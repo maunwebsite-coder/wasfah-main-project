@@ -7,6 +7,7 @@ use App\Models\Workshop;
 use App\Models\Recipe;
 use App\Services\ImageCompressionService;
 use App\Services\SimpleImageCompressionService;
+use App\Services\EnhancedImageUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,7 +60,7 @@ class WorkshopController extends Controller
         $workshop->currency = $request->currency;
         $workshop->max_participants = $request->max_participants;
         $workshop->is_online = $request->has('is_online');
-        $workshop->location = $request->location;
+        $workshop->location = $request->location ?? '';
         $workshop->is_active = $request->has('is_active');
         $workshop->featured_description = $request->featured_description;
         
@@ -76,33 +77,40 @@ class WorkshopController extends Controller
         $workshop->duration = $request->duration;
         $workshop->registration_deadline = $request->registration_deadline;
         $workshop->meeting_link = $request->meeting_link;
-        $workshop->address = $request->address;
-        $workshop->content = $request->content;
-        $workshop->what_you_will_learn = $request->what_you_will_learn;
-        $workshop->requirements = $request->requirements;
-        $workshop->materials_needed = $request->materials_needed;
-        $workshop->instructor_bio = $request->instructor_bio;
+        $workshop->address = $request->address ?? '';
+        $workshop->content = $request->content ?? '';
+        $workshop->what_you_will_learn = $request->what_you_will_learn ?? '';
+        $workshop->requirements = $request->requirements ?? '';
+        $workshop->materials_needed = $request->materials_needed ?? '';
+        $workshop->instructor_bio = $request->instructor_bio ?? '';
 
         // رفع الصورة مع الضغط
         if ($request->hasFile('image')) {
-            // محاولة استخدام ضغط الصور المتقدم أولاً
-            if (extension_loaded('gd')) {
-                $imagePath = ImageCompressionService::compressAndStore(
-                    $request->file('image'),
-                    'workshops',
-                    80, // جودة 80%
-                    1200, // أقصى عرض
-                    1200  // أقصى ارتفاع
-                );
+            $uploadResult = EnhancedImageUploadService::uploadImage(
+                $request->file('image'),
+                'workshops',
+                85, // جودة 85%
+                1200, // أقصى عرض
+                1200  // أقصى ارتفاع
+            );
+            
+            if ($uploadResult['success']) {
+                $workshop->image = $uploadResult['path'];
+                \Log::info('Image uploaded successfully for new workshop', [
+                    'image_path' => $uploadResult['path'],
+                    'compressed' => $uploadResult['compressed'] ?? false,
+                    'original_size' => $uploadResult['original_size'] ?? null,
+                    'compressed_size' => $uploadResult['compressed_size'] ?? null
+                ]);
             } else {
-                // استخدام الحفظ المباشر إذا لم يكن GD متوفراً
-                $imagePath = SimpleImageCompressionService::compressAndStore(
-                    $request->file('image'),
-                    'workshops',
-                    80
-                );
+                \Log::error('Failed to upload image for new workshop', [
+                    'error' => $uploadResult['error'],
+                    'file_name' => $request->file('image')->getClientOriginalName(),
+                    'file_size' => $request->file('image')->getSize()
+                ]);
+                return redirect()->back()
+                    ->with('error', $uploadResult['error']);
             }
-            $workshop->image = $imagePath;
         }
 
         $workshop->save();
@@ -156,9 +164,21 @@ class WorkshopController extends Controller
             'has_image' => $request->hasFile('image'),
             'image_size' => $request->hasFile('image') ? $request->file('image')->getSize() : null,
             'image_mime' => $request->hasFile('image') ? $request->file('image')->getMimeType() : null,
+            'all_files' => $request->allFiles(),
+            'request_method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
         ]);
 
-        $request->validate(Workshop::validationRules($id));
+        try {
+            $request->validate(Workshop::validationRules($id));
+            \Log::info('Validation passed for workshop update', ['workshop_id' => $id]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed for workshop update', [
+                'workshop_id' => $id,
+                'errors' => $e->errors()
+            ]);
+            throw $e;
+        }
 
         $workshop->title = $request->title;
         $workshop->description = $request->description;
@@ -169,7 +189,7 @@ class WorkshopController extends Controller
         $workshop->currency = $request->currency;
         $workshop->max_participants = $request->max_participants;
         $workshop->is_online = $request->has('is_online');
-        $workshop->location = $request->location;
+        $workshop->location = $request->location ?? '';
         $workshop->is_active = $request->has('is_active');
         $workshop->featured_description = $request->featured_description;
         
@@ -186,12 +206,12 @@ class WorkshopController extends Controller
         $workshop->duration = $request->duration;
         $workshop->registration_deadline = $request->registration_deadline;
         $workshop->meeting_link = $request->meeting_link;
-        $workshop->address = $request->address;
-        $workshop->content = $request->content;
-        $workshop->what_you_will_learn = $request->what_you_will_learn;
-        $workshop->requirements = $request->requirements;
-        $workshop->materials_needed = $request->materials_needed;
-        $workshop->instructor_bio = $request->instructor_bio;
+        $workshop->address = $request->address ?? '';
+        $workshop->content = $request->content ?? '';
+        $workshop->what_you_will_learn = $request->what_you_will_learn ?? '';
+        $workshop->requirements = $request->requirements ?? '';
+        $workshop->materials_needed = $request->materials_needed ?? '';
+        $workshop->instructor_bio = $request->instructor_bio ?? '';
 
         // تحديث الصورة
         if ($request->hasFile('image')) {
@@ -200,44 +220,59 @@ class WorkshopController extends Controller
                 'old_image' => $workshop->image,
                 'new_image_size' => $request->file('image')->getSize(),
                 'new_image_mime' => $request->file('image')->getMimeType(),
+                'file_name' => $request->file('image')->getClientOriginalName(),
             ]);
 
             // حذف الصورة القديمة
             if ($workshop->image) {
-                if (extension_loaded('gd')) {
-                    ImageCompressionService::deleteCompressedImage($workshop->image);
-                } else {
-                    SimpleImageCompressionService::deleteImage($workshop->image);
-                }
+                EnhancedImageUploadService::deleteImage($workshop->image);
             }
             
-            // محاولة استخدام ضغط الصور المتقدم أولاً
-            if (extension_loaded('gd')) {
-                $imagePath = ImageCompressionService::compressAndStore(
-                    $request->file('image'),
-                    'workshops',
-                    80, // جودة 80%
-                    1200, // أقصى عرض
-                    1200  // أقصى ارتفاع
-                );
+            $uploadResult = EnhancedImageUploadService::uploadImage(
+                $request->file('image'),
+                'workshops',
+                85, // جودة 85%
+                1200, // أقصى عرض
+                1200  // أقصى ارتفاع
+            );
+            
+            if ($uploadResult['success']) {
+                $workshop->image = $uploadResult['path'];
+                \Log::info('Image uploaded successfully for workshop', [
+                    'workshop_id' => $id,
+                    'image_path' => $uploadResult['path'],
+                    'compressed' => $uploadResult['compressed'] ?? false,
+                    'original_size' => $uploadResult['original_size'] ?? null,
+                    'compressed_size' => $uploadResult['compressed_size'] ?? null
+                ]);
             } else {
-                // استخدام الحفظ المباشر إذا لم يكن GD متوفراً
-                $imagePath = SimpleImageCompressionService::compressAndStore(
-                    $request->file('image'),
-                    'workshops',
-                    80
-                );
+                \Log::error('Failed to upload image for workshop', [
+                    'workshop_id' => $id,
+                    'error' => $uploadResult['error'],
+                    'file_name' => $request->file('image')->getClientOriginalName(),
+                    'file_size' => $request->file('image')->getSize()
+                ]);
+                return redirect()->back()
+                    ->with('error', $uploadResult['error']);
             }
-            
-            \Log::info('Image compression result', [
-                'image_path' => $imagePath,
-                'success' => !is_null($imagePath)
-            ]);
-            
-            $workshop->image = $imagePath;
+        } elseif ($request->has('remove_image') && $request->remove_image) {
+            // حذف الصورة الحالية
+            if ($workshop->image) {
+                EnhancedImageUploadService::deleteImage($workshop->image);
+                $workshop->image = null;
+                \Log::info('Image removed for workshop', [
+                    'workshop_id' => $id
+                ]);
+            }
         }
 
         $workshop->save();
+        
+        \Log::info('Workshop updated successfully', [
+            'workshop_id' => $id,
+            'new_image' => $workshop->image,
+            'title' => $workshop->title
+        ]);
 
         // تحديث الوصفات المختارة للورشة
         if ($request->has('recipe_ids') && is_array($request->recipe_ids)) {
@@ -264,7 +299,7 @@ class WorkshopController extends Controller
         
         // حذف الصورة
         if ($workshop->image) {
-            \Storage::disk('public')->delete($workshop->image);
+            EnhancedImageUploadService::deleteImage($workshop->image);
         }
         
         $workshop->delete();

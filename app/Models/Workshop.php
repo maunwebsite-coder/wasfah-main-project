@@ -191,12 +191,12 @@ class Workshop extends Model
             'max_participants' => 'required|integer|min:1|max:1000',
             'price' => 'required|numeric|min:0',
             'currency' => 'required|string|in:JOD,AED',
-            'start_date' => 'required|date|after:now',
+            'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'is_online' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
 
         // إضافة validation خاص للورشة المميزة

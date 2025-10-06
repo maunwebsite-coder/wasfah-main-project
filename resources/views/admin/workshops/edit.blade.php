@@ -141,35 +141,85 @@
                         @enderror
                     </div>
 
-                    <!-- Current Image -->
-                    @if($workshop->image)
+                    <!-- Image Upload Section -->
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">الصورة الحالية</label>
-                        <div class="flex items-center gap-4">
-                            <img src="{{ asset('storage/' . $workshop->image) }}" 
-                                 alt="{{ $workshop->title }}" 
-                                 class="w-32 h-32 object-cover rounded-lg">
-                            <div>
-                                <p class="text-sm text-gray-600">لحذف الصورة الحالية، اختر صورة جديدة</p>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Image -->
-                    <div class="md:col-span-2">
-                        <label for="image" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-4">
                             {{ $workshop->image ? 'تغيير صورة الورشة' : 'صورة الورشة' }}
                         </label>
-                        <input type="file" 
-                               id="image" 
-                               name="image" 
-                               accept="image/*"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 @error('image') border-red-500 @enderror">
-                        <p class="text-sm text-gray-500 mt-1">الصيغ المدعومة: JPEG, PNG, JPG, GIF (حجم أقصى: 2MB)</p>
-                        @error('image')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
+                        
+                        <!-- Current Image Display -->
+                        @if($workshop->image)
+                        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">الصورة الحالية</label>
+                            <div class="flex items-center gap-4">
+                                <img src="{{ asset('storage/' . $workshop->image) }}?v={{ time() }}" 
+                                     alt="{{ $workshop->title }}" 
+                                     class="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                                     id="current-image-preview"
+                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-600 mb-2">لحذف الصورة الحالية، اختر صورة جديدة</p>
+                                    <button type="button" 
+                                            id="remove-current-image"
+                                            class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors">
+                                        <i class="fas fa-trash ml-1"></i>
+                                        حذف الصورة الحالية
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Image Upload Area -->
+                        <div class="image-upload-container">
+                            <div class="image-upload-area" 
+                                 id="image-upload-area"
+                                 onclick="document.getElementById('image').click()">
+                                <div class="text-center">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
+                                    <p class="text-lg font-medium text-gray-700 mb-2">اسحب وأفلت الصورة هنا</p>
+                                    <p class="text-sm text-gray-500 mb-4">أو انقر للاختيار من جهازك</p>
+                                    <div class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+                                        <i class="fas fa-folder-open ml-2"></i>
+                                        اختر صورة
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <input type="file" 
+                                   id="image" 
+                                   name="image" 
+                                   accept="image/*"
+                                   class="hidden"
+                                   onchange="handleImageUpload(this)">
+                            
+                            <!-- Image Preview -->
+                            <div id="image-preview" class="hidden mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">معاينة الصورة الجديدة</label>
+                                <div class="relative inline-block">
+                                    <img id="preview-img" 
+                                         class="w-32 h-32 object-cover rounded-lg border border-gray-200">
+                                    <button type="button" 
+                                            id="remove-preview"
+                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                                            onclick="removeImagePreview()">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-600" id="image-info"></p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-sm text-gray-500 mt-3">
+                                <i class="fas fa-info-circle ml-1"></i>
+                                الصيغ المدعومة: JPEG, PNG, JPG, GIF, WebP (حجم أقصى: 5MB)
+                            </p>
+                            
+                            @error('image')
+                                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <!-- Category -->
@@ -474,11 +524,138 @@
     </div>
 </div>
 
+<style>
+.image-upload-container {
+    position: relative;
+}
+
+.image-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f9fafb;
+}
+
+.image-upload-area:hover {
+    border-color: #f97316;
+    background-color: #fff7ed;
+}
+
+.image-upload-area.dragover {
+    border-color: #f97316;
+    background-color: #fff7ed;
+    transform: scale(1.02);
+}
+
+.image-upload-area.has-image {
+    border-color: #10b981;
+    background-color: #ecfdf5;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #f97316;
+    transition: width 0.3s ease;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    background-color: #10b981;
+}
+
+.notification.error {
+    background-color: #ef4444;
+}
+
+.notification.warning {
+    background-color: #f59e0b;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const featuredCheckbox = document.querySelector('input[name="is_featured"]');
     const form = document.querySelector('form');
     const workshopId = {{ $workshop->id }};
+    
+    // Image upload functionality
+    const imageInput = document.getElementById('image');
+    const imageUploadArea = document.getElementById('image-upload-area');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const imageInfo = document.getElementById('image-info');
+    const removeCurrentImageBtn = document.getElementById('remove-current-image');
+    const currentImagePreview = document.getElementById('current-image-preview');
+    
+    // Drag and drop functionality
+    if (imageUploadArea) {
+        imageUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        imageUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+        
+        imageUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imageInput.files = files;
+                handleImageUpload(imageInput);
+            }
+        });
+    }
+    
+    // Remove current image functionality
+    if (removeCurrentImageBtn) {
+        removeCurrentImageBtn.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من حذف الصورة الحالية؟')) {
+                // Hide current image
+                this.closest('.mb-6').style.display = 'none';
+                showNotification('تم حذف الصورة الحالية', 'success');
+                
+                // Add hidden input to indicate image should be removed
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'remove_image';
+                hiddenInput.value = '1';
+                form.appendChild(hiddenInput);
+            }
+        });
+    }
     
     // Recipe selection functionality
     const recipeSearch = document.getElementById('recipe-search');
@@ -537,8 +714,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (checkbox.checked) {
             const recipeItem = checkbox.closest('.recipe-item');
             recipeItem.classList.add('border-orange-500', 'bg-orange-50');
-      
-    
         }
     });
     
@@ -579,7 +754,109 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error:', error);
                 });
         }
+        
+        // إظهار رسالة تحميل
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الحفظ...';
+        }
     });
 });
+
+// Image upload handling
+function handleImageUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('نوع الملف غير مدعوم. يرجى اختيار صورة JPG, PNG, GIF أو WebP', 'error');
+        input.value = '';
+        return;
+    }
+    
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+        showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        input.value = '';
+        return;
+    }
+    
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewImg = document.getElementById('preview-img');
+            const imagePreview = document.getElementById('image-preview');
+            const imageInfo = document.getElementById('image-info');
+            const imageUploadArea = document.getElementById('image-upload-area');
+            const currentImagePreview = document.getElementById('current-image-preview');
+            
+            previewImg.src = e.target.result;
+            imagePreview.classList.remove('hidden');
+            imageUploadArea.classList.add('has-image');
+            
+            // Hide current image section if it exists
+            if (currentImagePreview && currentImagePreview.closest('.mb-6')) {
+                currentImagePreview.closest('.mb-6').style.display = 'none';
+            }
+            
+            // Show file info
+            const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+            imageInfo.textContent = `الملف: ${file.name} (${fileSizeMB} MB)`;
+            
+            showNotification('تم تحميل الصورة بنجاح', 'success');
+        };
+    
+    reader.readAsDataURL(file);
+}
+
+// Remove image preview
+function removeImagePreview() {
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    const imageUploadArea = document.getElementById('image-upload-area');
+    const currentImagePreview = document.getElementById('current-image-preview');
+    
+    imageInput.value = '';
+    imagePreview.classList.add('hidden');
+    imageUploadArea.classList.remove('has-image');
+    
+    // Show current image section again if it exists
+    if (currentImagePreview && currentImagePreview.closest('.mb-6')) {
+        currentImagePreview.closest('.mb-6').style.display = 'block';
+    }
+    
+    showNotification('تم حذف الصورة المحددة', 'success');
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
 </script>
 @endsection
