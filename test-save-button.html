@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار زر الحفظ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-4">اختبار زر الحفظ</h2>
+        
+        <button id="test-save-btn" 
+                class="btn save-recipe-btn flex items-center justify-center p-3 rounded-full font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors space-x-2 rtl:space-x-reverse" 
+                data-recipe-id="123" 
+                data-saved="false">
+            <i class="fas fa-bookmark ml-2"></i>
+            <span>حفظ الوصفة</span>
+        </button>
+        
+        <div class="mt-4">
+            <p class="text-sm text-gray-600">انقر على الزر لاختبار تغيير الألوان:</p>
+            <ul class="text-sm text-gray-600 mt-2">
+                <li>• أخضر = غير محفوظة (حفظ الوصفة)</li>
+                <li>• برتقالي = محفوظة (محفوظة)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveBtn = document.getElementById('test-save-btn');
+            let isSaved = false;
+            
+            saveBtn.addEventListener('click', function() {
+                isSaved = !isSaved;
+                
+                if (isSaved) {
+                    // محفوظة = برتقالي
+                    saveBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    saveBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                    saveBtn.querySelector('span').textContent = 'محفوظة';
+                    saveBtn.dataset.saved = 'true';
+                    console.log('Button set to ORANGE (saved state)');
+                } else {
+                    // غير محفوظة = أخضر
+                    saveBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                    saveBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                    saveBtn.querySelector('span').textContent = 'حفظ الوصفة';
+                    saveBtn.dataset.saved = 'false';
+                    console.log('Button set to GREEN (not saved state)');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

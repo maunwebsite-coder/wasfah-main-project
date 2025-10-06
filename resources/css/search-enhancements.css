@@ -1,0 +1,166 @@
+/* تحسينات البحث */
+.search-suggestions {
+    animation: slideDown 0.2s ease-out;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    backdrop-filter: blur(10px);
+    position: absolute !important;
+    z-index: 9999 !important;
+    pointer-events: auto;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* تحسينات للعناصر القابلة للتنقل */
+[data-navigable="true"] {
+    transition: all 0.15s ease;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+[data-navigable="true"]:hover {
+    background-color: #fef3c7 !important;
+    transform: translateX(-2px);
+}
+
+[data-navigable="true"].bg-orange-50 {
+    background-color: #fed7aa !important;
+    border-left: 3px solid #f97316;
+}
+
+/* تحسينات إضافية للعناصر القابلة للنقر */
+[data-navigable="true"] a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+[data-navigable="true"] a:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* تحسينات loading state */
+.search-loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* تحسينات للبحث في الموبايل */
+@media (max-width: 768px) {
+    .search-suggestions {
+        max-height: 60vh;
+        margin: 0 1rem;
+        border-radius: 0.75rem;
+    }
+    
+    .mobile-search-input:focus {
+        transform: scale(1.02);
+    }
+}
+
+/* تحسينات للبحث في سطح المكتب */
+@media (min-width: 769px) {
+    .search-suggestions {
+        min-width: 400px;
+    }
+}
+
+/* تحسينات للخط */
+.search-suggestions .text-sm {
+    line-height: 1.4;
+}
+
+.search-suggestions .text-xs {
+    line-height: 1.3;
+}
+
+/* تحسينات للأيقونات */
+.search-suggestions .fas {
+    transition: transform 0.15s ease;
+}
+
+[data-navigable="true"]:hover .fas {
+    transform: scale(1.1);
+}
+
+/* تحسينات للروابط */
+.search-suggestions a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+}
+
+.search-suggestions a:hover {
+    text-decoration: none;
+}
+
+/* تحسينات إضافية للعناصر */
+.search-suggestions [data-navigable="true"] {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.search-suggestions [data-navigable="true"]:active {
+    transform: scale(0.98);
+}
+
+/* تحسينات للحدود */
+.search-suggestions .border-t {
+    border-color: #f3f4f6;
+}
+
+.search-suggestions .border-b {
+    border-color: #f3f4f6;
+}
+
+/* تحسينات للظلال */
+.search-suggestions {
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* تحسينات للتمرير */
+.search-suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-suggestions::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

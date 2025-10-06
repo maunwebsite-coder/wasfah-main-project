@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="test-token-123">
+    <title>اختبار إصلاح زر الحفظ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-arabic" data-user-id="1">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">اختبار إصلاح زر الحفظ</h1>
+            
+            <!-- زر الحفظ في صفحة الوصفة -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">زر الحفظ في صفحة الوصفة:</h2>
+                
+                <!-- عداد الحفظ -->
+                <div class="mb-4">
+                    <i class="fas fa-bookmark text-orange-500 ml-2 text-base"></i>
+                    <span id="recipe-save-count" class="font-semibold">
+                        15 شخص حفظوا هذه الوصفة
+                    </span>
+                </div>
+                
+                <!-- زر الحفظ -->
+                <button 
+                    id="save-recipe-page-btn"
+                    class="btn save-recipe-btn flex items-center justify-center p-3 rounded-full font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors space-x-2 rtl:space-x-reverse" 
+                    data-recipe-id="456" 
+                    data-saved="false"
+                    data-user-id="1">
+                    <i class="fas fa-bookmark ml-2"></i>
+                    <span>حفظ</span>
+                </button>
+            </div>
+            
+            <!-- أزرار أخرى للاختبار -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">أزرار أخرى (يجب أن تعمل مع save-recipe.js):</h2>
+                
+                <!-- كارت وصفة -->
+                <div class="card-container bg-white rounded-lg shadow p-4 mb-4" data-recipe-id="789">
+                    <h3 class="font-bold mb-2">وصفة تجريبية</h3>
+                    <button 
+                        class="save-recipe-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                        data-recipe-id="789"
+                        data-saved="false">
+                        <i class="fas fa-bookmark ml-1"></i>
+                        حفظ الوصفة
+                    </button>
+                </div>
+            </div>
+            
+            <!-- معلومات التشخيص -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <h3 class="font-semibold text-yellow-800 mb-2">معلومات التشخيص:</h3>
+                <div id="diagnostic-info" class="text-yellow-700 space-y-1">
+                    <div>جاري التحقق...</div>
+                </div>
+            </div>
+            
+            <!-- أزرار الاختبار -->
+            <div class="space-x-4 rtl:space-x-reverse">
+                <button onclick="testPageButton()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    اختبار زر صفحة الوصفة
+                </button>
+                <button onclick="testCardButton()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                    اختبار زر الكارت
+                </button>
+                <button onclick="checkSystems()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                    فحص الأنظمة
+                </button>
+            </div>
+            
+            <!-- سجل الأحداث -->
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold mb-3">سجل الأحداث:</h3>
+                <div id="event-log" class="bg-gray-50 border rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm">
+                    <div class="text-gray-600">جاري تحميل النظام...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تحميل النظام الجديد -->
+    <script>
+        // محاكاة RecipeSaveButton class
+        class RecipeSaveButton {
+            constructor() {
+                this.button = null;
+                this.recipeId = null;
+                this.isSaved = false;
+                this.isProcessing = false;
+                this.saveCountElement = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.log('بدء تهيئة RecipeSaveButton...');
+                
+                this.button = document.getElementById('save-recipe-page-btn');
+                
+                if (!this.button) {
+                    this.log('خطأ: لم يتم العثور على زر صفحة الوصفة!', 'error');
+                    return;
+                }
+
+                this.recipeId = parseInt(this.button.dataset.recipeId);
+                this.isSaved = this.button.dataset.saved === 'true';
+                this.saveCountElement = document.getElementById('recipe-save-count');
+                
+                if (!this.recipeId) {
+                    this.log('خطأ: لم يتم العثور على معرف الوصفة!', 'error');
+                    return;
+                }
+
+                this.log(`تم العثور على البيانات: معرف الوصفة = ${this.recipeId}, محفوظة = ${this.isSaved}`, 'success');
+
+                this.updateButtonState(this.isSaved);
+                this.attachEventListener();
+                
+                this.log('تم تهيئة RecipeSaveButton بنجاح!', 'success');
+            }
+
+            updateButtonState(saved) {
+                if (!this.button) return;
+
+                const span = this.button.querySelector('span');
+                const icon = this.button.querySelector('i');
+
+                this.button.classList.remove(
+                    'bg-orange-500', 'hover:bg-orange-600',
+                    'bg-green-500', 'hover:bg-green-600'
+                );
+
+                if (saved) {
+                    this.button.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                    if (span) span.textContent = 'تم الحفظ'; 
+                    if (icon) icon.className = 'fas fa-bookmark ml-2';
+                    this.log('تم تحديث زر صفحة الوصفة إلى "محفوظة" (برتقالي)', 'info');
+                } else {
+                    this.button.classList.add('bg-green-500', 'hover:bg-green-600');
+                    if (span) span.textContent = 'حفظ';
+                    if (icon) icon.className = 'fas fa-bookmark ml-2';
+                    this.log('تم تحديث زر صفحة الوصفة إلى "غير محفوظة" (أخضر)', 'info');
+                }
+
+                this.isSaved = saved;
+                this.button.dataset.saved = saved.toString();
+            }
+
+            updateSaveCount(saved) {
+                if (!this.saveCountElement) return;
+
+                const currentText = this.saveCountElement.textContent;
+                const currentCount = parseInt(currentText.match(/(\d+)/)?.[1] || '0');
+                const newCount = saved ? currentCount + 1 : Math.max(0, currentCount - 1);
+                
+                this.saveCountElement.textContent = `${newCount} شخص حفظوا هذه الوصفة`;
+                
+                this.saveCountElement.style.color = '#f97316';
+                this.saveCountElement.style.fontWeight = 'bold';
+                this.saveCountElement.style.transform = 'scale(1.05)';
+                this.saveCountElement.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    this.saveCountElement.style.color = '';
+                    this.saveCountElement.style.fontWeight = '';
+                    this.saveCountElement.style.transform = 'scale(1)';
+                }, 500);
+
+                this.log(`تم تحديث عداد صفحة الوصفة: ${currentCount} -> ${newCount}`, 'info');
+            }
+
+            attachEventListener() {
+                if (!this.button) return;
+
+                this.button.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    await this.handleSaveAction();
+                });
+
+                this.log('تم إضافة مستمع الأحداث لزر صفحة الوصفة', 'success');
+            }
+
+            async handleSaveAction() {
+                if (this.isProcessing) {
+                    this.log('تم تجاهل النقرة - العملية قيد التنفيذ', 'warning');
+                    return;
+                }
+                
+                this.log('تم النقر على زر صفحة الوصفة!', 'info');
+                
+                const userId = document.body.dataset.userId;
+                
+                if (!userId || userId === 'null' || userId === '') {
+                    this.log('المستخدم غير مسجل دخول', 'warning');
+                    this.showToast('يجب تسجيل الدخول لحفظ الوصفة', 'warning');
+                    return;
+                }
+
+                this.isProcessing = true;
+                const newSavedState = !this.isSaved;
+                
+                this.log(`بدء عملية ${newSavedState ? 'الحفظ' : 'إلغاء الحفظ'} لصفحة الوصفة`, 'info');
+
+                this.updateButtonState(newSavedState);
+                this.updateSaveCount(newSavedState);
+                
+                this.setButtonLoading(true);
+
+                try {
+                    await this.simulateSaveRequest(newSavedState);
+                    
+                    const message = newSavedState ? 'تم حفظ الوصفة بنجاح!' : 'تم إلغاء حفظ الوصفة';
+                    this.showToast(message, 'success');
+                    this.log(`نجحت العملية: ${message}`, 'success');
+                    
+                } catch (error) {
+                    this.log(`خطأ: ${error.message}`, 'error');
+                    
+                    this.updateButtonState(this.isSaved);
+                    this.updateSaveCount(this.isSaved);
+                    
+                    this.showToast('حدث خطأ أثناء محاولة حفظ الوصفة', 'error');
+                    
+                } finally {
+                    this.setButtonLoading(false);
+                    this.isProcessing = false;
+                    this.log('انتهت عملية صفحة الوصفة', 'info');
+                }
+            }
+
+            async simulateSaveRequest(saved) {
+                this.log('جاري محاكاة إرسال طلب صفحة الوصفة...', 'info');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const success = Math.random() > 0.1;
+                
+                if (!success) {
+                    throw new Error('خطأ مُحاكى من الخادم');
+                }
+                
+                this.log('تم إرسال طلب صفحة الوصفة بنجاح', 'success');
+                return { success: true };
+            }
+
+            setButtonLoading(loading) {
+                if (!this.button) return;
+
+                if (loading) {
+                    this.button.disabled = true;
+                    this.button.classList.add('opacity-70', 'cursor-not-allowed');
+                    
+                    const icon = this.button.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas fa-spinner fa-spin ml-2';
+                    }
+                    this.log('تم تعطيل زر صفحة الوصفة (وضع التحميل)', 'info');
+                } else {
+                    this.button.disabled = false;
+                    this.button.classList.remove('opacity-70', 'cursor-not-allowed');
+                    
+                    const icon = this.button.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas fa-bookmark ml-2';
+                    }
+                    this.log('تم تفعيل زر صفحة الوصفة', 'info');
+                }
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed bottom-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-semibold transform translate-x-full transition-transform duration-300 ${
+                    type === 'success' ? 'bg-green-500' : 
+                    type === 'error' ? 'bg-red-500' : 
+                    type === 'warning' ? 'bg-yellow-500' :
+                    'bg-blue-500'
+                }`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+                
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 3000);
+            }
+
+            log(message, type = 'info') {
+                const eventLog = document.getElementById('event-log');
+                if (!eventLog) return;
+
+                const timestamp = new Date().toLocaleTimeString('ar-SA');
+                const colors = {
+                    info: 'text-blue-600',
+                    success: 'text-green-600',
+                    warning: 'text-yellow-600',
+                    error: 'text-red-600'
+                };
+
+                const logEntry = document.createElement('div');
+                logEntry.className = `${colors[type] || colors.info} mb-1`;
+                logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <strong>[RecipeSaveButton]</strong> ${message}`;
+                
+                eventLog.appendChild(logEntry);
+                eventLog.scrollTop = eventLog.scrollHeight;
+            }
+        }
+
+        // محاكاة save-recipe.js للكروت
+        function initializeCardButtons() {
+            const cardButtons = document.querySelectorAll('.save-recipe-btn:not(#save-recipe-page-btn)');
+            
+            cardButtons.forEach(button => {
+                if (button.dataset.initialized === 'true') return;
+                
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    log('تم النقر على زر الكارت!', 'info');
+                    
+                    const isCurrentlySaved = this.dataset.saved === 'true';
+                    const newSavedState = !isCurrentlySaved;
+                    
+                    this.dataset.saved = newSavedState.toString();
+                    
+                    if (newSavedState) {
+                        this.classList.remove('bg-green-500', 'hover:bg-green-600');
+                        this.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                        this.querySelector('i').className = 'fas fa-bookmark ml-1';
+                        this.innerHTML = '<i class="fas fa-bookmark ml-1"></i>محفوظة';
+                        log('تم تحديث زر الكارت إلى "محفوظة"', 'info');
+                    } else {
+                        this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                        this.classList.add('bg-green-500', 'hover:bg-green-600');
+                        this.querySelector('i').className = 'fas fa-bookmark ml-1';
+                        this.innerHTML = '<i class="fas fa-bookmark ml-1"></i>حفظ الوصفة';
+                        log('تم تحديث زر الكارت إلى "غير محفوظة"', 'info');
+                    }
+                });
+                
+                button.dataset.initialized = 'true';
+                log('تم تهيئة زر الكارت', 'success');
+            });
+        }
+
+        // دوال الاختبار
+        function testPageButton() {
+            if (window.recipeSaveButton && window.recipeSaveButton.button) {
+                window.recipeSaveButton.button.click();
+            } else {
+                log('زر صفحة الوصفة غير متاح', 'error');
+            }
+        }
+
+        function testCardButton() {
+            const cardButton = document.querySelector('.save-recipe-btn:not(#save-recipe-page-btn)');
+            if (cardButton) {
+                cardButton.click();
+            } else {
+                log('زر الكارت غير متاح', 'error');
+            }
+        }
+
+        function checkSystems() {
+            const diagnosticInfo = document.getElementById('diagnostic-info');
+            const info = [];
+            
+            // فحص RecipeSaveButton
+            if (window.recipeSaveButton) {
+                info.push('✅ RecipeSaveButton متاح');
+                info.push(`   - معرف الوصفة: ${window.recipeSaveButton.recipeId}`);
+                info.push(`   - حالة الحفظ: ${window.recipeSaveButton.isSaved}`);
+            } else {
+                info.push('❌ RecipeSaveButton غير متاح');
+            }
+            
+            // فحص زر صفحة الوصفة
+            const pageButton = document.getElementById('save-recipe-page-btn');
+            if (pageButton) {
+                info.push('✅ زر صفحة الوصفة موجود');
+                info.push(`   - معرف الوصفة: ${pageButton.dataset.recipeId}`);
+                info.push(`   - حالة الحفظ: ${pageButton.dataset.saved}`);
+            } else {
+                info.push('❌ زر صفحة الوصفة غير موجود');
+            }
+            
+            // فحص أزرار الكروت
+            const cardButtons = document.querySelectorAll('.save-recipe-btn:not(#save-recipe-page-btn)');
+            info.push(`✅ أزرار الكروت: ${cardButtons.length} زر`);
+            
+            // فحص العداد
+            const counter = document.getElementById('recipe-save-count');
+            if (counter) {
+                info.push('✅ عداد الحفظ موجود');
+            } else {
+                info.push('❌ عداد الحفظ غير موجود');
+            }
+            
+            diagnosticInfo.innerHTML = info.map(item => `<div>${item}</div>`).join('');
+            log('تم فحص الأنظمة', 'info');
+        }
+
+        function log(message, type = 'info') {
+            const eventLog = document.getElementById('event-log');
+            if (!eventLog) return;
+
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            const colors = {
+                info: 'text-blue-600',
+                success: 'text-green-600',
+                warning: 'text-yellow-600',
+                error: 'text-red-600'
+            };
+
+            const logEntry = document.createElement('div');
+            logEntry.className = `${colors[type] || colors.info} mb-1`;
+            logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+            
+            eventLog.appendChild(logEntry);
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        // تهيئة النظام عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            log('بدء تحميل النظام...', 'info');
+            
+            // تهيئة RecipeSaveButton
+            if (document.getElementById('save-recipe-page-btn')) {
+                window.recipeSaveButton = new RecipeSaveButton();
+            }
+            
+            // تهيئة أزرار الكروت
+            initializeCardButtons();
+            
+            // فحص أولي
+            setTimeout(() => {
+                checkSystems();
+            }, 500);
+            
+            log('تم تحميل النظام بالكامل', 'success');
+        });
+    </script>
+</body>
+</html>

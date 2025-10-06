@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار ألوان أزرار الحفظ في الكروت</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">اختبار ألوان أزرار الحفظ في الكروت</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">المنطق الجديد للكروت:</h2>
+            <ul class="space-y-2 text-gray-700">
+                <li class="flex items-center">
+                    <span class="w-4 h-4 bg-green-500 rounded ml-3"></span>
+                    <span>أخضر = محفوظة (تم الحفظ)</span>
+                </li>
+                <li class="flex items-center">
+                    <span class="w-4 h-4 bg-orange-500 rounded ml-3"></span>
+                    <span>برتقالي = غير محفوظة (حفظ)</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- كرت محفوظة (أخضر) -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                    <i class="fas fa-utensils text-white text-4xl"></i>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">وصفة محفوظة</h3>
+                    <p class="text-gray-600 mb-4">حلويات</p>
+                    <button class="save-recipe-btn w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 rtl:space-x-reverse"
+                            data-saved="true">
+                        <i class="fas fa-bookmark ml-2"></i>
+                        <span>محفوظة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- كرت غير محفوظة (برتقالي) -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                    <i class="fas fa-utensils text-white text-4xl"></i>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">وصفة غير محفوظة</h3>
+                    <p class="text-gray-600 mb-4">حلويات</p>
+                    <button class="save-recipe-btn w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 rtl:space-x-reverse"
+                            data-saved="false">
+                        <i class="fas fa-bookmark ml-2"></i>
+                        <span>حفظ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- كرت مع زر في المقدمة (شفاف) -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden relative">
+                <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center relative">
+                    <i class="fas fa-utensils text-white text-4xl"></i>
+                    <!-- زر الحفظ في المقدمة -->
+                    <div class="absolute top-4 right-4">
+                        <button class="save-recipe-btn bg-green-500/80 hover:bg-green-600/90 text-white font-semibold py-2 px-3 rounded-lg transition-all duration-300 hover:shadow-lg flex items-center justify-center backdrop-blur-sm"
+                                data-saved="true">
+                            <i class="fas fa-bookmark ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">كرت مع زر شفاف</h3>
+                    <p class="text-gray-600 mb-4">محفوظة (أخضر شفاف)</p>
+                </div>
+            </div>
+
+            <!-- كرت مع زر في الخلف -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="h-48 bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                    <i class="fas fa-utensils text-white text-4xl"></i>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">كرت مع زر في الخلف</h3>
+                    <p class="text-gray-600 mb-4">غير محفوظة (برتقالي)</p>
+                    <div class="flex space-x-2 rtl:space-x-reverse">
+                        <a href="#" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors text-center text-sm font-semibold">
+                            <i class="fas fa-eye ml-1"></i>
+                            عرض الوصفة
+                        </a>
+                        <button class="save-recipe-btn bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 hover:shadow-lg flex items-center justify-center"
+                                data-saved="false">
+                            <i class="fas fa-bookmark ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+            <i class="fas fa-info-circle ml-2"></i>
+            <strong>ملاحظة:</strong> تم تحديث جميع الكروت في الموقع لتتبع هذا المنطق الجديد.
+        </div>
+    </div>
+
+    <script>
+        // محاكاة تفاعل الأزرار
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveButtons = document.querySelectorAll('.save-recipe-btn');
+            
+            saveButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const isCurrentlySaved = this.dataset.saved === 'true';
+                    
+                    if (isCurrentlySaved) {
+                        // Change from saved (green) to not saved (orange)
+                        this.classList.remove('bg-green-500', 'hover:bg-green-600', 'bg-green-500/80', 'hover:bg-green-600/90');
+                        this.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                        this.querySelector('span').textContent = 'حفظ';
+                        this.dataset.saved = 'false';
+                    } else {
+                        // Change from not saved (orange) to saved (green)
+                        this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                        this.classList.add('bg-green-500', 'hover:bg-green-600');
+                        this.querySelector('span').textContent = 'محفوظة';
+                        this.dataset.saved = 'true';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

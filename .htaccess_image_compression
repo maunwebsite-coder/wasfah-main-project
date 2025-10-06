@@ -1,0 +1,37 @@
+# إعدادات Apache لتحسين ضغط الصور
+# يمكن إضافة هذه الإعدادات إلى ملف .htaccess الرئيسي
+
+# ضغط الصور تلقائياً
+<IfModule mod_deflate.c>
+    # ضغط ملفات الصور
+    AddOutputFilterByType DEFLATE image/jpeg
+    AddOutputFilterByType DEFLATE image/png
+    AddOutputFilterByType DEFLATE image/gif
+    AddOutputFilterByType DEFLATE image/webp
+</IfModule>
+
+# إعدادات Cache للصور
+<IfModule mod_expires.c>
+    ExpiresActive On
+    # Cache الصور لمدة شهر
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+</IfModule>
+
+# تحسين الأداء
+<IfModule mod_headers.c>
+    # إضافة headers للصور
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        Header set Cache-Control "public, max-age=2592000"
+        Header set Vary "Accept-Encoding"
+    </FilesMatch>
+</IfModule>
+
+# منع الوصول المباشر للملفات المؤقتة
+<FilesMatch "^(test_image_compression\.php|\.htaccess_image_compression)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+

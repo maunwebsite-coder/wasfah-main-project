@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="test-csrf-token">
+    <title>اختبار زر الحفظ - إعدادات الرؤية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .visibility-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .visibility-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">اختبار زر الحفظ - إعدادات الرؤية</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">اختبار التبديل والحفظ</h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <label class="visibility-toggle">
+                        <input type="checkbox" 
+                               data-id="1"
+                               data-original="true"
+                               class="visibility-checkbox"
+                               checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="text-lg">عنصر اختبار 1</span>
+                    <span class="status-badge status-visible" id="status-1">مرئي</span>
+                    <span class="pending-indicator text-orange-500" id="pending-1" style="display: none;">
+                        <i class="fas fa-exclamation-circle" title="تغيير غير محفوظ"></i>
+                    </span>
+                </div>
+                
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <label class="visibility-toggle">
+                        <input type="checkbox" 
+                               data-id="2"
+                               data-original="false"
+                               class="visibility-checkbox">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="text-lg">عنصر اختبار 2</span>
+                    <span class="status-badge status-hidden" id="status-2">مخفي</span>
+                    <span class="pending-indicator text-orange-500" id="pending-2" style="display: none;">
+                        <i class="fas fa-exclamation-circle" title="تغيير غير محفوظ"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">زر الحفظ</h2>
+            <button type="button" id="saveAllBtn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200" onclick="saveAllChanges()" style="display: none;">
+                <i class="fas fa-save ml-2"></i>
+                <span id="saveAllText">حفظ جميع التغييرات</span>
+                <span id="pendingCount" class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">0</span>
+            </button>
+            <div id="autoSaveIndicator" class="text-sm text-green-600 font-medium" style="display: inline-flex;">
+                <i class="fas fa-check-circle ml-1"></i>
+                حفظ تلقائي مفعل
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">سجل الأحداث</h2>
+            <div id="eventLog" class="bg-gray-100 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm">
+                <div class="text-gray-500">انتظار الأحداث...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // متغيرات عامة
+        let pendingChanges = new Set();
+        let isSaving = false;
+
+        // دالة تسجيل الأحداث
+        function logEvent(message) {
+            const log = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // تبديل الرؤية
+        function toggleVisibility(id, isVisible) {
+            logEvent(`toggleVisibility called: id=${id}, isVisible=${isVisible}`);
+            
+            const checkbox = document.querySelector(`input[data-id="${id}"]`);
+            if (!checkbox) {
+                logEvent(`ERROR: Checkbox not found for id: ${id}`);
+                return;
+            }
+            
+            const originalValue = checkbox.dataset.original === 'true';
+            logEvent(`Original value: ${originalValue}, New value: ${isVisible}`);
+            
+            // تحديث الواجهة فوراً
+            updateStatusBadge(id, isVisible);
+            
+            if (isVisible !== originalValue) {
+                logEvent(`Value changed, adding to pending changes`);
+                pendingChanges.add(id);
+                showPendingIndicator(id);
+                updateSaveButton();
+                
+                // محاكاة حفظ التغيير
+                simulateSave(id, isVisible);
+            } else {
+                logEvent(`Value unchanged, removing from pending changes`);
+                pendingChanges.delete(id);
+                hidePendingIndicator(id);
+                updateSaveButton();
+            }
+        }
+
+        // محاكاة الحفظ
+        function simulateSave(id, isVisible) {
+            logEvent(`Simulating save for id=${id}, isVisible=${isVisible}`);
+            
+            // محاكاة تأخير الشبكة
+            setTimeout(() => {
+                logEvent(`Save completed for id=${id}`);
+                
+                // تحديث البيانات الأصلية
+                const checkbox = document.querySelector(`input[data-id="${id}"]`);
+                if (checkbox) {
+                    checkbox.dataset.original = isVisible.toString();
+                }
+                
+                // إزالة من قائمة التغييرات المعلقة
+                pendingChanges.delete(id);
+                hidePendingIndicator(id);
+                updateSaveButton();
+                
+                logEvent(`Change saved successfully for id=${id}`);
+            }, 1000);
+        }
+
+        // تحديث شارة الحالة
+        function updateStatusBadge(id, isVisible) {
+            const statusBadge = document.getElementById(`status-${id}`);
+            if (statusBadge) {
+                statusBadge.textContent = isVisible ? 'مرئي' : 'مخفي';
+                statusBadge.className = `status-badge ${isVisible ? 'status-visible' : 'status-hidden'}`;
+            }
+        }
+
+        // إظهار مؤشر التغيير غير المحفوظ
+        function showPendingIndicator(id) {
+            const indicator = document.getElementById(`pending-${id}`);
+            if (indicator) {
+                indicator.style.display = 'inline';
+            }
+        }
+
+        // إخفاء مؤشر التغيير غير المحفوظ
+        function hidePendingIndicator(id) {
+            const indicator = document.getElementById(`pending-${id}`);
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+
+        // تحديث زر الحفظ
+        function updateSaveButton() {
+            const saveBtn = document.getElementById('saveAllBtn');
+            const pendingCount = document.getElementById('pendingCount');
+            const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+            
+            logEvent(`Updating save button: pendingChanges.size=${pendingChanges.size}`);
+            
+            if (pendingChanges.size > 0) {
+                saveBtn.style.display = 'inline-flex';
+                pendingCount.textContent = pendingChanges.size;
+                pendingCount.style.display = 'inline';
+                if (autoSaveIndicator) {
+                    autoSaveIndicator.style.display = 'none';
+                }
+            } else {
+                saveBtn.style.display = 'none';
+                pendingCount.style.display = 'none';
+                if (autoSaveIndicator) {
+                    autoSaveIndicator.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        // حفظ جميع التغييرات
+        function saveAllChanges() {
+            logEvent(`saveAllChanges called: pendingChanges.size=${pendingChanges.size}`);
+            
+            if (isSaving || pendingChanges.size === 0) {
+                logEvent(`Cannot save: isSaving=${isSaving}, pendingChanges.size=${pendingChanges.size}`);
+                return;
+            }
+            
+            isSaving = true;
+            const saveBtn = document.getElementById('saveAllBtn');
+            const saveText = document.getElementById('saveAllText');
+            
+            // تحديث حالة الزر
+            saveBtn.disabled = true;
+            saveText.textContent = 'جاري الحفظ...';
+            saveBtn.classList.add('opacity-50');
+            
+            logEvent(`Starting bulk save for ${pendingChanges.size} changes`);
+            
+            // محاكاة حفظ جميع التغييرات
+            setTimeout(() => {
+                logEvent(`Bulk save completed for ${pendingChanges.size} changes`);
+                
+                // مسح قائمة التغييرات
+                pendingChanges.clear();
+                updateSaveButton();
+                
+                // إعادة تعيين حالة الزر
+                isSaving = false;
+                saveBtn.disabled = false;
+                saveText.textContent = 'حفظ جميع التغييرات';
+                saveBtn.classList.remove('opacity-50');
+            }, 2000);
+        }
+
+        // تعريف دالة معالجة تغيير المفتاح
+        function handleCheckboxChange(e) {
+            logEvent(`Checkbox change event triggered: id=${this.dataset.id}, checked=${this.checked}`);
+            const id = parseInt(this.dataset.id);
+            const isVisible = this.checked;
+            toggleVisibility(id, isVisible);
+        }
+
+        // تعريف دالة معالجة النقر على المفتاح
+        function handleCheckboxClick(e) {
+            logEvent(`Checkbox click event triggered: id=${this.dataset.id}, checked=${this.checked}`);
+        }
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('Page loaded, initializing...');
+            
+            // إضافة event listeners لجميع مفاتيح التبديل
+            const checkboxes = document.querySelectorAll('input.visibility-checkbox');
+            logEvent(`Found ${checkboxes.length} checkboxes`);
+            
+            checkboxes.forEach(checkbox => {
+                logEvent(`Adding event listener to checkbox: ${checkbox.dataset.id}`);
+                checkbox.addEventListener('change', handleCheckboxChange);
+                checkbox.addEventListener('click', handleCheckboxClick);
+            });
+            
+            logEvent('Test page initialized successfully');
+        });
+    </script>
+</body>
+</html>
