@@ -14,7 +14,7 @@ class WorkshopController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Workshop::active()->upcoming();
+        $query = Workshop::active();
 
         // فلترة حسب الفئة
         if ($request->has('category') && $request->category !== 'all') {
@@ -75,7 +75,7 @@ class WorkshopController extends Controller
 
         $workshops = $query->withCount(['bookings' => function ($query) {
             $query->where('status', 'confirmed');
-        }])->paginate(12);
+        }])->get();
 
         // جلب الورشة المميزة فقط (بدون جلب ورشات أخرى)
         $featuredWorkshop = Workshop::active()
@@ -88,12 +88,12 @@ class WorkshopController extends Controller
             ->first();
 
         // إحصائيات للفلترة
-        $categories = Workshop::active()->upcoming()
+        $categories = Workshop::active()
             ->selectRaw('category, COUNT(*) as count')
             ->groupBy('category')
             ->get();
 
-        $levels = Workshop::active()->upcoming()
+        $levels = Workshop::active()
             ->selectRaw('level, COUNT(*) as count')
             ->groupBy('level')
             ->get();
@@ -156,7 +156,6 @@ class WorkshopController extends Controller
         }
 
         $workshops = Workshop::active()
-            ->upcoming()
             ->withCount(['bookings' => function ($query) {
                 $query->where('status', 'confirmed');
             }])
@@ -167,7 +166,7 @@ class WorkshopController extends Controller
                   ->orWhere('category', 'like', "%{$query}%");
             })
             ->orderBy('start_date')
-            ->paginate(12);
+            ->get();
 
         return view('workshops', compact('workshops'))->with('searchQuery', $query);
     }
