@@ -12,7 +12,7 @@
                     <div>
                         <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                             الإشعارات
-                            <span id="unread-count" class="unread-count bg-red-500 text-white text-sm font-bold rounded-full px-2 py-1 ml-2 {{ $unreadCount > 0 ? '' : 'hidden' }}">{{ $unreadCount }}</span>
+                            <span id="unread-count" data-notification-badge aria-live="polite" aria-atomic="true" class="unread-count bg-red-500 text-white text-sm font-bold rounded-full px-2 py-1 ml-2 {{ $unreadCount > 0 ? '' : 'hidden' }}" aria-hidden="{{ $unreadCount > 0 ? 'false' : 'true' }}">{{ $unreadCount }}</span>
                         </h1>
                         <p class="text-gray-600">
                             جميع إشعاراتك في مكان واحد
@@ -135,187 +135,92 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // تحديث دوري للإشعارات كل 5 ثوان
-    setInterval(function() {
-        // تحديث الإشعارات فقط بدون إعادة تحميل الصفحة - استخدام NotificationManager المركزي
-        if (window.NotificationManager) {
-            window.NotificationManager.getNotifications((data, error) => {
-                if (error) {
-                    console.error('Error updating notifications:', error);
-                    return;
-                }
-                
-                const unreadCount = data?.unreadCount || 0;
-                const countElement = document.getElementById('unread-count');
-                if (countElement) {
-                    const oldCount = parseInt(countElement.textContent) || 0;
-                    countElement.textContent = unreadCount;
-                    
-                    if (unreadCount > 0) {
-                        countElement.classList.remove('hidden');
-                        
-                        // إضافة تأثير بصري عند ظهور إشعارات جديدة
-                        if (unreadCount > oldCount) {
-                            countElement.classList.add('animate-bounce');
-                            setTimeout(() => {
-                                countElement.classList.remove('animate-bounce');
-                            }, 2000);
-                        }
-                    } else {
-                        countElement.classList.add('hidden');
-                    }
-                }
-            });
+const NOTIFICATION_BADGE_SELECTOR = '[data-notification-badge]';
+const FALLBACK_BADGE_ANIMATION_DURATION = 2000;
+
+function updateUnreadBadge(unreadCount) {
+    if (window.NotificationManager && typeof window.NotificationManager.updateBadgeElements === 'function') {
+        window.NotificationManager.updateBadgeElements(unreadCount);
+        return;
+    }
+
+    const badges = document.querySelectorAll(NOTIFICATION_BADGE_SELECTOR);
+    badges.forEach(badge => {
+        const previousCount = parseInt(badge.dataset.previousCount || badge.textContent || '0', 10) || 0;
+        badge.textContent = unreadCount;
+        badge.dataset.previousCount = unreadCount;
+
+        if (unreadCount > 0) {
+            badge.classList.remove('hidden');
+            badge.setAttribute('aria-hidden', 'false');
+
+            if (unreadCount > previousCount) {
+                badge.classList.add('animate-bounce');
+                setTimeout(() => {
+                    badge.classList.remove('animate-bounce');
+                }, FALLBACK_BADGE_ANIMATION_DURATION);
+            }
         } else {
-            console.warn('NotificationManager not available, falling back to direct fetch');
-            // Fallback to direct fetch
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            fetch('/notifications/api', {
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const unreadCount = data.unreadCount || 0;
-                    const countElement = document.getElementById('unread-count');
-                    if (countElement) {
-                        const oldCount = parseInt(countElement.textContent) || 0;
-                        countElement.textContent = unreadCount;
-                        
-                        if (unreadCount > 0) {
-                            countElement.classList.remove('hidden');
-                            
-                            if (unreadCount > oldCount) {
-                                countElement.classList.add('animate-bounce');
-                                setTimeout(() => {
-                                    countElement.classList.remove('animate-bounce');
-                                }, 2000);
-                            }
-                        } else {
-                            countElement.classList.add('hidden');
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating notifications:', error);
-                });
-        }
-    }, 5000);
-    
-    // تحديث فوري عند التركيز على النافذة - استخدام NotificationManager المركزي
-    window.addEventListener('focus', function() {
-        if (window.NotificationManager) {
-            window.NotificationManager.getNotifications((data, error) => {
-                if (error) {
-                    console.error('Error updating notifications on focus:', error);
-                    return;
-                }
-                
-                const unreadCount = data?.unreadCount || 0;
-                const countElement = document.getElementById('unread-count');
-                if (countElement) {
-                    const oldCount = parseInt(countElement.textContent) || 0;
-                    countElement.textContent = unreadCount;
-                    
-                    if (unreadCount > 0) {
-                        countElement.classList.remove('hidden');
-                        
-                        // إضافة تأثير بصري عند ظهور إشعارات جديدة
-                        if (unreadCount > oldCount) {
-                            countElement.classList.add('animate-bounce');
-                            setTimeout(() => {
-                                countElement.classList.remove('animate-bounce');
-                            }, 2000);
-                        }
-                    } else {
-                        countElement.classList.add('hidden');
-                    }
-                }
-            });
-        } else {
-            console.warn('NotificationManager not available, falling back to direct fetch');
-            // Fallback to direct fetch
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            fetch('/notifications/api', {
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const unreadCount = data.unreadCount || 0;
-                    const countElement = document.getElementById('unread-count');
-                    if (countElement) {
-                        const oldCount = parseInt(countElement.textContent) || 0;
-                        countElement.textContent = unreadCount;
-                        
-                        if (unreadCount > 0) {
-                            countElement.classList.remove('hidden');
-                            
-                            if (unreadCount > oldCount) {
-                                countElement.classList.add('animate-bounce');
-                                setTimeout(() => {
-                                    countElement.classList.remove('animate-bounce');
-                                }, 2000);
-                            }
-                        } else {
-                            countElement.classList.add('hidden');
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating notifications on focus:', error);
-                });
+            badge.classList.add('hidden');
+            badge.setAttribute('aria-hidden', 'true');
         }
     });
-    
-    // تحديث فوري عند العودة للصفحة
-    document.addEventListener('visibilitychange', function() {
+}
+
+function refreshNotificationCounts(force = false) {
+    if (window.NotificationManager) {
+        if (force && typeof window.NotificationManager.clearCache === 'function') {
+            window.NotificationManager.clearCache();
+        }
+
+        window.NotificationManager.getNotifications((data, error) => {
+            if (error) {
+                console.error('Error refreshing notifications:', error);
+                return;
+            }
+
+            const unreadCount = data?.unreadCount || 0;
+            updateUnreadBadge(unreadCount);
+        }, force);
+        return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    fetch('/notifications/api', {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+        .then(response => response.json())
+        .then(data => {
+            const unreadCount = data.unreadCount || 0;
+            updateUnreadBadge(unreadCount);
+        })
+        .catch(error => {
+            console.error('Error refreshing notifications:', error);
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const pollInterval = setInterval(() => refreshNotificationCounts(), 30000);
+    refreshNotificationCounts();
+
+    window.addEventListener('beforeunload', () => clearInterval(pollInterval));
+
+    document.addEventListener('notifications:updated', event => {
+        if (event.detail && typeof event.detail.unreadCount === 'number') {
+            updateUnreadBadge(event.detail.unreadCount);
+        }
+    });
+
+    window.addEventListener('focus', () => refreshNotificationCounts(true));
+
+    document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-            // تحديث الإشعارات فقط
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            fetch('/notifications/api', {
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const unreadCount = data.unreadCount || 0;
-                    const countElement = document.getElementById('unread-count');
-                    if (countElement) {
-                        const oldCount = parseInt(countElement.textContent) || 0;
-                        countElement.textContent = unreadCount;
-                        
-                        if (unreadCount > 0) {
-                            countElement.classList.remove('hidden');
-                            
-                            // إضافة تأثير بصري عند ظهور إشعارات جديدة
-                            if (unreadCount > oldCount) {
-                                countElement.classList.add('animate-bounce');
-                                setTimeout(() => {
-                                    countElement.classList.remove('animate-bounce');
-                                }, 2000);
-                            }
-                        } else {
-                            countElement.classList.add('hidden');
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating notifications:', error);
-                });
+            refreshNotificationCounts(true);
         }
     });
     
@@ -386,6 +291,8 @@ function markAsRead(notificationId) {
                 const markReadBtn = notificationItem.querySelector('.mark-read-btn');
                 if (markReadBtn) markReadBtn.remove();
             }
+
+            refreshNotificationCounts(true);
         }
     })
     .catch(error => {
@@ -470,6 +377,8 @@ function deleteNotification(notificationId) {
                 
                 // إغلاق الـ modal
                 document.getElementById('delete-notification-modal').remove();
+
+                refreshNotificationCounts(true);
             } else {
                 showErrorMessage('حدث خطأ أثناء حذف الإشعار');
                 document.getElementById('delete-notification-modal').remove();
@@ -553,6 +462,7 @@ function markAllAsRead() {
             if (data.success) {
                 // إظهار رسالة نجاح
                 showSuccessMessage('تم تحديد جميع الإشعارات كمقروءة!');
+                refreshNotificationCounts(true);
                 setTimeout(() => {
                     location.reload();
                 }, 1500);
@@ -639,6 +549,7 @@ function clearReadNotifications() {
             if (data.success) {
                 // إظهار رسالة نجاح
                 showSuccessMessage('تم حذف الإشعارات المقروءة بنجاح!');
+                refreshNotificationCounts(true);
                 setTimeout(() => {
                     location.reload();
                 }, 1500);

@@ -31,7 +31,24 @@ class WorkshopController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(10);
 
-        return view('admin.workshops.index', compact('workshops'));
+        $featuredWorkshop = Workshop::where('is_featured', true)->first();
+
+        $aggregates = Workshop::selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN is_online = 1 THEN 1 ELSE 0 END) as online,
+                COALESCE(SUM(bookings_count), 0) as confirmed_bookings
+            ')
+            ->first();
+
+        $stats = [
+            'total' => (int) ($aggregates?->total ?? 0),
+            'active' => (int) ($aggregates?->active ?? 0),
+            'online' => (int) ($aggregates?->online ?? 0),
+            'confirmed_bookings' => (int) ($aggregates?->confirmed_bookings ?? 0),
+        ];
+
+        return view('admin.workshops.index', compact('workshops', 'featuredWorkshop', 'stats'));
     }
 
     /**
@@ -59,16 +76,17 @@ class WorkshopController extends Controller
         $workshop->price = $request->price;
         $workshop->currency = $request->currency;
         $workshop->max_participants = $request->max_participants;
-        $workshop->is_online = $request->has('is_online');
-        $workshop->location = $request->location ?? '';
-        $workshop->is_active = $request->has('is_active');
+        $workshop->is_online = $request->boolean('is_online');
+        $workshop->is_active = $request->boolean('is_active');
         $workshop->featured_description = $request->featured_description;
-        
-        // التعامل مع الورشة المميزة
-        if ($request->has('is_featured') && $request->is_featured) {
-            $workshop->makeFeatured();
+        $locationValue = trim((string) ($request->location ?? ''));
+        if ($workshop->is_online) {
+            $meetingLink = trim((string) ($request->meeting_link ?? ''));
+            $workshop->meeting_link = $meetingLink !== '' ? $meetingLink : null;
+            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
         } else {
-            $workshop->is_featured = false;
+            $workshop->meeting_link = null;
+            $workshop->location = $locationValue;
         }
         
         // الحقول الجديدة
@@ -76,7 +94,6 @@ class WorkshopController extends Controller
         $workshop->level = $request->level;
         $workshop->duration = $request->duration;
         $workshop->registration_deadline = $request->registration_deadline;
-        $workshop->meeting_link = $request->meeting_link;
         $workshop->address = $request->address ?? '';
         $workshop->content = $request->content ?? '';
         $workshop->what_you_will_learn = $request->what_you_will_learn ?? '';
@@ -84,6 +101,13 @@ class WorkshopController extends Controller
         $workshop->materials_needed = $request->materials_needed ?? '';
         $workshop->instructor_bio = $request->instructor_bio ?? '';
 
+        // التعامل مع الورشة المميزة بعد ضبط الحقول الإلزامية
+        if ($request->has('is_featured') && $request->is_featured) {
+            $workshop->makeFeatured();
+        } else {
+            $workshop->is_featured = false;
+        }
+        
         // رفع الصورة مع الضغط
         if ($request->hasFile('image')) {
             $uploadResult = EnhancedImageUploadService::uploadImage(
@@ -188,16 +212,17 @@ class WorkshopController extends Controller
         $workshop->price = $request->price;
         $workshop->currency = $request->currency;
         $workshop->max_participants = $request->max_participants;
-        $workshop->is_online = $request->has('is_online');
-        $workshop->location = $request->location ?? '';
-        $workshop->is_active = $request->has('is_active');
+        $workshop->is_online = $request->boolean('is_online');
+        $workshop->is_active = $request->boolean('is_active');
         $workshop->featured_description = $request->featured_description;
-        
-        // التعامل مع الورشة المميزة
-        if ($request->has('is_featured') && $request->is_featured) {
-            $workshop->makeFeatured();
+        $locationValue = trim((string) ($request->location ?? ''));
+        if ($workshop->is_online) {
+            $meetingLink = trim((string) ($request->meeting_link ?? ''));
+            $workshop->meeting_link = $meetingLink !== '' ? $meetingLink : null;
+            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
         } else {
-            $workshop->is_featured = false;
+            $workshop->meeting_link = null;
+            $workshop->location = $locationValue;
         }
         
         // الحقول الجديدة
@@ -205,7 +230,6 @@ class WorkshopController extends Controller
         $workshop->level = $request->level;
         $workshop->duration = $request->duration;
         $workshop->registration_deadline = $request->registration_deadline;
-        $workshop->meeting_link = $request->meeting_link;
         $workshop->address = $request->address ?? '';
         $workshop->content = $request->content ?? '';
         $workshop->what_you_will_learn = $request->what_you_will_learn ?? '';
@@ -213,6 +237,13 @@ class WorkshopController extends Controller
         $workshop->materials_needed = $request->materials_needed ?? '';
         $workshop->instructor_bio = $request->instructor_bio ?? '';
 
+        // التعامل مع الورشة المميزة بعد ضبط الحقول الإلزامية
+        if ($request->has('is_featured') && $request->is_featured) {
+            $workshop->makeFeatured();
+        } else {
+            $workshop->is_featured = false;
+        }
+        
         // تحديث الصورة
         if ($request->hasFile('image')) {
             \Log::info('Processing image upload for workshop', [

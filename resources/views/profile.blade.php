@@ -4,92 +4,590 @@
 
 @php
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 @endphp
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
         <!-- Header Section -->
-        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <div class="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8 rtl:space-x-reverse">
+        <div class="bg-gradient-to-br from-orange-50 via-white to-white border border-orange-100 rounded-2xl shadow-lg p-8 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-40 h-40 bg-orange-200/40 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 right-0 w-52 h-52 bg-orange-100/50 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+
+            <div class="relative flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
                 <!-- Profile Picture -->
                 <div class="relative">
-                    <div class="w-32 h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                    <div class="w-32 h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl ring-8 ring-white/60">
                         @if($user->avatar)
                             <img src="{{ $user->avatar }}" alt="صورة الملف الشخصي" class="w-full h-full rounded-full object-cover">
                         @else
                             {{ substr($user->name, 0, 1) }}
                         @endif
                     </div>
-                    <div class="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center">
+                    <div class="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center shadow-md">
                         <i class="fas fa-check text-white text-sm"></i>
                     </div>
                 </div>
                 
                 <!-- User Info -->
-                <div class="flex-1 text-center md:text-right">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ $user->name }}</h1>
-                    <p class="text-gray-600 mb-4">{{ $user->email }}</p>
-                    @if($user->phone)
-                        <p class="text-gray-600 mb-4">
-                            <i class="fas fa-phone ml-2"></i>
-                            {{ $user->phone }}
-                        </p>
-                    @endif
-                    <div class="flex items-center justify-center md:justify-start space-x-4 rtl:space-x-reverse text-sm text-gray-500">
-                        <span>
-                            <i class="fas fa-calendar-alt ml-1"></i>
+                <div class="flex-1 w-full">
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div class="text-center md:text-right">
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ $user->name }}</h1>
+                            <p class="text-gray-600 mb-2">{{ $user->email }}</p>
+                            @if($user->phone)
+                                <p class="text-gray-600 mb-2">
+                                    <i class="fas fa-phone ml-2 text-orange-500"></i>
+                                    {{ $user->phone }}
+                                </p>
+                            @endif
+                        </div>
+
+                        <!-- Edit Profile Button -->
+                        <div class="flex justify-center md:justify-start">
+                            <button id="editProfileBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 shadow-md hover:shadow-lg">
+                                <i class="fas fa-edit"></i>
+                                <span>تعديل الملف الشخصي</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    @php
+                        $lastActivityAt = $stats['last_activity_at'];
+                        $upcomingCount = $stats['upcoming_workshops_count'];
+                    @endphp
+
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-5 text-sm text-gray-600">
+                        <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-orange-100">
+                            <i class="fas fa-calendar-alt text-orange-500"></i>
                             عضو منذ {{ $user->created_at->format('M Y') }}
                         </span>
+
+                        <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-orange-100">
+                            <i class="fas fa-bolt text-yellow-500"></i>
+                            نقاط التفاعل: <span class="font-semibold text-gray-800">{{ number_format($stats['engagement_score']) }}</span>
+                        </span>
+
+                        <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-orange-100">
+                            <i class="fas fa-clock text-sky-500"></i>
+                            آخر نشاط: {{ $lastActivityAt ? $lastActivityAt->diffForHumans() : 'لم يتم تسجيل نشاط بعد' }}
+                        </span>
+
+                        <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-orange-100">
+                            <i class="fas fa-calendar-check text-green-500"></i>
+                            البرامج القادمة: 
+                            <span class="font-semibold text-gray-800">{{ $upcomingCount }}</span>
+                        </span>
+
                         @if($user->is_admin)
-                            <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-medium">
-                                <i class="fas fa-crown ml-1"></i>
-                                مدير
+                            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-orange-500/10 border border-orange-200 text-orange-700 font-medium">
+                                <i class="fas fa-crown"></i>
+                                مدير الموقع
                             </span>
                         @endif
                     </div>
                 </div>
-                
-                <!-- Edit Profile Button -->
-                <button id="editProfileBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse">
-                    <i class="fas fa-edit"></i>
-                    <span>تعديل الملف الشخصي</span>
-                </button>
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
-                <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-bookmark text-orange-600 text-2xl"></i>
+        <!-- Upcoming Workshops & Smart Suggestions -->
+        @php
+            $insights = [];
+
+            if ($stats['saved_recipes_count'] > $stats['made_recipes_count']) {
+                $insights[] = [
+                    'icon' => 'fa-utensils',
+                    'title' => 'حوّل وصفة محفوظة إلى تجربة',
+                    'description' => 'اختر وصفة محفوظة وخصص لها موعداً هذا الأسبوع لتقليل الفارق بين المحفوظ والمجرّب.',
+                ];
+            }
+
+            if ($stats['upcoming_workshops_count'] === 0) {
+                $insights[] = [
+                    'icon' => 'fa-lightbulb',
+                    'title' => 'استكشف ورشة جديدة',
+                    'description' => 'لا توجد ورشات قادمة حالياً. تصفح الورشات المميزة ودع مهارة جديدة تبدأ معك.',
+                ];
+            } else {
+                $insights[] = [
+                    'icon' => 'fa-calendar-day',
+                    'title' => 'استعد للورشة القادمة',
+                    'description' => 'راجع متطلبات الورشة القادمة وتأكد من تجهيز الأدوات المطلوبة قبل الموعد.',
+                ];
+            }
+
+            if ($stats['reviews_count'] === 0 && $bookedWorkshops->count() > 0) {
+                $insights[] = [
+                    'icon' => 'fa-pen',
+                    'title' => 'شارك تجربتك',
+                    'description' => 'لم تقم بكتابة أي تقييم بعد. اخبر المجتمع برأيك في آخر ورشة حضرتها.',
+                ];
+            } else {
+                $insights[] = [
+                    'icon' => 'fa-seedling',
+                    'title' => 'احفظ تقدمك',
+                    'description' => 'استمر في مشاركة التقييمات لتبني ملفاً شخصياً غنيّاً يساعد بقية المتعلمين.',
+                ];
+            }
+            $statusLabels = [
+                'confirmed' => 'مؤكدة',
+                'pending' => 'قيد الانتظار',
+                'cancelled' => 'ملغاة',
+            ];
+
+            $statusClasses = [
+                'confirmed' => 'bg-green-100 text-green-700',
+                'pending' => 'bg-yellow-100 text-yellow-700',
+                'cancelled' => 'bg-red-100 text-red-700',
+            ];
+
+            $levelLabels = [
+                'starter' => 'مبتدئ',
+                'bronze' => 'برونزي',
+                'silver' => 'فضي',
+                'gold' => 'ذهبي',
+                'platinum' => 'بلاتيني',
+                'متحمس' => 'متحمس',
+                'متمرّس' => 'متمرّس',
+                'أسطورة التفاعل' => 'أسطورة التفاعل',
+            ];
+        @endphp
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg p-6 xl:col-span-2 hover:shadow-xl transition-shadow">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">الورشة القادمة</h2>
+                        <p class="text-gray-500 text-sm">تابع برنامجك التدريبي واستعد لكل التفاصيل.</p>
+                    </div>
+                    <a href="{{ route('workshops') }}" class="inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-medium">
+                        <span>تصفح جميع الورشات</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ $stats['saved_recipes_count'] }}</h3>
-                <p class="text-gray-600">وصفة محفوظة</p>
+
+                @if($nextWorkshop && $nextWorkshop->workshop)
+                    <div class="bg-gradient-to-r from-orange-500/10 to-orange-500/0 border border-orange-100 rounded-2xl p-6 mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-orange-500/10 text-orange-600 text-xs font-semibold">
+                                        الورشة التالية
+                                    </span>
+                                    @if($nextWorkshop->status)
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusClasses[$nextWorkshop->status] ?? 'bg-gray-100 text-gray-600' }}">
+                                            <i class="fas fa-circle text-[8px] ml-1"></i>
+                                            {{ $statusLabels[$nextWorkshop->status] ?? $nextWorkshop->status }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-1">{{ $nextWorkshop->workshop->title }}</h3>
+                                <p class="text-gray-500 text-sm mb-4">{{ Str::limit($nextWorkshop->workshop->description, 120) }}</p>
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                    <span class="inline-flex items-center gap-2">
+                                        <i class="fas fa-calendar text-orange-500"></i>
+                                        {{ optional($nextWorkshop->workshop->start_date)->format('d M Y') }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-2">
+                                        <i class="fas fa-clock text-orange-500"></i>
+                                        {{ optional($nextWorkshop->workshop->start_date)->format('h:i A') }}
+                                    </span>
+                                    @if($nextWorkshop->workshop->location)
+                                        <span class="inline-flex items-center gap-2">
+                                            <i class="fas fa-map-marker-alt text-orange-500"></i>
+                                            {{ $nextWorkshop->workshop->location }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-start md:items-end gap-3 text-sm text-gray-600">
+                                @if($nextWorkshop->workshop->instructor)
+                                    <span class="inline-flex items-center gap-2">
+                                        <i class="fas fa-user text-orange-500"></i>
+                                        {{ $nextWorkshop->workshop->instructor }}
+                                    </span>
+                                @endif
+                                @if($nextWorkshop->workshop->duration)
+                                    <span class="inline-flex items-center gap-2">
+                                        <i class="fas fa-hourglass-half text-orange-500"></i>
+                                        {{ $nextWorkshop->workshop->duration }}
+                                    </span>
+                                @endif
+                                <a href="{{ route('workshops') }}#{{ $nextWorkshop->workshop->id }}" class="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold">
+                                    تفاصيل الورشة
+                                    <i class="fas fa-arrow-left text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($upcomingWorkshops->count() > 1)
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-600">ورشات أخرى في التقويم</h4>
+                            <div class="space-y-3">
+                                @foreach($upcomingWorkshops->skip(1)->take(3) as $booking)
+                                    @if($booking->workshop)
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                                            <div>
+                                                <p class="font-semibold text-gray-800">{{ $booking->workshop->title }}</p>
+                                                <p class="text-xs text-gray-500">
+                                                    {{ optional($booking->workshop->start_date)->format('d M Y h:i A') }}
+                                                </p>
+                                            </div>
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusClasses[$booking->status] ?? 'bg-gray-100 text-gray-600' }}">
+                                                {{ $statusLabels[$booking->status] ?? $booking->status }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    <div class="flex flex-col items-center justify-center text-center py-10">
+                        <div class="w-16 h-16 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center mb-4">
+                            <i class="fas fa-calendar-times text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">لا توجد ورشات قادمة</h3>
+                        <p class="text-gray-500 text-sm mb-4">
+                            احجز مقعدك في ورشة جديدة لتواصل تطوير مهاراتك.
+                        </p>
+                        <a href="{{ route('workshops') }}" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl transition-all">
+                            <i class="fas fa-search"></i>
+                            اكتشف ورشات جديدة
+                        </a>
+                    </div>
+                @endif
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">اقتراحات سريعة</h3>
+                <p class="text-sm text-gray-500 mb-4">
+                    توصيات مبنية على نشاطك الحالي لمساعدتك في مواصلة التقدم.
+                </p>
+                <ul class="space-y-4">
+                    @foreach($insights as $insight)
+                        <li class="flex items-start gap-3">
+                            <span class="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-50 text-orange-500">
+                                <i class="fas {{ $insight['icon'] }}"></i>
+                            </span>
+                            <div>
+                                <p class="font-semibold text-gray-800">{{ $insight['title'] }}</p>
+                                <p class="text-sm text-gray-500">{{ $insight['description'] }}</p>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <!-- Achievements Section -->
+        @if(!empty($achievements))
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-shadow">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">إنجازاتك الشخصية</h2>
+                        <p class="text-gray-500 text-sm">تابع مستويات التقدم عبر الحفظ والتجربة وحجوزات الورشات.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    @foreach($achievements as $achievement)
+                        <div class="border border-gray-100 rounded-2xl p-5 bg-gradient-to-br from-white to-orange-50/10 hover:shadow-lg transition-shadow">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-orange-100 text-orange-500">
+                                    <i class="fas fa-{{ $achievement['icon'] }} text-xl"></i>
+                                </span>
+                                <div>
+                                    <p class="text-sm text-gray-500 uppercase tracking-wide font-semibold">{{ $achievement['title'] }}</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">{{ $achievement['count'] }}</h3>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-4">{{ $achievement['description'] }}</p>
+                            <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                <span>المستوى الحالي</span>
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-semibold">
+                                    <i class="fas fa-medal"></i>
+                                    {{ $levelLabels[$achievement['current_level']] ?? $achievement['current_level'] }}
+                                </span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+                                <div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" style="width: {{ $achievement['progress'] }}%;"></div>
+                            </div>
+                            @if($achievement['next_goal'])
+                                <p class="text-xs text-gray-500">
+                                    تبقّى <span class="font-semibold text-gray-700">{{ max(0, $achievement['next_goal'] - $achievement['count']) }}</span> للوصول إلى المستوى التالي ({{ $achievement['next_goal'] }}).
+                                </p>
+                            @else
+                                <p class="text-xs text-orange-600 font-semibold">
+                                    تهانينا! وصلت إلى أعلى مستوى لهذا الإنجاز.
+                                </p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        <!-- Activity Timeline -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-shadow">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">سجل النشاط</h2>
+                    <p class="text-gray-500 text-sm">أحدث الحركات من حفظ الوصفات وتجربة الأطباق وحجوزات الورشات.</p>
+                </div>
+                <span class="inline-flex items-center gap-2 text-sm text-gray-500">
+                    <i class="fas fa-history text-orange-500"></i>
+                    {{ $activityFeed->count() }} نشاط{{ $activityFeed->count() === 1 ? '' : '' }} موثق
+                </span>
+            </div>
+
+            @if($activityFeed->isEmpty())
+                <div class="flex flex-col items-center justify-center text-center py-10">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mb-4">
+                        <i class="fas fa-clipboard-list text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">لا يوجد نشاط مسجل بعد</h3>
+                    <p class="text-gray-500 text-sm">ابدأ بحفظ وصفات أو حجز ورشات لتظهر تحديثاتك هنا.</p>
+                </div>
+            @else
+                @php
+                    $activityIcons = [
+                        'saved_recipe' => ['icon' => 'fa-bookmark', 'classes' => 'bg-orange-100 text-orange-500'],
+                        'made_recipe' => ['icon' => 'fa-check-circle', 'classes' => 'bg-green-100 text-green-500'],
+                        'workshop_booking' => ['icon' => 'fa-graduation-cap', 'classes' => 'bg-sky-100 text-sky-500'],
+                    ];
+                @endphp
+                <div class="space-y-6">
+                    @foreach($activityFeed as $activity)
+                        <div class="flex items-start gap-4">
+                            @php
+                                $iconData = $activityIcons[$activity['type']] ?? ['icon' => 'fa-circle', 'classes' => 'bg-gray-100 text-gray-400'];
+                            @endphp
+                            <span class="flex items-center justify-center w-12 h-12 rounded-xl {{ $iconData['classes'] }}">
+                                <i class="fas {{ $iconData['icon'] }} text-lg"></i>
+                            </span>
+                            <div class="flex-1 border border-gray-100 rounded-2xl p-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                                    <p class="font-semibold text-gray-800">
+                                        @switch($activity['type'])
+                                            @case('saved_recipe')
+                                                حفظت وصفة جديدة: 
+                                                <a href="{{ route('recipe.show', $activity['meta']['slug'] ?? '#') }}" class="text-orange-600 hover:text-orange-700">
+                                                    {{ $activity['title'] }}
+                                                </a>
+                                                @break
+                                            @case('made_recipe')
+                                                أنهيت تحضير: 
+                                                <a href="{{ route('recipe.show', $activity['meta']['slug'] ?? '#') }}" class="text-orange-600 hover:text-orange-700">
+                                                    {{ $activity['title'] }}
+                                                </a>
+                                                @break
+                                            @case('workshop_booking')
+                                                تحديث على ورشة: 
+                                                <span class="text-orange-600">{{ $activity['title'] }}</span>
+                                                @break
+                                            @default
+                                                نشاط جديد: {{ $activity['title'] }}
+                                        @endswitch
+                                    </p>
+                                    <span class="text-xs text-gray-400">
+                                        {{ optional($activity['timestamp'])->diffForHumans() }}
+                                    </span>
+                                </div>
+
+                                @if($activity['type'] === 'workshop_booking')
+                                    <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                        @php
+                                            $activityStatus = $activity['meta']['status'] ?? '';
+                                            $activityStatusClass = $statusClasses[$activityStatus] ?? 'bg-gray-100 text-gray-500';
+                                        @endphp
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full {{ $activityStatusClass }}">
+                                            حالة الحجز: {{ $statusLabels[$activity['meta']['status'] ?? ''] ?? ($activity['meta']['status'] ?? 'غير محدد') }}
+                                        </span>
+                                        @if(!empty($activity['meta']['start_date']))
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-calendar-alt text-orange-500"></i>
+                                                يبدأ في {{ optional($activity['meta']['start_date'])->format('d M Y h:i A') }}
+                                            </span>
+                                        @endif
+                                        @if(!empty($activity['meta']['end_date']))
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-clock text-orange-500"></i>
+                                                ينتهي {{ optional($activity['meta']['end_date'])->format('d M Y h:i A') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                        @if(!empty($activity['meta']['category']))
+                                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                                <i class="fas fa-tag text-gray-500"></i>
+                                                {{ $activity['meta']['category'] }}
+                                            </span>
+                                        @endif
+                                        @if(!empty($activity['meta']['recipe_id']))
+                                            <span class="inline-flex items-center gap-1 text-gray-500">
+                                                <i class="fas fa-hashtag text-orange-400"></i>
+                                                رقم الوصفة: {{ $activity['meta']['recipe_id'] }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="flex items-center justify-center w-14 h-14 rounded-xl bg-orange-100 text-orange-600">
+                        <i class="fas fa-bookmark text-2xl"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-orange-500 font-semibold">الوصفات المحفوظة</p>
+                        <h3 class="text-3xl font-extrabold text-gray-800" id="saved-count-value">{{ $stats['saved_recipes_count'] }}</h3>
+                    </div>
+                </div>
+                <p class="text-gray-500 text-sm">
+                    {{ $stats['saved_recipes_count'] > 0 ? 'مكتبة وصفات متنامية بانتظار اكتشافاتها القادمة.' : 'ابدأ بحفظ الوصفات المفضلة لديك لتصل إليها سريعاً.' }}
+                </p>
             </div>
             
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
-                <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+            @php
+                $completionRate = $stats['saved_recipes_count'] > 0
+                    ? min(100, round(($stats['made_recipes_count'] / max(1, $stats['saved_recipes_count'])) * 100))
+                    : ($stats['made_recipes_count'] > 0 ? 100 : 0);
+            @endphp
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="flex items-center justify-center w-14 h-14 rounded-xl bg-green-100 text-green-600">
+                        <i class="fas fa-check-circle text-2xl"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-green-500 font-semibold">الوصفات المجربة</p>
+                        <h3 class="text-3xl font-extrabold text-gray-800" id="made-count-value">{{ $stats['made_recipes_count'] }}</h3>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ $stats['made_recipes_count'] }}</h3>
-                <p class="text-gray-600">وصفة مصنوعة</p>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>نسبة تجربة المحفوظات</span>
+                        <span class="font-semibold text-gray-700" id="completion-rate-value">{{ $completionRate }}%</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full" id="completion-rate-bar" style="width: {{ $completionRate }}%;"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
-                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-graduation-cap text-blue-600 text-2xl"></i>
+            @php
+                $bookingTotal = max(1, $stats['booked_workshops_count']);
+                $confirmedPercent = round(($stats['confirmed_workshops_count'] / $bookingTotal) * 100);
+                $pendingPercent = round(($stats['pending_workshops_count'] / $bookingTotal) * 100);
+            @endphp
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="flex items-center justify-center w-14 h-14 rounded-xl bg-blue-100 text-blue-600">
+                        <i class="fas fa-graduation-cap text-2xl"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-blue-500 font-semibold">حجوزات الورشات</p>
+                        <h3 class="text-3xl font-extrabold text-gray-800" id="booked-count-value">{{ $stats['booked_workshops_count'] }}</h3>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ $stats['booked_workshops_count'] }}</h3>
-                <p class="text-gray-600">ورشة محجوزة</p>
+                <div class="space-y-2 text-xs text-gray-500">
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center gap-1 text-green-600">
+                            <i class="fas fa-check-circle"></i> مؤكدة
+                        </span>
+                        <span class="font-semibold text-gray-700">{{ $stats['confirmed_workshops_count'] }} ({{ $confirmedPercent }}%)</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center gap-1 text-yellow-600">
+                            <i class="fas fa-hourglass-half"></i> قيد الانتظار
+                        </span>
+                        <span class="font-semibold text-gray-700">{{ $stats['pending_workshops_count'] }} ({{ $pendingPercent }}%)</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center gap-1 text-red-600">
+                            <i class="fas fa-times-circle"></i> ملغاة
+                        </span>
+                        <span class="font-semibold text-gray-700">{{ $stats['cancelled_workshops_count'] }}</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
-                <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-star text-purple-600 text-2xl"></i>
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="flex items-center justify-center w-14 h-14 rounded-xl bg-purple-100 text-purple-600">
+                        <i class="fas fa-star text-2xl"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-purple-500 font-semibold">التقييمات المرسلة</p>
+                        <h3 class="text-3xl font-extrabold text-gray-800">{{ $stats['reviews_count'] }}</h3>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ $stats['reviews_count'] }}</h3>
-                <p class="text-gray-600">تقييم</p>
+                <p class="text-gray-500 text-sm">
+                    شاركت رأيك في الورشات لتحسين التجربة لبقية المجتمع.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="flex items-center justify-center w-14 h-14 rounded-xl bg-sky-100 text-sky-600">
+                        <i class="fas fa-calendar-check text-2xl"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-sky-500 font-semibold">ورشاتك القادمة</p>
+                        <h3 class="text-3xl font-extrabold text-gray-800">{{ $stats['upcoming_workshops_count'] }}</h3>
+                    </div>
+                </div>
+                @if($nextWorkshop && $nextWorkshop->workshop)
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        الورشة التالية: <span class="font-semibold text-gray-700">{{ $nextWorkshop->workshop->title }}</span><br>
+                        <span class="text-xs">{{ optional($nextWorkshop->workshop->start_date)->format('d M Y h:i A') }}</span>
+                    </p>
+                @else
+                    <p class="text-gray-500 text-sm">
+                        لا توجد ورشات قادمة حالياً. استكشف الدورات الجديدة وابدأ بالحجز.
+                    </p>
+                @endif
+            </div>
+
+            @php
+                $engagementLevel = 'مبتدئ';
+                if ($stats['engagement_score'] >= 60) {
+                    $engagementLevel = 'متحمس';
+                }
+                if ($stats['engagement_score'] >= 120) {
+                    $engagementLevel = 'متمرّس';
+                }
+                if ($stats['engagement_score'] >= 200) {
+                    $engagementLevel = 'أسطورة التفاعل';
+                }
+            @endphp
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="flex items-center justify-center w-14 h-14 rounded-xl bg-amber-100 text-amber-600">
+                        <i class="fas fa-fire text-2xl"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm uppercase tracking-wider text-amber-500 font-semibold">مؤشر التفاعل</p>
+                        <h3 class="text-3xl font-extrabold text-gray-800" id="engagement-score-value">{{ number_format($stats['engagement_score']) }}</h3>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+                    <span>مستواك الحالي</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-medium" id="engagement-level-label">
+                        <i class="fas fa-trophy"></i> {{ $engagementLevel }}
+                    </span>
+                </div>
+                <p class="text-gray-500 text-sm">
+                    داوم على الحفظ والتجربة والحجز للحفاظ على نسق التفاعل المرتفع.
+                </p>
             </div>
         </div>
 
@@ -97,34 +595,81 @@ use Illuminate\Support\Facades\Storage;
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
-                <nav class="flex space-x-8 rtl:space-x-reverse px-8">
-                <button class="tab-btn active py-4 px-2 border-b-2 border-orange-500 text-orange-600 font-medium" data-tab="workshops">
-                        <i class="fas fa-graduation-cap ml-2"></i>
-                        الورشات المحجوزة
-                    </button>
-                    <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="saved">
-                        <i class="fas fa-bookmark ml-2"></i>
-                        الوصفات المحفوظة
-                    </button>
-
-                    <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="made">
-                        <i class="fas fa-check-circle ml-2"></i>
-                        الوصفات المصنوعة
+                <nav class="flex flex-wrap items-center gap-4 px-8">
+                    <button class="tab-btn active inline-flex items-center gap-3 py-4 px-2 border-b-2 border-orange-500 text-orange-600 font-medium transition-colors" data-tab="workshops" type="button">
+                        <span class="inline-flex items-center gap-2">
+                            <i class="fas fa-graduation-cap"></i>
+                            الورشات المحجوزة
+                        </span>
+                        <span class="tab-count inline-flex items-center justify-center min-w-[32px] h-7 px-2 rounded-full bg-orange-100 text-orange-600 text-sm font-semibold">
+                            {{ $stats['booked_workshops_count'] }}
+                        </span>
                     </button>
 
- 
+                    <button class="tab-btn inline-flex items-center gap-3 py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium transition-colors" data-tab="saved" type="button">
+                        <span class="inline-flex items-center gap-2">
+                            <i class="fas fa-bookmark"></i>
+                            الوصفات المحفوظة
+                        </span>
+                        <span class="tab-count inline-flex items-center justify-center min-w-[32px] h-7 px-2 rounded-full bg-gray-100 text-gray-600 text-sm font-semibold">
+                            {{ $stats['saved_recipes_count'] }}
+                        </span>
+                    </button>
 
+                    <button class="tab-btn inline-flex items-center gap-3 py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium transition-colors" data-tab="made" type="button">
+                        <span class="inline-flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i>
+                            الوصفات المصنوعة
+                        </span>
+                        <span class="tab-count inline-flex items-center justify-center min-w-[32px] h-7 px-2 rounded-full bg-gray-100 text-gray-600 text-sm font-semibold">
+                            {{ $stats['made_recipes_count'] }}
+                        </span>
+                    </button>
+
+                    <button class="tab-btn inline-flex items-center gap-3 py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium transition-colors" data-tab="reviews" type="button">
+                        <span class="inline-flex items-center gap-2">
+                            <i class="fas fa-star"></i>
+                            تقييمات الورشات
+                        </span>
+                        <span class="tab-count inline-flex items-center justify-center min-w-[32px] h-7 px-2 rounded-full bg-gray-100 text-gray-600 text-sm font-semibold">
+                            {{ $stats['reviews_count'] }}
+                        </span>
+                    </button>
                 </nav>
             </div>
 
             <!-- Tab Content -->
             <div class="p-8">
                 <!-- Saved Recipes Tab -->
-                <div id="saved-tab" class="tab-content hidden">
+                <div id="saved-tab" class="tab-content hidden" data-tab-content="saved">
                     @if($savedRecipes->count() > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                            <div class="w-full md:w-1/2">
+                                <label for="savedSearch" class="text-sm font-medium text-gray-600 mb-2 block">ابحث داخل وصفاتك المحفوظة</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input
+                                        id="savedSearch"
+                                        type="search"
+                                        placeholder="ابحث باسم الوصفة أو التصنيف..."
+                                        class="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+                                        data-filter-input="saved"
+                                        autocomplete="off"
+                                    >
+                                    <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600" data-clear-filter="saved">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 md:text-right" id="saved-search-feedback">جميع الوصفات معروضة.</p>
+                        </div>
+                        <div id="savedCardsWrapper" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($savedRecipes as $recipe)
-                                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group recipe-card">
+                                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group recipe-card"
+                                     data-title="{{ Str::lower($recipe->title) }}"
+                                     data-category="{{ Str::lower($recipe->category->name ?? '') }}">
                                     <div class="relative overflow-hidden">
                                         @if($recipe->image || $recipe->image_url)
                                             <img src="{{ $recipe->image ? Storage::disk('public')->url($recipe->image) : $recipe->image_url }}" 
@@ -177,7 +722,7 @@ use Illuminate\Support\Facades\Storage;
                                             <div class="flex items-center space-x-2 rtl:space-x-reverse">
                                                 <div class="flex items-center text-yellow-500">
                                                     <i class="fas fa-star text-sm"></i>
-                                                    <span class="text-gray-600 text-sm mr-1">4.5</span>
+                                                    <span class="text-gray-600 text-sm mr-1">{{ number_format($recipe->rating ?? 4.5, 1) }}</span>
                                                 </div>
                                                 <span class="text-gray-400">•</span>
                                                 <span class="text-gray-500 text-sm">{{ $recipe->category->name ?? 'عام' }}</span>
@@ -202,6 +747,11 @@ use Illuminate\Support\Facades\Storage;
                                 </div>
                             @endforeach
                         </div>
+                        <div id="saved-empty-filter-message" class="hidden text-center py-12">
+                            <i class="fas fa-search text-gray-300 text-6xl mb-4"></i>
+                            <h3 class="text-xl font-medium text-gray-500 mb-2">لم يتم العثور على نتائج</h3>
+                            <p class="text-gray-400">حاول تغيير كلمة البحث أو مسح التصفية الحالية.</p>
+                        </div>
                     @else
                         <div class="text-center py-12">
                             <i class="fas fa-bookmark text-gray-300 text-6xl mb-4"></i>
@@ -212,11 +762,35 @@ use Illuminate\Support\Facades\Storage;
                 </div>
 
                 <!-- Made Recipes Tab -->
-                <div id="made-tab" class="tab-content hidden">
+                <div id="made-tab" class="tab-content hidden" data-tab-content="made">
                     @if($madeRecipes->count() > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                            <div class="w-full md:w-1/2">
+                                <label for="madeSearch" class="text-sm font-medium text-gray-600 mb-2 block">ابحث داخل الوصفات التي قمت بتحضيرها</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input
+                                        id="madeSearch"
+                                        type="search"
+                                        placeholder="ابحث باسم الوصفة أو التصنيف..."
+                                        class="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
+                                        data-filter-input="made"
+                                        autocomplete="off"
+                                    >
+                                    <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600" data-clear-filter="made">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 md:text-right" id="made-search-feedback">جميع الوصفات المعروضة سبق لك تحضيرها.</p>
+                        </div>
+                        <div id="madeCardsWrapper" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($madeRecipes as $recipe)
-                                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group recipe-card">
+                                <div class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 group recipe-card"
+                                     data-title="{{ Str::lower($recipe->title) }}"
+                                     data-category="{{ Str::lower($recipe->category->name ?? '') }}">
                                     <div class="relative overflow-hidden">
                                         @if($recipe->image || $recipe->image_url)
                                             <img src="{{ $recipe->image ? Storage::disk('public')->url($recipe->image) : $recipe->image_url }}" 
@@ -273,7 +847,7 @@ use Illuminate\Support\Facades\Storage;
                                             <div class="flex items-center space-x-2 rtl:space-x-reverse">
                                                 <div class="flex items-center text-yellow-500">
                                                     <i class="fas fa-star text-sm"></i>
-                                                    <span class="text-gray-600 text-sm mr-1">4.5</span>
+                                                    <span class="text-gray-600 text-sm mr-1">{{ number_format($recipe->rating ?? 4.5, 1) }}</span>
                                                 </div>
                                                 <span class="text-gray-400">•</span>
                                                 <span class="text-gray-500 text-sm">{{ $recipe->category->name ?? 'عام' }}</span>
@@ -486,14 +1060,19 @@ use Illuminate\Support\Facades\Storage;
                                 </div>
                             @endforeach
                         </div>
+                        <div id="made-empty-filter-message" class="hidden text-center py-12">
+                            <i class="fas fa-search text-gray-300 text-6xl mb-4"></i>
+                            <h3 class="text-xl font-medium text-gray-500 mb-2">لا توجد نتائج مطابقة</h3>
+                            <p class="text-gray-400">قم بمسح التصفية للعودة إلى جميع الوصفات المصنوعة.</p>
+                        </div>
                     @else
                         <div class="text-center py-12">
-                            <i class="fas fa-graduation-cap text-gray-300 text-6xl mb-4"></i>
-                            <h3 class="text-xl font-medium text-gray-500 mb-2">لا توجد ورشات محجوزة</h3>
-                            <p class="text-gray-400">احجز ورشة عمل لتعلم مهارات جديدة</p>
-                            <a href="{{ route('workshops') }}" class="inline-flex items-center px-6 py-3 mt-4 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors">
-                                <i class="fas fa-graduation-cap ml-2"></i>
-                                تصفح الورشات
+                            <i class="fas fa-utensils text-gray-300 text-6xl mb-4"></i>
+                            <h3 class="text-xl font-medium text-gray-500 mb-2">لا توجد وصفات مصنوعة بعد</h3>
+                            <p class="text-gray-400">اختر وصفة محفوظة وابدأ تجربتها لتظهر هنا.</p>
+                            <a href="{{ route('recipes') }}" class="inline-flex items-center px-6 py-3 mt-4 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
+                                <i class="fas fa-utensils ml-2"></i>
+                                استكشف الوصفات
                             </a>
                         </div>
                     @endif
@@ -677,30 +1256,56 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tab functionality
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+
+    const setActiveTab = (button) => {
+        if (!button) {
+            return;
+        }
+
+        const targetTab = button.getAttribute('data-tab');
+
+        tabBtns.forEach(b => {
+            b.classList.remove('active', 'border-orange-500', 'text-orange-600');
+            b.classList.add('border-transparent', 'text-gray-500');
+
+            const countBadge = b.querySelector('.tab-count');
+            if (countBadge) {
+                countBadge.classList.remove('bg-orange-100', 'text-orange-600');
+                countBadge.classList.add('bg-gray-100', 'text-gray-600');
+            }
+        });
+
+        button.classList.add('active', 'border-orange-500', 'text-orange-600');
+        button.classList.remove('border-transparent', 'text-gray-500');
+
+        const activeBadge = button.querySelector('.tab-count');
+        if (activeBadge) {
+            activeBadge.classList.remove('bg-gray-100', 'text-gray-600');
+            activeBadge.classList.add('bg-orange-100', 'text-orange-600');
+        }
+
+        tabContents.forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        const targetContent = document.getElementById(`${targetTab}-tab`);
+        if (targetContent) {
+            targetContent.classList.remove('hidden');
+        }
+
+        document.dispatchEvent(new CustomEvent('profile:tab-changed', {
+            detail: { tab: targetTab },
+        }));
+    };
     
     tabBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            const targetTab = this.getAttribute('data-tab');
-            
-            // Remove active class from all tabs
-            tabBtns.forEach(b => {
-                b.classList.remove('active', 'border-orange-500', 'text-orange-600');
-                b.classList.add('border-transparent', 'text-gray-500');
-            });
-            
-            // Add active class to clicked tab
-            this.classList.add('active', 'border-orange-500', 'text-orange-600');
-            this.classList.remove('border-transparent', 'text-gray-500');
-            
-            // Hide all tab contents
-            tabContents.forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // Show target tab content
-            document.getElementById(targetTab + '-tab').classList.remove('hidden');
+            setActiveTab(this);
         });
     });
+
+    const initialActive = document.querySelector('.tab-btn.active') || tabBtns[0];
+    setActiveTab(initialActive);
     
     // Edit profile modal
     const editProfileBtn = document.getElementById('editProfileBtn');
@@ -726,6 +1331,9 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('hidden');
         }
     });
+
+    // تهيئة البحث المتقدم داخل التابات
+    initializeSearchFilters();
     
     // تهيئة أزرار إزالة الوصفات المحفوظة
     initializeRemoveButtons();
@@ -765,6 +1373,175 @@ function showToast(message, type = 'info') {
             toast.remove();
         }, 300);
     }, 3000);
+}
+
+/**
+ * يهيئ البحث والتصفية داخل تبويبات الوصفات
+ */
+function initializeSearchFilters() {
+    const inputs = document.querySelectorAll('[data-filter-input]');
+
+    if (!inputs.length) {
+        return;
+    }
+
+    inputs.forEach(input => {
+        const collection = input.dataset.filterInput;
+        if (!collection) {
+            return;
+        }
+
+        const wrapper = document.getElementById(`${collection}CardsWrapper`);
+        const feedback = document.getElementById(`${collection}-search-feedback`);
+        const clearBtn = document.querySelector(`[data-clear-filter="${collection}"]`);
+        const emptyFilterMsg = document.getElementById(`${collection}-empty-filter-message`);
+
+        if (!wrapper) {
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                });
+            }
+            return;
+        }
+
+        const applyFilter = () => {
+            const query = input.value.trim().toLowerCase();
+            const cards = Array.from(wrapper.querySelectorAll('.recipe-card'));
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = (card.dataset.title || '').toLowerCase();
+                const category = (card.dataset.category || '').toLowerCase();
+
+                if (!query || title.includes(query) || category.includes(query)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            if (feedback) {
+                if (cards.length === 0) {
+                    feedback.textContent = 'لا توجد عناصر متاحة حالياً.';
+                } else if (query) {
+                    feedback.textContent = visibleCount > 0
+                        ? `تم العثور على ${visibleCount} من أصل ${cards.length} نتيجة مطابقة.`
+                        : 'لا توجد وصفات مطابقة للبحث الحالي.';
+                } else {
+                    feedback.textContent = 'جميع الوصفات معروضة.';
+                }
+            }
+
+            if (emptyFilterMsg) {
+                if (visibleCount === 0 && cards.length > 0) {
+                    emptyFilterMsg.classList.remove('hidden');
+                } else {
+                    emptyFilterMsg.classList.add('hidden');
+                }
+            }
+
+            document.dispatchEvent(new CustomEvent('profile:filter-updated', {
+                detail: { collection, visible: visibleCount, total: cards.length },
+            }));
+        };
+
+        input.addEventListener('input', applyFilter);
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (!input.value) {
+                    return;
+                }
+                input.value = '';
+                applyFilter();
+            });
+        }
+
+        document.addEventListener('profile:collection-changed', event => {
+            if (event.detail?.collection === collection) {
+                applyFilter();
+            }
+        });
+
+        applyFilter();
+    });
+}
+
+/**
+ * يعيد حساب مؤشر التفاعل اعتماداً على الأرقام الحالية
+ */
+function recalculateEngagementScore() {
+    const savedValue = parseInt(document.getElementById('saved-count-value')?.textContent || '0', 10) || 0;
+    const madeValue = parseInt(document.getElementById('made-count-value')?.textContent || '0', 10) || 0;
+    const bookedValue = parseInt(document.getElementById('booked-count-value')?.textContent || '0', 10) || 0;
+
+    const score = (savedValue * 2) + (madeValue * 3) + (bookedValue * 4);
+    const scoreElement = document.getElementById('engagement-score-value');
+    if (scoreElement) {
+        scoreElement.textContent = new Intl.NumberFormat().format(score);
+    }
+
+    const levelElement = document.getElementById('engagement-level-label');
+    if (levelElement) {
+        let levelText = 'مبتدئ';
+        if (score >= 200) {
+            levelText = 'أسطورة التفاعل';
+        } else if (score >= 120) {
+            levelText = 'متمرّس';
+        } else if (score >= 60) {
+            levelText = 'متحمس';
+        }
+        levelElement.innerHTML = `<i class="fas fa-trophy"></i> ${levelText}`;
+    }
+}
+
+/**
+ * يعدّل العدادات بعد أي تغيير في عدد العناصر
+ */
+function adjustCollectionCount(collection, delta) {
+    if (!delta) {
+        return;
+    }
+
+    const tabBadge = document.querySelector(`.tab-btn[data-tab="${collection}"] .tab-count`);
+    if (tabBadge) {
+        const current = parseInt(tabBadge.textContent || '0', 10) || 0;
+        tabBadge.textContent = Math.max(0, current + delta);
+    }
+
+    const statIds = {
+        saved: 'saved-count-value',
+        made: 'made-count-value',
+    };
+    const statId = statIds[collection];
+    if (statId) {
+        const element = document.getElementById(statId);
+        if (element) {
+            const current = parseInt(element.textContent || '0', 10) || 0;
+            element.textContent = Math.max(0, current + delta);
+        }
+    }
+
+    const savedValue = parseInt(document.getElementById('saved-count-value')?.textContent || '0', 10) || 0;
+    const madeValue = parseInt(document.getElementById('made-count-value')?.textContent || '0', 10) || 0;
+
+    const completionRateValue = document.getElementById('completion-rate-value');
+    const completionRateBar = document.getElementById('completion-rate-bar');
+
+    if (completionRateValue && completionRateBar) {
+        let completionRate = 0;
+        if (savedValue > 0) {
+            completionRate = Math.min(100, Math.round((madeValue / savedValue) * 100));
+        } else if (madeValue > 0) {
+            completionRate = 100;
+        }
+        completionRateValue.textContent = `${completionRate}%`;
+        completionRateBar.style.width = `${completionRate}%`;
+    }
+
+    recalculateEngagementScore();
 }
 
 /**
@@ -851,11 +1628,16 @@ async function handleRemoveRecipe(button, recipeId) {
             
             setTimeout(() => {
                 cardContainer.remove();
+
+                adjustCollectionCount('saved', -1);
+                document.dispatchEvent(new CustomEvent('profile:collection-changed', {
+                    detail: { collection: 'saved' },
+                }));
                 
-                // التحقق من وجود وصفات أخرى
-                const remainingCards = document.querySelectorAll('.recipe-card');
-                if (remainingCards.length === 0) {
-                    // إظهار رسالة عدم وجود وصفات
+                const cardsWrapper = document.getElementById('savedCardsWrapper');
+                const remainingCards = cardsWrapper ? cardsWrapper.querySelectorAll('.recipe-card') : [];
+
+                if (!remainingCards || remainingCards.length === 0) {
                     const tabContent = document.getElementById('saved-tab');
                     if (tabContent) {
                         tabContent.innerHTML = `
@@ -1132,18 +1914,27 @@ async function handleRemoveMadeRecipe(button, recipeId) {
             
             setTimeout(() => {
                 cardContainer.remove();
+
+                adjustCollectionCount('made', -1);
+                document.dispatchEvent(new CustomEvent('profile:collection-changed', {
+                    detail: { collection: 'made' },
+                }));
                 
-                // التحقق من وجود وصفات أخرى
-                const remainingCards = document.querySelectorAll('#made-tab .recipe-card');
-                if (remainingCards.length === 0) {
-                    // إظهار رسالة عدم وجود وصفات
+                const cardsWrapper = document.getElementById('madeCardsWrapper');
+                const remainingCards = cardsWrapper ? cardsWrapper.querySelectorAll('.recipe-card') : [];
+
+                if (!remainingCards || remainingCards.length === 0) {
                     const tabContent = document.getElementById('made-tab');
                     if (tabContent) {
                         tabContent.innerHTML = `
                             <div class="text-center py-12">
-                                <i class="fas fa-check-circle text-gray-300 text-6xl mb-4"></i>
-                                <h3 class="text-xl font-medium text-gray-500 mb-2">لا توجد وصفات مصنوعة</h3>
-                                <p class="text-gray-400">ابدأ بصنع الوصفات وشاركنا تجربتك</p>
+                                <i class="fas fa-utensils text-gray-300 text-6xl mb-4"></i>
+                                <h3 class="text-xl font-medium text-gray-500 mb-2">لا توجد وصفات مصنوعة بعد</h3>
+                                <p class="text-gray-400">اختر وصفة محفوظة وابدأ تجربتها لتظهر هنا.</p>
+                                <a href="{{ route('recipes') }}" class="inline-flex items-center px-6 py-3 mt-4 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-utensils ml-2"></i>
+                                    استكشف الوصفات
+                                </a>
                             </div>
                         `;
                     }
@@ -1522,4 +2313,3 @@ function hideMadeConfirmationModal() {
 </style>
 @endpush
 @endsection
-

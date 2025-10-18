@@ -197,6 +197,7 @@
     @php 
         $featuredIsFull = $featuredWorkshop->bookings_count >= $featuredWorkshop->max_participants; 
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
+        $featuredIsCompleted = $featuredWorkshop->is_completed;
     @endphp
     <section class="container mx-auto px-4 py-16">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
@@ -237,7 +238,12 @@
                     
                     <!-- أزرار الإجراءات -->
                     <div class="flex flex-col sm:flex-row gap-4">
-                        @if($featuredIsFull)
+                        @if($featuredIsCompleted)
+                            <button class="bg-gray-400 text-gray-600 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                                <i class="fas fa-check-circle ml-2 text-xl"></i>
+                                الورشة مكتملة
+                            </button>
+                        @elseif($featuredIsFull)
                             <button class="bg-gray-400 text-gray-600 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-lock ml-2 text-xl"></i>
                                 الورشة مكتملة
@@ -268,6 +274,54 @@
                          alt="{{ $featuredWorkshop->title }}" 
                          class="w-full h-full object-cover featured-workshop-image"
                          loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    @else
+    <!-- رسالة عدم وجود ورشات قادمة -->
+    <section class="container mx-auto px-4 py-16">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                <!-- المحتوى النصي -->
+                <div class="p-8 lg:p-12 text-white flex flex-col justify-center">
+                    <div class="mb-6">
+                        <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-block mb-4">
+                            الورشة القادمة
+                        </span>
+                        <h2 class="text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                            لا توجد ورشات قادمة الآن
+                        </h2>
+                        <p class="text-lg text-amber-100 mb-8 leading-relaxed">
+                            نحن نعمل على إعداد ورشات جديدة ومميزة لك. انتظرونا في الورشة القادمة!
+                        </p>
+                    </div>
+                    
+                    <!-- أزرار الإجراءات -->
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="{{ route('workshops') }}" 
+                           class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
+                            <i class="fas fa-list ml-2 text-xl"></i>
+                            تصفح جميع الورشات
+                        </a>
+                        <a href="{{ route('recipes') }}" 
+                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
+                            <i class="fas fa-utensils ml-2"></i>
+                            اكتشف الوصفات
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- الصورة/الأيقونة -->
+                <div class="relative h-64 lg:h-auto overflow-hidden flex items-center justify-center">
+                    <div class="w-full h-full flex items-center justify-center">
+                        <div class="relative w-56 h-56 bg-white/10 rounded-full flex items-center justify-center">
+                            <div class="absolute inset-4 bg-white/20 rounded-full"></div>
+                            <div class="absolute inset-12 bg-white/10 rounded-full"></div>
+                            <i class="fas fa-calendar-alt text-white text-5xl"></i>
+                        </div>
+                    </div>
                     <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
                 </div>
             </div>

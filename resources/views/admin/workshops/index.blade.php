@@ -6,243 +6,327 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">إدارة الورشات</h1>
-                <p class="text-gray-600">إدارة وإضافة وتعديل ورشات العمل</p>
-                @php
-                    $featuredWorkshop = \App\Models\Workshop::where('is_featured', true)->first();
-                @endphp
-                @if($featuredWorkshop)
-                    <div class="mt-3 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white px-6 py-3 rounded-xl shadow-2xl inline-block transform hover:scale-105 transition-all duration-300">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-white bg-opacity-20 p-2 rounded-full">
-                                <i class="fas fa-crown text-2xl animate-pulse"></i>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-lg">الورشة القادمة</span>
-                                    <div class="flex space-x-1">
-                                        <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                                        <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                        <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                    </div>
+        <div class="relative overflow-hidden rounded-3xl border border-orange-100 bg-white shadow-xl mb-10">
+            <div class="absolute inset-0 bg-gradient-to-l from-orange-50 via-white to-white opacity-90"></div>
+            <div class="absolute -top-16 -right-20 h-40 w-40 rounded-full bg-amber-200 opacity-30"></div>
+            <div class="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-orange-300 opacity-20"></div>
+
+            <div class="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-8 p-8 md:p-10">
+                <div class="flex-1">
+                    <span class="inline-flex items-center px-4 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold text-xs tracking-wide">
+                        <i class="fas fa-chalkboard-teacher ml-2"></i>
+                        لوحة إدارة الورشات
+                    </span>
+                    <h1 class="mt-4 text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+                        نظرة شاملة على الورشات مع تصميم أكثر وضوحاً وأناقة
+                    </h1>
+                    <p class="mt-3 text-base md:text-lg text-gray-600 max-w-3xl leading-relaxed">
+                        تمت إعادة ترتيب الصفحة لتمنحك تجربة استخدام أفضل: مسارات بصرية واضحة، بطاقات معلومات متناسقة،
+                        وإبراز فوري للورشة القادمة لضمان سرعة اتخاذ القرار.
+                    </p>
+                    <div class="mt-6 flex flex-wrap items-center text-sm text-gray-500 gap-3">
+                        <span class="flex items-center">
+                            <span class="ml-2 inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                            تحديث الإحصائيات يتم مباشرة من قاعدة البيانات
+                        </span>
+                        <span class="flex items-center">
+                            <i class="fas fa-magic ml-2 text-orange-400"></i>
+                            تأثيرات مرئية خفيفة دون التأثير على الأداء
+                        </span>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-80 flex flex-col gap-4">
+                    <a href="{{ route('admin.workshops.create') }}"
+                       class="group flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 px-6 py-4 text-white font-semibold shadow-lg transition transform hover:-translate-y-1 hover:shadow-2xl">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-white bg-opacity-20 text-xl transition group-hover:bg-opacity-30">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        <span class="text-lg">إضافة ورشة جديدة</span>
+                    </a>
+
+                    @if(isset($featuredWorkshop) && $featuredWorkshop)
+                        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 text-white shadow-xl">
+                            <div class="absolute -top-10 -right-12 h-32 w-32 rounded-full bg-white opacity-20 blur-lg"></div>
+                            <div class="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-white opacity-10 blur-lg"></div>
+
+                            <div class="relative flex items-start gap-4 p-6">
+                                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white bg-opacity-20 shadow-inner">
+                                    <i class="fas fa-crown text-xl featured-badge animate-pulse"></i>
                                 </div>
-                                <span class="font-bold text-xl">{{ $featuredWorkshop->title }}</span>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white text-opacity-80">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="inline-block h-2 w-2 rounded-full bg-white animate-ping"></span>
+                                            الورشة القادمة
+                                        </span>
+                                        <span class="rounded-full bg-white bg-opacity-20 px-2 py-0.5">مميزة</span>
+                                    </div>
+                                    <h2 class="text-lg font-bold leading-tight">{{ $featuredWorkshop->title }}</h2>
+                                    @if($featuredWorkshop->start_date)
+                                        <p class="text-sm text-white text-opacity-80">
+                                            {{ $featuredWorkshop->start_date->format('d M Y - h:i A') }}
+                                        </p>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @else
-                    <div class="mt-3 bg-gradient-to-r from-gray-400 to-gray-600 text-white px-6 py-3 rounded-xl shadow-lg inline-block">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-white bg-opacity-20 p-2 rounded-full">
-                                <i class="fas fa-exclamation-triangle text-xl"></i>
+                    @else
+                        <div class="rounded-2xl border border-dashed border-gray-300 bg-white bg-opacity-80 p-6 text-center shadow-sm">
+                            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500">
+                                <i class="fas fa-crown text-lg"></i>
                             </div>
-                            <div>
-                                <span class="font-semibold text-lg">لا توجد ورشة قادمة محددة</span>
-                                <p class="text-sm opacity-90">اختر ورشة لتكون مميزة</p>
-                            </div>
+                            <p class="text-sm font-semibold text-gray-700">لا توجد ورشة مميزة حتى الآن</p>
+                            <p class="mt-1 text-xs text-gray-500">تمييز ورشة ما يعرضها هنا لتكون في عين الفريق أولاً.</p>
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
-            <a href="{{ route('admin.workshops.create') }}" 
-               class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 mt-4 md:mt-0">
-                <i class="fas fa-plus"></i>
-                إضافة ورشة جديدة
-            </a>
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="bg-orange-100 p-3 rounded-full">
-                        <i class="fas fa-chalkboard-teacher text-orange-500 text-xl"></i>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
+            <div class="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-6 shadow-sm transition transform hover:-translate-y-1 hover:shadow-xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-50 to-white opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div class="relative flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">إجمالي الورشات</p>
+                        <p class="mt-2 text-3xl font-bold text-gray-900">{{ number_format($stats['total'] ?? 0) }}</p>
+                        <p class="mt-1 text-xs text-gray-400">جميع الورشات النشطة والمؤرشفة</p>
                     </div>
-                    <div class="mr-4">
-                        <p class="text-2xl font-bold text-gray-800">{{ $workshops->total() }}</p>
-                        <p class="text-gray-600">إجمالي الورشات</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-check-circle text-green-500 text-xl"></i>
-                    </div>
-                    <div class="mr-4">
-                        <p class="text-2xl font-bold text-gray-800">{{ $workshops->where('is_active', true)->count() }}</p>
-                        <p class="text-gray-600">ورشات نشطة</p>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-500 shadow-inner">
+                        <i class="fas fa-chalkboard-teacher text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-users text-blue-500 text-xl"></i>
+            <div class="group relative overflow-hidden rounded-2xl border border-green-100 bg-white p-6 shadow-sm transition transform hover:-translate-y-1 hover:shadow-xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-green-50 to-white opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div class="relative flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">ورشات نشطة</p>
+                        <p class="mt-2 text-3xl font-bold text-gray-900">{{ number_format($stats['active'] ?? 0) }}</p>
+                        <p class="mt-1 text-xs text-gray-400">متاحة حالياً للحجز أو العرض</p>
                     </div>
-                    <div class="mr-4">
-                        <p class="text-2xl font-bold text-gray-800">{{ $workshops->sum('bookings_count') }}</p>
-                        <p class="text-gray-600">إجمالي الحجوزات</p>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-500 shadow-inner">
+                        <i class="fas fa-check-circle text-xl"></i>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-laptop text-purple-500 text-xl"></i>
+            <div class="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-6 shadow-sm transition transform hover:-translate-y-1 hover:shadow-xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-white opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div class="relative flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">إجمالي الحجوزات المؤكدة</p>
+                        <p class="mt-2 text-3xl font-bold text-gray-900">{{ number_format($stats['confirmed_bookings'] ?? 0) }}</p>
+                        <p class="mt-1 text-xs text-gray-400">حجوزات تم تأكيدها حتى الآن</p>
                     </div>
-                    <div class="mr-4">
-                        <p class="text-2xl font-bold text-gray-800">{{ $workshops->where('is_online', true)->count() }}</p>
-                        <p class="text-gray-600">ورشات أونلاين</p>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-500 shadow-inner">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="group relative overflow-hidden rounded-2xl border border-purple-100 bg-white p-6 shadow-sm transition transform hover:-translate-y-1 hover:shadow-xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-50 to-white opacity-0 transition-opacity group-hover:opacity-100"></div>
+                <div class="relative flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">ورشات أونلاين</p>
+                        <p class="mt-2 text-3xl font-bold text-gray-900">{{ number_format($stats['online'] ?? 0) }}</p>
+                        <p class="mt-1 text-xs text-gray-400">جلسات يمكن الانضمام لها عن بُعد</p>
+                    </div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-500 shadow-inner">
+                        <i class="fas fa-laptop text-xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Workshops Table -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="rounded-3xl border border-gray-100 bg-white shadow-xl overflow-hidden">
+            <div class="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white px-6 py-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">قائمة الورشات</h2>
+                    <p class="text-sm text-gray-500 mt-1">استعرض تفاصيل الورشات وحالة الحجز والتمييز لكل ورشة.</p>
+                </div>
+                <div class="hidden md:flex items-center gap-3 text-sm text-gray-500">
+                    <span class="flex items-center gap-1">
+                        <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                        نشطة
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="h-2 w-2 rounded-full bg-gray-300"></span>
+                        غير نشطة
+                    </span>
+                </div>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="min-w-full divide-y divide-gray-100 text-right">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">الورشة</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">المدرب</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">التاريخ</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">السعر</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">الحجوزات</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">الحالة</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">الورشة القادمة</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-gray-800">الإجراءات</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">الورشة</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">المدرب</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">التاريخ</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">السعر</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">الحجوزات</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">الحالة</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">الورشة القادمة</th>
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-100">
                         @forelse($workshops as $workshop)
-                        <tr class="hover:bg-gray-50">
+                        @php
+                            $rowClasses = $workshop->is_featured ? 'featured-row bg-orange-50' : '';
+                            $isOnline = $workshop->is_online;
+                        @endphp
+                        <tr class="group transition duration-200 hover:bg-gray-50 {{ $rowClasses }}">
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/60x60/f87171/FFFFFF?text=ورشة' }}" 
-                                         alt="{{ $workshop->title }}" 
-                                         class="w-12 h-12 rounded-lg object-cover ml-4">
-                                    <div>
+                                    <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/60x60/f87171/FFFFFF?text=ورشة' }}"
+                                         alt="{{ $workshop->title }}"
+                                         class="w-12 h-12 rounded-xl object-cover ml-4 border border-white shadow-sm">
+                                    <div class="space-y-1">
                                         <h3 class="font-semibold text-gray-800">{{ $workshop->title }}</h3>
-                                        <p class="text-sm text-gray-500">{{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}</p>
+                                        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                            <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 {{ $isOnline ? 'bg-purple-50 text-purple-600' : 'bg-green-50 text-green-600' }}">
+                                                <i class="fas {{ $isOnline ? 'fa-wifi' : 'fa-map-marker-alt' }}"></i>
+                                                {{ $isOnline ? 'أونلاين' : 'حضوري' }}
+                                            </span>
+                                            @if($workshop->category)
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-gray-600">
+                                                    <i class="fas fa-folder-open text-xs"></i>
+                                                    {{ $workshop->category }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="text-gray-800">{{ $workshop->instructor }}</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm">
-                                    <p class="text-gray-800">{{ $workshop->start_date->format('d M, Y') }}</p>
-                                    <p class="text-gray-500">{{ $workshop->start_date->format('H:i') }}</p>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="font-semibold text-gray-800">{{ $workshop->price }} {{ $workshop->currency }}</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <span class="text-gray-800">{{ $workshop->bookings_count }}</span>
-                                    <span class="text-gray-500 mr-1">/ {{ $workshop->max_participants }}</span>
-                                    @if($workshop->total_bookings > $workshop->bookings_count)
-                                        <span class="text-xs text-orange-500 mr-1">({{ $workshop->total_bookings - $workshop->bookings_count }} معلق)</span>
+                                <div class="flex flex-col gap-1 max-w-xs">
+                                    <span class="font-medium text-gray-800 truncate">{{ $workshop->instructor }}</span>
+                                    @if($workshop->instructor_bio)
+                                        <span class="text-xs text-gray-400 truncate">{{ \Illuminate\Support\Str::limit($workshop->instructor_bio, 70) }}</span>
                                     @endif
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $workshop->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $workshop->is_active ? 'نشطة' : 'غير نشطة' }}
-                                </span>
+                                <div class="text-sm space-y-1">
+                                    <p class="font-semibold text-gray-800">{{ $workshop->start_date->format('d M, Y') }}</p>
+                                    <p class="text-xs text-gray-500">{{ $workshop->start_date->format('H:i') }}</p>
+                                    @if($workshop->end_date)
+                                        <p class="text-xs text-gray-400">حتى {{ $workshop->end_date->format('d M, Y') }}</p>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-gray-800">{{ $workshop->price }} {{ $workshop->currency }}</span>
+                                    @if($workshop->duration)
+                                        <span class="text-xs text-gray-400">{{ $workshop->duration }} دقيقة</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-semibold text-gray-800">{{ $workshop->bookings_count }}</span>
+                                    <span class="text-gray-400">/ {{ $workshop->max_participants }}</span>
+                                    @if($workshop->total_bookings > $workshop->bookings_count)
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs text-orange-600">
+                                            <i class="fas fa-clock"></i>
+                                            {{ $workshop->total_bookings - $workshop->bookings_count }} معلق
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold border {{ $workshop->is_active ? 'bg-green-50 text-green-600 border-green-200' : 'bg-rose-50 text-rose-600 border-rose-200' }}">
+                                        {{ $workshop->is_active ? 'نشطة' : 'غير نشطة' }}
+                                    </span>
+                                    <span class="text-xs text-gray-400">
+                                        آخر تحديث {{ $workshop->updated_at->diffForHumans() }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 @if($workshop->is_featured)
-                                    <div class="flex items-center gap-3">
-                                        <div class="relative">
-                                            <span class="px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white shadow-xl transform hover:scale-105 transition-all duration-300">
-                                                <i class="fas fa-crown ml-2 animate-pulse"></i>
-                                                الورشة القادمة
-                                            </span>
-                                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
-                                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <div class="flex items-center gap-3 text-sm">
+                                        <div class="relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 px-4 py-2 text-white font-semibold shadow-lg">
+                                            <i class="fas fa-crown featured-badge"></i>
+                                            الورشة القادمة
+                                            <span class="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white animate-ping"></span>
+                                            <span class="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white"></span>
                                         </div>
-                                        <div class="flex flex-col">
-                                            <span class="text-xs text-amber-600 font-bold flex items-center gap-1">
-                                                <i class="fas fa-star text-yellow-500"></i>
-                                                مميزة
-                                            </span>
-                                            <span class="text-xs text-green-600 font-semibold">✨ نشطة</span>
-                                        </div>
+                                        <span class="text-xs text-amber-600 font-bold flex items-center gap-1">
+                                            <i class="fas fa-star text-yellow-500"></i>
+                                            مميزة
+                                        </span>
                                     </div>
                                 @else
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-gray-400 text-sm flex items-center gap-1">
-                                            <i class="fas fa-circle text-xs"></i>
-                                            عادية
-                                        </span>
+                                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                                        <i class="fas fa-circle text-xs"></i>
+                                        عادية
                                     </div>
                                 @endif
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.workshops.show', $workshop->id) }}" 
-                                       class="text-blue-600 hover:text-blue-800 transition-colors" 
+                                    <a href="{{ route('admin.workshops.show', $workshop->id) }}"
+                                       class="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600 transition transform hover:-translate-y-0.5 hover:bg-blue-100"
                                        title="عرض التفاصيل">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.workshops.edit', $workshop->id) }}" 
-                                       class="text-orange-600 hover:text-orange-800 transition-colors" 
+                                    <a href="{{ route('admin.workshops.edit', $workshop->id) }}"
+                                       class="flex h-9 w-9 items-center justify-center rounded-lg border border-orange-100 bg-orange-50 text-orange-600 transition transform hover:-translate-y-0.5 hover:bg-orange-100"
                                        title="تعديل">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @if(!$workshop->is_featured)
-                                    <form action="{{ route('admin.workshops.toggle-featured', $workshop->id) }}" 
+                                    <form action="{{ route('admin.workshops.toggle-featured', $workshop->id) }}"
                                           method="POST" class="inline-block"
                                           onsubmit="return confirmFeaturedWorkshop('{{ $workshop->title }}')">
                                         @csrf
-                                        <button type="submit" 
-                                                class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-3 py-2 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center gap-2" 
+                                        <button type="submit"
+                                                class="inline-flex h-9 items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 text-sm font-semibold text-white shadow-md transition transform hover:-translate-y-0.5 hover:from-amber-600 hover:to-orange-600"
                                                 title="جعلها الورشة القادمة">
-                                            <i class="fas fa-crown animate-pulse"></i>
-                                            <span class="text-sm font-semibold">تمييز</span>
+                                            <i class="fas fa-crown"></i>
+                                            <span>تمييز</span>
                                         </button>
                                     </form>
                                     @else
                                     <div class="flex items-center gap-2">
-                                        <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
-                                            <i class="fas fa-crown animate-pulse"></i>
+                                        <div class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white shadow-md">
+                                            <i class="fas fa-crown"></i>
                                             <span class="text-sm font-bold">مميزة</span>
                                         </div>
-                                        <form action="{{ route('admin.workshops.toggle-featured', $workshop->id) }}" 
+                                        <form action="{{ route('admin.workshops.toggle-featured', $workshop->id) }}"
                                               method="POST" class="inline-block"
                                               onsubmit="return confirmRemoveFeatured('{{ $workshop->title }}')">
                                             @csrf
-                                            <button type="submit" 
-                                                    class="bg-red-500 hover:bg-red-600 text-white px-2 py-2 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300" 
+                                            <button type="submit"
+                                                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-500 text-white shadow-md transition transform hover:-translate-y-0.5 hover:bg-red-600"
                                                     title="إلغاء التمييز">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>
                                     </div>
                                     @endif
-                                    <form action="{{ route('admin.workshops.toggle-status', $workshop->id) }}" 
+                                    <form action="{{ route('admin.workshops.toggle-status', $workshop->id) }}"
                                           method="POST" class="inline">
                                         @csrf
-                                        <button type="submit" 
-                                                class="text-purple-600 hover:text-purple-800 transition-colors" 
+                                        <button type="submit"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-purple-100 bg-purple-50 text-purple-600 transition transform hover:-translate-y-0.5 hover:bg-purple-100"
                                                 title="{{ $workshop->is_active ? 'إلغاء التفعيل' : 'تفعيل' }}">
                                             <i class="fas {{ $workshop->is_active ? 'fa-pause' : 'fa-play' }}"></i>
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.workshops.destroy', $workshop->id) }}" 
-                                          method="POST" class="inline"
-                                          onsubmit="return confirm('هل أنت متأكد من حذف هذه الورشة؟')">
+                                    <form action="{{ route('admin.workshops.destroy', $workshop->id) }}"
+                                          method="POST" class="inline delete-workshop-form"
+                                          data-workshop-title="{{ $workshop->title }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" 
-                                                class="text-red-600 hover:text-red-800 transition-colors" 
+                                        <button type="submit"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-100 bg-rose-50 text-rose-600 transition transform hover:-translate-y-0.5 hover:bg-rose-100"
                                                 title="حذف">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -252,12 +336,12 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="text-gray-500">
-                                    <i class="fas fa-chalkboard-teacher text-4xl mb-4"></i>
-                                    <p class="text-lg">لا توجد ورشات حالياً</p>
-                                    <p class="text-sm">ابدأ بإضافة ورشة جديدة</p>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50 text-orange-400">
+                                    <i class="fas fa-chalkboard-teacher text-3xl"></i>
                                 </div>
+                                <p class="text-lg font-semibold text-gray-700">لا توجد ورشات حالياً</p>
+                                <p class="text-sm text-gray-500 mt-1">ابدأ بإضافة ورشة جديدة ليظهر محتواها هنا.</p>
                             </td>
                         </tr>
                         @endforelse
@@ -274,162 +358,117 @@
         @endif
     </div>
 </div>
-
 @endsection
 
-@section('scripts')
-<script>
-// تحسين نوافذ التأكيد للورشة المميزة
-function confirmFeaturedWorkshop(workshopTitle) {
-    return Swal.fire({
-        title: 'تأكيد التمييز',
-        html: `
-            <div class="text-center">
-                <div class="mb-4">
-                    <i class="fas fa-crown text-6xl text-amber-500 mb-4"></i>
-                </div>
-                <p class="text-lg mb-2">هل تريد جعل هذه الورشة هي الورشة المميزة؟</p>
-                <p class="text-xl font-bold text-amber-600">"${workshopTitle}"</p>
-                <div class="mt-4 p-3 bg-amber-50 rounded-lg">
-                    <p class="text-sm text-amber-700">
-                        <i class="fas fa-info-circle ml-1"></i>
-                        سيتم إلغاء تمييز الورشة المميزة الحالية (إن وجدت)
-                    </p>
-                </div>
-            </div>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#f59e0b',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '<i class="fas fa-crown ml-2"></i>نعم، اجعلها مميزة',
-        cancelButtonText: '<i class="fas fa-times ml-2"></i>إلغاء',
-        customClass: {
-            popup: 'swal2-popup-arabic',
-            title: 'swal2-title-arabic',
-            content: 'swal2-content-arabic'
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // إظهار رسالة نجاح
-            Swal.fire({
-                title: 'تم التمييز بنجاح!',
-                text: `تم جعل "${workshopTitle}" هي الورشة المميزة`,
-                icon: 'success',
-                confirmButtonColor: '#10b981',
-                confirmButtonText: 'ممتاز!'
-            });
-        }
-        return result.isConfirmed;
-    });
-}
+@include('admin.workshops.partials.delete-confirm-script')
 
-function confirmRemoveFeatured(workshopTitle) {
-    return Swal.fire({
-        title: 'إلغاء التمييز',
-        html: `
-            <div class="text-center">
-                <div class="mb-4">
-                    <i class="fas fa-crown text-6xl text-red-500 mb-4"></i>
+@push('scripts')
+    <script>
+    function confirmFeaturedWorkshop(workshopTitle) {
+        return Swal.fire({
+            title: 'تأكيد التمييز',
+            html: `
+                <div class="text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-crown text-6xl text-amber-500 mb-4"></i>
+                    </div>
+                    <p class="text-lg mb-2">هل تريد جعل هذه الورشة هي الورشة المميزة؟</p>
+                    <p class="text-xl font-bold text-amber-600">"${workshopTitle}"</p>
+                    <div class="mt-4 p-3 bg-amber-50 rounded-lg">
+                        <p class="text-sm text-amber-700">
+                            <i class="fas fa-info-circle ml-1"></i>
+                            سيتم إلغاء تمييز الورشة المميزة الحالية (إن وجدت)
+                        </p>
+                    </div>
                 </div>
-                <p class="text-lg mb-2">هل تريد إلغاء تمييز هذه الورشة؟</p>
-                <p class="text-xl font-bold text-red-600">"${workshopTitle}"</p>
-                <div class="mt-4 p-3 bg-red-50 rounded-lg">
-                    <p class="text-sm text-red-700">
-                        <i class="fas fa-exclamation-triangle ml-1"></i>
-                        لن تكون هناك ورشة مميزة بعد إلغاء التمييز
-                    </p>
-                </div>
-            </div>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '<i class="fas fa-times ml-2"></i>نعم، ألغِ التمييز',
-        cancelButtonText: '<i class="fas fa-arrow-right ml-2"></i>إلغاء',
-        customClass: {
-            popup: 'swal2-popup-arabic',
-            title: 'swal2-title-arabic',
-            content: 'swal2-content-arabic'
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // إظهار رسالة نجاح
-            Swal.fire({
-                title: 'تم إلغاء التمييز!',
-                text: `تم إلغاء تمييز "${workshopTitle}"`,
-                icon: 'info',
-                confirmButtonColor: '#6b7280',
-                confirmButtonText: 'حسناً'
-            });
-        }
-        return result.isConfirmed;
-    });
-}
-
-// إضافة تأثيرات بصرية إضافية
-document.addEventListener('DOMContentLoaded', function() {
-    // تأثير hover للورشات المميزة
-    const featuredRows = document.querySelectorAll('tr:has(.bg-gradient-to-r.from-amber-500)');
-    featuredRows.forEach(row => {
-        row.classList.add('bg-gradient-to-r', 'from-amber-50', 'to-orange-50', 'border-l-4', 'border-amber-500');
-    });
-    
-    // تأثير النبض للشارات المميزة
-    const featuredBadges = document.querySelectorAll('.animate-pulse');
-    featuredBadges.forEach(badge => {
-        badge.addEventListener('mouseenter', function() {
-            this.classList.add('animate-bounce');
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-crown ml-2"></i>نعم، اجعلها مميزة',
+            cancelButtonText: '<i class="fas fa-times ml-2"></i>إلغاء',
+            customClass: {
+                popup: 'swal2-popup-arabic',
+                title: 'swal2-title-arabic',
+                content: 'swal2-content-arabic'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'تم التمييز بنجاح!',
+                    text: `تم جعل "${workshopTitle}" هي الورشة المميزة`,
+                    icon: 'success',
+                    confirmButtonColor: '#10b981',
+                    confirmButtonText: 'ممتاز!'
+                });
+            }
+            return result.isConfirmed;
         });
-        badge.addEventListener('mouseleave', function() {
-            this.classList.remove('animate-bounce');
+    }
+
+    function confirmRemoveFeatured(workshopTitle) {
+        return Swal.fire({
+            title: 'إلغاء التمييز',
+            html: `
+                <div class="text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-crown text-6xl text-red-500 mb-4"></i>
+                    </div>
+                    <p class="text-lg mb-2">هل تريد إلغاء تمييز هذه الورشة؟</p>
+                    <p class="text-xl font-bold text-red-600">"${workshopTitle}"</p>
+                    <div class="mt-4 p-3 bg-red-50 rounded-lg">
+                        <p class="text-sm text-red-700">
+                            <i class="fas fa-exclamation-triangle ml-1"></i>
+                            لن تكون هناك ورشة مميزة بعد إلغاء التمييز
+                        </p>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-times ml-2"></i>نعم، ألغِ التمييز',
+            cancelButtonText: '<i class="fas fa-arrow-right ml-2"></i>إلغاء',
+            customClass: {
+                popup: 'swal2-popup-arabic',
+                title: 'swal2-title-arabic',
+                content: 'swal2-content-arabic'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'تم إلغاء التمييز!',
+                    text: `تم إلغاء تمييز "${workshopTitle}"`,
+                    icon: 'info',
+                    confirmButtonColor: '#6b7280',
+                    confirmButtonText: 'حسناً'
+                });
+            }
+            return result.isConfirmed;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const featuredRows = document.querySelectorAll('tr.featured-row');
+        featuredRows.forEach(function(row) {
+            row.classList.add('border-r-4', 'border-amber-400');
+        });
+
+        const featuredBadges = document.querySelectorAll('.featured-badge');
+        featuredBadges.forEach(function(badge) {
+            badge.addEventListener('mouseenter', function() {
+                this.classList.add('animate-bounce');
+            });
+            badge.addEventListener('mouseleave', function() {
+                this.classList.remove('animate-bounce');
+            });
         });
     });
-});
-</script>
+    </script>
+@endpush
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<style>
-/* تخصيص SweetAlert2 للعربية */
-.swal2-popup-arabic {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    direction: rtl;
-}
-
-.swal2-title-arabic {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 700;
-}
-
-.swal2-content-arabic {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* تأثيرات إضافية للورشات المميزة */
-@keyframes shimmer {
-    0% { background-position: -200px 0; }
-    100% { background-position: calc(200px + 100%) 0; }
-}
-
-.featured-shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    background-size: 200px 100%;
-    animation: shimmer 2s infinite;
-}
-
-/* تحسين مظهر الأزرار */
-.btn-featured {
-    background: linear-gradient(45deg, #f59e0b, #f97316);
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-    transition: all 0.3s ease;
-}
-
-.btn-featured:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
-}
-</style>
-@endsection
+@push('styles')
+    @include('admin.workshops.partials.swal-styles')
+@endpush

@@ -14,15 +14,23 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // جلب الورشة المميزة فقط
-        $featuredWorkshop = Workshop::active()
+        // جلب الورشة المميزة مع ضمان عرض آخر ورشة مميزة حتى إن لم تكن مستقبلية
+        $featuredWorkshopQuery = Workshop::active()
             ->featured()
-            ->upcoming()
             ->withCount(['bookings' => function ($query) {
                 $query->where('status', 'confirmed');
-            }])
+            }]);
+
+        $featuredWorkshop = (clone $featuredWorkshopQuery)
+            ->upcoming()
             ->orderBy('start_date', 'asc')
             ->first();
+
+        if (!$featuredWorkshop) {
+            $featuredWorkshop = $featuredWorkshopQuery
+                ->orderBy('start_date', 'desc')
+                ->first();
+        }
 
         // التحقق من وجود ورشات قادمة على الإطلاق
         $hasUpcomingWorkshops = Workshop::active()

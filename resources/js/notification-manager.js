@@ -11,6 +11,8 @@ class NotificationManager {
         this.pendingCallbacks = [];
         this.retryCount = 0;
         this.maxRetries = 3;
+        this.badgeSelector = '[data-notification-badge]';
+        this.badgeAnimationDuration = 2000;
     }
 
     /**
@@ -104,6 +106,12 @@ class NotificationManager {
      * @param {Error} error - Error if any
      */
     executeCallbacks(data, error = null) {
+        if (!error && data) {
+            const unreadCount = data?.unreadCount ?? 0;
+            this.updateBadgeElements(unreadCount);
+            this.dispatchUpdateEvent(data);
+        }
+
         const callbacks = [...this.pendingCallbacks];
         this.pendingCallbacks = [];
 
@@ -144,6 +152,62 @@ class NotificationManager {
         this.cachedData = data;
         this.lastUpdate = Date.now();
     }
+
+    /**
+     * Update all notification badges in the UI
+     * @param {number} count - Number of unread notifications
+     */
+    updateBadgeElements(count) {
+        const badges = document.querySelectorAll(this.badgeSelector);
+        badges.forEach(badge => {
+            const previousCount = parseInt(badge.dataset.previousCount || badge.textContent || '0', 10) || 0;
+
+            badge.textContent = count;
+            badge.dataset.previousCount = count;
+
+            if (count > 0) {
+                badge.classList.remove('hidden');
+                badge.setAttribute('aria-hidden', 'false');
+
+                if (count > previousCount) {
+                    badge.classList.remove('animate-bounce');
+                    void badge.offsetWidth; // trigger reflow to restart animation
+                    badge.classList.add('animate-bounce');
+                    setTimeout(() => {
+                        badge.classList.remove('animate-bounce');
+                    }, this.badgeAnimationDuration);
+                }
+            } else {
+                badge.classList.add('hidden');
+                badge.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        // Update body attribute for styling conditions if needed
+        const body = document.body;
+        if (body) {
+            body.dataset.unreadNotifications = String(count);
+        }
+    }
+
+    /**
+     * Broadcast a notification update event for other scripts
+     * @param {Object} detail - Notification payload
+     */
+    dispatchUpdateEvent(detail) {
+        if (typeof document === 'undefined' || typeof CustomEvent === 'undefined') {
+            return;
+        }
+
+        const event = new CustomEvent('notifications:updated', {
+            detail: {
+                ...detail,
+                timestamp: Date.now()
+            }
+        });
+
+        document.dispatchEvent(event);
+    }
 }
 
 // Create global instance
@@ -157,26 +221,8 @@ window.loadNotificationsCount = function() {
             return;
         }
 
-        const notificationsCountEl = document.getElementById('notifications-count-nav');
-        if (notificationsCountEl) {
-            const oldCount = parseInt(notificationsCountEl.textContent) || 0;
-            const count = data?.unreadCount || 0;
-            notificationsCountEl.textContent = count;
-            
-            if (count > 0) {
-                notificationsCountEl.classList.remove('hidden');
-                
-                // Add visual effect for new notifications
-                if (count > oldCount) {
-                    notificationsCountEl.classList.add('animate-bounce');
-                    setTimeout(() => {
-                        notificationsCountEl.classList.remove('animate-bounce');
-                    }, 2000);
-                }
-            } else {
-                notificationsCountEl.classList.add('hidden');
-            }
-        }
+        const count = data?.unreadCount || 0;
+        window.NotificationManager.updateBadgeElements(count);
     });
 };
 
@@ -187,46 +233,8 @@ window.loadMobileNotificationsCount = function() {
             return;
         }
 
-        const mobileNotificationsCountEl = document.getElementById('mobile-notifications-count');
-        const mobileMenuNotificationsCountEl = document.getElementById('notifications-count-mobile');
-        
         const count = data?.unreadCount || 0;
-        
-        // Update header notification count
-        if (mobileNotificationsCountEl) {
-            const oldCount = parseInt(mobileNotificationsCountEl.textContent) || 0;
-            mobileNotificationsCountEl.textContent = count;
-            if (count > 0) {
-                mobileNotificationsCountEl.classList.remove('hidden');
-                
-                if (count > oldCount) {
-                    mobileNotificationsCountEl.classList.add('animate-bounce');
-                    setTimeout(() => {
-                        mobileNotificationsCountEl.classList.remove('animate-bounce');
-                    }, 2000);
-                }
-            } else {
-                mobileNotificationsCountEl.classList.add('hidden');
-            }
-        }
-        
-        // Update mobile menu notification count
-        if (mobileMenuNotificationsCountEl) {
-            const oldCount = parseInt(mobileMenuNotificationsCountEl.textContent) || 0;
-            mobileMenuNotificationsCountEl.textContent = count;
-            if (count > 0) {
-                mobileMenuNotificationsCountEl.classList.remove('hidden');
-                
-                if (count > oldCount) {
-                    mobileMenuNotificationsCountEl.classList.add('animate-bounce');
-                    setTimeout(() => {
-                        mobileMenuNotificationsCountEl.classList.remove('animate-bounce');
-                    }, 2000);
-                }
-            } else {
-                mobileMenuNotificationsCountEl.classList.add('hidden');
-            }
-        }
+        window.NotificationManager.updateBadgeElements(count);
     });
 };
 
@@ -237,7 +245,9 @@ window.loadNotifications = function() {
             return;
         }
 
-        updateNotificationsUI(data?.notifications || [], data?.unreadCount || 0);
+        if (typeof updateNotificationsUI === 'function') {
+            updateNotificationsUI(data?.notifications || [], data?.unreadCount || 0);
+        }
     });
 };
 
@@ -249,7 +259,9 @@ window.loadNotificationsDropdown = function() {
             return;
         }
 
-        updateNotificationsUI(data?.notifications || [], data?.unreadCount || 0);
+        if (typeof updateNotificationsUI === 'function') {
+            updateNotificationsUI(data?.notifications || [], data?.unreadCount || 0);
+        }
     });
 };
 

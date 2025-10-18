@@ -77,15 +77,24 @@ class WorkshopController extends Controller
             $query->where('status', 'confirmed');
         }])->get();
 
-        // جلب الورشة المميزة فقط (بدون جلب ورشات أخرى)
-        $featuredWorkshop = Workshop::active()
+        // جلب الورشة المميزة (الورشة القادمة) مع التعامل مع حال
+        // عدم وجود ورشة قادمة مستقبلية ولكن تم تحديد ورشة مميزة
+        $featuredWorkshopQuery = Workshop::active()
             ->featured()
-            ->upcoming()
             ->withCount(['bookings' => function ($query) {
                 $query->where('status', 'confirmed');
-            }])
+            }]);
+
+        $featuredWorkshop = (clone $featuredWorkshopQuery)
+            ->upcoming()
             ->orderBy('start_date', 'asc')
             ->first();
+
+        if (!$featuredWorkshop) {
+            $featuredWorkshop = $featuredWorkshopQuery
+                ->orderBy('start_date', 'desc')
+                ->first();
+        }
 
         // إحصائيات للفلترة
         $categories = Workshop::active()

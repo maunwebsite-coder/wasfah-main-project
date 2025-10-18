@@ -2,6 +2,133 @@
 
 @section('title', 'إدارة الحجوزات')
 
+@php
+    $totalBookings = max($stats['total'], 1);
+
+    $statusCards = [
+        [
+            'label' => 'إجمالي الحجوزات',
+            'value' => $stats['total'],
+            'formatted' => number_format($stats['total']),
+            'icon' => 'fa-calendar-check',
+            'gradient' => 'from-sky-500 via-indigo-500 to-purple-500',
+            'description' => 'جميع الحجوزات المسجلة في النظام',
+            'percentage' => null,
+        ],
+        [
+            'label' => 'قيد المراجعة',
+            'value' => $stats['pending'],
+            'formatted' => number_format($stats['pending']),
+            'icon' => 'fa-hourglass-half',
+            'gradient' => 'from-amber-500 to-orange-500',
+            'description' => 'حجوزات تنتظر الإجراء',
+            'percentage' => round(($stats['pending'] / $totalBookings) * 100, 1),
+        ],
+        [
+            'label' => 'مؤكدة',
+            'value' => $stats['confirmed'],
+            'formatted' => number_format($stats['confirmed']),
+            'icon' => 'fa-check-circle',
+            'gradient' => 'from-emerald-500 to-teal-500',
+            'description' => 'تم تأكيدها للمشاركين',
+            'percentage' => round(($stats['confirmed'] / $totalBookings) * 100, 1),
+        ],
+        [
+            'label' => 'ملغية',
+            'value' => $stats['cancelled'],
+            'formatted' => number_format($stats['cancelled']),
+            'icon' => 'fa-times-circle',
+            'gradient' => 'from-rose-500 to-red-500',
+            'description' => 'تحتاج تحليل أسباب الإلغاء',
+            'percentage' => round(($stats['cancelled'] / $totalBookings) * 100, 1),
+        ],
+    ];
+
+    $statusDistribution = [
+        [
+            'label' => 'مؤكدة',
+            'icon' => 'fa-check-circle',
+            'raw' => $stats['confirmed'],
+            'formatted' => number_format($stats['confirmed']),
+            'percentage' => round(($stats['confirmed'] / $totalBookings) * 100, 1),
+            'color' => 'bg-emerald-500',
+        ],
+        [
+            'label' => 'قيد المراجعة',
+            'icon' => 'fa-stopwatch',
+            'raw' => $stats['pending'],
+            'formatted' => number_format($stats['pending']),
+            'percentage' => round(($stats['pending'] / $totalBookings) * 100, 1),
+            'color' => 'bg-amber-500',
+        ],
+        [
+            'label' => 'ملغية',
+            'icon' => 'fa-times-circle',
+            'raw' => $stats['cancelled'],
+            'formatted' => number_format($stats['cancelled']),
+            'percentage' => round(($stats['cancelled'] / $totalBookings) * 100, 1),
+            'color' => 'bg-rose-500',
+        ],
+    ];
+
+    $paymentBreakdown = [
+        [
+            'label' => 'مدفوعة',
+            'raw' => $stats['paid'],
+            'formatted' => number_format($stats['paid']),
+            'percentage' => round(($stats['paid'] / $totalBookings) * 100, 1),
+            'color' => 'bg-teal-500',
+        ],
+        [
+            'label' => 'غير مدفوعة',
+            'raw' => $stats['unpaid'],
+            'formatted' => number_format($stats['unpaid']),
+            'percentage' => round(($stats['unpaid'] / $totalBookings) * 100, 1),
+            'color' => 'bg-rose-500',
+        ],
+    ];
+
+    $quickStatusFilters = [
+        [
+            'label' => 'الكل',
+            'value' => null,
+            'count' => number_format($stats['total']),
+            'icon' => 'fa-layer-group',
+            'hint' => 'عرض جميع الحجوزات',
+        ],
+        [
+            'label' => 'قيد المراجعة',
+            'value' => 'pending',
+            'count' => number_format($stats['pending']),
+            'icon' => 'fa-hourglass-half',
+            'hint' => 'الحجوزات التي لم يتم اتخاذ إجراء بشأنها',
+        ],
+        [
+            'label' => 'مؤكدة',
+            'value' => 'confirmed',
+            'count' => number_format($stats['confirmed']),
+            'icon' => 'fa-check-circle',
+            'hint' => 'الحجوزات الجاهزة للورشة',
+        ],
+        [
+            'label' => 'ملغية',
+            'value' => 'cancelled',
+            'count' => number_format($stats['cancelled']),
+            'icon' => 'fa-ban',
+            'hint' => 'إلغاءات تحتاج متابعة',
+        ],
+    ];
+
+    $advancedFiltersActive = request()->hasAny([
+        'workshop_type',
+        'price_range',
+        'payment_method',
+        'booking_count',
+        'workshop_date_from',
+        'workshop_date_to',
+    ]);
+@endphp
+
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
 <style>
@@ -75,6 +202,128 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+.quick-filter-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+.quick-filter-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.quick-filter-scroll::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 9999px;
+}
+
+.quick-filter-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.quick-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: rgba(59, 130, 246, 0.08);
+    color: #1e3a8a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+}
+
+.quick-filter-chip:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.quick-filter-chip .chip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.quick-filter-chip .chip-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.85);
+    color: #1e40af;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+
+.quick-filter-chip.is-active {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 18px 35px -20px rgba(79, 70, 229, 0.9);
+}
+
+.quick-filter-chip.is-active .chip-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    box-shadow: none;
+}
+
+.insight-progress {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+
+.insight-progress span {
+    display: block;
+    height: 100%;
+    border-radius: 9999px;
+}
+
+.stat-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--stat-icon-size, 3rem);
+    height: var(--stat-icon-size, 3rem);
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.stat-card-highlight {
+    position: absolute;
+    inset-inline-end: -3rem;
+    inset-block-start: -3rem;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    filter: blur(0.5rem);
+}
+
+@media (max-width: 640px) {
+    .quick-filter-chip {
+        padding-inline: 0.75rem;
+        font-size: 0.8rem;
+    }
+}
 </style>
 @endpush
 
@@ -111,184 +360,143 @@
             </div>
         </div>
 
-        <!-- إحصائيات اليوم -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="dashboard-card bg-gradient-to-r from-blue-500 to-blue-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-calendar-check dashboard-icon"></i>
+        <!-- نظرة عامة سريعة -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+            @foreach($statusCards as $card)
+                <div class="relative overflow-hidden rounded-2xl shadow-lg bg-gradient-to-br {{ $card['gradient'] }} text-white">
+                    <span class="stat-card-highlight"></span>
+                    <div class="relative p-6 flex flex-col gap-5">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-white/70">{{ $card['label'] }}</p>
+                                <p class="mt-2 text-3xl font-bold tracking-tight">{{ $card['formatted'] }}</p>
+                            </div>
+                            <span class="stat-card-icon">
+                                <i class="fas {{ $card['icon'] }} text-xl"></i>
+                            </span>
                         </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium opacity-90 truncate">إجمالي الحجوزات</dt>
-                                <dd class="stat-number">{{ number_format($stats['total']) }}</dd>
-                            </dl>
-                        </div>
+                        @if(!is_null($card['percentage']))
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-white/70 mb-1">
+                                    <span>{{ $card['description'] }}</span>
+                                    <span>{{ number_format($card['percentage'], 1) }}%</span>
+                                </div>
+                                <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+                                    <div class="h-full bg-white/80 rounded-full" style="width: {{ min($card['percentage'], 100) }}%"></div>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-xs text-white/75">{{ $card['description'] }}</p>
+                        @endif
                     </div>
                 </div>
-            </div>
-
-            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-clock text-3xl"></i>
-                        </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium opacity-90 truncate">في الانتظار</dt>
-                                <dd class="text-2xl font-bold">{{ number_format($stats['pending']) }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-gradient-to-r from-green-500 to-green-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-check-circle text-3xl"></i>
-                        </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium opacity-90 truncate">مؤكدة</dt>
-                                <dd class="text-2xl font-bold">{{ number_format($stats['confirmed']) }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-gradient-to-r from-red-500 to-red-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-times-circle text-3xl"></i>
-                        </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium opacity-90 truncate">ملغية</dt>
-                                <dd class="text-2xl font-bold">{{ number_format($stats['cancelled']) }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
 
-        <!-- الإحصائيات الرئيسية -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- المدفوعات -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border-r-4 border-green-500">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-credit-card text-3xl text-green-500"></i>
-                        </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">
-                                    مدفوعة
-                                </dt>
-                                <dd class="text-2xl font-bold text-gray-900">
-                                    {{ number_format($stats['paid']) }}
-                                </dd>
-                                <dd class="text-sm text-green-600 flex items-center">
-                                    <i class="fas fa-check ml-1"></i>
-                                    {{ number_format(($stats['paid'] / max($stats['total'], 1)) * 100, 1) }}% من إجمالي الحجوزات
-                                </dd>
-                            </dl>
-                        </div>
+        <!-- تحليلات الحالة -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
+            <div class="xl:col-span-2 bg-white shadow-lg rounded-2xl border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-chart-pie text-blue-500 ml-2"></i>
+                            توزيع حالات الحجوزات
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">تابع حالة كل حجز وتعرف على نسب التقدم</p>
                     </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                        {{ now()->format('Y-m-d H:i') }}
+                    </span>
+                </div>
+                <div class="space-y-4">
+                    @foreach($statusDistribution as $item)
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="stat-card-icon" style="--stat-icon-size: 2.5rem;">
+                                        <i class="fas {{ $item['icon'] }} text-base"></i>
+                                    </span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $item['label'] }}</p>
+                                        <p class="text-xs text-gray-500">{{ number_format($item['percentage'], 1) }}% من الإجمالي</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-700">{{ $item['formatted'] }}</span>
+                            </div>
+                            <div class="insight-progress mt-3">
+                                <span class="{{ $item['color'] }}" style="width: {{ min($item['percentage'], 100) }}%"></span>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-
-            <!-- غير المدفوعات -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border-r-4 border-orange-500">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-exclamation-triangle text-3xl text-orange-500"></i>
+            <div class="bg-white shadow-lg rounded-2xl border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-wallet text-emerald-500 ml-2"></i>
+                    أداء المدفوعات
+                </h3>
+                <p class="text-sm text-gray-500 mt-2">راقب تحصيل المدفوعات وتابع الحجوزات المؤجلة</p>
+                <div class="mt-6 space-y-6">
+                    @foreach($paymentBreakdown as $item)
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700">{{ $item['label'] }}</span>
+                                <span class="text-sm font-semibold text-gray-900">{{ $item['formatted'] }}</span>
+                            </div>
+                            <div class="insight-progress mt-3">
+                                <span class="{{ $item['color'] }}" style="width: {{ min($item['percentage'], 100) }}%"></span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">{{ number_format($item['percentage'], 1) }}% من إجمالي الحجوزات</div>
                         </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">
-                                    غير مدفوعة
-                                </dt>
-                                <dd class="text-2xl font-bold text-gray-900">
-                                    {{ number_format($stats['unpaid']) }}
-                                </dd>
-                                <dd class="text-sm text-orange-600 flex items-center">
-                                    <i class="fas fa-clock ml-1"></i>
-                                    تحتاج متابعة
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- معدل التأكيد -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border-r-4 border-purple-500">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-percentage text-3xl text-purple-500"></i>
-                        </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">معدل التأكيد</dt>
-                                <dd class="text-2xl font-bold text-gray-900">{{ number_format(($stats['confirmed'] / max($stats['total'], 1)) * 100, 1) }}%</dd>
-                                <dd class="text-sm text-purple-600 flex items-center">
-                                    <i class="fas fa-chart-line ml-1"></i>
-                                    من إجمالي الحجوزات
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- معدل الإلغاء -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg border-r-4 border-red-500">
-                <div class="p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-ban text-3xl text-red-500"></i>
-                        </div>
-                        <div class="ml-4 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">معدل الإلغاء</dt>
-                                <dd class="text-2xl font-bold text-gray-900">{{ number_format(($stats['cancelled'] / max($stats['total'], 1)) * 100, 1) }}%</dd>
-                                <dd class="text-sm text-red-600 flex items-center">
-                                    <i class="fas fa-exclamation-triangle ml-1"></i>
-                                    يحتاج تحسين
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>
 
         <!-- الفلاتر -->
-        <div class="bg-white shadow-lg rounded-lg mb-6">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-filter text-blue-500 ml-2"></i>
-                    فلترة الحجوزات
-                </h3>
-                <p class="mt-1 text-sm text-gray-500">استخدم الفلاتر أدناه للعثور على الحجوزات المحددة</p>
+        <div class="bg-white shadow-xl rounded-2xl mb-8 border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-200 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-filter text-blue-500 ml-2"></i>
+                        فلترة الحجوزات
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500">اختصر الوقت باستعمال الفلاتر الذكية أدناه</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="toggleAdvancedFilters" class="inline-flex items-center px-4 py-2 rounded-md border border-blue-200 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors duration-200" aria-expanded="{{ $advancedFiltersActive ? 'true' : 'false' }}">
+                        <i class="fas fa-sliders-h ml-2"></i>
+                        <span id="advancedFiltersToggleLabel">{{ $advancedFiltersActive ? 'إخفاء الفلاتر المتقدمة' : 'عرض الفلاتر المتقدمة' }}</span>
+                    </button>
+                    <a href="{{ route('admin.bookings.index') }}" class="inline-flex items-center px-4 py-2 rounded-md border border-gray-200 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-redo ml-2"></i>
+                        إعادة التعيين
+                    </a>
+                </div>
             </div>
-            <div class="p-6">
-                <form method="GET" id="bookingFiltersForm" class="space-y-6">
-                    <!-- الصف الأول - الفلاتر الأساسية -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <form method="GET" id="bookingFiltersForm" class="px-6 py-6 space-y-6">
+                <div class="quick-filter-scroll">
+                    @foreach($quickStatusFilters as $filter)
+                        @php
+                            $isActiveStatus = request()->filled('status') ? request('status') === $filter['value'] : is_null($filter['value']);
+                        @endphp
+                        <button type="button" class="quick-filter-chip {{ $isActiveStatus ? 'is-active' : '' }}" data-status-value="{{ $filter['value'] ?? '' }}">
+                            <span class="chip-icon">
+                                <i class="fas {{ $filter['icon'] }} text-sm"></i>
+                            </span>
+                            <div class="flex flex-col text-right leading-tight">
+                                <span class="chip-label">{{ $filter['label'] }}</span>
+                                <span class="text-[11px] text-blue-900/60">{{ $filter['hint'] }}</span>
+                            </div>
+                            <span class="chip-count">{{ $filter['count'] }}</span>
+                        </button>
+                    @endforeach
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
-                        <select name="status" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select id="statusSelect" name="status" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">جميع الحالات</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>في الانتظار</option>
                             <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>مؤكدة</option>
@@ -327,16 +535,14 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
                         <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" max="{{ date('Y-m-d') }}">
                     </div>
+                </div>
 
-                    </div>
-
-                    <!-- الصف الثاني - الفلاتر المتقدمة -->
-                    <div class="border-t border-gray-200 pt-4">
-                        <h4 class="text-sm font-medium text-gray-700 mb-4 flex items-center">
-                            <i class="fas fa-cogs ml-2"></i>
-                            فلاتر متقدمة
-                        </h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div id="advancedFilters" class="border-t border-gray-200 pt-4 {{ $advancedFiltersActive ? '' : 'hidden' }}">
+                    <h4 class="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                        <i class="fas fa-cogs ml-2"></i>
+                        فلاتر متقدمة
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">نوع الورشة</label>
                             <select name="workshop_type" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -374,52 +580,52 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">عدد الحجوزات</label>
                             <select name="booking_count" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">جميع المستخدمين</option>
-                                <option value="single" {{ request('booking_count') == 'single' ? 'selected' : '' }}>حجز واحد فقط</option>
-                                <option value="multiple" {{ request('booking_count') == 'multiple' ? 'selected' : '' }}>حجوزات متعددة</option>
+                                <option value="single" {{ request('booking_count') == 'single' ? 'selected' : '' }}>حجز واحد</option>
+                                <option value="multiple" {{ request('booking_count') == 'multiple' ? 'selected' : '' }}>عدة حجوزات</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الورشة</label>
-                            <div class="flex gap-2">
-                                <input type="date" name="workshop_date_from" value="{{ request('workshop_date_from') }}" placeholder="من" class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                <input type="date" name="workshop_date_to" value="{{ request('workshop_date_to') }}" placeholder="إلى" class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            </div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الورشة (من)</label>
+                            <input type="date" name="workshop_date_from" value="{{ request('workshop_date_from') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الورشة (إلى)</label>
+                            <input type="date" name="workshop_date_to" value="{{ request('workshop_date_to') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
+                </div>
 
-                    <!-- الصف الثالث - البحث والترتيب والأزرار -->
-                    <div class="border-t border-gray-200 pt-4">
-                        <div class="flex flex-col lg:flex-row gap-4">
-                            <div class="flex-1">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث بالاسم أو البريد الإلكتروني أو عنوان الورشة..." class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div class="flex gap-2">
-                                <select name="sort_by" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>تاريخ الحجز</option>
-                                    <option value="payment_amount" {{ request('sort_by') == 'payment_amount' ? 'selected' : '' }}>المبلغ</option>
-                                    <option value="workshop_start_date" {{ request('sort_by') == 'workshop_start_date' ? 'selected' : '' }}>تاريخ الورشة</option>
-                                </select>
-                                <select name="sort_direction" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="desc" {{ request('sort_direction') == 'desc' ? 'selected' : '' }}>تنازلي</option>
-                                    <option value="asc" {{ request('sort_direction') == 'asc' ? 'selected' : '' }}>تصاعدي</option>
-                                </select>
-                            </div>
-                            <div class="flex gap-2">
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث بالاسم أو البريد الإلكتروني أو عنوان الورشة..." class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="flex gap-2">
+                            <select name="sort_by" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>تاريخ الحجز</option>
+                                <option value="payment_amount" {{ request('sort_by') == 'payment_amount' ? 'selected' : '' }}>المبلغ</option>
+                                <option value="workshop_start_date" {{ request('sort_by') == 'workshop_start_date' ? 'selected' : '' }}>تاريخ الورشة</option>
+                            </select>
+                            <select name="sort_direction" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="desc" {{ request('sort_direction') == 'desc' ? 'selected' : '' }}>تنازلي</option>
+                                <option value="asc" {{ request('sort_direction') == 'asc' ? 'selected' : '' }}>تصاعدي</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <i class="fas fa-search ml-2"></i>
                                 بحث
                             </button>
-                                <a href="{{ route('admin.bookings.index') }}" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                                <i class="fas fa-times ml-2"></i>
-                                مسح
-                            </a>
-                            </div>
+                            <button type="button" id="clearFiltersButton" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                <i class="fas fa-broom ml-2"></i>
+                                مسح الحقول
+                            </button>
                         </div>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
 
         <!-- مؤشرات الفلاتر النشطة -->
@@ -1032,14 +1238,30 @@ function showCancellationModal(bookingId) {
 // تحسين وظائف الفلترة
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('bookingFiltersForm');
-    const dateFromInput = document.querySelector('input[name="date_from"]');
-    const dateToInput = document.querySelector('input[name="date_to"]');
-    
-    // التحقق من صحة التواريخ
+    if (!form) {
+        return;
+    }
+
+    const dateFromInput = form.querySelector('input[name="date_from"]');
+    const dateToInput = form.querySelector('input[name="date_to"]');
+    const workshopDateFromInput = form.querySelector('input[name="workshop_date_from"]');
+    const workshopDateToInput = form.querySelector('input[name="workshop_date_to"]');
+    const statusSelect = document.getElementById('statusSelect');
+    const quickFilterChips = form.querySelectorAll('.quick-filter-chip');
+    const clearFiltersButton = document.getElementById('clearFiltersButton');
+    const toggleAdvancedFiltersButton = document.getElementById('toggleAdvancedFilters');
+    const advancedFiltersSection = document.getElementById('advancedFilters');
+    const advancedFiltersLabel = document.getElementById('advancedFiltersToggleLabel');
+
+    // التحقق من صحة التواريخ الأساسية
     function validateDates() {
+        if (!dateFromInput || !dateToInput) {
+            return true;
+        }
+
         const dateFrom = dateFromInput.value;
         const dateTo = dateToInput.value;
-        
+
         if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
             showAlertModal('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
             dateToInput.value = '';
@@ -1047,21 +1269,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return true;
     }
-    
-    // إضافة مستمعي الأحداث
-    dateFromInput.addEventListener('change', function() {
-        if (this.value && dateToInput.value) {
-            validateDates();
-        }
-    });
-    
-    dateToInput.addEventListener('change', function() {
-        if (this.value && dateFromInput.value) {
-            validateDates();
-        }
-    });
-    
-    // إرسال النموذج عند تغيير الفلاتر
+
+    if (dateFromInput && dateToInput) {
+        dateFromInput.addEventListener('change', function() {
+            if (this.value && dateToInput.value) {
+                validateDates();
+            }
+        });
+
+        dateToInput.addEventListener('change', function() {
+            if (this.value && dateFromInput.value) {
+                validateDates();
+            }
+        });
+    }
+
+    if (toggleAdvancedFiltersButton && advancedFiltersSection) {
+        toggleAdvancedFiltersButton.addEventListener('click', () => {
+            const isHidden = advancedFiltersSection.classList.toggle('hidden');
+            toggleAdvancedFiltersButton.setAttribute('aria-expanded', (!isHidden).toString());
+            if (advancedFiltersLabel) {
+                advancedFiltersLabel.textContent = isHidden ? 'عرض الفلاتر المتقدمة' : 'إخفاء الفلاتر المتقدمة';
+            }
+        });
+    }
+
     const filterInputs = form.querySelectorAll('select, input[type="date"]');
     filterInputs.forEach(input => {
         input.addEventListener('change', function() {
@@ -1072,13 +1304,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // التحقق من صحة تواريخ الورشة
-    const workshopDateFromInput = document.querySelector('input[name="workshop_date_from"]');
-    const workshopDateToInput = document.querySelector('input[name="workshop_date_to"]');
-    
     function validateWorkshopDates() {
+        if (!workshopDateFromInput || !workshopDateToInput) {
+            return true;
+        }
+
         const dateFrom = workshopDateFromInput.value;
         const dateTo = workshopDateToInput.value;
-        
+
         if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
             showAlertModal('تاريخ بداية الورشة يجب أن يكون قبل تاريخ نهاية الورشة');
             workshopDateToInput.value = '';
@@ -1086,51 +1319,90 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return true;
     }
-    
-    workshopDateFromInput.addEventListener('change', function() {
-        if (this.value && workshopDateToInput.value) {
-            validateWorkshopDates();
-        }
-    });
-    
-    workshopDateToInput.addEventListener('change', function() {
-        if (this.value && workshopDateFromInput.value) {
-            validateWorkshopDates();
-        }
-    });
-    
+
+    if (workshopDateFromInput && workshopDateToInput) {
+        workshopDateFromInput.addEventListener('change', function() {
+            if (this.value && workshopDateToInput.value) {
+                validateWorkshopDates();
+            }
+        });
+
+        workshopDateToInput.addEventListener('change', function() {
+            if (this.value && workshopDateFromInput.value) {
+                validateWorkshopDates();
+            }
+        });
+    }
+
     // البحث مع تأخير
-    const searchInput = document.querySelector('input[name="search"]');
-    let searchTimeout;
-    
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            if (this.value.length >= 2 || this.value.length === 0) {
+    const searchInput = form.querySelector('input[name="search"]');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 2 || this.value.length === 0) {
+                    form.submit();
+                }
+            }, 500);
+        });
+    }
+
+    // الفلاتر السريعة للحالة
+    quickFilterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            quickFilterChips.forEach(btn => btn.classList.remove('is-active'));
+            chip.classList.add('is-active');
+
+            if (statusSelect) {
+                statusSelect.value = chip.getAttribute('data-status-value') || '';
+                statusSelect.dispatchEvent(new Event('change'));
+            } else {
                 form.submit();
             }
-        }, 500);
+        });
     });
-    
+
+    if (clearFiltersButton) {
+        clearFiltersButton.addEventListener('click', () => {
+            form.reset();
+            if (statusSelect) {
+                statusSelect.value = '';
+            }
+
+            quickFilterChips.forEach(btn => btn.classList.remove('is-active'));
+            const defaultChip = Array.from(quickFilterChips).find(btn => (btn.getAttribute('data-status-value') || '') === '');
+            if (defaultChip) {
+                defaultChip.classList.add('is-active');
+            }
+
+            if (validateDates()) {
+                form.submit();
+            }
+        });
+    }
+
     // إضافة تأثيرات بصرية للتحميل
     form.addEventListener('submit', function() {
         const submitButton = form.querySelector('button[type="submit"]');
+        if (!submitButton) {
+            return;
+        }
+
         const originalContent = submitButton.innerHTML;
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري البحث...';
         submitButton.disabled = true;
-        
-        // إضافة تأثير تحميل للصفحة
+
         document.body.style.opacity = '0.8';
         document.body.style.transition = 'opacity 0.3s ease';
-        
-        // إعادة تعيين الزر بعد 3 ثوانٍ كحد أقصى
+
         setTimeout(() => {
             submitButton.innerHTML = originalContent;
             submitButton.disabled = false;
             document.body.style.opacity = '1';
         }, 3000);
     });
-    
+
     // إضافة تأثيرات hover للبطاقات
     const cards = document.querySelectorAll('.dashboard-card, .bg-white');
     cards.forEach(card => {
@@ -1138,12 +1410,12 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(-2px)';
             this.style.transition = 'transform 0.3s ease';
         });
-        
+
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
         });
     });
-    
+
     // إضافة تأثيرات للجداول
     const tableRows = document.querySelectorAll('.activity-item');
     tableRows.forEach(row => {
@@ -1151,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
             this.style.transition = 'box-shadow 0.3s ease';
         });
-        
+
         row.addEventListener('mouseleave', function() {
             this.style.boxShadow = 'none';
         });

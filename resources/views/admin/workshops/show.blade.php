@@ -1,169 +1,595 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'تفاصيل الورشة - لوحة الإدارة')
+@section('title', 'تفاصيل الورشة - ' . $workshop->title)
+
+@push('styles')
+<style>
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 45%, #fff7ed 100%);
+        min-height: 100vh;
+    }
+
+    .admin-card {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(226, 232, 240, 0.7);
+        box-shadow: 0 35px 60px -45px rgba(30, 41, 59, 0.45);
+        backdrop-filter: blur(8px);
+    }
+
+    .page-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(254, 243, 199, 0.94) 55%, rgba(224, 242, 254, 0.94) 100%);
+        border-radius: 1.75rem;
+        border: 1px solid rgba(249, 115, 22, 0.16);
+        padding: 2.75rem 2.5rem;
+        box-shadow: 0 35px 60px -42px rgba(249, 115, 22, 0.55);
+    }
+
+    .page-hero::before,
+    .page-hero::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    .page-hero::before {
+        width: 360px;
+        height: 360px;
+        top: -150px;
+        left: -140px;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.25), transparent 65%);
+    }
+
+    .page-hero::after {
+        width: 420px;
+        height: 420px;
+        bottom: -220px;
+        right: -170px;
+        background: radial-gradient(circle, rgba(249, 115, 22, 0.3), transparent 70%);
+    }
+
+    .page-hero > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.95rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: rgba(255,255,255,0.65);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        color: #92400e;
+        backdrop-filter: blur(6px);
+    }
+
+    .hero-badge--active {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.35);
+        color: #047857;
+    }
+
+    .hero-badge--inactive {
+        background: rgba(248, 113, 113, 0.2);
+        border-color: rgba(248, 113, 113, 0.35);
+        color: #b91c1c;
+    }
+
+    .hero-badge--online {
+        background: rgba(59, 130, 246, 0.22);
+        border-color: rgba(59, 130, 246, 0.35);
+        color: #1d4ed8;
+    }
+
+    .hero-badge--featured {
+        background: rgba(250, 204, 21, 0.3);
+        border-color: rgba(250, 204, 21, 0.45);
+        color: #b45309;
+    }
+
+    .hero-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 1.25rem;
+        margin-top: 2.5rem;
+    }
+
+    .hero-meta-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 1.15rem;
+        border: 1px solid rgba(203, 213, 225, 0.45);
+        padding: 1.1rem 1.35rem;
+        backdrop-filter: blur(8px);
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        min-height: 110px;
+        box-shadow: 0 20px 45px -38px rgba(14, 165, 233, 0.45);
+    }
+
+    .hero-meta-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .hero-meta-value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .hero-meta-sub {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .detail-heading {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.65rem;
+    }
+
+    .detail-block + .detail-block {
+        border-top: 1px solid rgba(226, 232, 240, 0.7);
+        padding-top: 1.35rem;
+        margin-top: 1.35rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 9999px;
+        background: rgba(248, 250, 252, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        padding: 0.35rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .progress-bar {
+        position: relative;
+        height: 0.65rem;
+        background: rgba(226, 232, 240, 0.8);
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        border-radius: inherit;
+        transition: width 0.4s ease;
+    }
+
+    .notification {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.35rem;
+        border-radius: 0.9rem;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 18px 30px -18px rgba(15, 23, 42, 0.25);
+        transform: translateX(120%);
+        transition: transform 0.3s ease;
+        z-index: 1200;
+    }
+
+    .notification.show {
+        transform: translateX(0);
+    }
+
+    .notification.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .notification.error {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .notification.warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    @media (max-width: 1024px) {
+        .page-hero {
+            padding: 2.25rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-hero {
+            padding: 2rem;
+        }
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="container mx-auto px-4 max-w-6xl">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">تفاصيل الورشة</h1>
-                <p class="text-gray-600">{{ $workshop->title }}</p>
+@php
+    $bookingsCount = (int) ($workshop->bookings_count ?? 0);
+    $maxParticipants = max((int) ($workshop->max_participants ?? 0), 1);
+    $occupancy = min(100, round(($bookingsCount / $maxParticipants) * 100));
+    $isOnline = (bool) $workshop->is_online;
+    $isFeatured = (bool) $workshop->is_featured;
+    $hasMeetingLink = $isOnline && $workshop->meeting_link;
+@endphp
+<div class="py-10 md:py-16">
+    <div class="container mx-auto px-4 max-w-6xl space-y-10">
+        <div class="page-hero">
+            <div class="flex flex-col xl:flex-row gap-8 xl:gap-12">
+                <div class="flex-1 space-y-6">
+                    <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 text-orange-600 font-semibold text-xs tracking-widest shadow-sm uppercase">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        لوحة تفاصيل الورشة
+                    </span>
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-black text-slate-900 leading-tight">
+                            {{ $workshop->title }}
+                        </h1>
+                        <p class="mt-4 text-slate-600 leading-relaxed max-w-3xl">
+                            تابع حالة الورشة، راجع محتواها، وتأكد من أن كل التفاصيل المرتبطة بالجلسات أو الوصفات محدثة قبل مشاركتها مع المتدربين.
+                        </p>
+                    </div>
+
+                    <div class="hero-badges">
+                        <span class="hero-badge {{ $workshop->is_active ? 'hero-badge--active' : 'hero-badge--inactive' }}">
+                            <i class="fas {{ $workshop->is_active ? 'fa-bolt' : 'fa-pause-circle' }}"></i>
+                            {{ $workshop->is_active ? 'الورشة نشطة' : 'الورشة غير مفعّلة' }}
+                        </span>
+                        <span class="hero-badge {{ $isOnline ? 'hero-badge--online' : '' }}">
+                            <i class="fas {{ $isOnline ? 'fa-video' : 'fa-map-marker-alt' }}"></i>
+                            {{ $isOnline ? 'ورشة أونلاين' : 'ورشة حضورية' }}
+                        </span>
+                        @if($isFeatured)
+                            <span class="hero-badge hero-badge--featured">
+                                <i class="fas fa-crown"></i>
+                                الورشة المميزة الحالية
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="w-full xl:w-80 space-y-4">
+                    <div class="hero-meta-card">
+                        <span class="hero-meta-label">المدرب</span>
+                        <span class="hero-meta-value">{{ $workshop->instructor }}</span>
+                        <span class="hero-meta-sub">شارك ملف المدرب أو نبذة عنه أسفل الصفحة.</span>
+                    </div>
+                    <div class="hero-meta-card">
+                        <span class="hero-meta-label">السعر</span>
+                        <span class="hero-meta-value">{{ number_format($workshop->price, 2) }} {{ $workshop->currency }}</span>
+                        <span class="hero-meta-sub">تأكد من أن التسعير متوافق مع المحتوى والمدة.</span>
+                    </div>
+                </div>
             </div>
-            <div class="flex gap-3">
-                <a href="{{ route('admin.workshops.edit', $workshop->id) }}" 
-                   class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    <i class="fas fa-edit ml-2"></i>
-                    تعديل
-                </a>
-                <a href="{{ route('admin.workshops.index') }}" 
-                   class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    <i class="fas fa-arrow-right ml-2"></i>
-                    العودة للقائمة
-                </a>
+
+            <div class="hero-meta-grid">
+                <div class="hero-meta-card">
+                    <span class="hero-meta-label">تاريخ البداية</span>
+                    <span class="hero-meta-value">{{ optional($workshop->start_date)->format('d M Y، H:i') ?? 'غير محدد' }}</span>
+                    <span class="hero-meta-sub">موعد انطلاق الورشة.</span>
+                </div>
+                <div class="hero-meta-card">
+                    <span class="hero-meta-label">تاريخ النهاية</span>
+                    <span class="hero-meta-value">{{ optional($workshop->end_date)->format('d M Y، H:i') ?? 'غير محدد' }}</span>
+                    <span class="hero-meta-sub">خاتمة الورشة أو آخر جلسة.</span>
+                </div>
+                <div class="hero-meta-card">
+                    <span class="hero-meta-label">مدة الورشة</span>
+                    <span class="hero-meta-value">{{ $workshop->duration ?? 0 }} دقيقة</span>
+                    <span class="hero-meta-sub">الوقت الإجمالي المتوقع لكل المشاركين.</span>
+                </div>
+                <div class="hero-meta-card">
+                    <span class="hero-meta-label">الاشغال</span>
+                    <span class="hero-meta-value">{{ $occupancy }}%</span>
+                    <span class="progress-bar mt-2">
+                        <span class="progress-fill" style="width: {{ $occupancy }}%"></span>
+                    </span>
+                    <span class="hero-meta-sub">{{ $bookingsCount }} / {{ $maxParticipants }} مقعد محجوز.</span>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Main Content -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Workshop Image -->
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/800x400/f87171/FFFFFF?text=ورشة' }}" 
-                         alt="{{ $workshop->title }}" 
-                         class="w-full h-64 object-cover">
+        <div class="grid gap-8 lg:grid-cols-[2fr_1fr]">
+            <div class="space-y-8">
+                <div class="admin-card overflow-hidden">
+                    <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/1200x600/f97316/FFFFFF?text=ورشة' }}"
+                         alt="{{ $workshop->title }}"
+                         class="h-72 w-full object-cover">
                 </div>
 
-                <!-- Workshop Details -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">تفاصيل الورشة</h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <h3 class="font-semibold text-gray-700 mb-2">الوصف</h3>
-                            <p class="text-gray-600 leading-relaxed">{{ $workshop->description }}</p>
-                        </div>
+                <div class="admin-card p-6 md:p-8">
+                    <div class="detail-block">
+                        <h2 class="detail-heading">وصف الورشة</h2>
+                        <p class="leading-relaxed text-slate-600">{!! nl2br(e($workshop->description)) !!}</p>
+                    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="detail-block">
+                        <h2 class="detail-heading">الجدول والتفاصيل الزمنية</h2>
+                        <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">المدرب</h3>
-                                <p class="text-gray-600">{{ $workshop->instructor }}</p>
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">البداية</span>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->start_date)->format('d M Y، H:i') ?? 'غير محدد' }}</p>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">السعر</h3>
-                                <p class="text-gray-600 font-bold">{{ $workshop->price }} {{ $workshop->currency }}</p>
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">النهاية</span>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->end_date)->format('d M Y، H:i') ?? 'غير محدد' }}</p>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">تاريخ البداية</h3>
-                                <p class="text-gray-600">{{ $workshop->start_date->format('d M, Y - H:i') }}</p>
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">التسجيل متاح حتى</span>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->registration_deadline)->format('d M Y، H:i') ?? 'لم يحدد' }}</p>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">تاريخ النهاية</h3>
-                                <p class="text-gray-600">{{ $workshop->end_date->format('d M, Y - H:i') }}</p>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">العدد الأقصى</h3>
-                                <p class="text-gray-600">{{ $workshop->max_participants }} مشارك</p>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-700 mb-2">النوع</h3>
-                                <p class="text-gray-600">{{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}</p>
+                                <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">عدد المقاعد</span>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ $maxParticipants }} مقعد</p>
                             </div>
                         </div>
+                    </div>
 
-                        @if($workshop->location && !$workshop->is_online)
-                        <div>
-                            <h3 class="font-semibold text-gray-700 mb-2">الموقع</h3>
-                            <p class="text-gray-600">{{ $workshop->location }}</p>
+                    @if($workshop->content)
+                        <div class="detail-block">
+                            <h2 class="detail-heading">المحتوى التفصيلي</h2>
+                            <div class="prose max-w-none rtl:text-right">
+                                <p class="leading-relaxed text-slate-600">{!! nl2br(e($workshop->content)) !!}</p>
+                            </div>
                         </div>
+                    @endif
+
+                    <div class="detail-block grid gap-4 md:grid-cols-2">
+                        @if($workshop->what_you_will_learn)
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 mb-3">ما سيتعلمه المشاركون</h3>
+                                <p class="text-slate-600 leading-relaxed">{!! nl2br(e($workshop->what_you_will_learn)) !!}</p>
+                            </div>
+                        @endif
+                        @if($workshop->requirements)
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 mb-3">المتطلبات</h3>
+                                <p class="text-slate-600 leading-relaxed">{!! nl2br(e($workshop->requirements)) !!}</p>
+                            </div>
+                        @endif
+                        @if($workshop->materials_needed)
+                            <div class="md:col-span-2">
+                                <h3 class="text-sm font-bold text-slate-900 mb-3">المواد والأدوات المطلوبة</h3>
+                                <p class="text-slate-600 leading-relaxed">{!! nl2br(e($workshop->materials_needed)) !!}</p>
+                            </div>
+                        @endif
+                        @if($workshop->instructor_bio)
+                            <div class="md:col-span-2">
+                                <h3 class="text-sm font-bold text-slate-900 mb-3">نبذة عن المدرب</h3>
+                                <p class="text-slate-600 leading-relaxed">{!! nl2br(e($workshop->instructor_bio)) !!}</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="admin-card p-6 md:p-8">
+                    <div class="detail-block">
+                        <h2 class="detail-heading">معلومات الوصول</h2>
+                        <div class="space-y-4">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="chip">
+                                    <i class="fas {{ $isOnline ? 'fa-video' : 'fa-store' }} text-orange-400"></i>
+                                    {{ $isOnline ? 'جلسة أونلاين' : 'جلسة حضورية' }}
+                                </span>
+                                <span class="chip">
+                                    <i class="fas fa-clock text-orange-400"></i>
+                                    {{ $workshop->duration ?? 0 }} دقيقة</span>
+                                <span class="chip">
+                                    <i class="fas fa-users text-orange-400"></i>
+                                    {{ $bookingsCount }} حجز مؤكد</span>
+                            </div>
+
+                            @if(!$isOnline && $workshop->location)
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900 mb-2">الموقع</h3>
+                                    <p class="text-slate-600 leading-relaxed">{{ $workshop->location }}</p>
+                                    @if($workshop->address)
+                                        <p class="text-xs text-slate-500 mt-1">{{ $workshop->address }}</p>
+                                    @endif
+                                </div>
+                            @endif
+
+                            @if($hasMeetingLink)
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900 mb-2">رابط الاجتماع</h3>
+                                    <div class="flex flex-col gap-3">
+                                        <code class="truncate rounded-xl bg-slate-100 px-4 py-2 text-sm text-slate-700">{{ $workshop->meeting_link }}</code>
+                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
+                                                data-copy-target="{{ $workshop->meeting_link }}">
+                                            <i class="fas fa-copy"></i>
+                                            نسخ الرابط للمشاركين
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card p-6 md:p-8">
+                    <div class="detail-block">
+                        <h2 class="detail-heading">الوصفات المرفقة</h2>
+                        @if($workshop->recipes && $workshop->recipes->count())
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                @foreach($workshop->recipes as $recipe)
+                                    <div class="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
+                                        <div class="flex items-start gap-3">
+                                            <img src="{{ $recipe->image_url ?: 'https://placehold.co/80x80/f97316/FFFFFF?text=وصفة' }}"
+                                                 alt="{{ $recipe->title }}"
+                                                 class="h-16 w-16 rounded-xl border border-slate-200 object-cover"
+                                                 onerror="this.src='{{ asset('image/logo.png') }}';">
+                                            <div class="space-y-1">
+                                                <p class="text-sm font-bold text-slate-900">{{ $recipe->title }}</p>
+                                                <p class="text-xs text-slate-500">{{ $recipe->author }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-slate-500">لم يتم ربط أية وصفات بهذه الورشة حتى الآن.</p>
                         @endif
                     </div>
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div class="space-y-6">
-                <!-- Status Card -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="font-bold text-gray-800 mb-4">حالة الورشة</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">الحالة:</span>
-                            <span class="px-3 py-1 rounded-full text-sm font-semibold {{ $workshop->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $workshop->is_active ? 'نشطة' : 'غير نشطة' }}
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">النوع:</span>
-                            <span class="px-3 py-1 rounded-full text-sm font-semibold {{ $workshop->is_online ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">تاريخ الإنشاء:</span>
-                            <span class="text-gray-800">{{ $workshop->created_at->format('d M, Y') }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bookings Card -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="font-bold text-gray-800 mb-4">الحجوزات</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">عدد الحجوزات:</span>
-                            <span class="font-bold text-gray-800">{{ $workshop->bookings_count }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">المقاعد المتاحة:</span>
-                            <span class="font-bold text-gray-800">{{ $workshop->max_participants - $workshop->bookings_count }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-orange-500 h-2 rounded-full" 
-                                 style="width: {{ ($workshop->bookings_count / $workshop->max_participants) * 100 }}%"></div>
-                        </div>
-                        <p class="text-sm text-gray-500 text-center">
-                            {{ round(($workshop->bookings_count / $workshop->max_participants) * 100) }}% مكتمل
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Actions Card -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="font-bold text-gray-800 mb-4">الإجراءات</h3>
-                    <div class="space-y-3">
-                        <a href="{{ route('admin.workshops.edit', $workshop->id) }}" 
-                           class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
-                            <i class="fas fa-edit ml-2"></i>
-                            تعديل الورشة
+            <div class="space-y-8">
+                <div class="admin-card p-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-900">ملخص سريع</h3>
+                        <a href="{{ route('admin.workshops.index') }}" class="text-sm font-semibold text-orange-500 hover:text-orange-600">
+                            <i class="fas fa-arrow-right ml-2"></i>عودة للقائمة
                         </a>
-                        
-                        <form action="{{ route('admin.workshops.toggle-status', $workshop->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" 
-                                    class="w-full {{ $workshop->is_active ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600' }} text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
-                                <i class="fas {{ $workshop->is_active ? 'fa-pause' : 'fa-play' }} ml-2"></i>
-                                {{ $workshop->is_active ? 'إلغاء التفعيل' : 'تفعيل الورشة' }}
-                            </button>
-                        </form>
-
-                        <form action="{{ route('admin.workshops.destroy', $workshop->id) }}" 
-                              method="POST" 
-                              onsubmit="return confirm('هل أنت متأكد من حذف هذه الورشة؟')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
-                                <i class="fas fa-trash ml-2"></i>
-                                حذف الورشة
-                            </button>
-                        </form>
+                    </div>
+                    <div class="mt-6 space-y-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">تاريخ الإنشاء</span>
+                            <span class="font-semibold text-slate-800">{{ optional($workshop->created_at)->format('d M Y') }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">آخر تحديث</span>
+                            <span class="font-semibold text-slate-800">{{ optional($workshop->updated_at)->diffForHumans() }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">الفئة</span>
+                            <span class="font-semibold text-slate-800">{{ $workshop->category ?: 'غير محددة' }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">المستوى</span>
+                            <span class="font-semibold text-slate-800">
+                                @switch($workshop->level)
+                                    @case('beginner') مبتدئ @break
+                                    @case('intermediate') متوسط @break
+                                    @case('advanced') متقدم @break
+                                    @default غير محدد
+                                @endswitch
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+
+                <div class="admin-card p-6">
+                    <h3 class="text-lg font-bold text-slate-900">الحجوزات</h3>
+                    <div class="mt-6 space-y-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">الحجوزات المؤكدة</span>
+                            <span class="font-semibold text-slate-900">{{ $bookingsCount }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">المقاعد المتاحة</span>
+                            <span class="font-semibold text-slate-900">{{ max($maxParticipants - $bookingsCount, 0) }}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <span class="progress-fill" style="width: {{ $occupancy }}%"></span>
+                        </div>
+                        <p class="text-xs text-slate-500 text-center">{{ $occupancy }}% من الورشة ممتلئ حالياً.</p>
+                    </div>
+                </div>
+
+                <div class="admin-card p-6 space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900">الإجراءات</h3>
+                    <a href="{{ route('admin.workshops.edit', $workshop->id) }}"
+                       class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5">
+                        <i class="fas fa-edit"></i>
+                        تعديل الورشة
+                    </a>
+
+                    <form action="{{ route('admin.workshops.toggle-status', $workshop->id) }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 {{ $workshop->is_active ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-emerald-500 hover:bg-emerald-600' }}">
+                            <i class="fas {{ $workshop->is_active ? 'fa-pause' : 'fa-play' }}"></i>
+                            {{ $workshop->is_active ? 'إلغاء تفعيل الورشة' : 'تفعيل الورشة' }}
+                        </button>
+                    </form>
+
+                    <form action="{{ route('admin.workshops.destroy', $workshop->id) }}" method="POST"
+                          class="delete-workshop-form"
+                          data-workshop-title="{{ $workshop->title }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-red-600">
+                            <i class="fas fa-trash"></i>
+                            حذف الورشة
+                        </button>
+                    </form>
+</div>
+</div>
+</div>
+</div>
 </div>
 @endsection
 
+@include('admin.workshops.partials.delete-confirm-script')
+
+@push('styles')
+    @include('admin.workshops.partials.swal-styles')
+@endpush
+
+@push('scripts')
+<script>
+function showNotification(message, type = 'success') {
+    document.querySelectorAll('.notification').forEach(el => el.remove());
+
+    const icon = type === 'error' ? 'fa-exclamation-triangle' : (type === 'warning' ? 'fa-info-circle' : 'fa-check');
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+
+    document.body.appendChild(notification);
+    requestAnimationFrame(() => notification.classList.add('show'));
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3200);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('button[data-copy-target]').forEach(button => {
+        button.addEventListener('click', async () => {
+            const text = button.getAttribute('data-copy-target');
+            if (!text) {
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(text);
+                showNotification('تم نسخ رابط الاجتماع بنجاح!', 'success');
+            } catch (error) {
+                console.error(error);
+                showNotification('تعذّر نسخ الرابط. يرجى المحاولة يدوياً.', 'error');
+            }
+        });
+    });
+});
+</script>
+@endpush

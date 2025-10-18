@@ -948,7 +948,7 @@
                 <!-- Mobile Notification Bell Icon -->
                 <a href="/notifications" class="relative text-gray-600 hover:text-orange-500 transition-colors focus:outline-none">
                     <i class="fas fa-bell text-xl"></i>
-                    <span id="mobile-notification-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10">0</span>
+                    <span id="mobile-notification-count" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10" aria-hidden="true">0</span>
                 </a>
                 @endauth
                 
@@ -994,7 +994,7 @@
                         <div class="relative notification-container" id="notification-container">
                             <button id="notification-bell" class="relative text-gray-600 hover:text-orange-500 transition-colors focus:outline-none" onclick="toggleNotificationDropdown()">
                                 <i class="fas fa-bell text-xl"></i>
-                                <span id="notification-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10">0</span>
+                                <span id="notification-count" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10" aria-hidden="true">0</span>
                             </button>
                             
                             <!-- Notification Dropdown -->
@@ -1079,7 +1079,7 @@
                 <a href="/notifications" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors mobile-menu-item relative">
                     <i class="fas fa-bell ml-3 text-orange-500"></i>
                     <span class="font-medium">الإشعارات</span>
-                    <span id="mobile-notification-count-menu" class="absolute left-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10">0</span>
+                    <span id="mobile-notification-count-menu" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute left-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10" aria-hidden="true">0</span>
                 </a>
                 @endauth
                 @auth
@@ -1478,32 +1478,21 @@
                     }
 
                     const count = data?.unreadCount || 0;
-                    
-                    // Update desktop notification count
-                    const desktopCount = document.getElementById('notification-count');
-                    if (desktopCount) {
-                        desktopCount.textContent = count;
-                        if (count > 0) {
-                            desktopCount.classList.remove('hidden');
-                        } else {
-                            desktopCount.classList.add('hidden');
-                        }
-                    }
-
-                    // Update mobile notification counts
-                    const mobileCount = document.getElementById('mobile-notification-count');
-                    const mobileMenuCount = document.getElementById('mobile-notification-count-menu');
-                    
-                    [mobileCount, mobileMenuCount].forEach(element => {
-                        if (element) {
+                    if (typeof window.NotificationManager.updateBadgeElements === 'function') {
+                        window.NotificationManager.updateBadgeElements(count);
+                    } else {
+                        const badges = document.querySelectorAll('[data-notification-badge]');
+                        badges.forEach(element => {
                             element.textContent = count;
                             if (count > 0) {
                                 element.classList.remove('hidden');
+                                element.setAttribute('aria-hidden', 'false');
                             } else {
                                 element.classList.add('hidden');
+                                element.setAttribute('aria-hidden', 'true');
                             }
-                        }
-                    });
+                        });
+                    }
                 });
             }
         }

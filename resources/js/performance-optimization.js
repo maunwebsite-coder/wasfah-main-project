@@ -152,28 +152,28 @@ function optimizedLoadNotificationsCount() {
 
 // دالة تحديث واجهة العداد
 function updateNotificationsCountUI(count) {
-    const countElement = document.getElementById('notifications-count-nav');
-    const mobileCountElement = document.getElementById('mobile-notifications-count');
-    const mobileMenuCountElement = document.getElementById('notifications-count-mobile');
-    
-    [countElement, mobileCountElement, mobileMenuCountElement].forEach(element => {
-        if (element) {
-            const oldCount = parseInt(element.textContent) || 0;
-            element.textContent = count;
-            
-            if (count > 0) {
-                element.classList.remove('hidden');
-                
-                // إضافة تأثير بصري عند ظهور إشعارات جديدة
-                if (count > oldCount) {
-                    element.classList.add('animate-bounce');
-                    setTimeout(() => {
-                        element.classList.remove('animate-bounce');
-                    }, 2000);
-                }
-            } else {
-                element.classList.add('hidden');
+    if (window.NotificationManager && typeof window.NotificationManager.updateBadgeElements === 'function') {
+        window.NotificationManager.updateBadgeElements(count);
+        return;
+    }
+
+    const badges = document.querySelectorAll('[data-notification-badge]');
+    badges.forEach(badge => {
+        const previousCount = parseInt(badge.dataset.previousCount || badge.textContent || '0', 10) || 0;
+        badge.textContent = count;
+        badge.dataset.previousCount = count;
+
+        if (count > 0) {
+            badge.classList.remove('hidden');
+
+            if (count > previousCount) {
+                badge.classList.add('animate-bounce');
+                setTimeout(() => {
+                    badge.classList.remove('animate-bounce');
+                }, 2000);
             }
+        } else {
+            badge.classList.add('hidden');
         }
     });
 }
@@ -252,4 +252,3 @@ window.PerformanceOptimization = {
         }
     }
 };
-

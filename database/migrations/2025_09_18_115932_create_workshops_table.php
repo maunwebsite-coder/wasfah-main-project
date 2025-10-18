@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('content')->nullable(); // محتوى الورشة التفصيلي
             $table->string('instructor'); // اسم المدرب
             $table->string('instructor_avatar')->nullable(); // صورة المدرب
-            $table->string('instructor_bio')->nullable(); // نبذة عن المدرب
+            $table->text('instructor_bio')->nullable(); // نبذة عن المدرب
             $table->string('category'); // فئة الورشة (طبخ، حلويات، إلخ)
             $table->string('level'); // مستوى الورشة (مبتدئ، متوسط، متقدم)
             $table->integer('duration'); // مدة الورشة بالدقائق

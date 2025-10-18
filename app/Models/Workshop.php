@@ -193,9 +193,12 @@ class Workshop extends Model
             'currency' => 'required|string|in:JOD,AED',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
+            'location' => ['required_unless:is_online,1', 'nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
             'is_online' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'meeting_link' => ['nullable', 'url', 'max:255', 'required_if:is_online,1'],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
 
