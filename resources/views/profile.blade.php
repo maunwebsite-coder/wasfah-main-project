@@ -213,7 +213,7 @@ use Carbon\Carbon;
                                         {{ $nextWorkshop->workshop->duration }}
                                     </span>
                                 @endif
-                                <a href="{{ route('workshops') }}#{{ $nextWorkshop->workshop->id }}" class="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold">
+                                <a href="{{ route('workshop.show', $nextWorkshop->workshop->slug) }}" class="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold">
                                     تفاصيل الورشة
                                     <i class="fas fa-arrow-left text-xs"></i>
                                 </a>
@@ -1139,12 +1139,17 @@ use Carbon\Carbon;
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input type="email" name="email" value="{{ $user->email }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
+                    <input type="email" name="email" value="{{ $user->email }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed" readonly disabled>
+                    <p class="text-xs text-gray-500 mt-1">لا يمكن تعديل البريد الإلكتروني</p>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
-                    <input type="text" name="phone" value="{{ $user->phone }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone text-orange-500 ml-2"></i>
+                        رقم الهاتف
+                    </label>
+                    <input type="tel" name="phone" value="{{ $user->phone }}" placeholder="أدخل رقم هاتفك" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" pattern="[0-9+\-\s\(\)]+">
+                    <p class="text-xs text-gray-500 mt-1">أضف رقم هاتفك للتواصل معك بخصوص الورشات</p>
                 </div>
             </div>
             
