@@ -27,6 +27,7 @@ class SearchController extends Controller
                 $recipesQuery = Recipe::select([
                         'recipes.recipe_id',
                         'recipes.title',
+                        'recipes.slug',
                         'recipes.description',
                         'recipes.author',
                         'recipes.image',
@@ -112,12 +113,15 @@ class SearchController extends Controller
             if ($type === 'all' || $type === 'workshops') {
                 $workshopsQuery = Workshop::select([
                         'id',
+                        'slug',
                         'title',
                         'description',
                         'instructor',
                         'category',
                         'price',
+                        'currency',
                         'start_date',
+                        'location',
                         'image',
                         'is_online',
                         'rating',
@@ -279,6 +283,7 @@ class SearchController extends Controller
         return Recipe::select([
                 'recipes.recipe_id',
                 'recipes.title',
+                'recipes.slug',
                 'recipes.description',
                 'recipes.author',
                 'recipes.image',
@@ -319,12 +324,15 @@ class SearchController extends Controller
     {
         return Workshop::select([
                 'id',
+                'slug',
                 'title',
                 'description',
                 'instructor',
                 'category',
                 'price',
+                'currency',
                 'start_date',
+                'location',
                 'image',
                 'is_online'
             ])

@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 		return;
 	}
 	
+	// تفعيل قائمة المستخدم في سطح المكتب
+	setupUserMenuDropdown(userMenuContainer);
+	
 	// استهداف عناصر القائمة
 	const desktopNav = document.querySelector('.hidden.md\\:flex nav');
 	const mobileNav = document.querySelector('#mobileMenu nav');
@@ -192,4 +195,73 @@ function setupMobileSearch() {
 			window.location.href = '/';
 		}
 	}
+}
+
+/**
+ * تفعيل قائمة المستخدم المنسدلة في سطح المكتب
+ * @param {HTMLElement} userMenuContainer - الحاوية الرئيسية لزر المستخدم والقائمة
+ */
+function setupUserMenuDropdown(userMenuContainer) {
+	if (!userMenuContainer || userMenuContainer.dataset.dropdownInitialized === 'true') {
+		return;
+	}
+	
+	const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
+	const dropdownMenu = userMenuContainer.querySelector('#user-menu-dropdown');
+	
+	if (!userMenuButton || !dropdownMenu) {
+		console.log('User menu elements not found, skipping dropdown setup');
+		return;
+	}
+	
+	userMenuContainer.dataset.dropdownInitialized = 'true';
+	dropdownMenu.classList.add('hidden');
+	dropdownMenu.setAttribute('aria-hidden', 'true');
+	userMenuButton.setAttribute('aria-expanded', 'false');
+	userMenuButton.setAttribute('aria-haspopup', 'true');
+	
+	const openMenu = () => {
+		dropdownMenu.classList.remove('hidden');
+		dropdownMenu.setAttribute('aria-hidden', 'false');
+		userMenuButton.setAttribute('aria-expanded', 'true');
+	};
+	
+	const closeMenu = () => {
+		if (dropdownMenu.classList.contains('hidden')) {
+			return;
+		}
+		
+		dropdownMenu.classList.add('hidden');
+		dropdownMenu.setAttribute('aria-hidden', 'true');
+		userMenuButton.setAttribute('aria-expanded', 'false');
+	};
+	
+	userMenuButton.addEventListener('click', (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+		
+		if (dropdownMenu.classList.contains('hidden')) {
+			openMenu();
+		} else {
+			closeMenu();
+		}
+	});
+	
+	dropdownMenu.addEventListener('click', (event) => {
+		// منع إغلاق القائمة عند التفاعل مع عناصرها
+		event.stopPropagation();
+	});
+	
+	document.addEventListener('click', (event) => {
+		if (!userMenuContainer.contains(event.target)) {
+			closeMenu();
+		}
+	});
+	
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			closeMenu();
+			userMenuButton.focus();
+		}
+	});
 }

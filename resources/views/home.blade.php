@@ -40,6 +40,317 @@
         .workshop-card:hover img {
             transform: scale(1.05);
         }
+
+        /* Home hero layout */
+        .home-hero-shell {
+            position: relative;
+            border-radius: 2rem;
+            padding: clamp(1.5rem, 4vw, 2.75rem);
+            background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 45%, #ffffff 100%);
+            box-shadow: 0 30px 60px rgba(249, 115, 22, 0.12);
+            overflow: hidden;
+        }
+        .home-hero-shell::after {
+            content: "";
+            position: absolute;
+            inset-inline-end: -120px;
+            top: -60px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle at center, rgba(251, 191, 36, 0.35), transparent 70%);
+            pointer-events: none;
+        }
+        .home-hero-grid {
+            position: relative;
+            display: grid;
+            gap: clamp(1.75rem, 4vw, 2.5rem);
+            z-index: 1;
+        }
+        .hero-main-card {
+            background: #ffffff;
+            border-radius: 1.8rem;
+            padding: clamp(1.5rem, 3vw, 2.25rem);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            display: grid;
+            gap: clamp(1.25rem, 3vw, 1.75rem);
+            grid-template-areas:
+                "media"
+                "content";
+        }
+        .hero-media {
+            grid-area: media;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255, 237, 213, 0.7), rgba(254, 215, 170, 0.3));
+            position: relative;
+            isolation: isolate;
+        }
+        .hero-media::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.05));
+            mix-blend-mode: soft-light;
+        }
+        .hero-main-image {
+            width: 100%;
+            height: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            display: block;
+            border-radius: inherit;
+        }
+        .hero-content {
+            grid-area: content;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            justify-content: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #b45309;
+            background: linear-gradient(135deg, rgba(254, 215, 170, 0.85), rgba(253, 186, 116, 0.85));
+            border-radius: 9999px;
+            padding: 0.55rem 1.35rem;
+            box-shadow: 0 10px 18px rgba(249, 115, 22, 0.18);
+        }
+        .hero-title {
+            font-size: clamp(1.9rem, 4.8vw, 3rem);
+            font-weight: 800;
+            color: #1f2937;
+            line-height: 1.25;
+        }
+        .hero-description {
+            font-size: clamp(1rem, 2.7vw, 1.125rem);
+            color: #4b5563;
+            line-height: 1.8;
+            max-width: 48ch;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+        }
+        .hero-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            padding: 0.85rem 1.8rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hero-action i {
+            font-size: 0.95rem;
+        }
+        .hero-action:hover {
+            transform: translateY(-2px);
+        }
+        .primary-action {
+            background: linear-gradient(135deg, #f97316, #f59e0b);
+            color: #ffffff;
+            box-shadow: 0 12px 22px rgba(249, 115, 22, 0.25);
+        }
+        .primary-action:hover {
+            box-shadow: 0 16px 30px rgba(249, 115, 22, 0.32);
+        }
+        .secondary-action {
+            border: 2px solid rgba(249, 115, 22, 0.35);
+            color: #b45309;
+            background: rgba(255, 255, 255, 0.85);
+        }
+        .secondary-action:hover {
+            background: rgba(255, 237, 213, 0.6);
+        }
+        .hero-latest-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 1.8rem;
+            padding: clamp(1.25rem, 3vw, 2rem);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 1.35rem;
+            min-width: 0;
+            backdrop-filter: blur(12px);
+        }
+        .hero-latest-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+            padding-bottom: 0.85rem;
+        }
+        .hero-latest-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+        .hero-latest-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 600;
+            color: #f97316;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+        .hero-latest-link:hover {
+            color: #ea580c;
+        }
+        .hero-latest-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .hero-latest-empty {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.95rem;
+            padding: 2rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .hero-latest-empty-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 9999px;
+            background: rgba(229, 231, 235, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 1.35rem;
+        }
+
+        .featured-workshop-card {
+            position: relative;
+        }
+        .featured-workshop-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+            pointer-events: none;
+        }
+        .featured-workshop-actions > * {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .featured-workshop-actions > *:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (min-width: 1024px) {
+            .home-hero-grid {
+                grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+                align-items: stretch;
+            }
+            .hero-main-card {
+                grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+                grid-template-areas: "content media";
+                align-items: center;
+            }
+            .hero-media {
+                max-height: 100%;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .home-hero-shell::after {
+                inset-inline-end: -160px;
+                top: -110px;
+                width: 280px;
+                height: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .home-hero-shell {
+                padding: 1.75rem;
+                border-radius: 1.75rem;
+            }
+            .home-hero-grid {
+                gap: 1.5rem;
+            }
+            .hero-main-card {
+                padding: 1.75rem;
+            }
+            .hero-actions {
+                flex-direction: column;
+            }
+            .hero-action {
+                width: 100%;
+            }
+            .hero-latest-card {
+                padding: 1.5rem;
+            }
+            .featured-workshop-section {
+                padding-top: 3.5rem !important;
+                padding-bottom: 3.5rem !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .home-hero-shell {
+                padding: 1.5rem;
+                border-radius: 1.5rem;
+            }
+            .hero-main-card {
+                padding: 1.4rem;
+            }
+            .hero-actions {
+                gap: 0.75rem;
+            }
+            .hero-badge {
+                font-size: 0.9rem;
+                padding: 0.5rem 1.15rem;
+            }
+            .hero-main-image {
+                max-height: 260px;
+            }
+            .hero-latest-card {
+                border-radius: 1.5rem;
+            }
+            .card-container {
+                width: 100%;
+                height: auto;
+            }
+            .swiper-slide {
+                width: min(88vw, 320px);
+                height: auto;
+            }
+            .featured-workshop-card {
+                border-radius: 1.5rem;
+            }
+            .featured-workshop-section {
+                padding-top: 2.75rem !important;
+                padding-bottom: 2.75rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.85rem;
+            }
+            .hero-description {
+                font-size: 0.98rem;
+            }
+            .hero-latest-header h2 {
+                font-size: 1.35rem;
+            }
+        }
         
         /* Mobile Responsive Images */
         @media (max-width: 768px) {
@@ -83,7 +394,7 @@
         /* Flip Card Styles */
         .card-container {
             perspective: 1000px;
-            width: 280px;
+            width: clamp(240px, 28vw, 280px);
             height: 400px;
             cursor: pointer;
             margin: 0;
@@ -127,7 +438,7 @@
 
         .swiper-slide {
             flex: 0 0 auto;
-            width: 280px;
+            width: clamp(240px, 28vw, 280px);
             height: 400px;
             box-sizing: border-box;
             display: flex;
@@ -163,32 +474,54 @@
     />
 
     <!-- قسم المحتوى الرئيسي -->
-    <main class="container mx-auto px-4 py-8 mt-6">
-        <div class="flex flex-col md:flex-row gap-8">
-            <!-- القسم الأيمن (الرئيسي) -->
-            <div class="flex-1 bg-white rounded-2xl shadow-lg p-6">
-                <img src="{{ asset('image/Brownies.png') }}" alt="صورة تيراميسو إيطالي فاخر" class="w-full h-auto rounded-xl mb-6">
-                <span class="bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 text-sm font-semibold px-4 py-2 rounded-full mb-3 inline-block shadow-sm">عن الموقع</span>
-                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4 leading-tight">منصّة وصفة – عالم الحلويات الفاخرة والراقية</h1>
-                <p class="text-gray-600 leading-relaxed mb-6">اكتشف أسرار صنع أرقى الحلويات العالمية من التيراميسو الإيطالي والشوكولاتة البلجيكية إلى البراونيز الفاخر والبرازنز تيرامايز. وصفات حصرية من أفضل الشيفات العالميين مع تقنيات احترافية ومواد أولية فاخرة.</p>  
-            </div>
-            
-            <!-- القسم الأيسر (الجانبي) -->
-            <aside class="w-full md:w-1/3 bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-3">أحدث الوصفات</h2>
-                <ul class="space-y-4">
-                    @forelse($latestRecipes as $recipe)
-                        <x-latest-recipe-item :recipe="$recipe" />
-                    @empty
-                        <div class="text-center py-8">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-utensils text-2xl text-gray-400"></i>
-                            </div>
-                            <p class="text-gray-500">لا توجد وصفات متاحة حالياً</p>
+    <main class="container mx-auto px-4 py-10 lg:py-12">
+        <div class="home-hero-shell">
+            <div class="home-hero-grid">
+                <!-- القسم الرئيسي -->
+                <article class="hero-main-card">
+                    <div class="hero-media">
+                        <img src="{{ asset('image/Brownies.png') }}" alt="صورة تيراميسو إيطالي فاخر" class="hero-main-image">
+                    </div>
+                    <div class="hero-content">
+                        <span class="hero-badge">عن الموقع</span>
+                        <h1 class="hero-title">منصّة وصفة – عالم الحلويات الفاخرة والراقية</h1>
+                        <p class="hero-description">اكتشف أسرار صنع أرقى الحلويات العالمية من التيراميسو الإيطالي والشوكولاتة البلجيكية إلى البراونيز الفاخر والبرازنز تيرامايز. وصفات حصرية من أفضل الشيفات العالميين مع تقنيات احترافية ومواد أولية فاخرة.</p>
+                        <div class="hero-actions">
+                            <a href="{{ route('recipes') }}" class="hero-action primary-action">
+                                <span>ابدأ اكتشاف الوصفات</span>
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                            <a href="{{ route('workshops') }}" class="hero-action secondary-action">
+                                <span>تعرّف على الورشات</span>
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </a>
                         </div>
+                    </div>
+                </article>
+                
+                <!-- قسم أحدث الوصفات -->
+                <aside class="hero-latest-card">
+                    <div class="hero-latest-header">
+                        <h2>أحدث الوصفات</h2>
+                        <a href="{{ route('recipes') }}" class="hero-latest-link">
+                            عرض الكل
+                            <i class="fas fa-arrow-left text-xs"></i>
+                        </a>
+                    </div>
+                    <ul class="hero-latest-list">
+                        @forelse($latestRecipes as $recipe)
+                            <x-latest-recipe-item :recipe="$recipe" />
+                    @empty
+                        <li class="hero-latest-empty">
+                            <div class="hero-latest-empty-icon">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <p>لا توجد وصفات متاحة حالياً</p>
+                        </li>
                     @endforelse
                 </ul>
             </aside>
+            </div>
         </div>
     </main>
 
@@ -199,8 +532,8 @@
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
         $featuredIsCompleted = $featuredWorkshop->is_completed;
     @endphp
-    <section class="container mx-auto px-4 py-16">
-        <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
+    <section class="container mx-auto px-4 py-16 featured-workshop-section">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl featured-workshop-card">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <!-- المحتوى النصي -->
                 <div class="p-8 lg:p-12 text-white flex flex-col justify-center">
@@ -237,31 +570,31 @@
                     </div>
                     
                     <!-- أزرار الإجراءات -->
-                    <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex flex-col sm:flex-row gap-4 featured-workshop-actions">
                         @if($featuredIsCompleted)
-                            <button class="bg-gray-400 text-gray-600 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                            <button class="bg-gray-400 text-gray-600 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-check-circle ml-2 text-xl"></i>
                                 الورشة مكتملة
                             </button>
                         @elseif($featuredIsFull)
-                            <button class="bg-gray-400 text-gray-600 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                            <button class="bg-gray-400 text-gray-600 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-lock ml-2 text-xl"></i>
                                 الورشة مكتملة
                             </button>
                         @elseif($featuredIsRegistrationClosed)
-                            <button class="bg-yellow-400 text-yellow-800 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                            <button class="bg-yellow-400 text-yellow-800 font-bold py-4 px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-clock ml-2 text-xl"></i>
                                 انتهى التسجيل
                             </button>
                         @else
                             <button onclick="unifiedBooking({{ $featuredWorkshop->id }}, '{{ $featuredWorkshop->title }}', '{{ $featuredWorkshop->formatted_price }}', '{{ $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d M, Y') : 'غير محدد' }}', '{{ $featuredWorkshop->instructor }}', '{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}', '{{ $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d M, Y') : 'غير محدد' }}')" 
-                                    class="bg-white text-green-600 hover:bg-green-50 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
+                                    class="bg-white text-green-600 hover:bg-green-50 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl w-full sm:w-auto">
                                 <i class="fab fa-whatsapp ml-2 text-xl"></i>
                                 احجز مقعدك الآن
                             </button>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
-                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
+                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center w-full sm:w-auto">
                             <i class="fas fa-info-circle ml-2"></i>
                             تفاصيل أكثر
                         </a>
@@ -281,7 +614,7 @@
     </section>
     @else
     <!-- رسالة عدم وجود ورشات قادمة -->
-    <section class="container mx-auto px-4 py-16">
+    <section class="container mx-auto px-4 py-16 featured-workshop-section">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <!-- المحتوى النصي -->

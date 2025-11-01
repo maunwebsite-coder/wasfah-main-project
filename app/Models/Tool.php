@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Tool extends Model
 {
@@ -13,6 +14,7 @@ class Tool extends Model
         'name',
         'description',
         'image',
+        'gallery_images',
         'amazon_url',
         'affiliate_url',
         'price',
@@ -29,7 +31,8 @@ class Tool extends Model
         'price' => 'decimal:2',
         'rating' => 'decimal:1',
         'amazon_url' => 'string',
-        'affiliate_url' => 'string'
+        'affiliate_url' => 'string',
+        'gallery_images' => 'array'
     ];
 
     protected $attributes = [
@@ -66,8 +69,41 @@ class Tool extends Model
         if ($this->image) {
             return asset('storage/' . $this->image);
         }
+
+        if (!empty($this->gallery_images) && is_array($this->gallery_images)) {
+            $firstImage = collect($this->gallery_images)
+                ->first(function ($path) {
+                    return !empty($path);
+                });
+
+            if ($firstImage) {
+                return Str::startsWith($firstImage, ['http://', 'https://'])
+                    ? $firstImage
+                    : asset('storage/' . ltrim($firstImage, '/'));
+            }
+        }
         
         return asset('image/logo.png');
+    }
+
+    /**
+     * Get full URLs for gallery images
+     */
+    public function getGalleryImageUrlsAttribute(): array
+    {
+        if (empty($this->gallery_images) || !is_array($this->gallery_images)) {
+            return [];
+        }
+
+        return collect($this->gallery_images)
+            ->filter()
+            ->map(function ($path) {
+                return Str::startsWith($path, ['http://', 'https://'])
+                    ? $path
+                    : asset('storage/' . ltrim($path, '/'));
+            })
+            ->values()
+            ->all();
     }
 
     /**

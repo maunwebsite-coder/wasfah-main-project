@@ -124,11 +124,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // إلغاء الطلب السابق إذا كان موجوداً
         if (currentRequest) {
-            currentRequest.abort();
+            currentRequest.abortController.abort();
+            clearTimeout(currentRequest.timeoutId);
         }
-        
+
         currentQuery = query;
-        
+
         // التحقق من cache أولاً
         if (searchCache.has(query)) {
             const cachedData = searchCache.get(query);
@@ -139,19 +140,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // إظهار loading state فقط إذا لم تكن هناك نتائج محفوظة
         showLoadingState();
         
+        let controller;
+        let timeoutId;
+
         try {
-            // إنشاء AbortController لإلغاء الطلب
-            const controller = new AbortController();
-            currentRequest = controller;
-            
+            // إنشاء AbortController وإضافة مهلة يدوية للطلب
+            controller = new AbortController();
+            timeoutId = setTimeout(() => controller.abort(), 10000);
+            currentRequest = {
+                abortController: controller,
+                timeoutId
+            };
+
             const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
                 signal: controller.signal,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
-                },
-                // إضافة timeout للطلب
-                timeout: 10000 // 10 ثواني
+                }
             });
             
             if (response.ok) {
@@ -225,7 +231,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 showErrorState(errorMessage);
             }
         } finally {
-            currentRequest = null;
+            if (currentRequest && controller && currentRequest.abortController === controller) {
+                clearTimeout(currentRequest.timeoutId);
+                currentRequest = null;
+            } else if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
             hideLoadingState();
         }
     }

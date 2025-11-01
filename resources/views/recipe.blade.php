@@ -114,6 +114,616 @@
       .btn.save-recipe-btn.bg-green-500:hover {
         background-color: #059669 !important; /* hover:bg-green-600 */
       }
+
+      .recipe-hero {
+        position: relative;
+        background: linear-gradient(135deg, rgba(254, 243, 199, 0.85) 0%, rgba(255, 251, 235, 0.92) 45%, #ffffff 100%);
+        border: 1px solid rgba(249, 115, 22, 0.08);
+        box-shadow: 0 25px 55px rgba(15, 23, 42, 0.07);
+        overflow: hidden;
+      }
+
+      .recipe-hero::before,
+      .recipe-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 9999px;
+        background: radial-gradient(circle at center, rgba(249, 115, 22, 0.18), transparent 65%);
+        pointer-events: none;
+        transition: transform 0.5s ease;
+      }
+
+      .recipe-hero::before {
+        width: 380px;
+        height: 380px;
+        top: -160px;
+        left: -120px;
+        opacity: 0.45;
+      }
+
+      .recipe-hero::after {
+        width: 320px;
+        height: 320px;
+        bottom: -140px;
+        right: -80px;
+        opacity: 0.35;
+      }
+
+      .recipe-hero:hover::before,
+      .recipe-hero:hover::after {
+        transform: scale(1.05);
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        color: #ea580c;
+        font-weight: 600;
+        font-size: 0.95rem;
+        backdrop-filter: blur(6px);
+      }
+
+      .hero-title {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        line-height: 1.2;
+        font-weight: 800;
+        color: #1f2937;
+        letter-spacing: -0.015em;
+      }
+
+      .hero-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        align-items: stretch;
+      }
+
+      .hero-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 1rem 1.25rem;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(249, 115, 22, 0.12);
+        box-shadow: 0 12px 30px rgba(249, 115, 22, 0.08);
+      }
+
+      .hero-stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 9999px;
+        background: rgba(249, 115, 22, 0.12);
+        color: #f97316;
+        font-size: 1.25rem;
+      }
+
+      .hero-stat-label {
+        display: block;
+        color: #6b7280;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .hero-stat-value {
+        color: #111827;
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      .hero-stat-sub {
+        display: inline-block;
+        margin-right: 0.75rem;
+        color: #9ca3af;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .hero-panel {
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(249, 115, 22, 0.15);
+        border-radius: 1.5rem;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(8px);
+      }
+
+      .hero-panel .author-meta span {
+        display: block;
+        color: #4b5563;
+        font-size: 0.95rem;
+      }
+
+      .hero-panel .author-meta span + span {
+        margin-top: 0.35rem;
+      }
+
+      .hero-actions {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      @media (min-width: 640px) {
+        .hero-actions {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .hero-panel {
+          min-width: 18rem;
+        }
+      }
+
+      .media-card {
+        background: #ffffff;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        border: 1px solid rgba(249, 115, 22, 0.12);
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      }
+
+      .media-card .thumbnail {
+        border-radius: 1rem;
+        border: 2px solid transparent;
+        opacity: 0.65;
+      }
+
+      .media-card .thumbnail.active,
+      .media-card .thumbnail:hover {
+        border-color: #f97316;
+        opacity: 1;
+      }
+
+      .media-card .main-image-wrapper {
+        height: 400px;
+      }
+
+      .media-card .thumbnail-strip {
+        gap: 0.75rem;
+      }
+
+      .section-card {
+        position: relative;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 247, 237, 0.75) 80%, #ffffff 100%);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        border: 1px solid rgba(249, 115, 22, 0.12);
+        box-shadow: 0 22px 48px rgba(15, 23, 42, 0.07);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .section-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.1);
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+      }
+
+      .section-title i {
+        color: #f97316;
+        font-size: 1.4rem;
+      }
+
+      .info-highlight-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .info-highlight {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 1rem 1.25rem;
+        border-radius: 1.25rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(229, 231, 235, 0.6);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
+      }
+
+      .info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 1rem;
+        background: rgba(249, 115, 22, 0.12);
+        color: #f97316;
+        font-size: 1.3rem;
+      }
+
+      .info-label {
+        display: block;
+        color: #6b7280;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .info-value {
+        color: #111827;
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+
+      .info-unit {
+        margin-right: 0.5rem;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .serving-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .serving-size-btn {
+        min-width: 68px;
+        padding: 0.65rem 1.25rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        background: rgba(255, 255, 255, 0.95);
+        color: #f97316;
+        transition: all 0.2s ease;
+      }
+
+      .serving-size-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(249, 115, 22, 0.15);
+      }
+
+      .serving-size-hint {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.1rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px dashed rgba(249, 115, 22, 0.3);
+      }
+
+      .ingredient-list {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .ingredient-item {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.85rem 1.1rem;
+        border-radius: 1.25rem;
+        background: rgba(248, 250, 252, 0.95);
+        border: 1px solid rgba(226, 232, 240, 0.7);
+        font-weight: 600;
+        color: #374151;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .ingredient-item:hover {
+        transform: translateX(-4px);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+      }
+
+      .ingredient-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.9rem;
+        background: rgba(249, 115, 22, 0.12);
+        color: #f97316;
+        font-size: 1rem;
+      }
+
+      .section-card .tool-card {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .section-card .tool-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+      }
+
+      .step-list {
+        counter-reset: steps;
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      .step-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: 1.25rem 1.4rem;
+        border-radius: 1.4rem;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(226, 232, 240, 0.7);
+        box-shadow: 0 16px 35px rgba(15, 23, 42, 0.06);
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #374151;
+      }
+
+      .step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 9999px;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        box-shadow: 0 12px 24px rgba(249, 115, 22, 0.3);
+      }
+
+      .step-text {
+        flex: 1;
+      }
+
+      .callout-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        background: linear-gradient(140deg, rgba(249, 115, 22, 0.12) 0%, rgba(253, 186, 116, 0.08) 45%, rgba(255, 255, 255, 0.85) 100%);
+        border: 1px solid rgba(249, 115, 22, 0.14);
+      }
+
+      @media (min-width: 768px) {
+        .callout-card {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+        }
+      }
+
+      .callout-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 1.1rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(249, 115, 22, 0.3);
+        color: #f97316;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .callout-card .callout-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .callout-card .callout-meta p {
+        color: #4b5563;
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .callout-card .cta-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      @media (min-width: 768px) {
+        .callout-card .cta-buttons {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+
+      .rating-card {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(254, 215, 170, 0.4) 100%);
+        border: 1px solid rgba(249, 115, 22, 0.15);
+      }
+
+      .rating-card .section-title {
+        margin-bottom: 1.5rem;
+      }
+
+      .rating-card .star-rating {
+        margin-bottom: 1rem;
+      }
+
+      .rating-card .rating-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+      }
+
+      @media (min-width: 768px) {
+        .rating-card .rating-actions {
+          flex-direction: row;
+          width: auto;
+        }
+      }
+
+      .related-section .related-recipe-card {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .related-section .related-recipe-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 28px 52px rgba(15, 23, 42, 0.1);
+      }
+
+      @media (max-width: 640px) {
+        .recipe-hero {
+          padding: 1.75rem 1.5rem;
+          border-radius: 2rem;
+        }
+
+        .hero-title {
+          font-size: 1.9rem;
+        }
+
+        .hero-stats-grid {
+          grid-template-columns: unset;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(200px, 1fr);
+          overflow-x: auto;
+          padding: 1rem 1rem 0.75rem;
+          margin: 1.75rem -1rem 0;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .hero-stats-grid::-webkit-scrollbar {
+          display: none;
+        }
+
+        .hero-stat {
+          scroll-snap-align: start;
+          min-width: 200px;
+        }
+
+        .hero-panel {
+          width: 100%;
+          padding: 1.5rem;
+          margin-top: 1.25rem;
+        }
+
+        .hero-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .section-card {
+          padding: 1.75rem !important;
+          border-radius: 1.25rem;
+        }
+
+        .info-highlight-grid {
+          gap: 0.75rem;
+        }
+
+        .info-highlight {
+          padding: 0.9rem 1rem;
+        }
+
+        .serving-controls {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.75rem;
+        }
+
+        .serving-size-btn {
+          width: 100%;
+        }
+
+        .ingredient-item {
+          padding: 0.75rem 1rem;
+        }
+
+        .media-card {
+          border-radius: 1.5rem;
+        }
+
+        .media-card .main-image-wrapper {
+          height: 260px;
+        }
+
+        .media-card .thumbnail-strip {
+          gap: 0.5rem;
+          padding-inline: 0.25rem;
+        }
+
+        .step-item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .step-number {
+          margin-bottom: 0.75rem;
+        }
+
+        .callout-card {
+          gap: 1.25rem;
+          padding: 1.75rem;
+        }
+
+        .callout-card .cta-buttons {
+          width: 100%;
+        }
+
+        .callout-card .cta-buttons button {
+          width: 100%;
+        }
+
+        .rating-card {
+          padding: 1.75rem !important;
+        }
+
+        .slider-track {
+          display: flex !important;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          gap: 0.85rem;
+          padding-inline: 0.75rem;
+          margin-inline: -0.75rem;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          scroll-padding-inline-start: 0.75rem;
+        }
+
+        .slider-track::-webkit-scrollbar {
+          display: none;
+        }
+
+        .slider-track > * {
+          flex: 0 0 78%;
+          max-width: 78%;
+          scroll-snap-align: start;
+        }
+
+        .tools-slider > * {
+          flex-basis: 72%;
+          max-width: 72%;
+        }
+
+        .related-slider > * {
+          flex-basis: 80%;
+          max-width: 80%;
+        }
+
+        .related-slider {
+          padding-bottom: 0.5rem;
+        }
+      }
       
       /* Print Styles */
       @media print {
@@ -657,128 +1267,155 @@
 @section('content')
 
     <main class="container mx-auto px-4 py-8">
-      <!-- بداية الكرت الاساسي ل الوصفه-->
-       
-      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
-          {{ $recipe->title }}
-        </h1>
-        <br>
-        <!-- عدادات الوصفة -->
-        <div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 sm:gap-4 mb-6">
-          <!-- عداد التقييم -->
-          <div class="flex items-center text-sm text-gray-700 bg-gradient-to-r from-yellow-50 to-yellow-100 px-4 py-2 rounded-full border border-yellow-200 shadow-sm">
-            <i class="fas fa-star text-yellow-500 ml-2 text-base"></i>
-            <span class="font-semibold">
-              @if($recipe->interactions_avg_rating)
-                {{ number_format($recipe->interactions_avg_rating, 1) }} تقييم
-              @else
-                لا توجد تقييمات بعد
-              @endif
+      <!-- بداية تصميم البطل للوصفة -->
+      <section class="recipe-hero rounded-3xl px-6 py-8 md:px-10 md:py-10 mb-12">
+        @php
+          $totalTime = (int) ($recipe->prep_time ?? 0) + (int) ($recipe->cook_time ?? 0);
+        @endphp
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-start gap-10">
+          <div class="flex-1">
+            <span class="hero-badge">
+              <i class="fas fa-fire ml-1 text-sm"></i>
+              وصفة من منصة وصفة
             </span>
-          </div>
-          
-          <!-- عداد الحفظ -->
-          <div class="flex items-center text-sm text-gray-700 bg-gradient-to-r from-orange-50 to-orange-100 px-4 py-2 rounded-full border border-orange-200 shadow-sm">
-            <i class="fas fa-bookmark text-orange-500 ml-2 text-base"></i>
-            <span id="recipe-save-count" class="font-semibold">
-              {{ $recipe->saved_count }} شخص حفظوا هذه الوصفة
-            </span>
-          </div>
-        </div>
-
-        <div
-          class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-8"
-        >
-          <img
-            src="/image/tnl.png"
-            alt="صورة مؤلف"
-            class="rounded-full w-16 h-16"
-          />
-          <div>
-            <span class="text-gray-600">
-              بواسطة
-            </span>
-            <span class="text-gray-500 text-sm">
-              {{ $recipe->author ?? 'مجهول' }}
-            </span>
-            <br>
-            <span class="text-gray-500 text-sm">
-              آخر تحديث: {{ $recipe->updated_at->format('Y-m-d') }}
-            </span>
-          </div>
-        </div>
-
-        <p class="text-gray-600 leading-relaxed mb-6">
-          {{ $recipe->description }}
-        </p>
-        @if($recipe->is_registration_closed)
-            <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg mb-6 no-print">
-                <div class="flex items-center">
-                    <i class="fas fa-clock ml-2"></i>
-                    <span class="font-semibold">انتهت مهلة الحجز لهذه الوصفة</span>
+            <h1 class="hero-title mt-4">
+              {{ $recipe->title }}
+            </h1>
+            <p class="text-gray-700 text-base md:text-lg leading-relaxed mt-4 max-w-3xl">
+              {{ $recipe->description }}
+            </p>
+            @if($recipe->is_registration_closed)
+              <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-2xl mt-6 no-print flex items-start gap-3">
+                <i class="fas fa-clock mt-1 ml-2"></i>
+                <span class="font-semibold">انتهت مهلة الحجز لهذه الوصفة</span>
+              </div>
+            @endif
+            <div class="hero-stats-grid mt-8 gap-3 sm:gap-4">
+              <div class="hero-stat">
+                <span class="hero-stat-icon">
+                  <i class="fas fa-star"></i>
+                </span>
+                <div>
+                  <span class="hero-stat-label">التقييم العام</span>
+                  <span class="hero-stat-value">
+                    @if($recipe->interactions_avg_rating)
+                      {{ number_format($recipe->interactions_avg_rating, 1) }}
+                      <span class="hero-stat-sub">تقييمات المستخدمين</span>
+                    @else
+                      لا توجد تقييمات بعد
+                    @endif
+                  </span>
                 </div>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-icon">
+                  <i class="fas fa-bookmark"></i>
+                </span>
+                <div>
+                  <span class="hero-stat-label">المستخدمون الذين حفظوا</span>
+                  <span class="hero-stat-value" id="recipe-save-count">
+                    {{ $recipe->saved_count }} شخص حفظوا هذه الوصفة
+                  </span>
+                </div>
+              </div>
+              @if($recipe->servings || $totalTime)
+                <div class="hero-stat">
+                  <span class="hero-stat-icon">
+                    <i class="fas fa-stopwatch"></i>
+                  </span>
+                  <div>
+                    <span class="hero-stat-label">
+                      @if($totalTime)
+                        الوقت الإجمالي
+                      @else
+                        الكمية تكفي
+                      @endif
+                    </span>
+                    <span class="hero-stat-value">
+                      @if($totalTime)
+                        {{ $totalTime }} دقيقة
+                        @if($recipe->prep_time && $recipe->cook_time)
+                          <span class="hero-stat-sub">تحضير {{ (int) $recipe->prep_time }}د • طبخ {{ (int) $recipe->cook_time }}د</span>
+                        @elseif($recipe->prep_time)
+                          <span class="hero-stat-sub">تحضير {{ (int) $recipe->prep_time }} دقيقة</span>
+                        @elseif($recipe->cook_time)
+                          <span class="hero-stat-sub">طبخ {{ (int) $recipe->cook_time }} دقيقة</span>
+                        @endif
+                      @elseif($recipe->servings)
+                        يكفي لـ {{ (int) $recipe->servings }} أشخاص
+                      @endif
+                    </span>
+                  </div>
+                </div>
+              @endif
             </div>
-        @endif
-
-        <div class="flex flex-col md:flex-row md:justify-between no-print">
-          <div class="flex flex-wrap items-center gap-2 mb-6 md:flex-nowrap md:overflow-x-auto md:space-x-4 md:rtl:space-x-reverse">
-            
-            <button 
+          </div>
+          <div class="hero-panel lg:w-80 xl:w-96 p-6 md:p-7">
+            <div class="flex items-center gap-4 pb-5 border-b border-orange-100/60">
+              <img
+                src="/image/tnl.png"
+                alt="صورة مؤلف"
+                class="rounded-full w-16 h-16 shadow-lg border-2 border-white"
+              />
+              <div class="author-meta">
+                <span>بواسطة {{ $recipe->author ?? 'مجهول' }}</span>
+                <span class="text-sm text-gray-500">آخر تحديث: {{ $recipe->updated_at->format('Y-m-d') }}</span>
+              </div>
+            </div>
+            <div class="hero-actions mt-6 no-print">
+              <button 
                 id="save-recipe-page-btn"
-                class="btn save-recipe-btn flex items-center justify-center p-3 rounded-full font-semibold text-white {{ $recipe->is_saved ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600' }} transition-colors space-x-2 rtl:space-x-reverse" 
+                class="btn save-recipe-btn {{ $recipe->is_saved ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600' }}" 
                 data-recipe-id="{{ $recipe->recipe_id }}" 
                 data-saved="{{ $recipe->is_saved ? 'true' : 'false' }}"
                 data-user-id="{{ Auth::id() }}">
                 <i class="fas fa-bookmark ml-2"></i>
                 <span>{{ $recipe->is_saved ? 'محفوظة' : 'حفظ' }}</span>
-            </button>
-            
-            <button
-              id="rating-scroll-btn"
-              class="flex-grow flex items-center justify-center p-2 text-sm md:p-3 md:text-base border border-gray-300 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors {{ $recipe->user_rating ? 'bg-green-50 border-green-300 text-green-700' : '' }}"
-            >
-              <i class="fas fa-star ml-2"></i>
-              <span id="rating-btn-text">
-                @if($recipe->user_rating)
-                  تم التقييم
-                @else
-                  تقييم
-                @endif
-              </span>
-            </button>
-            <button
-              id="print-recipe-btn"
-              class="flex-grow flex items-center justify-center p-2 text-sm md:p-3 md:text-base border border-gray-300 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
-            >
-              <i class="fas fa-print ml-2"></i>
-              طباعة
-            </button>
-            <button
-              id="share-recipe-btn-1"
-              class="flex-grow flex items-center justify-center p-2 text-sm md:p-3 md:text-base border border-gray-300 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
-            >
-              <i class="fas fa-share-alt ml-2"></i>
-              مشاركة
-            </button>
+              </button>
+              <button
+                id="rating-scroll-btn"
+                class="flex items-center justify-center p-3 text-base border border-gray-200 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors {{ $recipe->user_rating ? 'bg-green-50 border-green-300 text-green-700' : '' }}"
+              >
+                <i class="fas fa-star ml-2"></i>
+                <span id="rating-btn-text">
+                  @if($recipe->user_rating)
+                    تم التقييم
+                  @else
+                    تقييم
+                  @endif
+                </span>
+              </button>
+              <button
+                id="print-recipe-btn"
+                class="flex items-center justify-center p-3 text-base border border-gray-200 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
+              >
+                <i class="fas fa-print ml-2"></i>
+                طباعة
+              </button>
+              <button
+                id="share-recipe-btn-1"
+                class="flex items-center justify-center p-3 text-base border border-gray-200 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
+              >
+                <i class="fas fa-share-alt ml-2"></i>
+                مشاركة
+              </button>
+            </div>
           </div>
-          
         </div>
-      </div>
-
+      </section>
       <!-- *******************************
-           نهاية الكرت الأساسي للوصفة
+           نهاية تصميم البطل للوصفة
            ******************************* -->
 
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Media Container for Images or Video -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="media-card">
             @if($recipe->getAllImages() && count($recipe->getAllImages()) > 0)
                 <!-- Image Gallery -->
                 <div class="relative">
                     <!-- Main Image Display -->
-                    <div class="relative overflow-hidden" style="height: 400px;">
+                    <div class="main-image-wrapper relative overflow-hidden">
                         <img id="main-recipe-image" class="w-full h-full object-cover transition-opacity duration-300" 
                              src="{{ $recipe->getAllImages()[0] }}" alt="صورة الوصفة"
                              onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
@@ -803,10 +1440,10 @@
                     
                     <!-- Thumbnail Strip -->
                     @if(count($recipe->getAllImages()) > 1)
-                        <div class="flex space-x-2 p-4 bg-gray-50 overflow-x-auto">
+                        <div class="thumbnail-strip flex space-x-2 rtl:space-x-reverse p-4 bg-gray-50 overflow-x-auto">
                             @foreach($recipe->getAllImages() as $index => $imageUrl)
                                 <img onclick="showImage({{ $index }})" 
-                                     class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 transition-all thumbnail {{ $index === 0 ? 'border-orange-500' : 'border-transparent' }}" 
+                                     class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all thumbnail {{ $index === 0 ? 'active' : '' }}" 
                                      src="{{ $imageUrl }}" 
                                      alt="صورة {{ $index + 1 }}"
                                      onerror="this.src='{{ asset('image/logo.png') }}';">
@@ -830,63 +1467,91 @@
             @endif
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">معلومات</h2>
-          <ul class="space-y-4 text-gray-600">
-            <li>
-              <i class="fa-solid fa-clock text-orange-500 ml-2"></i> وقت
-              التحضير: {{ (int)$recipe->prep_time }} دقيقة
-            </li>
-            <li>
-              <i class="fa-solid fa-fire text-orange-500 ml-2"></i> وقت الطهي:
-              {{ (int)$recipe->cook_time }} دقيقة
-            </li>
-            <li>
-              <i class="fa-solid fa-utensils text-orange-500 ml-2"></i> الكمية:
-              {{ (int)$recipe->servings }} أشخاص
-            </li>
-          </ul>
+        <div class="section-card info-card px-6 py-6 md:px-8 md:py-8">
+          <h2 class="section-title">
+            <i class="fas fa-info-circle"></i>
+            <span>معلومات أساسية</span>
+          </h2>
+          <div class="info-highlight-grid">
+            <div class="info-highlight">
+              <span class="info-icon">
+                <i class="fas fa-clock"></i>
+              </span>
+              <div>
+                <span class="info-label">وقت التحضير</span>
+                <span class="info-value">
+                  <span data-prep-time>{{ (int)$recipe->prep_time }}</span>
+                  <span class="info-unit">دقيقة</span>
+                </span>
+              </div>
+            </div>
+            <div class="info-highlight">
+              <span class="info-icon">
+                <i class="fas fa-fire"></i>
+              </span>
+              <div>
+                <span class="info-label">وقت الطهي</span>
+                <span class="info-value">
+                  <span data-cook-time>{{ (int)$recipe->cook_time }}</span>
+                  <span class="info-unit">دقيقة</span>
+                </span>
+              </div>
+            </div>
+            <div class="info-highlight">
+              <span class="info-icon">
+                <i class="fas fa-utensils"></i>
+              </span>
+              <div>
+                <span class="info-label">تكفي لـ</span>
+                <span class="info-value">
+                  <span data-servings>{{ (int)$recipe->servings }}</span>
+                  <span class="info-unit">أشخاص</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">
-            المكونات
+        <div class="section-card px-6 py-6 md:px-8 md:py-8">
+          <h2 class="section-title">
+            <i class="fas fa-list"></i>
+            <span>المكونات</span>
           </h2>
 
-          <div class="flex items-center space-x-2 rtl:space-x-reverse mb-6 no-print">
+          <div class="serving-controls mb-6 no-print">
             <button
-              class="serving-size-btn p-2 rounded-full border bg-white hover:bg-gray-100 transition-colors"
+              class="serving-size-btn"
               data-multiplier="0.5"
             >
               1/2x
             </button>
             <button
-              class="serving-size-btn p-2 rounded-full border bg-orange-500 text-white hover:bg-gray-100 transition-colors"
+              class="serving-size-btn bg-orange-500 text-white"
               data-multiplier="1"
             >
               1x
             </button>
             <button
-              class="serving-size-btn p-2 rounded-full border bg-white hover:bg-gray-100 transition-colors"
+              class="serving-size-btn"
               data-multiplier="2"
             >
               2x
             </button>
           </div>
 
-          <div class="flex items-center gap-2 mb-2 relative">
-            <span class="text-sm text-gray-500"
-              >الوصفة الأصلية (1X) تنتج حصتين</span
-            >
+          <div class="serving-size-hint no-print">
+            <span class="text-sm text-gray-600">
+              الوصفة الأصلية (1X) تنتج حصتين
+            </span>
             <i
               id="info-icon"
               class="fas fa-question-circle text-gray-400 cursor-pointer"
             ></i>
             <div
               id="info-tooltip"
-              class="absolute bottom-full right-0 mb-2 p-4 bg-white rounded-lg shadow-lg max-w-xs w-64 z-10 hidden transform origin-bottom-right transition-opacity duration-300"
+              class="absolute bottom-full right-0 mb-2 p-4 bg-white rounded-xl shadow-xl max-w-xs w-64 z-10 hidden transform origin-bottom-right transition-opacity duration-300 border border-orange-100"
             >
               <p class="text-sm text-gray-700 leading-relaxed">
                 تم تطوير هذه الوصفة بإنتاجيتها الأصلية. يتم تعديل كميات المكونات
@@ -896,11 +1561,14 @@
             </div>
           </div>
 
-          <ul class="list-disc list-inside space-y-2 text-gray-700">
+          <ul class="ingredient-list mt-6">
             @foreach($recipe->ingredients as $ingredient)
               <li class="ingredient-item" 
                   data-original-quantity="{{ $ingredient->quantity ?? '' }}"
                   data-name="{{ $ingredient->name }}">
+                <span class="ingredient-icon">
+                  <i class="fas fa-check"></i>
+                </span>
                 <span class="full-ingredient-text">{{ $ingredient->quantity ?? 'كمية حسب الحاجة' }} {{ $ingredient->name }}</span>
               </li>
             @endforeach
@@ -908,12 +1576,12 @@
         </div>
 
         <!-- قسم المعدات -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
-            <i class="fas fa-tools text-orange-500 ml-2"></i>
-            المعدات المستخدمة
+        <div class="section-card px-6 py-6 md:px-8 md:py-8">
+          <h2 class="section-title mb-6">
+            <i class="fas fa-tools"></i>
+            <span>المعدات المستخدمة</span>
           </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 slider-track tools-slider">
             @if((is_array($recipe->tools) ? count($recipe->tools) : $recipe->tools->count()) > 0)
               @foreach($recipe->tools as $tool)
                 <div class="tool-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -977,38 +1645,44 @@
       </div>
 
       <div class="mt-8">
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">
-            خطوات التحضير
+        <div class="section-card px-6 py-6 md:px-8 md:py-8">
+          <h2 class="section-title">
+            <i class="fas fa-clipboard-check"></i>
+            <span>خطوات التحضير</span>
           </h2>
-          <ol class="list-decimal list-inside space-y-4 text-gray-700">
+          <ol class="step-list">
             @foreach($recipe->steps as $index => $step)
-              <li class="step-item">{{ $step }}</li>
+              <li class="step-item">
+                <span class="step-number">{{ $index + 1 }}</span>
+                <span class="step-text">{{ $step }}</span>
+              </li>
             @endforeach
           </ol>
         </div>
       </div>
       </div>
 
-      <div
-        class="bg-white rounded-xl shadow-lg p-6 mt-8 flex flex-col md:flex-row items-center justify-between no-print"
-      >
-        <div class="flex items-center space-x-2 rtl:space-x-reverse">
-          <span id="question-text" class="font-semibold text-gray-800 text-lg">هل جربت هذه الوصفة؟</span>
-          <span id="made-it-count" class="text-gray-500 text-sm">
+      <div class="section-card callout-card mt-8 no-print">
+        <div class="callout-meta">
+          <span class="callout-badge">
+            <i class="fas fa-users ml-1"></i>
+            تفاعل المجتمع
+          </span>
+          <h3 id="question-text" class="font-semibold text-gray-800 text-lg md:text-xl">
+            هل جربت هذه الوصفة؟
+          </h3>
+          <p id="made-it-count" class="text-gray-600 text-sm md:text-base">
             @if($recipe->made_count > 0)
               <span class="font-bold text-orange-500 text-lg">{{ $recipe->made_count }}</span> شخص جربوا هذه الوصفة!
             @else
               كن أول من يجرب هذه الوصفة! 🚀
             @endif
-          </span>
+          </p>
         </div>
-        <div
-          class="flex items-center mt-4 md:mt-0 space-x-4 rtl:space-x-reverse"
-        >
+        <div class="cta-buttons">
           <button
             id="made-recipe-btn"
-            class="flex items-center justify-center p-3 rounded-full font-semibold text-white transition-colors {{ $recipe->is_made ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600' }}"
+            class="flex items-center justify-center px-6 py-3 rounded-full font-semibold text-white transition-colors {{ $recipe->is_made ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600' }}"
             data-recipe-id="{{ $recipe->recipe_id }}"
             data-user-id="{{ Auth::id() }}"
             data-made="{{ $recipe->is_made ? 'true' : 'false' }}"
@@ -1018,7 +1692,7 @@
           </button>
           <button
             id="share-recipe-btn-2"
-            class="flex items-center justify-center p-3 border border-gray-300 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
+            class="flex items-center justify-center px-6 py-3 border border-orange-200 text-orange-600 rounded-full font-semibold bg-white/90 hover:bg-white transition-colors"
           >
             <i class="fas fa-share-alt ml-2"></i>
             مشاركة الوصفة
@@ -1027,11 +1701,12 @@
       </div>
 
       <section id="rating-section" class="py-8 no-print">
-        <div class="bg-white rounded-xl shadow-lg p-6 dark-card">
-          <h2 class="text-2xl font-bold text-gray-800 dark-text mb-4 border-b pb-2">
-            تقييم الوصفة
+        <div class="section-card rating-card px-6 py-6 md:px-8 md:py-8">
+          <h2 class="section-title">
+            <i class="fas fa-star"></i>
+            <span>تقييم الوصفة</span>
           </h2>
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center text-center gap-4">
             <div class="star-rating">
               <input type="radio" id="star5" name="rating" value="5" {{ $recipe->user_rating == 5 ? 'checked' : '' }} /><label for="star5" title="5 نجوم">
                 <span class="star">★</span></label
@@ -1061,10 +1736,10 @@
               @endif
             </p>
             @if(Auth::check())
-              <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+              <div class="rating-actions">
                 <button
                   id="submit-rating-btn"
-                  class="flex-1 p-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+                  class="flex-1 px-6 py-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
                 >
                   <i class="fas fa-paper-plane ml-2"></i>
                   أرسل التقييم
@@ -1072,7 +1747,7 @@
                 @if($recipe->user_rating)
                   <button
                     id="remove-rating-btn"
-                    class="flex-1 p-3 rounded-full font-semibold text-red-500 bg-transparent border-2 border-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    class="flex-1 px-6 py-3 rounded-full font-semibold text-red-500 bg-transparent border-2 border-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                   >
                     <i class="fas fa-trash ml-2"></i>
                     إلغاء التقييم
@@ -1080,7 +1755,7 @@
                 @endif
               </div>
             @else
-              <a href="/login" class="w-full md:w-auto p-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors inline-block text-center">
+              <a href="/login" class="inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors">
                 <i class="fas fa-sign-in-alt ml-2"></i>
                 سجل الدخول للتقييم
               </a>
@@ -1089,15 +1764,15 @@
         </div>
       </section>
 
-      <section class="mt-8 no-print">
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 dark-text mb-6">
-            <i class="fas fa-utensils text-orange-500 ml-2"></i>
-            وصفات مشابهة من نفس التصنيف
+      <section class="mt-8 no-print related-section">
+        <div class="section-card px-6 py-6 md:px-8 md:py-8">
+          <h2 class="section-title">
+            <i class="fas fa-utensils"></i>
+            <span>وصفات مشابهة من نفس التصنيف</span>
           </h2>
           
           @if($relatedRecipes && $relatedRecipes->count() > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 slider-track related-slider">
               @foreach($relatedRecipes as $relatedRecipe)
                 <div class="related-recipe-card bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
                   <!-- Recipe Image -->
@@ -1766,18 +2441,29 @@
                         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الإرسال...';
 
                         // Send rating to server
+                        const saveRecipeBtn = document.getElementById('save-recipe-page-btn');
+                        const madeRecipeBtn = document.getElementById('made-recipe-btn');
+
+                        const requestPayload = {
+                            recipe_id: recipeId,
+                            rating: parseInt(rating)
+                        };
+
+                        if (saveRecipeBtn && typeof saveRecipeBtn.dataset.saved !== 'undefined') {
+                            requestPayload.is_saved = saveRecipeBtn.dataset.saved === 'true';
+                        }
+
+                        if (madeRecipeBtn && typeof madeRecipeBtn.dataset.made !== 'undefined') {
+                            requestPayload.is_made = madeRecipeBtn.dataset.made === 'true';
+                        }
+
                         fetch('/api/interactions', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                             },
-                            body: JSON.stringify({
-                                recipe_id: recipeId,
-                                rating: parseInt(rating),
-                                is_saved: false,
-                                is_made: false
-                            })
+                            body: JSON.stringify(requestPayload)
                         })
                         .then(response => {
                             if (response.status === 401) {
@@ -1834,13 +2520,11 @@
                         imageCounter.textContent = index + 1;
                     }
                     
-                    // Update thumbnail borders
+                    // Update thumbnail state
                     thumbnails.forEach((thumb, i) => {
-                        thumb.classList.remove('border-orange-500');
-                        thumb.classList.add('border-transparent');
+                        thumb.classList.remove('active');
                         if (i === index) {
-                            thumb.classList.remove('border-transparent');
-                            thumb.classList.add('border-orange-500');
+                            thumb.classList.add('active');
                         }
                     });
                 }
@@ -2000,4 +2684,3 @@
         </script>
     @endpush
 @endsection
-

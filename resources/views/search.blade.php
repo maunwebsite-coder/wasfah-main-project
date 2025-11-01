@@ -1,941 +1,327 @@
+
 @extends('layouts.app')
 
 @section('title', 'نتائج البحث - موقع وصفة')
 
+@php
+    $typeOptions = [
+        'all' => [
+            'label' => 'الكل',
+            'icon' => 'fa-border-all',
+            'count' => $recipes->count() + $workshops->count(),
+        ],
+        'recipes' => [
+            'label' => 'الوصفات',
+            'icon' => 'fa-bowl-food',
+            'count' => $recipes->count(),
+        ],
+        'workshops' => [
+            'label' => 'ورشات العمل',
+            'icon' => 'fa-chalkboard-teacher',
+            'count' => $workshops->count(),
+        ],
+    ];
+
+    $hasQuery = filled($query);
+    $totalResults = $typeOptions['all']['count'];
+
+    $highlight = function (?string $text) use ($hasQuery, $query) {
+        if (!$text) {
+            return '';
+        }
+
+        $clean = e(strip_tags($text));
+
+        if (!$hasQuery || trim($query) === '') {
+            return $clean;
+        }
+
+        $pattern = '~(' . preg_quote($query, '~') . ')~iu';
+        $result = preg_replace($pattern, '<mark class="SearchHighlight">$1</mark>', $clean);
+
+        return $result ?? $clean;
+    };
+@endphp
+
 @push('styles')
 <style>
-    .search-result-card {
-        transition: box-shadow 0.3s ease;
+    .SearchHighlight {
+        background-color: rgba(251, 146, 60, 0.18);
+        color: #c2410c;
+        border-radius: 0.45rem;
+        padding: 0 0.35rem;
     }
-    .search-result-card:hover {
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+
+    .SearchCard {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
-    .search-tab {
-        transition: all 0.3s ease;
-    }
-    .search-tab.active {
-        background-color: #f97316;
-        color: white;
-        border-color: #f97316;
-    }
-    .highlight {
-        background-color: #fef3c7;
-        padding: 2px 4px;
-        border-radius: 4px;
-    }
-    
-    /* Image Display Improvements */
-    .result-card-image {
-        width: 100%;
-        height: 240px;
-        object-fit: cover;
-        object-position: center;
-        transition: transform 0.3s ease;
-        border-radius: 0.5rem 0.5rem 0 0;
-    }
-    
-    .search-result-card:hover .result-card-image {
-        transform: scale(1.05);
-    }
-    
-    /* Ensure images load properly */
-    .result-card-image[src*="drive.google.com"] {
-        background-color: #f3f4f6;
-        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%239ca3af"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>');
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 48px;
-    }
-    
-    /* Mobile Responsive Improvements */
-    @media (max-width: 768px) {
-        .search-header {
-            padding: 1rem 0;
-        }
-        
-        .search-title {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .search-form {
-            margin-bottom: 1rem;
-        }
-        
-        .search-input {
-            font-size: 16px; /* Prevents zoom on iOS */
-            padding: 0.75rem 1rem;
-        }
-        
-        .search-tabs-container {
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: stretch;
-        }
-        
-        .search-tab {
-            text-align: center;
-            padding: 0.75rem 1rem;
-            font-size: 0.9rem;
-        }
-        
-        .search-results-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        
-        .search-result-card {
-            margin-bottom: 0;
-        }
-        
-        .result-card-image {
-            height: 200px;
-            object-fit: cover;
-            object-position: center;
-        }
-        
-        .result-card-content {
-            padding: 1rem;
-        }
-        
-        .result-card-title {
-            font-size: 1.1rem;
-            line-height: 1.4;
-        }
-        
-        .result-card-description {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        
-        .result-card-actions {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .result-card-button {
-            width: 100%;
-            padding: 0.75rem;
-            font-size: 0.9rem;
-        }
-        
-        .rating-modal {
-            margin: 1rem;
-            max-width: calc(100vw - 2rem);
-        }
-        
-        .star-rating-modal .star {
-            font-size: 2rem;
-        }
-        
-    }
-    
-    @media (max-width: 480px) {
-        .search-title {
-            font-size: 1.25rem;
-        }
-        
-        .search-input {
-            padding: 0.625rem 0.875rem;
-            font-size: 16px;
-        }
-        
-        .search-tab {
-            padding: 0.625rem 0.875rem;
-            font-size: 0.85rem;
-        }
-        
-        .result-card-image {
-            height: 180px;
-            object-fit: cover;
-            object-position: center;
-        }
-        
-        .result-card-content {
-            padding: 0.875rem;
-        }
-        
-        .result-card-title {
-            font-size: 1rem;
-        }
-        
-        .result-card-description {
-            font-size: 0.85rem;
-        }
-        
-        .result-card-info {
-            font-size: 0.8rem;
-        }
-        
-        .star-rating-modal .star {
-            font-size: 1.75rem;
-        }
-    }
-    
-    /* Rating Modal Styles */
-    .star-rating-modal {
-        unicode-bidi: bidi-override;
-        direction: rtl;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        gap: 5px;
-        flex-direction: row;
-    }
-    
-    .star-rating-modal input {
-        display: none;
-    }
-    
-    .star-rating-modal label {
-        display: inline-block;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        padding: 5px;
-        position: relative;
-    }
-    
-    .star-rating-modal .star {
-        font-size: 2.5rem;
-        color: #e5e7eb;
-        display: block;
-        transition: all 0.2s ease-in-out;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        line-height: 1;
-    }
-    
-    .star-rating-modal input:checked ~ label .star {
-        color: #eab308 !important;
-        transform: scale(1.1);
-        text-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
-    }
-    
-    .star-rating-modal label:hover .star {
-        color: #eab308 !important;
-        transform: scale(1.1);
-        text-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
-    }
-    
-    .star-rating-modal label:hover ~ label .star {
-        color: #eab308 !important;
-        transform: scale(1.1);
-        text-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
-    }
-    
-    .star-rating-modal label:hover + label .star {
-        color: #e5e7eb !important;
-        transform: scale(1);
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    
-    .star-rating-modal label:hover {
-        transform: scale(1.05);
+
+    .SearchCard:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 22px 45px rgba(248, 113, 113, 0.16);
     }
 </style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Search Header -->
-    <section class="bg-white shadow-sm py-8 search-header">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-3xl font-bold text-gray-900 mb-4 search-title">نتائج البحث</h1>
-                
-                <!-- Search Results Display -->
-                <div class="mb-6 search-form">
-                    <h2 class="text-2xl font-bold text-gray-800 text-center py-4 border-b border-gray-200">
-                        <i class="fas fa-search text-orange-500 ml-2"></i>
-                        نتائج البحث عن: 
-                        <span class="text-orange-600">"{{ $query }}"</span>
-                    </h2>
+<div class="bg-gradient-to-b from-orange-50/60 via-white to-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+        <div class="rounded-3xl border border-orange-100 bg-white shadow-sm">
+            <div class="px-6 py-8 sm:px-10 sm:py-10 space-y-6">
+                <div class="space-y-2">
+                    <p class="text-sm font-semibold uppercase tracking-widest text-orange-500">نتائج البحث</p>
+                    @if($hasQuery)
+                        <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">
+                            النتائج عن <span class="text-orange-500">"{{ $query }}"</span>
+                        </h1>
+                        <p class="text-slate-500 text-sm sm:text-base">
+                            يمكنك تعديل الكلمة المفتاحية أو تغيير نوع النتائج للحصول على أفضل المطابقات.
+                        </p>
+                    @else
+                        <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">ابحث عن وصفة أو ورشة ملهمة</h1>
+                        <p class="text-slate-500 text-sm sm:text-base">
+                            اكتب كلمة مفتاحية للعثور على الوصفات، الأدوات أو الورشات التي تلهمك في عالم الحلويات.
+                        </p>
+                    @endif
                 </div>
-                
-                <!-- Search Tabs -->
-                <div class="flex flex-wrap items-center justify-center gap-4 mb-6 search-tabs-container">
-                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                        <button type="button" 
-                                data-type="all"
-                                class="search-tab px-4 py-2 border border-gray-300 rounded-lg {{ $type === 'all' ? 'active' : '' }}">
-                            <i class="fas fa-th-large ml-2"></i>
-                            الكل (<span id="all-count">{{ $recipes->count() + $workshops->count() }}</span>)
-                        </button>
-                        <button type="button" 
-                                data-type="recipes"
-                                class="search-tab px-4 py-2 border border-gray-300 rounded-lg {{ $type === 'recipes' ? 'active' : '' }}">
-                            <i class="fas fa-utensils ml-2"></i>
-                            الوصفات (<span id="recipes-count">{{ $recipes->count() }}</span>)
-                        </button>
-                        <button type="button" 
-                                data-type="workshops"
-                                class="search-tab px-4 py-2 border border-gray-300 rounded-lg {{ $type === 'workshops' ? 'active' : '' }}">
-                            <i class="fas fa-graduation-cap ml-2"></i>
-                            ورشات العمل (<span id="workshops-count">{{ $workshops->count() }}</span>)
+
+                <form method="GET" action="{{ route('search') }}" class="relative">
+                    <input type="hidden" name="type" value="{{ $type }}">
+                    <div class="relative">
+                        <input name="q"
+                               dir="rtl"
+                               type="text"
+                               value="{{ $query }}"
+                               placeholder="ابحث عن وصفة، أداة أو ورشة..."
+                               class="w-full rounded-2xl border border-orange-100 bg-orange-50/70 pr-5 pl-14 py-4 text-base text-slate-700 placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-200">
+                        <button type="submit" class="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                            <i class="fas fa-search text-sm"></i>
                         </button>
                     </div>
-                </div>
+                </form>
 
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($typeOptions as $optionType => $option)
+                        @php
+                            $isActive = $type === $optionType;
+                            $queryParams = array_filter([
+                                'q' => $query,
+                                'type' => $optionType,
+                            ], fn ($value) => filled($value));
+                        @endphp
+                        <a href="{{ route('search', $queryParams) }}"
+                           class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition {{ $isActive ? 'border-orange-400 bg-orange-500 text-white shadow-sm' : 'border-orange-100 bg-white text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600' }}">
+                            <i class="fas {{ $option['icon'] }} text-xs"></i>
+                            <span>{{ $option['label'] }}</span>
+                            <span class="text-xs font-semibold opacity-80">({{ $option['count'] }})</span>
+                        </a>
+                    @endforeach
+                </div>
             </div>
         </div>
-    </section>
 
-    <!-- Search Results -->
-    <section class="py-8">
-        <div class="container mx-auto px-4">
-            <div class="max-w-6xl mx-auto">
-                <!-- Results Container -->
-                <div id="search-results-container">
-                    @if($query)
-                    @if($recipes->count() > 0 || $workshops->count() > 0)
-                        <!-- Recipes Results -->
-                        @if($recipes->count() > 0 && ($type === 'all' || $type === 'recipes'))
-                            <div class="mb-12">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                                    <i class="fas fa-utensils ml-3 text-orange-500"></i>
-                                    الوصفات ({{ $recipes->count() }})
-                                </h2>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 search-results-grid">
-                                    @foreach($recipes as $recipe)
-                                        <div class="search-result-card bg-white rounded-lg shadow-md overflow-hidden">
-                                            <div class="relative">
-                                                <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="result-card-image"
-                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                                                <div class="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-2xl border border-orange-100 bg-white p-5 text-center shadow-sm">
+                <span class="text-sm font-semibold text-orange-500">عدد النتائج</span>
+                <p class="mt-2 text-3xl font-bold text-slate-900">{{ $totalResults }}</p>
+                <p class="text-sm text-slate-500">إجمالي النتائج الحالية</p>
+            </div>
+            <div class="rounded-2xl border border-orange-100 bg-white p-5 text-center shadow-sm">
+                <span class="text-sm font-semibold text-orange-500">الوصفات</span>
+                <p class="mt-2 text-3xl font-bold text-slate-900">{{ $typeOptions['recipes']['count'] }}</p>
+                <p class="text-sm text-slate-500">وصفات لذيذة تم العثور عليها</p>
+            </div>
+            <div class="rounded-2xl border border-orange-100 bg-white p-5 text-center shadow-sm">
+                <span class="text-sm font-semibold text-orange-500">ورشات العمل</span>
+                <p class="mt-2 text-3xl font-bold text-slate-900">{{ $typeOptions['workshops']['count'] }}</p>
+                <p class="text-sm text-slate-500">فرص تدريبية متاحة</p>
+            </div>
+        </div>
+
+        @if($hasQuery)
+            <div class="space-y-16">
+                @if($type === 'all' || $type === 'recipes')
+                    <section>
+                        <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-900">الوصفات</h2>
+                                <p class="text-sm text-slate-500">{{ $recipes->count() ? 'تم العثور على ' . $recipes->count() . ' وصفة متطابقة' : 'لا توجد وصفات مطابقة حالياً' }}</p>
+                            </div>
+                            @if($recipes->count())
+                                <a href="{{ route('recipes') }}" class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50">
+                                    استكشف جميع الوصفات
+                                    <i class="fas fa-arrow-left text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+
+                        @if($recipes->count())
+                            <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                                @foreach($recipes as $recipe)
+                                    @php
+                                        $image = $recipe->image_url ?: ($recipe->image ? (str_starts_with($recipe->image, 'http') ? $recipe->image : asset('storage/' . $recipe->image)) : asset('image/logo.png'));
+                                        $prepTime = $recipe->prep_time ? $recipe->prep_time . ' دقيقة' : 'وقت مرن';
+                                        $excerpt = \Illuminate\Support\Str::limit($recipe->description ?? '', 140);
+                                    @endphp
+                                    <article class="SearchCard group flex flex-col overflow-hidden rounded-3xl border border-orange-50 bg-white shadow-sm">
+                                        <div class="relative h-56 overflow-hidden">
+                                            <img src="{{ $image }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.png') }}';">
+                                            <div class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 py-3 text-xs text-white">
+                                                <span class="flex items-center gap-2 font-medium">
+                                                    <i class="fas fa-tag text-[11px] opacity-80"></i>
                                                     {{ $recipe->category->name ?? 'وصفة' }}
-                                                </div>
-                                            </div>
-                                            <div class="p-6 result-card-content">
-                                                <h3 class="text-xl font-bold text-gray-900 mb-2 result-card-title">
-                                                    {!! str_ireplace($query, '<span class="highlight">' . $query . '</span>', $recipe->title) !!}
-                                                </h3>
-                                                <p class="text-gray-600 mb-4 line-clamp-2 result-card-description">
-                                                    {!! str_ireplace($query, '<span class="highlight">' . $query . '</span>', Str::limit($recipe->description, 100)) !!}
-                                                </p>
-                                                <div class="flex items-center justify-between mb-4 result-card-info">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-user ml-1"></i>
-                                                        <span>{{ $recipe->author ?? 'غير محدد' }}</span>
-                                                    </div>
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-clock ml-1"></i>
-                                                        <span>{{ (int)$recipe->prep_time }} دقيقة</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-center justify-between mb-4 result-card-info">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-star text-yellow-400 ml-1"></i>
-                                                        <span>{{ number_format($recipe->interactions_avg_rating ?? 0, 1) }}</span>
-                                                        <span class="text-gray-400 mr-1">({{ $recipe->interactions_count ?? 0 }})</span>
-                                                    </div>
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-bookmark ml-1"></i>
-                                                        <span>{{ $recipe->saved_count ?? 0 }} حفظ</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex gap-2 result-card-actions">
-                                                    @if($recipe->is_registration_closed)
-                                                        <button class="flex-1 text-center bg-yellow-400 text-yellow-800 font-bold py-2 px-4 rounded-lg cursor-not-allowed">
-                                                            <i class="fas fa-clock ml-1"></i>
-                                                            انتهت مهلة الحجز
-                                                        </button>
-                                                    @else
-                                                        <a href="{{ route('recipe.show', $recipe->slug) }}" 
-                                                           class="flex-1 text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors result-card-button">
-                                                            عرض الوصفة
-                                                        </a>
-                                                    @endif
-                                                    <button class="rate-recipe-btn px-3 py-2 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white rounded-lg transition-colors" 
-                                                            data-recipe-id="{{ $recipe->recipe_id }}"
-                                                            data-recipe-title="{{ $recipe->title }}">
-                                                        <i class="fas fa-star"></i>
-                                                    </button>
-                                                </div>
+                                                </span>
+                                                <span class="flex items-center gap-1 tracking-wide">
+                                                    <i class="far fa-clock text-[11px]"></i>
+                                                    {{ $prepTime }}
+                                                </span>
                                             </div>
                                         </div>
-                                    @endforeach
-                                </div>
+                                        <div class="flex flex-1 flex-col space-y-4 p-6">
+                                            <div class="space-y-2">
+                                                <h3 class="text-xl font-semibold leading-tight text-slate-900">{!! $highlight($recipe->title) !!}</h3>
+                                                <p class="text-sm leading-6 text-slate-500">{!! $highlight($excerpt) !!}</p>
+                                            </div>
+                                            <div class="mt-auto flex items-center justify-between text-sm text-slate-500">
+                                                <span class="flex items-center gap-2">
+                                                    <i class="fas fa-user text-orange-400"></i>
+                                                    {{ $recipe->author ?? 'وصفة' }}
+                                                </span>
+                                                <span class="flex items-center gap-2">
+                                                    <i class="fas fa-bookmark text-orange-400"></i>
+                                                    {{ number_format($recipe->saved_count ?? 0) }} حفظ
+                                                </span>
+                                            </div>
+                                            <a href="{{ route('recipe.show', $recipe->slug) }}" class="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 focus:ring-offset-white">
+                                                <span>عرض الوصفة</span>
+                                                <i class="fas fa-arrow-left text-xs"></i>
+                                            </a>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="rounded-2xl border border-dashed border-orange-200 bg-orange-50/40 px-6 py-10 text-center text-slate-600">
+                                <i class="fas fa-cookie-bite mb-4 text-4xl text-orange-400"></i>
+                                <p class="text-base font-medium">لم نعثر على وصفات مطابقة. جرّب كلمات مفتاحية مختلفة أو اختر نوعاً آخر.</p>
                             </div>
                         @endif
+                    </section>
+                @endif
 
-                        <!-- Workshops Results -->
-                        @if($workshops->count() > 0 && ($type === 'all' || $type === 'workshops'))
-                            <div class="mb-12">
-                                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                                    <i class="fas fa-graduation-cap ml-3 text-orange-500"></i>
-                                    ورشات العمل ({{ $workshops->count() }})
-                                </h2>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 search-results-grid">
-                                    @foreach($workshops as $workshop)
-                                        <div class="search-result-card bg-white rounded-lg shadow-md overflow-hidden">
-                                            <div class="relative">
-                                                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" alt="{{ $workshop->title }}" class="result-card-image"
-                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                                                <div class="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                    {{ $workshop->formatted_price }}
-                                                </div>
+                @if($type === 'all' || $type === 'workshops')
+                    <section>
+                        <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-900">ورشات العمل</h2>
+                                <p class="text-sm text-slate-500">{{ $workshops->count() ? 'تم العثور على ' . $workshops->count() . ' ورشة متاحة' : 'لا توجد ورشات مطابقة حالياً' }}</p>
+                            </div>
+                            @if($workshops->count())
+                                <a href="{{ route('workshops') }}" class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50">
+                                    استعرض جميع الورشات
+                                    <i class="fas fa-arrow-left text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+
+                        @if($workshops->count())
+                            <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                                @foreach($workshops as $workshop)
+                                    @php
+                                        $workshopImage = $workshop->image
+                                            ? (str_starts_with($workshop->image, 'http') ? $workshop->image : asset('storage/' . $workshop->image))
+                                            : asset('image/logo.png');
+                                        $workshopExcerpt = \Illuminate\Support\Str::limit($workshop->description ?? '', 140);
+                                        $workshopDate = optional($workshop->start_date)->format('Y-m-d');
+                                    @endphp
+                                    <article class="SearchCard group flex flex-col overflow-hidden rounded-3xl border border-orange-50 bg-white shadow-sm">
+                                        <div class="relative h-56 overflow-hidden">
+                                            <img src="{{ $workshopImage }}" alt="{{ $workshop->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.png') }}';">
+                                            <div class="absolute inset-x-0 top-4 flex items-start justify-between px-4">
+                                                <span class="rounded-full bg-orange-500/90 px-3 py-1 text-xs font-semibold text-white shadow">
+                                                    {{ $workshop->formatted_price ?? number_format($workshop->price ?? 0, 2) . ' ' . ($workshop->currency ?? 'JOD') }}
+                                                </span>
                                                 @if($workshop->is_featured)
-                                                    <div class="absolute top-4 left-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                    <span class="rounded-full bg-amber-400/90 px-3 py-1 text-xs font-semibold text-white shadow">
                                                         مميز
-                                                    </div>
+                                                    </span>
                                                 @endif
                                             </div>
-                                            <div class="p-6 result-card-content">
-                                                <h3 class="text-xl font-bold text-gray-900 mb-2 result-card-title">
-                                                    {!! str_ireplace($query, '<span class="highlight">' . $query . '</span>', $workshop->title) !!}
-                                                </h3>
-                                                <p class="text-gray-600 mb-4 line-clamp-2 result-card-description">
-                                                    {!! str_ireplace($query, '<span class="highlight">' . $query . '</span>', Str::limit($workshop->description, 100)) !!}
-                                                </p>
-                                                <div class="flex items-center justify-between mb-4 result-card-info">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-user ml-1"></i>
-                                                        <span>{{ $workshop->instructor }}</span>
-                                                    </div>
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-calendar ml-1"></i>
-                                                        <span>{{ $workshop->start_date->format('Y-m-d') }}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-center justify-between mb-4 result-card-info">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-map-marker-alt ml-1"></i>
-                                                        <span>{{ $workshop->location }}</span>
-                                                    </div>
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <i class="fas fa-star text-yellow-400 ml-1"></i>
-                                                        <span>{{ number_format($workshop->rating ?? 0, 1) }}</span>
-                                                        <span class="text-gray-400 mr-1">({{ $workshop->reviews_count ?? 0 }})</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex gap-2 result-card-actions">
-                                                    <a href="{{ route('workshop.show', $workshop->slug) }}" 
-                                                       class="flex-1 text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors result-card-button">
-                                                        عرض الورشة
-                                                    </a>
-                                                    <button class="rate-workshop-btn px-3 py-2 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white rounded-lg transition-colors" 
-                                                            data-workshop-id="{{ $workshop->id }}"
-                                                            data-workshop-title="{{ $workshop->title }}">
-                                                        <i class="fas fa-star"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
                                         </div>
-                                    @endforeach
-                                </div>
+                                        <div class="flex flex-1 flex-col space-y-4 p-6">
+                                            <div class="space-y-2">
+                                                <h3 class="text-xl font-semibold leading-tight text-slate-900">{!! $highlight($workshop->title) !!}</h3>
+                                                <p class="text-sm leading-6 text-slate-500">{!! $highlight($workshopExcerpt) !!}</p>
+                                            </div>
+                                            <dl class="grid grid-cols-2 gap-4 text-xs text-slate-500">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-user-circle text-orange-400"></i>
+                                                    <span>{{ $workshop->instructor }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 justify-end">
+                                                    <i class="fas fa-calendar text-orange-400"></i>
+                                                    <span>{{ $workshopDate ?? 'موعد مرن' }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-map-marker-alt text-orange-400"></i>
+                                                    <span>{{ $workshop->is_online ? 'متاحة عبر الإنترنت' : ($workshop->location ?? 'سيتم التحديد') }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 justify-end">
+                                                    <i class="fas fa-star text-orange-400"></i>
+                                                    <span>{{ number_format($workshop->rating ?? 0, 1) }} <small class="opacity-70">({{ $workshop->reviews_count ?? 0 }})</small></span>
+                                                </div>
+                                            </dl>
+                                            <a href="{{ route('workshop.show', $workshop->slug) }}" class="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 focus:ring-offset-white">
+                                                <span>عرض تفاصيل الورشة</span>
+                                                <i class="fas fa-arrow-left text-xs"></i>
+                                            </a>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="rounded-2xl border border-dashed border-orange-200 bg-orange-50/40 px-6 py-10 text-center text-slate-600">
+                                <i class="fas fa-chalkboard-teacher mb-4 text-4xl text-orange-400"></i>
+                                <p class="text-base font-medium">لم نعثر على ورشات مطابقة. يمكنك تجربة كلمات أخرى أو تصفح الورشات المتاحة.</p>
                             </div>
                         @endif
-                    @else
-                        <!-- No Results -->
-                        <div class="text-center py-16">
-                            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
-                            <h3 class="text-2xl font-semibold text-gray-600 mb-2">لم نجد نتائج لـ "{{ $query }}"</h3>
-                            <p class="text-gray-500 mb-6">جرب البحث بكلمات مختلفة أو تحقق من الإملاء</p>
-                            <div class="flex flex-wrap justify-center gap-4">
-                                <a href="{{ route('home') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors">
-                                    الصفحة الرئيسية
-                                </a>
-                                <a href="{{ route('workshops') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors">
-                                    ورشات العمل
-                                </a>
-                            </div>
-                        </div>
-                    @endif
-                @else
-                    <!-- Loading Skeleton -->
-                    <div id="search-loading-skeleton" class="space-y-12">
-                        <!-- Recipes Loading Skeleton -->
-                        <div>
-                            <div class="h-8 bg-gray-300 rounded w-48 mb-6 animate-pulse"></div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                @for($i = 0; $i < 6; $i++)
-                                    <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
-                                        <div class="h-48 bg-gray-300"></div>
-                                        <div class="p-6">
-                                            <div class="h-5 bg-gray-300 rounded mb-2"></div>
-                                            <div class="h-5 bg-gray-300 rounded w-3/4 mb-4"></div>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <div class="h-4 bg-gray-300 rounded w-20"></div>
-                                                <div class="h-4 bg-gray-300 rounded w-16"></div>
-                                            </div>
-                                            <div class="h-8 bg-gray-300 rounded"></div>
-                                        </div>
-                                    </div>
-                                @endfor
-                            </div>
-                        </div>
-                        
-                        <!-- Workshops Loading Skeleton -->
-                        <div>
-                            <div class="h-8 bg-gray-300 rounded w-48 mb-6 animate-pulse"></div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                @for($i = 0; $i < 6; $i++)
-                                    <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
-                                        <div class="h-48 bg-gray-300"></div>
-                                        <div class="p-6">
-                                            <div class="h-5 bg-gray-300 rounded mb-2"></div>
-                                            <div class="h-5 bg-gray-300 rounded w-3/4 mb-4"></div>
-                                            <div class="h-3 bg-gray-300 rounded mb-1"></div>
-                                            <div class="h-3 bg-gray-300 rounded w-2/3 mb-4"></div>
-                                            <div class="flex items-center justify-between mb-3">
-                                                <div class="h-4 bg-gray-300 rounded w-20"></div>
-                                                <div class="h-4 bg-gray-300 rounded w-16"></div>
-                                            </div>
-                                            <div class="h-8 bg-gray-300 rounded"></div>
-                                        </div>
-                                    </div>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Empty Search (Hidden by default) -->
-                    <div id="empty-search" class="text-center py-16 hidden">
-                        <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-2xl font-semibold text-gray-600 mb-2">ابحث عن وصفة أو ورشة</h3>
-                        <p class="text-gray-500 mb-6">استخدم مربع البحث أعلاه للعثور على ما تبحث عنه</p>
-                    </div>
+                    </section>
                 @endif
+            </div>
+        @else
+            <div class="rounded-3xl border border-dashed border-orange-200 bg-white px-8 py-12 text-center shadow-sm">
+                <i class="fas fa-search mb-4 text-4xl text-orange-400"></i>
+                <h2 class="text-2xl font-semibold text-slate-900 mb-2">ابدأ البحث الآن</h2>
+                <p class="text-slate-500 max-w-2xl mx-auto">
+                    اكتب اسم وصفة، أداة، مكوّن أو ورشة عمل في الحقل أعلاه لتحصل على نتائج مخصصة، أو تصفح التصنيفات الرئيسية من شريط التنقل.
+                </p>
+                <div class="mt-6 flex flex-wrap justify-center gap-3 text-sm text-orange-600">
+                    <span class="rounded-full bg-orange-50 px-4 py-2">براونيز</span>
+                    <span class="rounded-full bg-orange-50 px-4 py-2">كيك الشوكولاتة</span>
+                    <span class="rounded-full bg-orange-50 px-4 py-2">ورشات للمبتدئين</span>
+                    <span class="rounded-full bg-orange-50 px-4 py-2">أدوات الخَبز</span>
                 </div>
             </div>
-        </div>
-    </section>
-</div>
+        @endif
 
-<!-- Rating Modal -->
-<div id="rating-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 rating-modal">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-gray-800">تقييم</h3>
-            <button id="close-rating-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-        <div class="text-center mb-6">
-            <h4 id="rating-item-title" class="text-lg font-semibold text-gray-700 mb-2">...</h4>
-            <p class="text-sm text-gray-500">كيف تقيم هذا العنصر؟</p>
-        </div>
-        
-        <div class="flex flex-col items-center">
-            <div class="star-rating-modal mb-4">
-                <input type="radio" id="modal-star5" name="modal-rating" value="5" />
-                <label for="modal-star5" title="5 نجوم">
-                    <span class="star">★</span>
-                </label>
-                <input type="radio" id="modal-star4" name="modal-rating" value="4" />
-                <label for="modal-star4" title="4 نجوم">
-                    <span class="star">★</span>
-                </label>
-                <input type="radio" id="modal-star3" name="modal-rating" value="3" />
-                <label for="modal-star3" title="3 نجوم">
-                    <span class="star">★</span>
-                </label>
-                <input type="radio" id="modal-star2" name="modal-rating" value="2" />
-                <label for="modal-star2" title="نجمتان">
-                    <span class="star">★</span>
-                </label>
-                <input type="radio" id="modal-star1" name="modal-rating" value="1" />
-                <label for="modal-star1" title="نجمة واحدة">
-                    <span class="star">★</span>
-                </label>
+        @if($hasQuery && $totalResults === 0)
+            <div class="rounded-3xl border border-orange-100 bg-white px-8 py-12 shadow-sm">
+                <div class="mx-auto max-w-2xl text-center space-y-4">
+                    <h2 class="text-2xl font-semibold text-slate-900">لم نعثر على نتائج مطابقة للبحث الحالي</h2>
+                    <p class="text-slate-500">حاول استخدام مرادفات مختلفة، تقليل عدد الكلمات، أو تصفح الأقسام الأساسية.</p>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <a href="{{ route('home') }}" class="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600">
+                            العودة للرئيسية
+                            <i class="fas fa-arrow-left text-xs"></i>
+                        </a>
+                        <a href="{{ route('workshops') }}" class="inline-flex items-center gap-2 rounded-full border border-orange-200 px-5 py-2.5 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50">
+                            تصفح الورشات
+                            <i class="fas fa-arrow-left text-xs"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-            <p id="modal-rating-text" class="text-center text-gray-500 mb-4">
-                الرجاء اختيار تقييم
-            </p>
-            <button id="submit-modal-rating-btn" class="w-full p-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                <i class="fas fa-paper-plane ml-2"></i>
-                أرسل التقييم
-            </button>
-        </div>
+        @endif
     </div>
 </div>
-
 @endsection
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // عناصر البحث - تم تحويلها لعرض النتائج فقط
-    const resultsContainer = document.getElementById('search-results-container');
-    const allCount = document.getElementById('all-count');
-    const recipesCount = document.getElementById('recipes-count');
-    const workshopsCount = document.getElementById('workshops-count');
-    
-    let currentType = '{{ $type }}';
-    
-    // لا نحتاج لتحديث العدادات ديناميكياً - يتم عرضها من الخادم
-    console.log('Counts are displayed from server - no dynamic updates needed');
-    console.log('Search results display - no input field needed');
-    
-    // Handle search tabs
-    console.log('Setting up search tabs');
-    document.querySelectorAll('.search-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const type = this.dataset.type;
-            console.log('Search tab clicked:', type);
-            currentType = type;
-            
-            // Update active tab
-            document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // تصفية النتائج حسب النوع
-            filterResultsByType(type);
-        });
-    });
-    
-    // دالة لتصفية النتائج حسب النوع - إعادة تحميل الصفحة
-    function filterResultsByType(type) {
-        console.log('Filtering results by type:', type);
-        
-        // إعادة تحميل الصفحة مع النوع الجديد
-        const url = new URL(window.location);
-        url.searchParams.set('type', type);
-        window.location.href = url.toString();
-    }
-    
-    // Advanced filters have been removed
-    console.log('Advanced filters removed - no filter functionality needed');
-
-    
-    // Rating Modal Functionality
-    const ratingModal = document.getElementById('rating-modal');
-    const closeRatingModal = document.getElementById('close-rating-modal');
-    const ratingItemTitle = document.getElementById('rating-item-title');
-    const modalRatingText = document.getElementById('modal-rating-text');
-    const submitModalRatingBtn = document.getElementById('submit-modal-rating-btn');
-    const modalStarInputs = document.querySelectorAll('input[name="modal-rating"]');
-    
-    let currentRatingType = null; // 'recipe' or 'workshop'
-    let currentItemId = null;
-    let currentRating = null;
-    
-    // التحقق من وجود عناصر Rating Modal
-    if (!ratingModal || !closeRatingModal || !ratingItemTitle || !modalRatingText || !submitModalRatingBtn) {
-        console.warn('Some rating modal elements are missing');
-    }
-    
-    // Recipe rating buttons
-    document.querySelectorAll('.rate-recipe-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentRatingType = 'recipe';
-            currentItemId = this.dataset.recipeId;
-            if (ratingItemTitle) {
-            ratingItemTitle.textContent = this.dataset.recipeTitle;
-            }
-            openRatingModal();
-        });
-    });
-    
-    // Workshop rating buttons
-    document.querySelectorAll('.rate-workshop-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentRatingType = 'workshop';
-            currentItemId = this.dataset.workshopId;
-            if (ratingItemTitle) {
-            ratingItemTitle.textContent = this.dataset.workshopTitle;
-            }
-            openRatingModal();
-        });
-    });
-    
-    // Close modal
-    if (closeRatingModal) {
-    closeRatingModal.addEventListener('click', closeModal);
-    }
-    if (ratingModal) {
-    ratingModal.addEventListener('click', function(e) {
-        if (e.target === ratingModal) {
-            closeModal();
-        }
-    });
-    }
-    
-    // Rating change handlers
-    if (modalStarInputs && modalStarInputs.length > 0) {
-    modalStarInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            currentRating = parseInt(this.value);
-            updateModalRatingText(currentRating);
-            updateSubmitButton();
-        });
-        
-        const label = input.nextElementSibling;
-        if (label) {
-            label.addEventListener('mouseenter', () => {
-                highlightModalStars(parseInt(input.value));
-            });
-        }
-    });
-    }
-    
-    // Reset star highlight on mouse leave
-    const starRatingModal = document.querySelector('.star-rating-modal');
-    if (starRatingModal) {
-        starRatingModal.addEventListener('mouseleave', () => {
-        resetModalStarHighlight();
-    });
-    }
-    
-    // Submit rating
-    if (submitModalRatingBtn) {
-    submitModalRatingBtn.addEventListener('click', submitRating);
-    }
-    
-    function openRatingModal() {
-        if (!ratingModal || !modalRatingText) return;
-        
-        // Reset modal state
-        currentRating = null;
-        modalStarInputs.forEach(input => input.checked = false);
-        modalRatingText.textContent = 'الرجاء اختيار تقييم';
-        updateSubmitButton();
-        
-        ratingModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-    
-    function closeModal() {
-        if (ratingModal) {
-        ratingModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-        }
-    }
-    
-    function updateModalRatingText(rating) {
-        if (!modalRatingText) return;
-        
-        const ratingTexts = {
-            1: 'مقبول',
-            2: 'جيد',
-            3: 'جيد جداً',
-            4: 'ممتاز',
-            5: 'رائع جداً'
-        };
-        
-        modalRatingText.textContent = ratingTexts[rating] || 'الرجاء اختيار تقييم';
-    }
-    
-    function updateSubmitButton() {
-        if (!submitModalRatingBtn) return;
-        
-        if (currentRating) {
-            submitModalRatingBtn.disabled = false;
-            submitModalRatingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        } else {
-            submitModalRatingBtn.disabled = true;
-            submitModalRatingBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        }
-    }
-    
-    function highlightModalStars(rating) {
-        if (!modalStarInputs || modalStarInputs.length === 0) return;
-        
-        modalStarInputs.forEach(input => {
-            const label = input.nextElementSibling;
-            const star = label?.querySelector('.star');
-            if (star) {
-                if (parseInt(input.value) <= rating) {
-                    star.style.color = '#eab308';
-                    star.style.transform = 'scale(1.1)';
-                } else {
-                    star.style.color = '#e5e7eb';
-                    star.style.transform = 'scale(1)';
-                }
-            }
-        });
-    }
-    
-    function resetModalStarHighlight() {
-        if (!modalStarInputs || modalStarInputs.length === 0) return;
-        
-        modalStarInputs.forEach(input => {
-            const label = input.nextElementSibling;
-            const star = label?.querySelector('.star');
-            if (star) {
-                if (input.checked) {
-                    star.style.color = '#eab308';
-                    star.style.transform = 'scale(1.1)';
-                } else {
-                    star.style.color = '#e5e7eb';
-                    star.style.transform = 'scale(1)';
-                }
-            }
-        });
-    }
-    
-    async function submitRating() {
-        if (!currentRating || !currentItemId || !submitModalRatingBtn) {
-            showMessage('الرجاء اختيار تقييم قبل الإرسال', 'error');
-            return;
-        }
-        
-        // Set loading state
-        submitModalRatingBtn.disabled = true;
-        submitModalRatingBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الإرسال...';
-        
-        try {
-            let response;
-            if (currentRatingType === 'recipe') {
-                response = await fetch('/api/interactions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        recipe_id: currentItemId,
-                        rating: currentRating
-                    })
-                });
-            } else if (currentRatingType === 'workshop') {
-                // For workshops, we'll need to implement a similar API endpoint
-                response = await fetch('/api/workshop-reviews', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        workshop_id: currentItemId,
-                        rating: currentRating
-                    })
-                });
-            }
-            
-            const result = await response.json();
-            
-            if (response.ok) {
-                showMessage('تم إرسال التقييم بنجاح!', 'success');
-                closeModal();
-                // Optionally refresh the page or update the rating display
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                const errorMessage = result.message || 'حدث خطأ أثناء إرسال التقييم';
-                throw new Error(errorMessage);
-            }
-            
-        } catch (error) {
-            console.error('خطأ في إرسال التقييم:', error);
-            
-            let errorMessage = 'حدث خطأ أثناء إرسال التقييم. يرجى المحاولة مرة أخرى.';
-            
-            if (error.message.includes('Unauthenticated') || error.message.includes('401')) {
-                errorMessage = 'يجب تسجيل الدخول لتقييم هذا العنصر';
-            } else if (error.message.includes('422') || error.message.includes('validation')) {
-                errorMessage = 'تقييم غير صالح. يرجى اختيار تقييم من 1 إلى 5 نجوم';
-            } else if (error.message.includes('404')) {
-                errorMessage = 'العنصر غير موجود';
-            }
-            
-            showMessage(errorMessage, 'error');
-        } finally {
-            // Reset button state
-            if (submitModalRatingBtn) {
-            submitModalRatingBtn.disabled = false;
-            submitModalRatingBtn.innerHTML = '<i class="fas fa-paper-plane ml-2"></i>أرسل التقييم';
-            }
-        }
-    }
-    
-    function showMessage(message, type = 'info') {
-        // Remove existing messages
-        const existingMessages = document.querySelectorAll('.rating-message');
-        existingMessages.forEach(msg => msg.remove());
-        
-        // Create message element
-        const messageEl = document.createElement('div');
-        messageEl.className = `rating-message fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
-            type === 'success' ? 'bg-green-500 text-white' :
-            type === 'error' ? 'bg-red-500 text-white' :
-            'bg-blue-500 text-white'
-        }`;
-        
-        const icon = type === 'success' ? 'fas fa-check-circle' :
-                    type === 'error' ? 'fas fa-exclamation-triangle' :
-                    'fas fa-info-circle';
-        
-        messageEl.innerHTML = `
-            <div class="flex items-center space-x-2 rtl:space-x-reverse">
-                <i class="${icon}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        document.body.appendChild(messageEl);
-        
-        // Show message
-        setTimeout(() => {
-            messageEl.classList.remove('translate-x-full');
-        }, 100);
-        
-        // Hide message
-        setTimeout(() => {
-            messageEl.classList.add('translate-x-full');
-            setTimeout(() => {
-                if (messageEl.parentNode) {
-                    messageEl.parentNode.removeChild(messageEl);
-                }
-            }, 300);
-        }, 4000);
-    }
-    
-    function getCsrfToken() {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : '';
-    }
-    
-    // معالجة روابط Google Drive في نتائج البحث
-    function convertGoogleDriveUrl(url) {
-        if (url.includes('drive.google.com/file/d/')) {
-            const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
-            if (match && match[1]) {
-                return `https://lh3.googleusercontent.com/d/${match[1]}`;
-            }
-        }
-        
-        if (url.includes('drive.google.com') && url.includes('id=')) {
-            const urlParams = new URLSearchParams(new URL(url).search);
-            const fileId = urlParams.get('id');
-            if (fileId) {
-                return `https://lh3.googleusercontent.com/d/${fileId}`;
-            }
-        }
-        
-        return url;
-    }
-    
-    // تطبيق التحويل على جميع الصور في نتائج البحث
-    const searchImages = document.querySelectorAll('img[src*="drive.google.com"]');
-    console.log('Found Google Drive images:', searchImages.length);
-    searchImages.forEach(function(img) {
-        const originalSrc = img.src;
-        const convertedSrc = convertGoogleDriveUrl(originalSrc);
-        if (convertedSrc !== originalSrc) {
-            console.log('Converting Google Drive image:', originalSrc, 'to:', convertedSrc);
-            img.src = convertedSrc;
-        }
-    });
-    
-    // إضافة معالجة إضافية للتأكد من أن البحث يعمل
-    console.log('Search page JavaScript loaded successfully');
-    console.log('Current query:', '{{ $query }}');
-    console.log('Current type:', '{{ $type }}');
-    
-    // عرض النتائج الحالية فقط - لا توجد تصفية ديناميكية
-    console.log('Displaying current search results');
-    console.log('Current query:', '{{ $query }}');
-    console.log('Current type:', '{{ $type }}');
-    
-    // تم تحويل حقل البحث إلى عرض النتائج فقط
-    console.log('Search results display - no click handler needed');
-});
-</script>
-@endpush
-

@@ -14,12 +14,55 @@ use Illuminate\Support\Facades\Storage;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         border: 1px solid #f3f4f6;
     }
-    .recipe-card {
-        transition: all 0.2s ease;
+    .recipes-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
     }
-    .recipe-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    .recipes-table thead th {
+        background: #f9fafb;
+        color: #4b5563;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .recipes-table tbody td {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #374151;
+        vertical-align: middle;
+    }
+    .recipes-table tbody tr:hover {
+        background: #f9fafb;
+    }
+    .recipe-thumbnail {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 0.75rem;
+        object-fit: cover;
+        box-shadow: 0 4px 10px rgba(15, 118, 110, 0.08);
+    }
+    .difficulty-badge {
+        position: absolute;
+        top: -0.35rem;
+        right: -0.35rem;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        padding: 0.3rem 0.65rem;
+        border-radius: 9999px;
+        box-shadow: 0 2px 6px rgba(249, 115, 22, 0.35);
+    }
+    .btn-sm {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.875rem;
+    }
+    .btn-sm i {
+        font-size: 0.8125rem;
     }
     .btn-primary {
         background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
@@ -93,83 +136,99 @@ use Illuminate\Support\Facades\Storage;
             </div>
         @endif
 
-        <!-- Recipes Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($recipes as $recipe)
-                <div class="recipe-card admin-card overflow-hidden">
-                    <!-- Recipe Image -->
-                    <div class="relative h-48">
-                        <img src="{{ $recipe->image ? Storage::disk('public')->url($recipe->image) : $recipe->image_url }}" alt="{{ $recipe->title }}" 
-                             class="w-full h-full object-cover"
-                             onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                        <div class="absolute top-4 right-4">
-                            <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                {{ ucfirst($recipe->difficulty) }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Recipe Content -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $recipe->title }}</h3>
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ $recipe->description }}</p>
-                        
-                        <!-- Recipe Info -->
-                        <div class="space-y-2 text-sm text-gray-500 mb-4">
-                            <div class="flex items-center">
-                                <i class="fas fa-user w-4 text-orange-500 ml-2"></i>
-                                <span>{{ $recipe->author }}</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-clock w-4 text-orange-500 ml-2"></i>
-                                <span>{{ (int)$recipe->prep_time + (int)$recipe->cook_time }} دقيقة</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-users w-4 text-orange-500 ml-2"></i>
-                                <span>{{ (int)$recipe->servings }} حصة</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-tag w-4 text-orange-500 ml-2"></i>
-                                <span>{{ $recipe->category->name ?? 'غير محدد' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex space-x-2 rtl:space-x-reverse">
-                            <a href="{{ route('admin.recipes.show', $recipe) }}" 
-                               class="btn-secondary flex-1 text-center">
-                                <i class="fas fa-eye ml-1"></i>
-                                عرض
-                            </a>
-                            <a href="{{ route('admin.recipes.edit', $recipe) }}" 
-                               class="btn-primary flex-1 text-center">
-                                <i class="fas fa-edit ml-1"></i>
-                                تعديل
-                            </a>
-                            <form action="{{ route('admin.recipes.destroy', $recipe) }}" 
-                                  method="POST" class="flex-1" 
-                                  onsubmit="return confirm('هل أنت متأكد من حذف هذه الوصفة؟')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-danger w-full">
-                                    <i class="fas fa-trash ml-1"></i>
-                                    حذف
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+        <!-- Recipes Table -->
+        <div class="admin-card overflow-hidden">
+            @if($recipes->count())
+                <div class="overflow-x-auto">
+                    <table class="recipes-table">
+                        <thead>
+                            <tr>
+                                <th class="text-right">الوصفة</th>
+                                <th class="text-right">صاحب الوصفة</th>
+                                <th class="text-right">المدة الإجمالية</th>
+                                <th class="text-right">عدد الحصص</th>
+                                <th class="text-right">التصنيف</th>
+                                <th class="text-right w-48">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recipes as $recipe)
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center gap-4">
+                                            <div class="relative flex-shrink-0">
+                                                <img 
+                                                    src="{{ $recipe->image ? Storage::disk('public')->url($recipe->image) : $recipe->image_url }}" 
+                                                    alt="{{ $recipe->title }}" 
+                                                    class="recipe-thumbnail"
+                                                    onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                                <span class="difficulty-badge">
+                                                    {{ ucfirst($recipe->difficulty) }}
+                                                </span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <div class="font-semibold text-gray-900">
+                                                    {{ $recipe->title }}
+                                                </div>
+                                                <p class="text-sm text-gray-500 line-clamp-2 max-w-xs">
+                                                    {{ $recipe->description }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-sm text-gray-600">
+                                        {{ $recipe->author }}
+                                    </td>
+                                    <td class="text-sm text-gray-600">
+                                        {{ (int)$recipe->prep_time + (int)$recipe->cook_time }} دقيقة
+                                    </td>
+                                    <td class="text-sm text-gray-600">
+                                        {{ (int)$recipe->servings }} حصة
+                                    </td>
+                                    <td class="text-sm text-gray-600">
+                                        {{ $recipe->category->name ?? 'غير محدد' }}
+                                    </td>
+                                    <td class="text-sm">
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            <a href="{{ route('admin.recipes.show', $recipe) }}" 
+                                               class="btn-secondary btn-sm inline-flex items-center gap-1">
+                                                <i class="fas fa-eye ml-1"></i>
+                                                عرض
+                                            </a>
+                                            <a href="{{ route('admin.recipes.edit', $recipe) }}" 
+                                               class="btn-primary btn-sm inline-flex items-center gap-1">
+                                                <i class="fas fa-edit ml-1"></i>
+                                                تعديل
+                                            </a>
+                                            <form action="{{ route('admin.recipes.destroy', $recipe) }}" 
+                                                  method="POST" 
+                                                  class="inline-flex"
+                                                  onsubmit="return confirm('هل أنت متأكد من حذف هذه الوصفة؟')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn-danger btn-sm inline-flex items-center gap-1">
+                                                    <i class="fas fa-trash ml-1"></i>
+                                                    حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-            @empty
-                <div class="col-span-full text-center py-16">
+            @else
+                <div class="py-16 text-center">
                     <i class="fas fa-utensils text-6xl text-gray-300 mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-700 mb-2">لا توجد وصفات</h3>
                     <p class="text-gray-500 mb-6">ابدأ بإضافة وصفة جديدة</p>
-                    <a href="{{ route('admin.recipes.create') }}" class="btn-primary">
-                        <i class="fas fa-plus ml-2"></i>
+                    <a href="{{ route('admin.recipes.create') }}" class="btn-primary btn-sm inline-flex items-center gap-1">
+                        <i class="fas fa-plus ml-1"></i>
                         إضافة وصفة جديدة
                     </a>
                 </div>
-            @endforelse
+            @endif
         </div>
 
         <!-- Pagination -->

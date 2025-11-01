@@ -921,216 +921,7 @@
 <body class="bg-gray-100 font-sans" data-user-id="@auth{{ Auth::id() }}@endauth">
 
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex items-center justify-between header-container">
-            <div class="flex items-center space-x-2 rtl:space-x-reverse">
-                <a href="{{ route('home') }}" class="flex items-center">
-                    <img src="{{ asset('image/logo.png') }}" alt="Logo" class="h-12 w-auto inline header-logo">
-                </a>
-            </div>
-            <div class="flex items-center space-x-4 rtl:space-x-reverse md:hidden mobile-menu-btn">
-                <!-- Mobile Search Icon -->
-                <button id="mobileSearchBtn" class="text-gray-600 hover:text-orange-500 transition-colors focus:outline-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </button>
-                
-                <!-- Mobile Cart Icon with Counter -->
-                <a href="{{ route('saved.index') }}" class="relative text-gray-600 hover:text-orange-500 transition-colors focus:outline-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
-                    </svg>
-                    <span id="mobile-cart-count" class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10">0</span>
-                </a>
-                
-                @auth
-                <!-- Mobile Notification Bell Icon -->
-                <a href="/notifications" class="relative text-gray-600 hover:text-orange-500 transition-colors focus:outline-none">
-                    <i class="fas fa-bell text-xl"></i>
-                    <span id="mobile-notification-count" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10" aria-hidden="true">0</span>
-                </a>
-                @endauth
-                
-                <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="text-gray-600 hover:text-orange-500 transition-colors focus:outline-none">
-                    <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
-                    <svg id="close-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div class="hidden md:flex items-center md:space-x-4 rtl:space-x-reverse text-gray-600 header-nav">
-                <div class="relative w-auto md:w-64" id="search-container">
-                    <input id="search-input" 
-                           dir="rtl" 
-                           type="text" 
-                           placeholder="ابحث عن وصفة أو ورشة..." 
-                           autocomplete="off"
-                           spellcheck="false"
-                           class="w-full pl-4 pr-10 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200">
-                    <button id="search-submit" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </button>
-                </div>
-                <nav class="flex items-center space-x-4 rtl:space-x-reverse text-gray-600">
-                    <a href="{{ route('recipes') }}" class="hover:text-orange-500 transition-colors font-medium">
-                        <i class="fas fa-utensils ml-1"></i>
-                        الوصفات
-                    </a>
-                    <a href="{{ route('tools') }}" class="hover:text-orange-500 transition-colors font-medium">
-                        <i class="fas fa-kitchen-set ml-1"></i>
-                        أدوات الشيف
-                    </a>
-                    <a href="{{ route('workshops') }}" class="hover:text-orange-500 transition-colors font-medium">
-                        <i class="fas fa-graduation-cap ml-1"></i>
-                        ورشات العمل
-                    </a>
-                    <a href="{{ route('saved.index') }}" class="hover:text-orange-500 transition-colors font-medium relative">
-                        <i class="fas fa-bookmark ml-1"></i>
-                        الأدوات المحفوظة
-                        <span id="saved-count" class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10">0</span>
-                    </a>
-                    @auth
-                        <!-- Notification Bell Icon -->
-                        <div class="relative notification-container" id="notification-container">
-                            <button id="notification-bell" class="relative text-gray-600 hover:text-orange-500 transition-colors focus:outline-none" onclick="toggleNotificationDropdown()">
-                                <i class="fas fa-bell text-xl"></i>
-                                <span id="notification-count" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10" aria-hidden="true">0</span>
-                            </button>
-                            
-                            <!-- Notification Dropdown -->
-                            <div id="notification-dropdown" class="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden">
-                                <div class="p-4 border-b border-gray-200">
-                                    <div class="flex items-center justify-between">
-                                        <h3 class="text-lg font-semibold text-gray-900">الإشعارات</h3>
-                                        <div class="flex space-x-2 rtl:space-x-reverse">
-                                            <button id="mark-all-read-btn" class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded transition-colors">
-                                                تحديد الكل كمقروء
-                                            </button>
-                                            <a href="/notifications" class="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors">
-                                                عرض الكل
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="notification-list" class="max-h-80 overflow-y-auto">
-                                    <!-- Notifications will be loaded here -->
-                                    <div class="p-4 text-center text-gray-500">
-                                        <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
-                                        <p>جاري تحميل الإشعارات...</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="p-3 border-t border-gray-200 bg-gray-50">
-                                    <a href="/notifications" class="block text-center text-sm text-orange-600 hover:text-orange-700 font-medium">
-                                        عرض جميع الإشعارات
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    @endauth
-                    @auth
-                        <div class="relative user-menu-container" id="user-menu-container">
-                            <button id="user-menu-button" class="flex items-center space-x-2 rtl:space-x-reverse focus:outline-none" onclick="toggleUserMenu()">
-                                <span class="font-semibold text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
-                                <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
-                            <div id="dropdown-menu">
-                                <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">ملفي الشخصي</a>
-                                @if(Auth::user()->is_admin)
-                                <a href="{{ route('admin.admin-area') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-crown ml-2 text-orange-500"></i>
-                                    <span class="font-semibold">منطقة الإدمن</span>
-                                </a>
-                                @endif
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="event.preventDefault(); this.closest('form').submit();">تسجيل الخروج</a>
-                                </form>
-                            </div>
-                        </div>
-                    @endauth
-                    @guest
-                        <a href="{{ route('login') }}" class="hover:text-orange-500 transition-colors">تسجيل الدخول</a>
-                    @endguest
-                </nav>
-            </div>
-        </div>
-        <div id="mobileMenu" class="hidden bg-white border-t shadow-md md:hidden mobile-menu" style="display: none; position: relative; z-index: 50;">
-            <nav class="flex flex-col space-y-2 p-4 text-gray-600">
-                <a href="{{ route('recipes') }}" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors mobile-menu-item">
-                    <i class="fas fa-utensils ml-3 text-orange-500"></i>
-                    <span class="font-medium">الوصفات</span>
-                </a>
-                <a href="{{ route('tools') }}" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors mobile-menu-item">
-                    <i class="fas fa-kitchen-set ml-3 text-orange-500"></i>
-                    <span class="font-medium">أدوات الشيف</span>
-                </a>
-                <a href="{{ route('workshops') }}" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors mobile-menu-item">
-                    <i class="fas fa-graduation-cap ml-3 text-orange-500"></i>
-                    <span class="font-medium">ورشات العمل</span>
-                </a>
-                <a href="{{ route('saved.index') }}" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors mobile-menu-item relative">
-                    <i class="fas fa-bookmark ml-3 text-orange-500"></i>
-                    <span class="font-medium">الأدوات المحفوظة</span>
-                    <span id="saved-count-mobile" class="absolute left-3 top-3 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10">0</span>
-                </a>
-                @auth
-                <a href="/notifications" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors mobile-menu-item relative">
-                    <i class="fas fa-bell ml-3 text-orange-500"></i>
-                    <span class="font-medium">الإشعارات</span>
-                    <span id="mobile-notification-count-menu" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute left-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px] z-10" aria-hidden="true">0</span>
-                </a>
-                @endauth
-                @auth
-                    <a href="#" class="-m-3 flex items-center p-3 focus:outline-offset-2"><span class="ml-4 rtl:mr-4 text-base font-semibold text-gray-900">{{ Auth::user()->name }}</span></a>
-                    <div class="mt-2 space-y-2">
-                        <a href="{{ route('profile') }}" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50">ملفي الشخصي</a>
-                        @if(Auth::user()->is_admin)
-                        <a href="{{ route('admin.admin-area') }}" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50">
-                            <i class="fas fa-crown ml-2 text-orange-500"></i>
-                            <span class="font-bold">منطقة الإدمن</span>
-                        </a>
-                        @endif
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <a href="#" id="logout-btn-mobile" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50" onclick="event.preventDefault(); this.closest('form').submit();">تسجيل الخروج</a>
-                        </form>
-                    </div>
-                @endauth
-                @guest
-                    <a href="{{ route('login') }}" class="hover:text-orange-500 transition-colors">تسجيل الدخول</a>
-                @endguest
-            </nav>
-        </div>
-        
-        <!-- Mobile Search Modal -->
-        <div id="mobileSearchModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-bold text-gray-800">البحث</h3>
-                    <button id="closeMobileSearchModal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                
-                <div class="relative">
-                    <input id="mobile-search-input" 
-                           dir="rtl" 
-                           type="text" 
-                           placeholder="ابحث عن وصفة أو ورشة..." 
-                           autocomplete="off"
-                           spellcheck="false"
-                           class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200 text-lg">
-                    <button id="mobile-search-submit" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('partials.navbar')
 
     <!-- Main Navigation Bar -->
     <!-- <nav class="bg-white border-t border-gray-200 shadow-sm ">
@@ -1147,6 +938,7 @@
 
     <!-- Page Content -->
     <main>
+        @include('components.breadcrumbs')
         @yield('content')
     </main>
 
@@ -1344,7 +1136,9 @@
         </div>
     </footer>
 
-    @vite(['resources/js/header.js', 'resources/js/mobile-menu.js', 'resources/js/save-recipe.js', 'resources/js/script.js', 'resources/js/search.js', 'resources/js/recipe.js', 'resources/js/recipe-save-button.js', 'resources/js/notification-manager.js'])
+    @include('components.confirmation-modal')
+
+    @vite(['resources/js/header.js', 'resources/js/mobile-menu.js', 'resources/js/save-recipe.js', 'resources/js/script.js', 'resources/js/search.js', 'resources/js/recipe.js', 'resources/js/recipe-save-button.js', 'resources/js/notification-manager.js', 'resources/js/confirmation-modal.js'])
     
     <!-- Notification System JavaScript -->
     <script>

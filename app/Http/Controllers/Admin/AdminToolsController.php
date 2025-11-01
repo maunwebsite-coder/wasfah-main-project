@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminToolsController extends Controller
 {
@@ -84,6 +85,28 @@ class AdminToolsController extends Controller
             } elseif (!empty($data['extracted_image_url'])) {
                 // Download and save extracted image with compression
                 $data['image'] = $this->downloadAndSaveImage($data['extracted_image_url']);
+            }
+
+            // Handle gallery images extracted from Amazon
+            $galleryPaths = [];
+            if (!empty($data['extracted_gallery_images'])) {
+                $decodedGallery = json_decode($data['extracted_gallery_images'], true);
+                if (is_array($decodedGallery) && !empty($decodedGallery)) {
+                    $galleryPaths = $this->downloadAndSaveGalleryImages($decodedGallery);
+                }
+            }
+
+            unset($data['extracted_image_url'], $data['extracted_gallery_images']);
+
+            if (!empty($galleryPaths)) {
+                if (empty($data['image'])) {
+                    $data['image'] = $galleryPaths[0];
+                }
+                $data['gallery_images'] = $this->mergePrimaryIntoGallery($data['image'] ?? null, $galleryPaths);
+            } elseif (!empty($data['image'])) {
+                $data['gallery_images'] = [$data['image']];
+            } else {
+                $data['gallery_images'] = [];
             }
 
             // Clean and validate URLs
@@ -217,6 +240,40 @@ class AdminToolsController extends Controller
             $data['image'] = $this->downloadAndSaveImage($data['extracted_image_url']);
         }
 
+        // Handle gallery images extracted from Amazon
+        $galleryPaths = [];
+        if (!empty($data['extracted_gallery_images'])) {
+            $decodedGallery = json_decode($data['extracted_gallery_images'], true);
+            if (is_array($decodedGallery) && !empty($decodedGallery)) {
+                $galleryPaths = $this->downloadAndSaveGalleryImages($decodedGallery);
+            }
+        }
+
+        unset($data['extracted_image_url'], $data['extracted_gallery_images']);
+
+        if (!empty($galleryPaths)) {
+            $this->deleteGalleryImages($tool->gallery_images ?? []);
+            if (empty($data['image'])) {
+                $data['image'] = $galleryPaths[0];
+            }
+            $data['gallery_images'] = $this->mergePrimaryIntoGallery($data['image'] ?? null, $galleryPaths);
+        } else {
+            $existingGallery = is_array($tool->gallery_images) ? $tool->gallery_images : [];
+
+            // Remove old primary image if it has been replaced
+            if (!empty($tool->image) && (!empty($data['image']) && $data['image'] !== $tool->image)) {
+                $existingGallery = array_values(array_filter($existingGallery, function ($path) use ($tool) {
+                    return $path !== $tool->image;
+                }));
+            }
+
+            if (!empty($data['image'])) {
+                $data['gallery_images'] = $this->mergePrimaryIntoGallery($data['image'], $existingGallery);
+            } else {
+                $data['gallery_images'] = $existingGallery;
+            }
+        }
+
         // Clean and validate URLs
         if (!empty($data['amazon_url'])) {
             $data['amazon_url'] = trim($data['amazon_url']);
@@ -252,6 +309,8 @@ class AdminToolsController extends Controller
      */
     public function destroy(Tool $tool): RedirectResponse
     {
+        $this->deleteGalleryImages($tool->gallery_images ?? []);
+
         // Delete image if exists
         if ($tool->image && Storage::disk('public')->exists($tool->image)) {
             Storage::disk('public')->delete($tool->image);
@@ -437,109 +496,123 @@ class AdminToolsController extends Controller
             $data['name'] = $title;
         }
         
-        // Extract price - multiple patterns
+        // Extract price
         $price = null;
-        
-        // Pattern 1: a-price-whole (most common)
-        if (preg_match('/<span[^>]*class="a-price-whole"[^>]*>([^<]+)<\/span>/', $html, $matches)) {
-            $price = preg_replace('/[^0-9.]/', '', $matches[1]);
+        $priceCurrency = null;
+        $htmlDecodeFlags = ENT_QUOTES | (defined('ENT_HTML5') ? ENT_HTML5 : 0);
+
+        // Try to get price from screen-reader spans (most reliable on Amazon pages)
+        if (preg_match_all('/<span[^>]*class="a-offscreen"[^>]*>([^<]+)<\/span>/', $html, $offscreenMatches)) {
+            foreach ($offscreenMatches[1] as $value) {
+                $cleanValue = trim(strip_tags(html_entity_decode($value, $htmlDecodeFlags, 'UTF-8')));
+
+                if ($cleanValue === '') {
+                    continue;
+                }
+
+                $numericValue = preg_replace('/[^0-9.,]/', '', $cleanValue);
+                if ($numericValue === '') {
+                    continue;
+                }
+
+                $amount = floatval(str_replace(',', '', $numericValue));
+                if ($amount <= 0) {
+                    continue; // skip placeholders like $0.00
+                }
+
+                $currency = null;
+                if (stripos($cleanValue, 'AED') !== false || stripos($cleanValue, 'د.إ') !== false || stripos($cleanValue, 'درهم') !== false) {
+                    $currency = 'AED';
+                } elseif (strpos($cleanValue, '$') !== false || stripos($cleanValue, 'USD') !== false) {
+                    $currency = 'USD';
+                }
+
+                if ($currency === 'AED') {
+                    $price = $amount;
+                    $priceCurrency = 'AED';
+                    break;
+                }
+
+                if (is_null($price)) {
+                    $price = $amount;
+                    $priceCurrency = $currency;
+                }
+            }
         }
-        // Pattern 2: a-offscreen (screen reader price)
-        elseif (preg_match('/<span[^>]*class="a-offscreen"[^>]*>\$([0-9.,]+)<\/span>/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
+
+        // Fallback patterns if offscreen spans didn't give us a price
+        if (is_null($price)) {
+            $aedPatterns = [
+                '/<span[^>]*class="a-offscreen"[^>]*>\\s*AED\\s*([0-9.,]+)<\\/span>/',
+                '/<span[^>]*class="aok-offscreen"[^>]*>\\s*AED\\s*([0-9.,]+)<\\/span>/',
+                '/<span[^>]*class="a-price"[^>]*>.*?AED\\s*([0-9.,]+).*?<\\/span>/s',
+                '/<span[^>]*class="a-price-symbol"[^>]*>AED<\\/span><span[^>]*class="a-price-whole"[^>]*>([0-9.,]+)/',
+                '/"displayPrice":"\\s*AED\\s*([0-9.,]+)"/',
+                '/"displayString"[^>]*value="\\s*AED\\s*([0-9.,]+)"/',
+                '/AED\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})?)/',
+            ];
+
+            foreach ($aedPatterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $amount = floatval(str_replace(',', '', $matches[1]));
+                    if ($amount > 0) {
+                        $price = $amount;
+                        $priceCurrency = 'AED';
+                        break;
+                    }
+                }
+            }
         }
-        // Pattern 3: a-price-range
-        elseif (preg_match('/<span[^>]*class="a-price-range"[^>]*>\$([0-9.,]+)[^<]*<\/span>/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
+
+        if (is_null($price)) {
+            $usdPatterns = [
+                '/<span[^>]*class="a-price"[^>]*>.*?\\$\\s*([0-9.,]+).*?<\\/span>/s',
+                '/<span[^>]*class="a-offscreen"[^>]*>\\s*\\$\\s*([0-9.,]+)<\\/span>/',
+                '/<span[^>]*class="a-price-range"[^>]*>\\s*\\$\\s*([0-9.,]+)[^<]*<\\/span>/',
+                '/<span[^>]*class="a-price-symbol"[^>]*>\\$<\\/span><span[^>]*class="a-price-whole"[^>]*>([0-9.,]+)/',
+                '/"price":\\s*"([0-9.,]+)"/',
+                '/\\$([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})?)/',
+            ];
+
+            foreach ($usdPatterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $amount = floatval(str_replace(',', '', $matches[1]));
+                    if ($amount > 0) {
+                        $price = $amount;
+                        $priceCurrency = 'USD';
+                        break;
+                    }
+                }
+            }
         }
-        // Pattern 4: priceToPay
-        elseif (preg_match('/<span[^>]*id="priceToPay"[^>]*>.*?\$([0-9.,]+).*?<\/span>/s', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
+
+        if (is_null($price)) {
+            $genericPatterns = [
+                '/data-price="([0-9.,]+)"/',
+                '/name="[^"]*price[^"]*"[^>]*value="([0-9.,]+)"/',
+            ];
+
+            foreach ($genericPatterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $amount = floatval(str_replace(',', '', $matches[1]));
+                    if ($amount > 0) {
+                        $price = $amount;
+                        break;
+                    }
+                }
+            }
         }
-        // Pattern 5: a-price
-        elseif (preg_match('/<span[^>]*class="a-price"[^>]*>.*?\$([0-9.,]+).*?<\/span>/s', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 6: a-price-symbol
-        elseif (preg_match('/<span[^>]*class="a-price-symbol"[^>]*>\$<\/span><span[^>]*class="a-price-whole"[^>]*>([^<]+)<\/span>/', $html, $matches)) {
-            $price = preg_replace('/[^0-9.]/', '', $matches[1]);
-        }
-        // Pattern 7: Deal price
-        elseif (preg_match('/<span[^>]*class="a-price-deal"[^>]*>.*?\$([0-9.,]+).*?<\/span>/s', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 8: Price in data attributes
-        elseif (preg_match('/data-price="([0-9.,]+)"/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 9: Price in JSON-LD structured data
-        elseif (preg_match('/"price":\s*"([0-9.,]+)"/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 10: Generic price pattern with more flexibility
-        elseif (preg_match('/\$([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 11: Price in AED (for Amazon.ae)
-        elseif (preg_match('/AED\s*([0-9.,]+)/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 12: Price in AED with different format
-        elseif (preg_match('/<span[^>]*class="a-price"[^>]*>.*?AED\s*([0-9.,]+).*?<\/span>/s', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 13: Price in AED with symbol
-        elseif (preg_match('/<span[^>]*class="a-price-symbol"[^>]*>AED<\/span><span[^>]*class="a-price-whole"[^>]*>([^<]+)<\/span>/', $html, $matches)) {
-            $price = preg_replace('/[^0-9.]/', '', $matches[1]);
-        }
-        // Pattern 14: AED price in JSON data
-        elseif (preg_match('/"priceAmount":([0-9.,]+)/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 15: AED price in displayPrice
-        elseif (preg_match('/"displayPrice":"AED\s*([0-9.,]+)"/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 16: AED price in specific Amazon format
-        elseif (preg_match('/AED\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 17: Price in different currency formats
-        elseif (preg_match('/<span[^>]*class="a-price"[^>]*>.*?([0-9.,]+).*?<\/span>/s', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 18: AED in a-offscreen
-        elseif (preg_match('/<span[^>]*class="a-offscreen"[^>]*>AED\s*([0-9.,]+)<\/span>/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 19: AED in aok-offscreen
-        elseif (preg_match('/<span[^>]*class="aok-offscreen"[^>]*>AED\s*([0-9.,]+)<\/span>/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 20: AED in displayString
-        elseif (preg_match('/"displayString"[^>]*value="AED\s*([0-9.,]+)"/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 21: AED in JSON data
-        elseif (preg_match('/"displayPrice":"AED\s*([0-9.,]+)"/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        // Pattern 22: AED in hidden input
-        elseif (preg_match('/name="[^"]*price[^"]*"[^>]*value="([0-9.,]+)"/', $html, $matches)) {
-            $price = str_replace(',', '', $matches[1]);
-        }
-        
-        if ($price) {
-            $priceValue = floatval($price);
-            
-            // Check if it's already in AED (from Amazon.ae)
-            if (strpos($html, 'AED') !== false || strpos($html, 'درهم') !== false) {
-                $data['price'] = $priceValue;
-                $data['original_price_aed'] = $priceValue;
+
+        if (!is_null($price)) {
+            if ($priceCurrency === 'AED' || (!$priceCurrency && (stripos($html, 'AED') !== false || stripos($html, 'درهم') !== false))) {
+                $data['price'] = round($price, 2);
+                $data['original_price_aed'] = round($price, 2);
+            } elseif ($priceCurrency === 'USD' || (!$priceCurrency && strpos($html, '$') !== false)) {
+                $converted = round($price * 3.67, 2);
+                $data['price'] = $converted;
+                $data['original_price_usd'] = round($price, 2);
             } else {
-                // Convert USD to AED (1 USD = 3.67 AED approximately)
-                $data['price'] = round($priceValue * 3.67, 2);
-                $data['original_price_usd'] = $priceValue; // Keep original USD price for reference
+                $data['price'] = round($price, 2);
             }
         }
         
@@ -570,11 +643,68 @@ class AdminToolsController extends Controller
         
         $data['description'] = trim($description);
         
-        // Extract image
+        // Extract gallery images
+        $galleryImages = [];
+
+        if (preg_match('/data-a-dynamic-image="([^"]+)"/i', $html, $matches)) {
+            $json = html_entity_decode($matches[1], ENT_QUOTES | (defined('ENT_HTML5') ? ENT_HTML5 : 0), 'UTF-8');
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                foreach (array_keys($decoded) as $imageUrl) {
+                    $cleanUrl = $this->sanitizeRemoteImageUrl($imageUrl);
+                    if ($cleanUrl) {
+                        $galleryImages[] = $cleanUrl;
+                    }
+                }
+            }
+        }
+
+        $additionalGalleryPatterns = [
+            '/"hiRes"\s*:\s*"([^"]+)"/i',
+            '/"large"\s*:\s*"([^"]+)"/i',
+            '/"mainUrl"\s*:\s*"([^"]+)"/i',
+            '/"thumbUrl"\s*:\s*"([^"]+)"/i',
+            '/"zoom"\s*:\s*"([^"]+)"/i',
+            '/data-old-hires="([^"]+)"/i',
+            "/data-old-hires='([^']+)'/i",
+        ];
+
+        foreach ($additionalGalleryPatterns as $pattern) {
+            if (preg_match_all($pattern, $html, $matches)) {
+                foreach ($matches[1] as $imageUrl) {
+                    $cleanUrl = $this->sanitizeRemoteImageUrl($imageUrl);
+                    if ($cleanUrl) {
+                        $galleryImages[] = $cleanUrl;
+                    }
+                }
+            }
+        }
+
+        $primaryCandidates = [];
         if (preg_match('/<img[^>]*id="landingImage"[^>]*src="([^"]+)"[^>]*>/', $html, $matches)) {
-            $data['image'] = $matches[1];
-        } elseif (preg_match('/<img[^>]*data-old-hires="([^"]+)"[^>]*>/', $html, $matches)) {
-            $data['image'] = $matches[1];
+            $cleanUrl = $this->sanitizeRemoteImageUrl($matches[1]);
+            if ($cleanUrl) {
+                $primaryCandidates[] = $cleanUrl;
+            }
+        }
+        if (empty($primaryCandidates) && preg_match('/<img[^>]*data-old-hires="([^"]+)"[^>]*>/', $html, $matches)) {
+            $cleanUrl = $this->sanitizeRemoteImageUrl($matches[1]);
+            if ($cleanUrl) {
+                $primaryCandidates[] = $cleanUrl;
+            }
+        }
+
+        if (!empty($primaryCandidates)) {
+            $data['image'] = $primaryCandidates[0];
+            $galleryImages = array_merge($primaryCandidates, $galleryImages);
+        }
+
+        $galleryImages = array_values(array_unique($galleryImages));
+        if (!empty($galleryImages)) {
+            $data['gallery_images'] = array_slice($galleryImages, 0, 10);
+            if (empty($data['image'])) {
+                $data['image'] = $data['gallery_images'][0];
+            }
         }
         
         return $data;
@@ -586,10 +716,15 @@ class AdminToolsController extends Controller
     private function downloadAndSaveImage($imageUrl)
     {
         try {
+            $sanitizedUrl = $this->sanitizeRemoteImageUrl($imageUrl);
+            if (!$sanitizedUrl) {
+                return null;
+            }
+
             // محاولة استخدام ضغط الصور المتقدم أولاً
             if (extension_loaded('gd')) {
                 return ImageCompressionService::compressFromUrl(
-                    $imageUrl,
+                    $sanitizedUrl,
                     'tools',
                     80, // جودة 80%
                     1200, // أقصى عرض
@@ -598,7 +733,7 @@ class AdminToolsController extends Controller
             } else {
                 // استخدام الحفظ المباشر إذا لم يكن GD متوفراً
                 return SimpleImageCompressionService::compressFromUrl(
-                    $imageUrl,
+                    $sanitizedUrl,
                     'tools'
                 );
             }
@@ -607,5 +742,155 @@ class AdminToolsController extends Controller
             \Log::error('Failed to download and save image: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Download and save multiple gallery images
+     *
+     * @param array $imageUrls
+     * @param int $limit
+     * @return array
+     */
+    private function downloadAndSaveGalleryImages(array $imageUrls, int $limit = 6): array
+    {
+        $storedImages = [];
+        $seen = [];
+
+        foreach ($imageUrls as $url) {
+            if (count($storedImages) >= $limit) {
+                break;
+            }
+
+            $sanitized = $this->sanitizeRemoteImageUrl($url);
+            if (!$sanitized || isset($seen[$sanitized])) {
+                continue;
+            }
+
+            $seen[$sanitized] = true;
+
+            $storedPath = $this->downloadAndSaveImage($sanitized);
+            if ($storedPath) {
+                $storedImages[] = $storedPath;
+            }
+        }
+
+        return $storedImages;
+    }
+
+    /**
+     * Merge primary image path into gallery ensuring uniqueness
+     */
+    private function mergePrimaryIntoGallery(?string $primary, array $gallery): array
+    {
+        $collection = collect($gallery);
+
+        if ($primary) {
+            $collection = $collection->prepend($primary);
+        }
+
+        return $collection
+            ->filter()
+            ->map(function ($path) {
+                return ltrim($path, '/');
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Delete gallery images from storage
+     */
+    private function deleteGalleryImages(?array $paths, array $exclude = []): void
+    {
+        if (empty($paths) || !is_array($paths)) {
+            return;
+        }
+
+        $excludeLookup = array_flip(array_map(function ($path) {
+            return ltrim($path, '/');
+        }, $exclude));
+
+        foreach ($paths as $path) {
+            if (empty($path)) {
+                continue;
+            }
+
+            $normalized = ltrim($path, '/');
+            if (isset($excludeLookup[$normalized])) {
+                continue;
+            }
+
+            if (Storage::disk('public')->exists($normalized)) {
+                Storage::disk('public')->delete($normalized);
+            }
+        }
+    }
+
+    /**
+     * Ensure remote image URL is valid and absolute
+     */
+    private function sanitizeRemoteImageUrl(?string $url): ?string
+    {
+        if (empty($url)) {
+            return null;
+        }
+
+        $decoded = html_entity_decode($url, ENT_QUOTES | (defined('ENT_HTML5') ? ENT_HTML5 : 0), 'UTF-8');
+        $decoded = trim(str_replace(['\\/', '\\u0026'], ['/', '&'], $decoded));
+
+        if ($decoded === '') {
+            return null;
+        }
+
+        if (Str::startsWith($decoded, '//')) {
+            $decoded = 'https:' . $decoded;
+        }
+
+        if (!Str::startsWith($decoded, ['http://', 'https://'])) {
+            return null;
+        }
+
+        // Drop URL fragments to stabilise duplicates coming from the same asset.
+        $decoded = Str::before($decoded, '#');
+
+        $parts = parse_url($decoded);
+        if ($parts === false || empty($parts['host'])) {
+            return null;
+        }
+
+        $host = strtolower($parts['host']);
+        $scheme = isset($parts['scheme']) ? strtolower($parts['scheme']) : 'https';
+
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return null;
+        }
+
+        // Amazon image hosts all support HTTPS, so normalise to avoid duplicates.
+        if ($scheme === 'http' && Str::contains($host, ['amazon.', 'amazonaws.', 'media-amazon', 'images-amazon'])) {
+            $scheme = 'https';
+        }
+
+        $path = $parts['path'] ?? '';
+        if ($path === '') {
+            return null;
+        }
+
+        // Collapse repeated slashes to keep path canonical.
+        $path = preg_replace('#/{2,}#', '/', $path);
+
+        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+
+        if (Str::contains($host, ['amazon.', 'amazonaws.', 'media-amazon', 'images-amazon'])) {
+            // Remove Amazon's size suffixes (e.g. ._AC_SX679_) to prevent same image variants.
+            if (preg_match('/^(.*)\._[^\/]+_\.(jpe?g|png|gif|webp)$/i', $path, $matches)) {
+                $path = $matches[1] . '.' . $matches[2];
+            }
+            $query = ''; // Amazon image URLs do not require query parameters.
+        }
+
+        $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+
+        return "{$scheme}://{$host}{$port}{$path}{$query}";
     }
 }

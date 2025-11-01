@@ -75,6 +75,7 @@ Route::get('/recipes', [App\Http\Controllers\RecipeController::class, 'index'])-
 
 // مسار الأدوات
 Route::get('/tools', [App\Http\Controllers\ToolsController::class, 'index'])->name('tools');
+Route::get('/tools/{tool}', [App\Http\Controllers\ToolsController::class, 'show'])->name('tools.show');
 
 // مسارات الحجوزات - محمية بـ middleware المصادقة
 Route::middleware('auth')->group(function () {

@@ -21,6 +21,7 @@ export default defineConfig({
                 'resources/js/recipe-save-button.js',
                 'resources/js/rating.js',
                 'resources/js/notification-manager.js',
+                'resources/js/confirmation-modal.js',
             ],
             refresh: true,
         }),

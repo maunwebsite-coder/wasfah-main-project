@@ -4,23 +4,212 @@
 
 @push('styles')
 <style>
+    .tools-hero {
+        position: relative;
+        overflow: hidden;
+    }
+    .tools-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+        pointer-events: none;
+    }
     .tool-card {
-        transition: all 0.3s ease;
-        border: 1px solid #e5e7eb;
-        max-width: 100%;
-        height: 100%;
+        position: relative;
         display: flex;
         flex-direction: column;
+        height: 100%;
+        border-radius: 1.125rem;
+        border: 1px solid #f1f5f9;
+        background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+        box-shadow: 0 18px 28px rgba(15, 23, 42, 0.08);
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        overflow: hidden;
     }
     .tool-card:hover {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        transform: translateY(-4px);
+        transform: translateY(-8px);
+        box-shadow: 0 26px 40px rgba(15, 23, 42, 0.12);
     }
-    .rating-stars {
+    .tool-card__media {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        min-height: 210px;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tool-slider {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .tool-slider .swiper-wrapper {
+        height: 100%;
+    }
+    .tool-slider .swiper-slide {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        height: 100%;
+    }
+    .tool-card__image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        transition: transform 0.35s ease;
+    }
+    .tool-card:hover .tool-card__image {
+        transform: scale(1.05);
+    }
+    .tool-card__badge {
+        align-self: flex-end;
+        margin: 0.9rem 1.25rem 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(249, 115, 22, 0.92);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.85rem;
+        border-radius: 9999px;
+        box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2);
+    }
+    .tool-card__content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex-grow: 1;
+        padding: 1.25rem;
+        background: #fff;
+    }
+    .tool-card__title {
+        color: #0f172a;
+        font-weight: 700;
+        line-height: 1.4;
+        font-size: 1rem;
+    }
+    .tool-card__title span {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .tool-card__price {
+        color: #f97316;
+        font-weight: 700;
+        font-size: 1.125rem;
+    }
+    .tool-card .rating-stars {
         color: #fbbf24;
+        font-size: 0.875rem;
     }
-    .empty-rating {
+    .tool-card .empty-rating {
         color: #d1d5db;
+    }
+    .tool-card__meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        row-gap: 0.4rem;
+        gap: 0.5rem;
+        color: #475569;
+        font-size: 0.75rem;
+    }
+    .tool-card__meta > * {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .tool-card__actions {
+        margin-top: auto;
+        display: grid;
+        gap: 0.5rem;
+    }
+    .tool-card__actions a,
+    .tool-card__actions button {
+        border-radius: 0.875rem;
+        font-weight: 600;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .tool-card__actions a:active,
+    .tool-card__actions button:active {
+        transform: scale(0.97);
+    }
+    .tool-card__actions .amazon-btn {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+    }
+    .tool-card__actions .amazon-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+    }
+    .tool-slider .swiper-button-next,
+    .tool-slider .swiper-button-prev {
+        width: 28px;
+        height: 28px;
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.4);
+        color: #fff;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .tool-slider .swiper-button-next::after,
+    .tool-slider .swiper-button-prev::after {
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .tool-slider .swiper-pagination-bullet {
+        background-color: rgba(249, 115, 22, 0.85);
+        opacity: 1;
+        width: 6px;
+        height: 6px;
+    }
+    .tool-slider .swiper-pagination-bullet-active {
+        background-color: #f97316;
+    }
+    .tool-slider .swiper-button-disabled {
+        opacity: 0.35 !important;
+    }
+    .tools-grid-wrapper {
+        position: relative;
+        z-index: 0;
+    }
+    .tools-grid-wrapper::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top, rgba(253, 230, 138, 0.35), transparent 65%);
+        z-index: -1;
+        opacity: 0.7;
+    }
+    .tools-filter {
+        background: #fff;
+        border-radius: 1.75rem;
+        border: 1px solid rgba(249, 115, 22, 0.2);
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+    }
+    .category-filter-btn {
+        transition: all 0.3s ease;
+    }
+    .category-filter-btn.active {
+        box-shadow: 0 10px 20px rgba(249, 115, 22, 0.25);
+    }
+    .save-for-later-btn:disabled {
+        opacity: 0.85;
+        cursor: not-allowed;
+    }
+    #tools-grid {
+        gap: 2rem;
     }
     .line-clamp-2 {
         display: -webkit-box;
@@ -28,114 +217,37 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    
-    /* تحسينات للهواتف */
+    @media (max-width: 1024px) {
+        .tool-card {
+            border-radius: 1.25rem;
+        }
+        .tool-card__content {
+            padding: 1rem 1.15rem 1.25rem;
+        }
+        #tools-grid {
+            gap: 1.5rem;
+        }
+    }
     @media (max-width: 640px) {
         .tool-card {
-            margin-bottom: 0.75rem;
-            min-height: 280px;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
         }
-        
-        .tool-card .p-3 {
-            padding: 0.75rem;
+        .tool-card__media {
+            aspect-ratio: 1 / 1;
+            min-height: 200px;
         }
-        
-        .tool-card h3 {
-            font-size: 0.75rem;
-            line-height: 1.2rem;
-            min-height: 3rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 4;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .tool-card__title {
+            font-size: 0.9rem;
         }
-        
-        .tool-card .text-sm {
-            font-size: 0.875rem;
-        }
-        
-        .tool-card .text-lg {
+        .tool-card__price {
             font-size: 1rem;
         }
-        
-        .tool-card .text-xl {
-            font-size: 1.125rem;
+        .tools-filter {
+            border-radius: 1.25rem;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.15);
         }
-        
-        .tool-card button {
-            font-size: 0.75rem;
-            padding: 0.5rem 0.75rem;
-        }
-        
-        .tool-card .rating-stars {
-            font-size: 0.625rem;
-        }
-    }
-    
-    /* تحسينات للشاشات المتوسطة */
-    @media (min-width: 641px) and (max-width: 1024px) {
-        .tool-card {
-            margin-bottom: 1.25rem;
-        }
-    }
-    
-    /* تحسين الأزرار */
-    .add-to-cart-btn:active {
-        transform: scale(0.98);
-    }
-    
-    /* تحسين أزرار Amazon */
-    .tool-card a[href*="amazon"]:active {
-        transform: scale(0.98);
-    }
-    
-    .tool-card a[href*="amazon"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    }
-    
-    /* تحسين الشارات */
-    .category-badge {
-        backdrop-filter: blur(10px);
-        background: rgba(249, 115, 22, 0.9);
-    }
-    
-    /* ضمان التناسق */
-    .tool-card .p-4 {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-    }
-    
-    .tool-card h3 {
-        min-height: 3.5rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 4;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: 1.2;
-    }
-    
-    .tool-card .mt-auto {
-        margin-top: auto;
-    }
-    
-    
-    /* ضمان التناسق على الهواتف */
-    @media (max-width: 640px) {
         #tools-grid {
-            gap: 0.75rem;
-        }
-        
-        .tool-card {
-            width: 100%;
-            max-width: 100%;
-        }
-        
-        .tool-card img {
-            max-height: 120px;
+            gap: 1rem;
         }
     }
 </style>
@@ -144,39 +256,70 @@
 @section('content')
 <div class="min-h-screen bg-gray-50">
     <!-- Header Section -->
-    <section class="bg-gradient-to-r from-amber-500 to-orange-600 text-white py-16">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-5xl font-extrabold mb-4">أدوات الشيف الاحترافية</h1>
-            <p class="text-lg max-w-2xl mx-auto">
-                اكتشف أفضل أدوات الشيف المحترفين لصنع أرقى الحلويات في منزلك
+    <section class="tools-hero relative bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 text-white py-20">
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-4">أدوات الشيف الاحترافية</h1>
+            <p class="text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">
+                اكتشف مجموعة مختارة بعناية من أدوات الحلويات الموثوقة من أمازون لتطوير مهاراتك في المطبخ.
             </p>
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto text-sm">
+                <div class="bg-white/15 border border-white/25 rounded-2xl px-5 py-4 shadow-lg backdrop-blur flex items-center justify-center">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20">
+                            <i class="fas fa-star text-lg"></i>
+                        </span>
+                        <span class="leading-6 text-right">ترشيحات مبنية على أعلى تقييمات أمازون</span>
+                    </div>
+                </div>
+                <div class="bg-white/15 border border-white/25 rounded-2xl px-5 py-4 shadow-lg backdrop-blur flex items-center justify-center">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20">
+                            <i class="fas fa-book-open text-lg"></i>
+                        </span>
+                        <span class="leading-6 text-right">ملخصات سريعة لأهم المزايا قبل الشراء</span>
+                    </div>
+                </div>
+                <div class="bg-white/15 border border-white/25 rounded-2xl px-5 py-4 shadow-lg backdrop-blur flex items-center justify-center">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20">
+                            <i class="fas fa-sync-alt text-lg"></i>
+                        </span>
+                        <span class="leading-6 text-right">تحديثات مستمرة لأحدث الإصدارات والعروض</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Categories Filter -->
-    <section class="bg-white py-8 shadow-sm">
+    <section class="relative -mt-12 lg:-mt-16">
         <div class="container mx-auto px-4">
-            <div class="max-w-6xl mx-auto">
-                <!-- Cart Actions -->
-                <div class="flex justify-center mb-6 px-4">
-                    <a href="{{ route('saved.index') }}" 
-                       class="px-4 sm:px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all flex items-center justify-center text-sm sm:text-base">
-                        <i class="fas fa-bookmark ml-2"></i>
-                        عرض الأدوات المحفوظة
-                        <span id="saved-count-badge" class="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full mr-2 hidden">0</span>
-                    </a>
-                </div>
-                
-                <!-- Category Filters -->
-                <div class="flex flex-wrap gap-2 sm:gap-3 justify-center px-4">
-                    <button class="category-filter-btn px-3 sm:px-6 py-2 sm:py-3 bg-orange-500 text-white rounded-lg font-semibold transition-all active text-xs sm:text-sm" data-category="all">
-                        جميع الفئات
-                    </button>
-                    @foreach($categories as $categoryName => $categoryTools)
-                        <button class="category-filter-btn px-3 sm:px-6 py-2 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-orange-500 hover:text-white transition-all text-xs sm:text-sm" data-category="{{ $categoryName }}">
-                            {{ $categoryName }}
+            <div class="tools-filter max-w-6xl mx-auto overflow-hidden">
+                <div class="px-6 sm:px-8 lg:px-10 py-8">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <a href="{{ route('saved.index') }}" 
+                           class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all text-sm sm:text-base">
+                            <i class="fas fa-bookmark text-base"></i>
+                            <span>عرض الأدوات المحفوظة</span>
+                            <span id="saved-count-badge" class="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full hidden">0</span>
+                        </a>
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <i class="fas fa-info-circle text-orange-500"></i>
+                            <span>احفظ الأدوات التي تعجبك للرجوع إليها لاحقاً.</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Filters -->
+                    <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
+                        <button class="category-filter-btn px-4 sm:px-6 py-2.5 sm:py-3 bg-orange-500 text-white rounded-xl font-semibold transition-all active text-xs sm:text-sm" data-category="all">
+                            جميع الفئات
                         </button>
-                    @endforeach
+                        @foreach($categories as $categoryName => $categoryTools)
+                            <button class="category-filter-btn px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-orange-500 hover:text-white transition-all text-xs sm:text-sm" data-category="{{ $categoryName }}">
+                                {{ $categoryName }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
@@ -185,75 +328,96 @@
     <!-- Tools Grid -->
     <section class="py-12">
         <div class="container mx-auto px-4">
-            <div class="max-w-7xl mx-auto">
-                <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            <div class="tools-grid-wrapper max-w-7xl mx-auto">
+                <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach($tools as $tool)
-                        <div class="tool-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full" data-category="{{ $tool->category }}">
+                        <div class="tool-card group" data-category="{{ $tool->category }}">
                             <!-- Image Section -->
-                            <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-3 sm:p-4 flex-shrink-0" style="height: 140px;">
-                                <img src="{{ $tool->image_url }}" 
-                                     alt="{{ $tool->name }}" 
-                                     class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                                
-                                <!-- Category Badge -->
-                                <div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                                    {{ $tool->category }}
+                            @php
+                                $galleryUrls = $tool->gallery_image_urls;
+                                if (empty($galleryUrls)) {
+                                    $galleryUrls = [$tool->image_url];
+                                }
+                            @endphp
+                            <div class="tool-card__badge">{{ $tool->category }}</div>
+                            
+                            <div class="tool-card__media">
+                                <div class="tool-slider swiper tool-swiper" data-tool-id="{{ $tool->id }}">
+                                    <div class="swiper-wrapper">
+                                        @foreach($galleryUrls as $image)
+                                            <div class="swiper-slide">
+                                                <img src="{{ $image }}"
+                                                     alt="{{ $tool->name }}"
+                                                     class="tool-card__image"
+                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="swiper-pagination"></div>
+                                    <div class="swiper-button-prev"></div>
+                                    <div class="swiper-button-next"></div>
                                 </div>
                             </div>
 
                             <!-- Content Section -->
-                <div class="p-3 sm:p-4 flex flex-col flex-grow">
-                                <!-- Brand/Title -->
-                    <h3 class="text-xs sm:text-sm font-bold text-gray-900 mb-2 line-clamp-4 leading-tight min-h-[3rem] sm:min-h-[3.5rem]">
-                                    {{ $tool->name }}
+                            <div class="tool-card__content">
+                                <h3 class="tool-card__title text-sm sm:text-base">
+                                    <a href="{{ route('tools.show', $tool) }}" class="block hover:text-orange-500 transition-colors">
+                                        <span>{{ $tool->name }}</span>
+                                    </a>
                                 </h3>
 
-                                <!-- Rating -->
-                    <div class="flex items-center mb-2 sm:mb-3">
-                        <div class="flex rating-stars text-xs">
+                                <div class="tool-card__meta justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex rating-stars">
                                         @for($i = 1; $i <= 5; $i++)
                                             <i class="fas fa-star {{ $i <= round($tool->rating) ? 'text-yellow-400' : 'text-gray-300' }}"></i>
                                         @endfor
                                     </div>
-                        <span class="text-xs text-gray-600 mr-2 font-medium">
+                                        <span class="text-xs font-semibold text-slate-600">
                                         {{ $tool->rating }}
                                     </span>
-                        <span class="text-xs text-gray-500 hidden sm:inline">
+                                    </div>
+                                    <span class="text-xs text-slate-400 hidden sm:inline-flex">
                                         ({{ rand(10, 2000) }})
                                     </span>
                                 </div>
 
                                 <!-- Price -->
-                    <div class="text-sm sm:text-lg font-bold text-orange-600 mb-2 sm:mb-3">
-                        {{ number_format($tool->price, 2) }} درهم إماراتي
+                                <div class="tool-card__price text-sm sm:text-lg">
+                                    {{ number_format($tool->price, 2) }} درهم إماراتي
                                 </div>
 
 
-                    <!-- Action Buttons - Always at bottom -->
-                    <div class="w-full mt-auto space-y-2">
+                                <!-- Action Buttons -->
+                                <div class="tool-card__actions">
+                                    <a href="{{ route('tools.show', $tool) }}"
+                                       class="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 text-xs sm:text-sm font-semibold text-orange-600 border border-orange-200 hover:bg-orange-50 rounded-xl transition-colors duration-300">
+                                        <i class="fas fa-info-circle text-base"></i>
+                                        <span>عرض التفاصيل الكاملة</span>
+                                    </a>
                                     @if($tool->amazon_url)
                                     <a href="{{ $tool->amazon_url }}" 
                                        target="_blank"
-                                       class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95 group">
-                                        <i class="fab fa-amazon ml-1 sm:ml-2 group-hover:scale-110 transition-transform duration-300"></i>
+                                       class="amazon-btn w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 text-xs sm:text-sm">
+                                        <i class="fab fa-amazon text-base"></i>
                                         <span>متابعة الشراء من Amazon</span>
-                                        <i class="fas fa-external-link-alt mr-1 sm:mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>
+                                        <i class="fas fa-external-link-alt text-xs"></i>
                                     </a>
                                     @endif
                                     
                                     @if($tool->amazon_url || $tool->affiliate_url)
-                                    <button class="save-for-later-btn w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95"
+                                    <button class="save-for-later-btn w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-300"
                                             data-tool-id="{{ $tool->id }}"
                                             data-tool-name="{{ $tool->name }}"
                                             data-tool-price="{{ $tool->price }}">
-                                        <i class="fas fa-bookmark ml-1 sm:ml-2"></i>
+                                        <i class="fas fa-bookmark text-base"></i>
                                         <span class="btn-text">حفظ للشراء لاحقاً</span>
-                                        <i class="fas fa-spinner fa-spin ml-1 sm:ml-2 hidden loading-icon"></i>
+                                        <i class="fas fa-spinner fa-spin hidden loading-icon text-sm"></i>
                                     </button>
                                     @else
-                                    <div class="w-full bg-gray-300 text-gray-600 font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center">
-                                        <i class="fas fa-exclamation-circle ml-1 sm:ml-2"></i>
+                                    <div class="w-full bg-slate-100 text-slate-500 font-semibold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2">
+                                        <i class="fas fa-exclamation-circle text-base"></i>
                                         غير متوفر
                                     </div>
                                     @endif
@@ -265,40 +429,41 @@
             </div>
         </div>
     </section>
-
     <!-- Why Choose Our Tools Section -->
-    <section class="py-16 bg-gradient-to-br from-amber-50 to-orange-50">
+    <section class="py-16 bg-gradient-to-br from-amber-50 via-orange-50/70 to-white">
         <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-4">لماذا تختار أدوات الشيف الموصى بها؟</h2>
-            <p class="text-gray-600 mb-12 max-w-3xl mx-auto">نحن نختار بعناية أفضل أدوات الشيف المحترفين التي تساعدك في صنع حلويات احترافية</p>
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">لماذا نعرض أدوات الشيف الموصى بها؟</h2>
+            <p class="text-gray-600 mb-12 max-w-3xl mx-auto">
+                نعمل كمسوّقين بالعمولة مع أمازون، ونختار بعناية أدوات الحلويات الأعلى تقييماً لمساعدتك في العثور على المنتجات المناسبة دون عناء.
+            </p>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
                     <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-star text-4xl"></i>
+                        <i class="fas fa-check-circle text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">جودة عالية</h3>
-                    <p class="text-gray-600 text-center">جميع الأدوات مختارة بعناية من أفضل العلامات التجارية</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">ترشيحات موثوقة</h3>
+                    <p class="text-gray-600 text-center">نراجع تقييمات وآراء العملاء على أمازون لنرشح المنتجات الأعلى جودة.</p>
                 </div>
                 <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
                     <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-shipping-fast text-4xl"></i>
+                        <i class="fas fa-book-reader text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">شحن سريع</h3>
-                    <p class="text-gray-600 text-center">توصيل سريع وآمن لجميع أنحاء المملكة</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">معلومات واضحة</h3>
+                    <p class="text-gray-600 text-center">نلخّص أهم المواصفات لتتخذ قرار الشراء بثقة وفي وقت قصير.</p>
                 </div>
                 <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
                     <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-shield-alt text-4xl"></i>
+                        <i class="fas fa-sync text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">ضمان الجودة</h3>
-                    <p class="text-gray-600 text-center">ضمان شامل على جميع المنتجات مع خدمة عملاء متميزة</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">تحديثات مستمرة</h3>
+                    <p class="text-gray-600 text-center">نحدّث القوائم باستمرار بحسب توفر المنتجات وأفضل العروض.</p>
                 </div>
                 <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
                     <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-tools text-4xl"></i>
+                        <i class="fas fa-shopping-bag text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">أدوات الشيف المحترفين</h3>
-                    <p class="text-gray-600 text-center">نفس الأدوات التي يستخدمها الشيفات المحترفون في أفضل المطاعم</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">شراء مباشر من أمازون</h3>
+                    <p class="text-gray-600 text-center">إتمام الطلب يتم على موقع أمازون. نحن لا نوفر البيع أو الشحن بأنفسنا.</p>
                 </div>
             </div>
         </div>
@@ -309,6 +474,53 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Swiper !== 'undefined') {
+        document.querySelectorAll('.tool-swiper').forEach(function (el) {
+            const slidesCount = el.querySelectorAll('.swiper-slide').length;
+            const paginationEl = el.querySelector('.swiper-pagination');
+            const nextEl = el.querySelector('.swiper-button-next');
+            const prevEl = el.querySelector('.swiper-button-prev');
+
+            const options = {
+                slidesPerView: 1,
+                spaceBetween: 8,
+                loop: slidesCount > 1
+            };
+
+            if (slidesCount > 1 && paginationEl) {
+                options.pagination = {
+                    el: paginationEl,
+                    clickable: true
+                };
+            } else if (paginationEl) {
+                paginationEl.classList.add('hidden');
+            }
+
+            if (slidesCount > 1 && nextEl && prevEl) {
+                options.navigation = {
+                    nextEl,
+                    prevEl
+                };
+            } else {
+                if (nextEl) {
+                    nextEl.classList.add('hidden');
+                }
+                if (prevEl) {
+                    prevEl.classList.add('hidden');
+                }
+            }
+
+            if (slidesCount > 1) {
+                options.autoplay = {
+                    delay: 4000,
+                    disableOnInteraction: false
+                };
+            }
+
+            new Swiper(el, options);
+        });
+    }
+
     // Load saved status for all tools
     loadSavedStatus();
     
@@ -322,6 +534,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Category Filter Functionality
     const categoryButtons = document.querySelectorAll('.category-filter-btn');
     const toolCards = document.querySelectorAll('.tool-card');
+    const defaultSaveClasses = ['bg-gradient-to-r', 'from-orange-500', 'to-amber-500', 'hover:from-orange-600', 'hover:to-amber-600'];
+    const savedStateClasses = ['bg-green-500', 'hover:bg-green-600', 'saved'];
+
+    function applySavedButtonState(button) {
+        button.classList.remove(...defaultSaveClasses, 'bg-red-500');
+        button.classList.add(...savedStateClasses);
+    }
+
+    function applyDefaultButtonState(button) {
+        button.classList.remove(...savedStateClasses, 'bg-red-500');
+        defaultSaveClasses.forEach(cls => {
+            if (!button.classList.contains(cls)) {
+                button.classList.add(cls);
+            }
+        });
+    }
 
     categoryButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -336,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Filter tools
             toolCards.forEach(card => {
                 if (category === 'all' || card.dataset.category === category) {
-                    card.style.display = 'block';
+                    card.style.removeProperty('display');
                     card.style.animation = 'fadeIn 0.5s ease-in-out';
                 } else {
                     card.style.display = 'none';
@@ -358,8 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         if (isSaved) {
                             btn.querySelector('.btn-text').textContent = 'محفوظ';
-                            btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                            btn.classList.add('bg-green-500', 'hover:bg-green-600', 'saved');
+                            applySavedButtonState(btn);
                         }
                     });
                 }
@@ -477,9 +704,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     // Show success state - Item is now saved
                     this.querySelector('.btn-text').textContent = 'محفوظ';
-                    this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                    this.classList.add('bg-green-500', 'hover:bg-green-600');
-                    this.classList.add('saved');
+                    applySavedButtonState(this);
                     this.disabled = false;
                     
                     // Update saved count in header - تحديث فوري للعداد
@@ -523,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Show error state
                     this.querySelector('.btn-text').textContent = 'خطأ في الحفظ';
-                    this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                    this.classList.remove(...defaultSaveClasses, ...savedStateClasses);
                     this.classList.add('bg-red-500');
                     
                     showToast(data.message || 'حدث خطأ أثناء حفظ المنتج', 'error');
@@ -534,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
                         this.querySelector('.loading-icon').classList.add('hidden');
                         this.classList.remove('bg-red-500');
-                        this.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                        applyDefaultButtonState(this);
                     }, 2000);
                 }
             })
@@ -571,8 +796,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 // Show success state - Item removed
                 button.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
-                button.classList.remove('bg-green-500', 'hover:bg-green-600', 'saved');
-                button.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                applyDefaultButtonState(button);
                 button.disabled = false;
                 
                 // Update saved count - تحديث فوري للعداد

@@ -4,398 +4,804 @@
 
 @push('styles')
 <style>
-    .rating-stars {
-        color: #fbbf24;
+    .recipes-page {
+        background: #f9fafb;
     }
-    .empty-rating {
-        color: #d1d5db;
+    .recipes-hero {
+        padding: clamp(3rem, 6vw, 4.25rem) 0 clamp(2rem, 5vw, 3.5rem);
+        background: linear-gradient(135deg, #fff7ed 0%, #fde68a 65%, #ffffff 100%);
+        border-bottom: 1px solid rgba(253, 224, 71, 0.45);
     }
-    
-    /* Mobile Responsive Improvements */
-    @media (max-width: 768px) {
-        .recipes-header {
-            padding: 2rem 0;
-        }
-        
-        .recipes-title {
-            font-size: 2rem;
-        }
-        
-        .recipes-subtitle {
-            font-size: 1rem;
-        }
-        
-        .search-sort-section {
-            padding: 1rem 0;
-        }
-        
-        .search-form {
-            margin-bottom: 1rem;
-        }
-        
-        .search-input {
-            font-size: 16px; /* Prevents zoom on iOS */
-            padding: 0.75rem 1rem;
-        }
-        
-        .sort-container {
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: stretch;
-        }
-        
-        .recipes-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        
-        .recipe-card {
-            margin-bottom: 0;
-        }
-        
-        .recipe-image {
-            height: 200px;
-        }
-        
-        .recipe-content {
-            padding: 1rem;
-        }
-        
-        .recipe-title {
-            font-size: 1.1rem;
-            line-height: 1.4;
-        }
-        
-        .recipe-info {
-            font-size: 0.8rem;
-        }
-        
-        .recipe-actions {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .recipe-button {
-            width: 100%;
-            padding: 0.75rem;
-            font-size: 0.9rem;
-        }
-        
-        .pagination-container {
-            padding: 1rem 0;
-        }
-        
-        .pagination {
-            flex-wrap: wrap;
-            gap: 0.25rem;
-        }
-        
-        .pagination-link {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-        }
+    .recipes-hero__content {
+        display: grid;
+        gap: clamp(2rem, 4vw, 3rem);
     }
-    
-    /* Ultra Simple Pagination */
-    .pagination-container {
-        margin-top: 1rem;
+    .recipes-hero__intro {
+        display: grid;
+        gap: 1.25rem;
         text-align: center;
+        max-width: 48rem;
+        margin-inline: auto;
+        color: #b45309;
     }
-    
-    .pagination-info {
-        margin-bottom: 0.5rem;
-        color: #666;
-        font-size: 0.875rem;
-    }
-    
-    .pagination {
-        display: flex;
+    .recipes-hero__badge {
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
+        gap: 0.5rem;
+        margin-inline: auto;
+        padding: 0.55rem 1.2rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #b45309;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid rgba(250, 204, 21, 0.4);
+    }
+    .recipes-hero__title {
+        font-size: clamp(2.25rem, 5.5vw, 3.2rem);
+        font-weight: 800;
+        color: #7c2d12;
+        line-height: 1.25;
+    }
+    .recipes-hero__subtitle {
+        font-size: clamp(1rem, 2.7vw, 1.2rem);
+        color: #92400e;
+        line-height: 1.8;
+    }
+    .recipes-hero__meta {
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.6rem 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #a16207;
+    }
+    .recipes-hero__meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(252, 211, 77, 0.45);
+    }
+    .recipes-hero__stats {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+    .recipes-stat {
+        background: #ffffff;
+        border-radius: 1.25rem;
+        padding: 1.35rem 1.5rem;
+        border: 1px solid rgba(254, 215, 170, 0.6);
+        box-shadow: 0 10px 18px rgba(250, 204, 21, 0.12);
+        display: grid;
+        gap: 0.45rem;
+        color: #7c2d12;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .recipes-stat:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 26px rgba(250, 204, 21, 0.16);
+    }
+    .recipes-stat__icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: rgba(253, 224, 71, 0.2);
+        color: #ca8a04;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    .recipes-stat__body {
+        display: grid;
         gap: 0.25rem;
     }
-    
-    nav[role="navigation"] .relative.inline-flex {
-        background: #f5f5f5;
-        border: 1px solid #ddd;
-        color: #333;
-        text-decoration: none;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
+    .recipes-stat__label {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #a16207;
     }
-    
-    nav[role="navigation"] .relative.inline-flex span {
-        background: #f97316;
-        color: white;
+    .recipes-stat__value {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: #7c2d12;
     }
-    
-    nav[role="navigation"] .relative.inline-flex[aria-disabled="true"] {
-        background: #f0f0f0;
-        color: #999;
+    .recipes-stat__hint {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #b45309;
     }
+    .recipes-filter-section {
+        margin-top: -2rem;
     }
-    
-    /* Mobile */
+    .recipes-filter-card {
+        background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+        border-radius: 1.75rem;
+        padding: clamp(1.75rem, 4vw, 2.5rem);
+        box-shadow: 0 28px 60px rgba(249, 115, 22, 0.18);
+        border: 1px solid rgba(249, 115, 22, 0.16);
+    }
+    .recipes-filter-form {
+        display: grid;
+        gap: 1.5rem;
+    }
+    .recipes-filter-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        align-items: end;
+    }
+    .recipes-field {
+        display: grid;
+        gap: 0.6rem;
+    }
+    .recipes-field__label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #b45309;
+        letter-spacing: 0.01em;
+    }
+    .recipes-input,
+    .recipes-select {
+        width: 100%;
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+        background-color: #ffffff;
+        color: #1f2937;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .recipes-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.41.59 6 5.17 10.59.59 12 2l-6 6-6-6L1.41.59Z' fill='%23f97316'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 1rem center;
+        background-size: 12px 8px;
+        padding-inline-end: 2.5rem;
+    }
+    [dir="rtl"] .recipes-select {
+        background-position: right 1rem center;
+        padding-inline-start: 2.5rem;
+        padding-inline-end: 1rem;
+    }
+    .recipes-input:focus,
+    .recipes-select:focus {
+        outline: none;
+        border-color: rgba(249, 115, 22, 0.6);
+        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.14);
+    }
+    .recipes-search {
+        position: relative;
+        display: block;
+    }
+    .recipes-search i {
+        position: absolute;
+        inset-inline-end: 1.1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #f97316;
+        font-size: 1rem;
+        pointer-events: none;
+    }
+    [dir="rtl"] .recipes-search i {
+        inset-inline-start: 1.1rem;
+        inset-inline-end: auto;
+    }
+    .recipes-search .recipes-input {
+        padding-inline-end: 3rem;
+    }
+    [dir="rtl"] .recipes-search .recipes-input {
+        padding-inline-start: 3rem;
+        padding-inline-end: 1rem;
+    }
+    .recipes-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    .recipes-submit {
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f97316, #f59e0b);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 0.9rem 1.8rem;
+        box-shadow: 0 16px 32px rgba(249, 115, 22, 0.24);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+    .recipes-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 40px rgba(249, 115, 22, 0.3);
+    }
+    .recipes-reset {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: #f97316;
+        font-weight: 600;
+        font-size: 0.9rem;
+        background: rgba(249, 115, 22, 0.08);
+        padding: 0.75rem 1.3rem;
+        border-radius: 999px;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .recipes-reset:hover {
+        background: rgba(249, 115, 22, 0.16);
+        transform: translateY(-1px);
+    }
+    .recipes-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1rem;
+        align-items: center;
+        color: #475569;
+        font-size: 0.9rem;
+    }
+    .recipes-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        padding: 0.45rem 0.9rem;
+        background: #ffffff;
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        color: #f97316;
+        font-weight: 600;
+    }
+    .recipes-list {
+        padding: clamp(3rem, 6vw, 4.5rem) 0;
+    }
+    .recipes-grid {
+        display: grid;
+        gap: 1.75rem;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .recipe-card {
+        display: flex;
+        flex-direction: column;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, #ffffff 100%);
+        border: 1px solid rgba(226, 232, 240, 0.75);
+        box-shadow: 0 26px 52px rgba(15, 23, 42, 0.1);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        position: relative;
+        isolation: isolate;
+    }
+    .recipe-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(249, 115, 22, 0.08) 0%, transparent 55%);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        z-index: -1;
+    }
+    .recipe-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 36px 60px rgba(15, 23, 42, 0.16);
+    }
+    .recipe-card:hover::before {
+        opacity: 1;
+    }
+    .recipe-card__media {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        background: #f3f4f6;
+        overflow: hidden;
+    }
+    .recipe-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s ease;
+    }
+    .recipe-card:hover .recipe-card__media img {
+        transform: scale(1.05);
+    }
+    .recipe-card__badge {
+        position: absolute;
+        inset-inline-end: 1rem;
+        top: 1rem;
+        border-radius: 999px;
+        background: rgba(249, 115, 22, 0.95);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.4rem 0.9rem;
+        box-shadow: 0 14px 24px rgba(249, 115, 22, 0.25);
+    }
+    .recipe-card__content {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        flex: 1;
+    }
+    .recipe-card__title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.5;
+        min-height: 3.3rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .recipe-card__excerpt {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.75;
+        min-height: 4.9rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .recipe-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        row-gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .recipe-card__meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        background: rgba(15, 23, 42, 0.05);
+        font-weight: 600;
+    }
+    .recipe-card__stats {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid rgba(226, 232, 240, 0.8);
+        padding-top: 0.75rem;
+    }
+    .recipe-card__rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #fb923c;
+        font-weight: 600;
+    }
+    .recipe-card__rating .stars {
+        display: inline-flex;
+        gap: 0.2rem;
+        color: #fbbf24;
+    }
+    .recipe-card__rating .stars .empty-rating {
+        color: #e2e8f0;
+    }
+    .recipe-card__actions {
+        margin-top: auto;
+    }
+    .recipe-card__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        border-radius: 1rem;
+        padding: 0.9rem 1rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .recipe-card__btn--primary {
+        background: linear-gradient(135deg, #f97316, #f59e0b);
+        color: #ffffff;
+        box-shadow: 0 14px 28px rgba(249, 115, 22, 0.28);
+    }
+    .recipe-card__btn--primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 36px rgba(249, 115, 22, 0.32);
+    }
+    .recipe-card__btn--disabled {
+        background: #fde68a;
+        color: #92400e;
+        cursor: not-allowed;
+    }
+    .recipe-empty {
+        background: #ffffff;
+        border-radius: 2rem;
+        padding: clamp(3rem, 6vw, 4.5rem);
+        text-align: center;
+        box-shadow: 0 32px 64px rgba(15, 23, 42, 0.12);
+    }
+    .recipe-empty__icon {
+        width: 110px;
+        height: 110px;
+        margin: 0 auto 1.75rem;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.05));
+        display: grid;
+        place-items: center;
+        color: #f97316;
+        font-size: 2.6rem;
+    }
+    .recipe-empty__title {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+    .recipe-empty__subtitle {
+        max-width: 36rem;
+        margin: 0 auto 2rem;
+        color: #64748b;
+        line-height: 1.9;
+        font-size: 1rem;
+    }
+    .recipes-empty-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        border-radius: 999px;
+        padding: 0.9rem 1.7rem;
+        background: linear-gradient(135deg, #f97316, #f59e0b);
+        color: #ffffff;
+        font-weight: 700;
+        box-shadow: 0 18px 36px rgba(249, 115, 22, 0.26);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .recipes-empty-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 22px 44px rgba(249, 115, 22, 0.32);
+    }
     @media (max-width: 768px) {
-        .pagination {
-            gap: 0.125rem;
+        .recipes-filter-section {
+            margin-top: -1.5rem;
         }
-        
-        nav[role="navigation"] .relative.inline-flex {
-            padding: 0.375rem 0.5rem;
-            font-size: 0.8rem;
+        .recipes-actions {
+            justify-content: stretch;
+        }
+        .recipes-submit,
+        .recipes-reset {
+            width: 100%;
+            justify-content: center;
         }
     }
-    
-    @media (max-width: 480px) {
-        .recipes-title {
-            font-size: 1.75rem;
+    @media (max-width: 540px) {
+        .recipes-hero__meta span {
+            width: 100%;
+            justify-content: center;
         }
-        
-        .recipes-subtitle {
-            font-size: 0.9rem;
-        }
-        
-        .search-input {
-            padding: 0.625rem 0.875rem;
-            font-size: 16px;
-        }
-        
-        .recipe-image {
-            height: 180px;
-        }
-        
-        .recipe-content {
-            padding: 0.875rem;
-        }
-        
-        .recipe-title {
-            font-size: 1rem;
-        }
-        
-        .recipe-info {
-            font-size: 0.75rem;
-        }
-        
-        .recipe-button {
-            padding: 0.625rem;
-            font-size: 0.85rem;
+        .recipes-grid {
+            grid-template-columns: minmax(0, 1fr);
         }
     }
 </style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Header Section -->
-    <section class="bg-gradient-to-r from-amber-500 to-orange-600 text-white py-16 recipes-header">
-        <div class="container mx-auto px-4">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4 recipes-title">جميع الوصفات</h1>
-                <p class="text-xl text-amber-100 max-w-2xl mx-auto recipes-subtitle">
-                    اكتشف مجموعة واسعة من وصفات الحلويات الفاخرة والراقية
-                </p>
-            </div>
-        </div>
-    </section>
+@php
+    $sortOptions = [
+        'created_at' => 'الأحدث',
+        'rating' => 'الأعلى تقييماً',
+        'saved' => 'الأكثر حفظاً',
+    ];
+    $difficultyLabels = [
+        'easy' => 'سهل',
+        'medium' => 'متوسط',
+        'hard' => 'صعب',
+    ];
 
-    <!-- Simple Search and Sort -->
-    <section class="bg-white py-6 border-b search-sort-section">
+    $activeFilters = collect([
+        'search' => request('search'),
+        'category' => request('category'),
+    ])->filter(fn ($value) => filled($value));
+
+    $firstItem = $recipes->firstItem();
+    $lastItem = $recipes->lastItem();
+    $currentSort = request('sort', 'created_at');
+
+    $filterCount = $activeFilters->count();
+    if ($currentSort !== 'created_at') {
+        $filterCount++;
+        $activeFilters->put('sort', $currentSort);
+    }
+
+    $heroBadge = 'مختارات وصفة';
+    if ($selectedCategory = $categories->firstWhere('category_id', (int) request('category'))) {
+        $heroBadge = 'تصنيف ' . $selectedCategory->name;
+    } elseif (request('search')) {
+        $heroBadge = 'بحث: "' . request('search') . '"';
+    }
+
+    $heroSubtitle = 'اكتشف وصفات الحلويات الراقية المختارة من فريق وصفة.';
+    if ($selectedCategory) {
+        $heroSubtitle = 'كل ما يتعلق بوصفات ' . $selectedCategory->name . ' في مكان واحد.';
+    } elseif (request('search')) {
+        $heroSubtitle = 'عرض النتائج المطابقة لعبارة "' . request('search') . '".';
+    }
+
+    $locale = app()->getLocale() ?? 'ar';
+    $latestRecipe = $recipes->first();
+    $latestUpdated = $latestRecipe && $latestRecipe->created_at
+        ? $latestRecipe->created_at->locale($locale)->diffForHumans(null, null, false, 2)
+        : 'غير متوفر';
+
+    $heroStats = [
+        [
+            'icon' => 'fa-book-open',
+            'label' => 'إجمالي الوصفات',
+            'value' => number_format($recipes->total()),
+            'hint' => 'في مكتبة وصفة',
+        ],
+        [
+            'icon' => 'fa-layer-group',
+            'label' => 'المعروضة حالياً',
+            'value' => $recipes->count(),
+            'hint' => 'من ' . ($firstItem ?? 0) . ' إلى ' . ($lastItem ?? 0),
+        ],
+        [
+            'icon' => 'fa-sliders-h',
+            'label' => 'عوامل التصفية',
+            'value' => $filterCount,
+            'hint' => $filterCount ? 'إعدادات مفعّلة' : 'عرض افتراضي',
+        ],
+        [
+            'icon' => 'fa-history',
+            'label' => 'أحدث إضافة',
+            'value' => $latestUpdated,
+            'hint' => 'لأقرب وصفة منشورة',
+        ],
+    ];
+@endphp
+<div class="recipes-page min-h-screen pb-16">
+    <section class="recipes-hero">
         <div class="container mx-auto px-4">
-            <div class="max-w-6xl mx-auto">
-                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <!-- Search Bar -->
-                    <form method="GET" action="{{ route('recipes') }}" class="flex-1 max-w-md search-form">
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                name="search" 
-                                value="{{ request('search') }}"
-                                placeholder="ابحث عن وصفة..." 
-                                class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 search-input"
-                                dir="rtl"
-                            >
-                            <button type="submit" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500">
+            <div class="recipes-hero__content">
+                <div class="recipes-hero__intro">
+                    <span class="recipes-hero__badge">
+                        <i class="fas fa-crown"></i>
+                        {{ $heroBadge }}
+                    </span>
+                    <h1 class="recipes-hero__title">كل وصفات الحلويات في تجربة عرض واحدة</h1>
+                    <p class="recipes-hero__subtitle">{{ $heroSubtitle }}</p>
+                    <div class="recipes-hero__meta">
+                        <span>
+                            <i class="fas fa-sort-amount-down"></i>
+                            ترتيب: {{ $sortOptions[$currentSort] ?? $currentSort }}
+                        </span>
+                        <span>
+                            <i class="fas fa-sliders-h"></i>
+                            {{ $filterCount ? $filterCount . ' عوامل مفعّلة' : 'بدون عوامل تصفية إضافية' }}
+                        </span>
+                        @if(request('search'))
+                            <span>
                                 <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Sort and Count -->
-                    <div class="flex items-center gap-4 sort-container">
-                        <form method="GET" action="{{ route('recipes') }}" class="flex items-center gap-2">
-                            <!-- Preserve existing search parameters -->
-                            @if(request('search'))
-                                <input type="hidden" name="search" value="{{ request('search') }}">
-                            @endif
-                            @if(request('category'))
-                                <input type="hidden" name="category" value="{{ request('category') }}">
-                            @endif
-                            @if(request('difficulty'))
-                                <input type="hidden" name="difficulty" value="{{ request('difficulty') }}">
-                            @endif
-                            @if(request('prep_time'))
-                                <input type="hidden" name="prep_time" value="{{ request('prep_time') }}">
-                            @endif
-                            
-                            <span class="text-gray-600 text-sm">ترتيب:</span>
-                            <select name="sort" onchange="this.form.submit()" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
-                                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>الأحدث</option>
-                                <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>التقييم</option>
-                            </select>
-                        </form>
-                        <div class="text-gray-500 text-sm">
-                            {{ $recipes->total() }} وصفة
-                        </div>
+                                بحث: "{{ \Illuminate\Support\Str::limit(request('search'), 18) }}"
+                            </span>
+                        @endif
                     </div>
+                </div>
+                <div class="recipes-hero__stats">
+                    @foreach($heroStats as $stat)
+                        <article class="recipes-stat">
+                            <span class="recipes-stat__icon">
+                                <i class="fas {{ $stat['icon'] }}"></i>
+                            </span>
+                            <div class="recipes-stat__body">
+                                <p class="recipes-stat__label">{{ $stat['label'] }}</p>
+                                <div class="recipes-stat__value">{{ $stat['value'] }}</div>
+                                <p class="recipes-stat__hint">{{ $stat['hint'] }}</p>
+                            </div>
+                        </article>
+                    @endforeach
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Recipes Grid -->
-    <section class="py-12">
+    <section class="recipes-filter-section">
+        <div class="container mx-auto px-4">
+            <div class="recipes-filter-card">
+                <form method="GET" action="{{ route('recipes') }}" class="recipes-filter-form" id="recipes-filter-form" autocomplete="off">
+                    <div class="recipes-filter-grid">
+                        <label class="recipes-field">
+                            <span class="recipes-field__label">بحث عن وصفة</span>
+                            <div class="recipes-search">
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value="{{ request('search') }}"
+                                    class="recipes-input"
+                                    placeholder="مثال: تارت الفواكه الموسمية"
+                                    dir="rtl"
+                                >
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </label>
+                        <label class="recipes-field">
+                            <span class="recipes-field__label">التصنيفات</span>
+                            <select name="category" class="recipes-select" onchange="this.form.submit()">
+                                <option value="">كل التصنيفات</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->category_id }}" {{ (string) request('category') === (string) $category->category_id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="recipes-field">
+                            <span class="recipes-field__label">ترتيب النتائج</span>
+                            <select name="sort" class="recipes-select" onchange="this.form.submit()">
+                                @foreach($sortOptions as $value => $label)
+                                    <option value="{{ $value }}" {{ $currentSort === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <div class="recipes-actions">
+                            <button type="submit" class="recipes-submit">
+                                <i class="fas fa-filter ml-1"></i>
+                                عرض النتائج
+                            </button>
+                            @if($filterCount > 0)
+                                <a href="{{ route('recipes') }}" class="recipes-reset">
+                                    <i class="fas fa-rotate-right"></i>
+                                    إعادة الضبط
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+                @if($filterCount > 0)
+                    <div class="recipes-chips">
+                        <span class="font-semibold text-slate-600">
+                            <i class="fas fa-sliders-h text-orange-500 ml-1"></i>
+                            عوامل فعّالة:
+                        </span>
+                        @if(request('search'))
+                            <span class="recipes-chip">
+                                <i class="fas fa-search text-xs"></i>
+                                بحث: "{{ \Illuminate\Support\Str::limit(request('search'), 18) }}"
+                            </span>
+                        @endif
+                        @if($selectedCategory)
+                            <span class="recipes-chip">
+                                <i class="fas fa-layer-group text-xs"></i>
+                                تصنيف: {{ $selectedCategory->name }}
+                            </span>
+                        @endif
+                        @if($currentSort !== 'created_at')
+                            <span class="recipes-chip">
+                                <i class="fas fa-sort-amount-down text-xs"></i>
+                            ترتيب: {{ $sortOptions[$currentSort] ?? $currentSort }}
+                            </span>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    </section>
+
+    <section class="recipes-list">
         <div class="container mx-auto px-4">
             <div class="max-w-7xl mx-auto">
                 @if($recipes->count() > 0)
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 recipes-grid">
+                    <div class="recipes-grid">
                         @foreach($recipes as $recipe)
-                            <div class="recipe-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
-                                <!-- Image Section -->
-                                <div class="relative h-36 overflow-hidden recipe-image">
-                                    <img src="{{ $recipe->image_url }}" 
-                                         alt="{{ $recipe->title }}" 
-                                         class="w-full h-full object-cover"
-                                         onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                                    
-                                    <!-- Category Badge -->
-                                    <div class="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">
-                                        {{ $recipe->category->name ?? 'وصفة' }}
-                                    </div>
+                            @php
+        $imageSource = $recipe->image
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($recipe->image)
+            : ($recipe->image_url ?? null);
+
+        if (empty($imageSource)) {
+            $imageSource = asset('image/logo.png');
+        }
+
+        $difficultyLabel = null;
+        if (! empty($recipe->difficulty)) {
+            $difficultyLabel = $difficultyLabels[$recipe->difficulty] ?? ucfirst($recipe->difficulty);
+        }
+
+        $avgRating = (float) ($recipe->interactions_avg_rating ?? $recipe->rating ?? 0);
+@endphp
+                            <article class="recipe-card">
+                                <div class="recipe-card__media">
+                                    <img
+                                        src="{{ $imageSource }}"
+                                        alt="{{ $recipe->title }}"
+                                        loading="lazy"
+                                        onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة بديلة';"
+                                    >
+                                    <span class="recipe-card__badge">{{ $recipe->category->name ?? 'وصفة' }}</span>
                                 </div>
-
-                                <!-- Content Section -->
-                                <div class="p-3 recipe-content">
-                                    <!-- Title -->
-                                    <h3 class="text-base font-bold text-gray-900 mb-2 line-clamp-2 recipe-title">
-                                        {{ $recipe->title }}
-                                    </h3>
-
-                                    <!-- Recipe Info -->
-                                    <div class="flex items-center justify-between text-xs text-gray-500 mb-2 recipe-info">
-                                        <div class="flex items-center">
-                                            <i class="fas fa-clock ml-1"></i>
-                                            <span>{{ (int)$recipe->prep_time }} دقيقة</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <i class="fas fa-utensils ml-1"></i>
-                                            <span>{{ (int)$recipe->servings }} أشخاص</span>
-                                        </div>
+                                <div class="recipe-card__content">
+                                    <h3 class="recipe-card__title">{{ $recipe->title }}</h3>
+                                    <p class="recipe-card__excerpt">
+                                        {{ $recipe->description ? \Illuminate\Support\Str::limit(strip_tags($recipe->description), 110) : 'تعرّف على خطوات إعداد هذه الوصفة الفاخرة بأسلوب مبسّط وواضح.' }}
+                                    </p>
+                                    <div class="recipe-card__meta">
+                                        @if($recipe->prep_time)
+                                            <span>
+                                                <i class="fas fa-clock text-orange-400"></i>
+                                                {{ $recipe->prep_time }} دقيقة
+                                            </span>
+                                        @endif
+                                        @if($recipe->servings)
+                                            <span>
+                                                <i class="fas fa-user-friends text-orange-400"></i>
+                                                تكفي {{ $recipe->servings }} {{ $recipe->servings > 1 ? 'أشخاص' : 'شخص' }}
+                                            </span>
+                                        @endif
+                                        @if($difficultyLabel)
+                                            <span>
+                                                <i class="fas fa-signal text-orange-400"></i>
+                                                {{ $difficultyLabel }}
+                                            </span>
+                                        @endif
                                     </div>
-
-                                    <!-- Rating -->
-                                    <div class="flex items-center justify-between mb-3 recipe-info">
-                                        <div class="flex items-center">
-                                            <div class="flex rating-stars text-xs">
+                                    <div class="recipe-card__stats">
+                                        <div class="recipe-card__rating">
+                                            <div class="stars">
                                                 @for($i = 1; $i <= 5; $i++)
-                                                    <i class="fas fa-star {{ $i <= round($recipe->interactions_avg_rating ?? 0) ? '' : 'empty-rating' }}"></i>
+                                                    <i class="fas fa-star {{ $i <= round($avgRating) ? '' : 'empty-rating' }}"></i>
                                                 @endfor
                                             </div>
-                                            <span class="text-xs text-gray-500 mr-1">
-                                                {{ number_format($recipe->interactions_avg_rating ?? 0, 1) }}
-                                            </span>
+                                            <span>{{ number_format($avgRating, 1) }}</span>
                                         </div>
-                                        <div class="flex items-center text-xs text-gray-500">
-                                            <i class="fas fa-bookmark ml-1"></i>
-                                            <span>{{ $recipe->saved_count ?? 0 }}</span>
+                                        <div class="text-sm text-slate-500 font-semibold flex items-center gap-1">
+                                            <i class="fas fa-bookmark text-orange-400"></i>
+                                            {{ number_format($recipe->saved_count ?? 0) }}
                                         </div>
                                     </div>
-
-                                    <!-- Action Button -->
-                                    @if($recipe->is_registration_closed)
-                                        <button class="w-full bg-yellow-400 text-yellow-800 font-medium py-2 px-3 rounded text-sm cursor-not-allowed flex items-center justify-center">
-                                            <i class="fas fa-clock ml-1"></i>
-                                            انتهت مهلة الحجز
-                                        </button>
-                                    @else
-                                        <a href="{{ route('recipe.show', $recipe->slug) }}" 
-                                           class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-3 rounded text-sm transition-colors flex items-center justify-center recipe-button">
-                                            <i class="fas fa-eye ml-1"></i>
-                                            عرض الوصفة
-                                        </a>
-                                    @endif
+                                    <div class="recipe-card__actions">
+                                        @if($recipe->is_registration_closed)
+                                            <span class="recipe-card__btn recipe-card__btn--disabled">
+                                                <i class="fas fa-clock"></i>
+                                                انتهت مهلة الحجز
+                                            </span>
+                                        @else
+                                            <a href="{{ route('recipe.show', $recipe->slug) }}" class="recipe-card__btn recipe-card__btn--primary">
+                                                <i class="fas fa-utensils"></i>
+                                                عرض الوصفة
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
+                            </article>
                         @endforeach
                     </div>
 
-                    <!-- Pagination -->
-                    <div class="pagination-container">
-                        <div class="pagination-info">
-                            عرض {{ $recipes->firstItem() }} إلى {{ $recipes->lastItem() }} من {{ $recipes->total() }} نتيجة
+                    <div class="flex flex-col items-center gap-3 mt-12">
+                        <div class="text-sm text-slate-500 font-semibold">
+                            {{ $firstItem ?? 0 }} - {{ $lastItem ?? 0 }} من {{ number_format($recipes->total()) }} وصفة
                         </div>
-                        <div class="pagination">
-                            {{ $recipes->links('pagination.custom') }}
-                        </div>
+                        {{ $recipes->links('pagination.custom') }}
                     </div>
                 @else
-                    <!-- Loading Skeleton -->
-                    <div id="recipes-loading-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        @for($i = 0; $i < 8; $i++)
-                            <div class="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
-                                <!-- Image Skeleton -->
-                                <div class="h-36 bg-gray-300"></div>
-                                
-                                <!-- Content Skeleton -->
-                                <div class="p-3">
-                                    <!-- Title Skeleton -->
-                                    <div class="h-4 bg-gray-300 rounded mb-2"></div>
-                                    <div class="h-4 bg-gray-300 rounded w-3/4 mb-3"></div>
-                                    
-                                    <!-- Info Skeleton -->
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div class="h-3 bg-gray-300 rounded w-16"></div>
-                                        <div class="h-3 bg-gray-300 rounded w-16"></div>
-                                    </div>
-                                    
-                                    <!-- Rating Skeleton -->
-                                    <div class="flex items-center justify-between mb-3">
-                                        <div class="flex space-x-1 rtl:space-x-reverse">
-                                            <div class="h-3 w-3 bg-gray-300 rounded"></div>
-                                            <div class="h-3 w-3 bg-gray-300 rounded"></div>
-                                            <div class="h-3 w-3 bg-gray-300 rounded"></div>
-                                            <div class="h-3 w-3 bg-gray-300 rounded"></div>
-                                            <div class="h-3 w-3 bg-gray-300 rounded"></div>
-                                        </div>
-                                        <div class="h-3 bg-gray-300 rounded w-8"></div>
-                                    </div>
-                                    
-                                    <!-- Button Skeleton -->
-                                    <div class="h-8 bg-gray-300 rounded"></div>
-                                </div>
-                            </div>
-                        @endfor
-                    </div>
-                    
-                    <!-- Empty State (Hidden by default) -->
-                    <div id="empty-state" class="text-center py-16 hidden">
-                        <div class="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-utensils text-4xl text-orange-500"></i>
+                    <div class="recipe-empty">
+                        <div class="recipe-empty__icon">
+                            <i class="fas fa-ice-cream"></i>
                         </div>
-                        <h3 class="text-2xl font-bold text-gray-700 mb-3">لا توجد وصفات متاحة</h3>
-                        <p class="text-gray-500 mb-6">
-                            @if(request('search'))
-                                لم نجد وصفات تطابق البحث "{{ request('search') }}"
-                            @else
-                                لا توجد وصفات متاحة حالياً
-                            @endif
+                        <h3 class="recipe-empty__title">لم نعثر على نتائج مطابقة</h3>
+                        <p class="recipe-empty__subtitle">
+                            جرّب تعديل كلمات البحث أو اختيار تصنيف مختلف للحصول على المزيد من الوصفات الملهمة. يتم تحديث مكتبتنا باستمرار بوصفات جديدة.
                         </p>
-                        @if(request('search'))
-                            <a href="{{ route('recipes') }}" 
-                               class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                                <i class="fas fa-refresh ml-2"></i>
-                                عرض جميع الوصفات
-                            </a>
-                        @endif
+                        <a href="{{ route('recipes') }}" class="recipes-empty-btn">
+                            <i class="fas fa-rotate-right"></i>
+                            عرض كل الوصفات
+                        </a>
                     </div>
                 @endif
             </div>
@@ -404,45 +810,74 @@
 </div>
 @endsection
 
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus search input
     const searchInput = document.querySelector('input[name="search"]');
-    if (searchInput) {
-        searchInput.focus();
+    if (searchInput && window.innerWidth > 768) {
+        requestAnimationFrame(() => {
+            searchInput.focus({ preventScroll: true });
+            const valueLength = searchInput.value.length;
+            searchInput.setSelectionRange(valueLength, valueLength);
+        });
     }
 
-    // Convert Google Drive URLs
     function convertGoogleDriveUrl(url) {
-        if (url.includes('drive.google.com/file/d/')) {
-            const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
-            if (match && match[1]) {
-                return `https://lh3.googleusercontent.com/d/${match[1]}`;
-            }
+        if (!url || !url.includes('drive.google.com')) {
+            return url;
         }
-        
-        if (url.includes('drive.google.com') && url.includes('id=')) {
-            const urlParams = new URLSearchParams(new URL(url).search);
-            const fileId = urlParams.get('id');
-            if (fileId) {
-                return `https://lh3.googleusercontent.com/d/${fileId}`;
+
+        try {
+            const directMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+            if (directMatch && directMatch[1]) {
+                return `https://lh3.googleusercontent.com/d/${directMatch[1]}`;
             }
+
+            if (url.includes('id=')) {
+                const urlParams = new URLSearchParams(new URL(url).search);
+                const fileId = urlParams.get('id');
+                if (fileId) {
+                    return `https://lh3.googleusercontent.com/d/${fileId}`;
+                }
+            }
+
+            if (url.includes('uc?id=')) {
+                const urlParams = new URLSearchParams(new URL(url).search);
+                const fileId = urlParams.get('id');
+                if (fileId) {
+                    return `https://lh3.googleusercontent.com/d/${fileId}`;
+                }
+            }
+
+            const fallbackId = url.match(/[a-zA-Z0-9-_]{25,}/);
+            if (fallbackId) {
+                return `https://lh3.googleusercontent.com/d/${fallbackId[0]}`;
+            }
+        } catch (error) {
+            console.warn('Error converting Google Drive URL:', error);
         }
-        
+
         return url;
     }
-    
-    // Apply URL conversion to all images
-    const images = document.querySelectorAll('img[src*="drive.google.com"]');
-    images.forEach(function(img) {
-        const originalSrc = img.src;
-        const convertedSrc = convertGoogleDriveUrl(originalSrc);
-        if (convertedSrc !== originalSrc) {
-            img.src = convertedSrc;
+
+    document.querySelectorAll('img[src*="drive.google.com"]').forEach(function(img) {
+        const converted = convertGoogleDriveUrl(img.src);
+        if (converted !== img.src) {
+            img.src = converted;
         }
     });
 });
 </script>
 @endpush
+
+
+
+
+
+
+
+
+
+
+
+

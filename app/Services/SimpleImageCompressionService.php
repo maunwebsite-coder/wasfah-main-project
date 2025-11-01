@@ -82,25 +82,33 @@ class SimpleImageCompressionService
         string $directory = 'images'
     ): ?string {
         try {
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'header' => [
+                        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+                        'Accept: image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+                        'Accept-Language: en-US,en;q=0.9'
+                    ]
+                ]
+            ]);
+
             // تحميل الصورة من URL
-            $imageData = file_get_contents($imageUrl);
+            $imageData = @file_get_contents($imageUrl, false, $context);
             if (!$imageData) {
                 throw new \Exception('فشل في تحميل الصورة من URL');
             }
 
             // إنشاء اسم فريد للملف
-            $extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-            $filename = Str::uuid() . '.' . $extension;
+            $extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'jpg';
+            $filename = Str::uuid() . '.' . strtolower($extension);
             
             // حفظ الصورة مباشرة
-            $storedPath = Storage::disk('public')->putFileAs(
-                $directory,
-                new \Illuminate\Http\File($imageUrl),
-                $filename
-            );
+            $relativePath = trim($directory, '/') . '/' . $filename;
+            Storage::disk('public')->put($relativePath, $imageData);
 
-            \Log::info("تم حفظ الصورة من URL بدون ضغط: $storedPath");
-            return $storedPath;
+            \Log::info("تم حفظ الصورة من URL بدون ضغط: $relativePath");
+            return $relativePath;
 
         } catch (\Exception $e) {
             \Log::error('خطأ في حفظ الصورة من URL: ' . $e->getMessage());
@@ -169,4 +177,3 @@ class SimpleImageCompressionService
         ];
     }
 }
-

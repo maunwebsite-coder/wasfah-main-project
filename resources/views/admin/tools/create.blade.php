@@ -181,9 +181,13 @@
                                 @enderror
                                 
                                 <!-- Hidden field for extracted image URL -->
-                                <input type="hidden" 
-                                       id="extracted-image-url" 
-                                       name="extracted_image_url" 
+                                <input type="hidden"
+                                       id="extracted-image-url"
+                                       name="extracted_image_url"
+                                       value="">
+                                <input type="hidden"
+                                       id="extracted-gallery-images"
+                                       name="extracted_gallery_images"
                                        value="">
                             </div>
 
@@ -398,12 +402,25 @@ document.getElementById('extract-amazon-data').addEventListener('click', async f
             if (data.data.rating) {
                 document.getElementById('rating').value = data.data.rating;
             }
-            if (data.data.image) {
-                // Show image preview
-                showImagePreview(data.data.image);
-                // Store the extracted image URL for form submission
-                document.getElementById('extracted-image-url').value = data.data.image;
+            const galleryImages = Array.isArray(data.data.gallery_images) ? data.data.gallery_images : [];
+            const galleryInput = document.getElementById('extracted-gallery-images');
+            const primaryInput = document.getElementById('extracted-image-url');
+
+            if (galleryImages.length) {
+                galleryInput.value = JSON.stringify(galleryImages);
+            } else {
+                galleryInput.value = '';
             }
+
+            if (data.data.image) {
+                primaryInput.value = data.data.image;
+            } else if (galleryImages.length) {
+                primaryInput.value = galleryImages[0];
+            } else {
+                primaryInput.value = '';
+            }
+
+            updateImagePreview(primaryInput.value, galleryImages);
             
             showStatus('تم استخراج البيانات بنجاح!', 'success');
         } else {
@@ -441,21 +458,47 @@ function showStatus(message, type) {
     }
 }
 
-function showImagePreview(imageUrl) {
-    // Create image preview if it doesn't exist
+function updateImagePreview(primaryUrl, galleryUrls = []) {
     let previewDiv = document.getElementById('image-preview');
     if (!previewDiv) {
         previewDiv = document.createElement('div');
         previewDiv.id = 'image-preview';
         previewDiv.className = 'mt-4 p-4 border border-gray-300 rounded-lg bg-gray-50';
-        previewDiv.innerHTML = '<h4 class="font-semibold text-gray-700 mb-2">معاينة الصورة المستخرجة:</h4>';
         document.querySelector('input[name="image"]').parentNode.appendChild(previewDiv);
     }
-    
+
+    const images = [];
+    if (Array.isArray(galleryUrls)) {
+        galleryUrls.forEach(url => {
+            if (url && !images.includes(url)) {
+                images.push(url);
+            }
+        });
+    }
+    if (primaryUrl) {
+        if (images.includes(primaryUrl)) {
+            images.splice(images.indexOf(primaryUrl), 1);
+        }
+        images.unshift(primaryUrl);
+    }
+
+    if (!images.length) {
+        previewDiv.innerHTML = '';
+        previewDiv.classList.add('hidden');
+        return;
+    }
+
+    previewDiv.classList.remove('hidden');
+    const slides = images.map(url => `
+        <div class="w-24 h-24 rounded-lg overflow-hidden border flex-shrink-0 bg-white">
+            <img src="${url}" alt="معاينة الصورة" class="w-full h-full object-cover">
+        </div>
+    `).join('');
+
     previewDiv.innerHTML = `
-        <h4 class="font-semibold text-gray-700 mb-2">معاينة الصورة المستخرجة:</h4>
-        <img src="${imageUrl}" alt="معاينة الصورة" class="w-32 h-32 object-cover rounded-lg border">
-        <p class="text-sm text-gray-600 mt-2">يمكنك تحميل هذه الصورة أو اختيار صورة أخرى</p>
+        <h4 class="font-semibold text-gray-700 mb-2">معاينة الصور المستخرجة:</h4>
+        <div class="flex gap-3 overflow-x-auto pb-2">${slides}</div>
+        <p class="text-sm text-gray-600 mt-2">يمكنك تحميل أي من هذه الصور أو اختيار صورة أخرى.</p>
     `;
 }
 
