@@ -97,16 +97,40 @@
                 </div>
                 <nav class="flex items-center space-x-4 rtl:space-x-reverse text-gray-600">
                     @auth
-                        <div class="relative" id="user-menu-container">
-                            <button id="user-menu-button" class="flex items-center space-x-2 rtl:space-x-reverse focus:outline-none">
-                                <span class="font-semibold text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
-                                <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        <div id="user-menu-container" class="relative user-menu-container">
+                            <button
+                                id="user-menu-button"
+                                type="button"
+                                class="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="user-menu-dropdown">
+                                <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                                <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
                             </button>
-                            <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">ملفي الشخصي</a>
+                            <div
+                                id="user-menu-dropdown"
+                                class="absolute right-0 mt-2 hidden w-56 rounded-xl border border-slate-200 bg-white/95 py-2 text-sm text-slate-600 shadow-xl backdrop-blur"
+                                role="menu"
+                                aria-labelledby="user-menu-button">
+                                <a href="{{ route('profile') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
+                                    <i class="fas fa-user text-orange-500"></i>
+                                    <span class="font-semibold">ملفي الشخصي</span>
+                                </a>
+                                @if(Auth::user()->is_admin)
+                                    <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
+                                        <i class="fas fa-crown text-orange-500"></i>
+                                        <span class="font-semibold">منطقة الإدمن</span>
+                                    </a>
+                                @endif
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="event.preventDefault(); this.closest('form').submit();">تسجيل الخروج</a>
+                                    <button id="logout-btn" type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-left transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
+                                        <i class="fas fa-sign-out-alt text-orange-500"></i>
+                                        <span class="font-semibold">تسجيل الخروج</span>
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -201,21 +225,6 @@
     </footer>
 
     @vite(['resources/js/script.js', 'resources/js/header.js'])
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const userMenuButton = document.getElementById('user-menu-button');
-            const dropdownMenu = document.getElementById('dropdown-menu');
-            if (userMenuButton && dropdownMenu) {
-                userMenuButton.addEventListener('click', () => dropdownMenu.classList.toggle('hidden'));
-                document.addEventListener('click', (event) => {
-                    if (!userMenuButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
-                        dropdownMenu.classList.add('hidden');
-                    }
-                });
-            }
-        });
-    </script>
     @stack('scripts')
 </body>
 </html>
-
