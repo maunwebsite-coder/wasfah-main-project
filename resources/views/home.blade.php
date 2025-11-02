@@ -229,6 +229,7 @@
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
             overflow: hidden;
             display: flex;
+            flex-direction: column;
         }
         .hero-slider {
             width: 100%;
@@ -1264,8 +1265,8 @@
                                 'جلسات تفاعلية محدودة العدد',
                                 'ملفات تطبيقية وشهادة حضور',
                             ],
-                            'image' => asset('image/wterm.png'),
-                            'mobile_image' => asset('image/wterm.png'),
+                            'image' => data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png')),
+                            'mobile_image' => data_get($heroMedia ?? [], 'workshop.mobile', data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png'))),
                             'image_alt' => 'ورشة عمل للحلويات الاحترافية',
                             'actions' => [
                                 [
@@ -1290,8 +1291,8 @@
                                 'تصنيفات حسب المستوى والمناسبة',
                                 'حفظ ومزامنة وصفاتك المفضلة',
                             ],
-                            'image' => asset('image/Brownies.png'),
-                            'mobile_image' => asset('image/tnl.png'),
+                            'image' => data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png')),
+                            'mobile_image' => data_get($heroMedia ?? [], 'recipe.mobile', data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png'))),
                             'image_alt' => 'حلى براونيز فاخرة',
                             'actions' => [
                                 [
@@ -1316,8 +1317,8 @@
                                 'قوائم محدثة وروابط موثوقة',
                                 'نصائح استخدام وصيانة مختصرة',
                             ],
-                            'image' => asset('image/tnl.png'),
-                            'mobile_image' => asset('image/tnl.png'),
+                            'image' => data_get($heroMedia ?? [], 'tool.desktop', asset('image/tnl.png')),
+                            'mobile_image' => data_get($heroMedia ?? [], 'tool.mobile', data_get($heroMedia ?? [], 'tool.desktop', asset('image/tnl.png'))),
                             'image_alt' => 'مجموعة أدوات لتحضير الحلويات',
                             'actions' => [
                                 [
