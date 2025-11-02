@@ -1274,7 +1274,7 @@
         
         @if($featuredRecipes->count() > 0)
             <!-- Swiper Container -->
-            <div class="swiper">
+            <div class="swiper featured-recipes-swiper">
                 <div class="swiper-wrapper py-4">
                     @foreach($featuredRecipes as $recipe)
                         <div class="swiper-slide">
@@ -1299,39 +1299,62 @@
     </section>
 
     <!-- قسم لماذا تختار موقع وصفة؟ -->
+    @php
+        $whyChooseItems = [
+            [
+                'icon' => 'fas fa-crown',
+                'title' => 'وصفات متنوعة',
+                'description' => 'اكتشف أسرار أرقى الحلويات العالمية من التيراميسو الإيطالي والشوكولاتة البلجيكية إلى البراونيز الفاخر',
+            ],
+            [
+                'icon' => 'fas fa-gem',
+                'title' => 'تقنيات احترافية',
+                'description' => 'تعلم من أفضل الشيفات العالميين تقنيات متقدمة لصنع الحلويات الراقية بجودة مطاعم فاخرة',
+            ],
+            [
+                'icon' => 'fas fa-award',
+                'title' => 'مواد أولية فاخرة',
+                'description' => 'نرشدك لأفضل المكونات العالمية من الشوكولاتة البلجيكية إلى القهوة الإيطالية الأصيلة',
+            ],
+            [
+                'icon' => 'fas fa-magic',
+                'title' => 'ورشات متخصصة',
+                'description' => 'انضم لورشات عمل حصرية تتعلم فيها صنع الحلويات الراقية من خبراء عالميين',
+            ],
+        ];
+    @endphp
     <section class="py-16 bg-gradient-to-br from-amber-50 to-orange-50">
         <div class="container mx-auto px-6 text-center">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">لماذا تختار منصّة وصفة ؟</h2>
             <p class="text-gray-600 mb-12 max-w-3xl mx-auto">نحن نقدم لك تجربة فريدة في عالم الحلويات مع وصفات حصرية وتقنيات احترافية</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-crown text-4xl"></i>
+            <div class="md:hidden">
+                <div class="swiper why-choose-swiper pb-6 px-2">
+                    <div class="swiper-wrapper">
+                        @foreach($whyChooseItems as $item)
+                            <div class="swiper-slide flex justify-center">
+                                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-80 max-w-full">
+                                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
+                                        <i class="{{ $item['icon'] }} text-4xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $item['title'] }}</h3>
+                                    <p class="text-gray-600">{{ $item['description'] }}</p>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">وصفات متنوعة</h3>
-                    <p class="text-gray-600">اكتشف أسرار أرقى الحلويات العالمية من التيراميسو الإيطالي والشوكولاتة البلجيكية إلى البراونيز الفاخر</p>
+                    <div class="swiper-pagination" style="position: static; margin-top: 1.5rem;"></div>
                 </div>
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-gem text-4xl"></i>
+            </div>
+            <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+                @foreach($whyChooseItems as $item)
+                    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
+                            <i class="{{ $item['icon'] }} text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $item['title'] }}</h3>
+                        <p class="text-gray-600">{{ $item['description'] }}</p>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">تقنيات احترافية</h3>
-                    <p class="text-gray-600">تعلم من أفضل الشيفات العالميين تقنيات متقدمة لصنع الحلويات الراقية بجودة مطاعم فاخرة</p>
-                </div>
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-award text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">مواد أولية فاخرة</h3>
-                    <p class="text-gray-600">نرشدك لأفضل المكونات العالمية من الشوكولاتة البلجيكية إلى القهوة الإيطالية الأصيلة</p>
-                </div>
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-magic text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">ورشات متخصصة</h3>
-                    <p class="text-gray-600">انضم لورشات عمل حصرية تتعلم فيها صنع الحلويات الراقية من خبراء عالميين</p>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -1469,14 +1492,37 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Swiper for recipe cards
-    if (document.querySelector('.swiper')) {
-        new Swiper('.swiper', {
+    const featuredSwiperEl = document.querySelector('.featured-recipes-swiper');
+    if (featuredSwiperEl) {
+        new Swiper(featuredSwiperEl, {
             slidesPerView: 'auto',
             spaceBetween: 16,
             grabCursor: true,
             navigation: { 
                 nextEl: '#nextBtn', 
                 prevEl: '#prevBtn' 
+            },
+        });
+    }
+
+    // Initialize Swiper for "Why Choose" cards on mobile
+    const whyChooseSwiperEl = document.querySelector('.why-choose-swiper');
+    if (whyChooseSwiperEl) {
+        new Swiper(whyChooseSwiperEl, {
+            slidesPerView: 1.1,
+            spaceBetween: 16,
+            grabCursor: true,
+            pagination: {
+                el: whyChooseSwiperEl.querySelector('.swiper-pagination'),
+                clickable: true,
+            },
+            breakpoints: {
+                480: {
+                    slidesPerView: 1.2,
+                },
+                640: {
+                    slidesPerView: 1.4,
+                },
             },
         });
     }
