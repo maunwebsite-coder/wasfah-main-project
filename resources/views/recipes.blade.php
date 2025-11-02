@@ -118,6 +118,26 @@
         font-size: 0.85rem;
         color: #b45309;
     }
+    @media (max-width: 1024px) {
+        .recipes-hero__stats {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.75rem;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            touch-action: pan-x;
+        }
+        .recipes-hero__stats::-webkit-scrollbar {
+            display: none;
+        }
+        .recipes-stat {
+            flex: 0 0 auto;
+            min-width: min(260px, 80vw);
+            scroll-snap-align: start;
+        }
+    }
     .recipes-filter-section {
         margin-top: -2rem;
     }
