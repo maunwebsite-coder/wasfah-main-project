@@ -1305,21 +1305,33 @@
                 'icon' => 'fas fa-crown',
                 'title' => 'وصفات متنوعة',
                 'description' => 'اكتشف أسرار أرقى الحلويات العالمية من التيراميسو الإيطالي والشوكولاتة البلجيكية إلى البراونيز الفاخر',
+                'card_gradient' => 'from-sky-50 via-white to-sky-100',
+                'card_border' => 'border-sky-200/60',
+                'icon_gradient' => 'from-sky-400 to-sky-500',
             ],
             [
                 'icon' => 'fas fa-gem',
                 'title' => 'تقنيات احترافية',
                 'description' => 'تعلم من أفضل الشيفات العالميين تقنيات متقدمة لصنع الحلويات الراقية بجودة مطاعم فاخرة',
+                'card_gradient' => 'from-emerald-50 via-white to-emerald-100',
+                'card_border' => 'border-emerald-200/60',
+                'icon_gradient' => 'from-emerald-400 to-emerald-500',
             ],
             [
                 'icon' => 'fas fa-award',
                 'title' => 'مواد أولية فاخرة',
                 'description' => 'نرشدك لأفضل المكونات العالمية من الشوكولاتة البلجيكية إلى القهوة الإيطالية الأصيلة',
+                'card_gradient' => 'from-amber-50 via-white to-orange-100',
+                'card_border' => 'border-amber-200/60',
+                'icon_gradient' => 'from-amber-400 to-orange-500',
             ],
             [
                 'icon' => 'fas fa-magic',
                 'title' => 'ورشات متخصصة',
                 'description' => 'انضم لورشات عمل حصرية تتعلم فيها صنع الحلويات الراقية من خبراء عالميين',
+                'card_gradient' => 'from-rose-50 via-white to-rose-100',
+                'card_border' => 'border-rose-200/60',
+                'icon_gradient' => 'from-rose-400 to-rose-500',
             ],
         ];
     @endphp
@@ -1329,12 +1341,22 @@
             <p class="text-gray-600 text-sm md:text-base mb-0 md:mb-2 max-w-2xl mx-auto">نحن نقدم لك تجربة فريدة في عالم الحلويات مع وصفات حصرية وتقنيات احترافية</p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-4xl mx-auto mt-4 md:mt-6">
                 @foreach($whyChooseItems as $item)
-                    <div class="flex flex-col items-center bg-white p-4 md:p-5 rounded-2xl shadow-lg hover:shadow-xl transition-shadow justify-center max-w-[160px] md:max-w-none mx-auto" style="aspect-ratio: 1 / 1;">
-                        <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-xl md:rounded-2xl h-16 w-16 flex items-center justify-center mb-3 shadow-lg">
-                            <i class="{{ $item['icon'] }} text-2xl md:text-3xl"></i>
+                    @php
+                        $cardGradient = $item['card_gradient'] ?? 'from-amber-50 via-white to-orange-50';
+                        $cardBorder = $item['card_border'] ?? 'border-amber-200/60';
+                        $iconGradient = $item['icon_gradient'] ?? 'from-amber-400 to-orange-500';
+                    @endphp
+                    <div class="relative flex w-full items-center justify-center mx-auto max-w-[160px] md:max-w-none transition-transform duration-300 hover:-translate-y-1" style="aspect-ratio: 1 / 1;">
+                        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br {{ $cardGradient }}"></div>
+                        <div class="absolute inset-[1px] rounded-3xl border {{ $cardBorder }} opacity-70"></div>
+                        <div class="absolute inset-0 rounded-3xl bg-white/60 backdrop-blur-[2px]"></div>
+                        <div class="relative flex flex-col items-center justify-center gap-2 px-4 md:px-6 py-4 md:py-6 text-center">
+                            <div class="flex items-center justify-center h-14 w-14 md:h-16 md:w-16 rounded-2xl md:rounded-3xl bg-gradient-to-br {{ $iconGradient }} text-white shadow-lg ring-4 ring-white/70">
+                                <i class="{{ $item['icon'] }} text-2xl md:text-3xl"></i>
+                            </div>
+                            <h3 class="text-sm md:text-lg font-bold text-gray-800">{{ $item['title'] }}</h3>
+                            <p class="text-xs md:text-sm text-gray-600 leading-relaxed">{{ $item['description'] }}</p>
                         </div>
-                        <h3 class="text-base md:text-lg font-bold text-gray-800 mb-2">{{ $item['title'] }}</h3>
-                        <p class="text-gray-600 text-xs md:text-sm leading-relaxed">{{ $item['description'] }}</p>
                     </div>
                 @endforeach
             </div>
