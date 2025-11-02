@@ -1323,36 +1323,18 @@
             ],
         ];
     @endphp
-    <section class="py-16 bg-gradient-to-br from-amber-50 to-orange-50">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-4">لماذا تختار منصّة وصفة ؟</h2>
-            <p class="text-gray-600 mb-12 max-w-3xl mx-auto">نحن نقدم لك تجربة فريدة في عالم الحلويات مع وصفات حصرية وتقنيات احترافية</p>
-            <div class="md:hidden">
-                <div class="swiper why-choose-swiper pb-6 px-2">
-                    <div class="swiper-wrapper">
-                        @foreach($whyChooseItems as $item)
-                            <div class="swiper-slide flex justify-center">
-                                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow w-80 max-w-full">
-                                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                                        <i class="{{ $item['icon'] }} text-4xl"></i>
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $item['title'] }}</h3>
-                                    <p class="text-gray-600">{{ $item['description'] }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="swiper-pagination" style="position: static; margin-top: 1.5rem;"></div>
-                </div>
-            </div>
-            <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+    <section class="pt-5 pb-5 md:pt-8 md:pb-10 bg-gradient-to-br from-amber-50 to-orange-50">
+        <div class="container mx-auto px-3 md:px-6 text-center">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1 md:mb-3">لماذا تختار منصّة وصفة ؟</h2>
+            <p class="text-gray-600 text-sm md:text-base mb-0 md:mb-2 max-w-2xl mx-auto">نحن نقدم لك تجربة فريدة في عالم الحلويات مع وصفات حصرية وتقنيات احترافية</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-4xl mx-auto mt-4 md:mt-6">
                 @foreach($whyChooseItems as $item)
-                    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                            <i class="{{ $item['icon'] }} text-4xl"></i>
+                    <div class="flex flex-col items-center bg-white p-4 md:p-5 rounded-2xl shadow-lg hover:shadow-xl transition-shadow justify-center max-w-[160px] md:max-w-none mx-auto" style="aspect-ratio: 1 / 1;">
+                        <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-xl md:rounded-2xl h-16 w-16 flex items-center justify-center mb-3 shadow-lg">
+                            <i class="{{ $item['icon'] }} text-2xl md:text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $item['title'] }}</h3>
-                        <p class="text-gray-600">{{ $item['description'] }}</p>
+                        <h3 class="text-base md:text-lg font-bold text-gray-800 mb-2">{{ $item['title'] }}</h3>
+                        <p class="text-gray-600 text-xs md:text-sm leading-relaxed">{{ $item['description'] }}</p>
                     </div>
                 @endforeach
             </div>
@@ -1501,28 +1483,6 @@ document.addEventListener('DOMContentLoaded', function() {
             navigation: { 
                 nextEl: '#nextBtn', 
                 prevEl: '#prevBtn' 
-            },
-        });
-    }
-
-    // Initialize Swiper for "Why Choose" cards on mobile
-    const whyChooseSwiperEl = document.querySelector('.why-choose-swiper');
-    if (whyChooseSwiperEl) {
-        new Swiper(whyChooseSwiperEl, {
-            slidesPerView: 1.1,
-            spaceBetween: 16,
-            grabCursor: true,
-            pagination: {
-                el: whyChooseSwiperEl.querySelector('.swiper-pagination'),
-                clickable: true,
-            },
-            breakpoints: {
-                480: {
-                    slidesPerView: 1.2,
-                },
-                640: {
-                    slidesPerView: 1.4,
-                },
             },
         });
     }
