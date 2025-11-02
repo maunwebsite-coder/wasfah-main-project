@@ -2175,8 +2175,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Cards are now static - no click functionality needed
-    // Only save buttons and links are clickable
+    // Enable flip interaction on recipe cards
+    const recipeCards = document.querySelectorAll('.card-container');
+    if (recipeCards.length) {
+        recipeCards.forEach((card) => {
+            card.addEventListener('click', (event) => {
+                // Avoid flipping when clicking actionable elements
+                if (event.target.closest('.save-recipe-btn') || event.target.closest('a')) {
+                    return;
+                }
+
+                recipeCards.forEach((otherCard) => {
+                    if (otherCard !== card) {
+                        otherCard.classList.remove('is-flipped');
+                    }
+                });
+
+                card.classList.toggle('is-flipped');
+            });
+        });
+
+        // Close card when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.card-container')) {
+                recipeCards.forEach((card) => card.classList.remove('is-flipped'));
+            }
+        });
+    }
 
     // Initialize save buttons using the global function from save-recipe.js
     if (typeof window.SaveRecipe !== 'undefined' && window.SaveRecipe.initializeSaveButtons) {
