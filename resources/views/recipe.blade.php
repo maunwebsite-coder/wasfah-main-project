@@ -1610,7 +1610,7 @@
                     
                     <!-- Price -->
                     <div class="text-lg font-bold text-orange-500 mb-3">
-                      {{ $tool['price'] ? '$' . number_format($tool['price'], 2) : 'غير محدد' }}
+                      {{ $tool['price'] ? 'د.إ ' . number_format($tool['price'], 2) : 'غير محدد' }}
                     </div>
                     
                     <!-- Save Button -->
