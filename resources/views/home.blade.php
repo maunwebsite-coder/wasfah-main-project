@@ -1154,7 +1154,7 @@
             }
             .hero-slider-pagination {
                 margin-top: 1.25rem;
-                display: none;
+                display: none !important;
             }
             .hero-latest-card {
                 padding: 1.5rem;
