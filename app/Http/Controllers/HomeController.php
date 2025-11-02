@@ -106,13 +106,15 @@ class HomeController extends Controller
             });
         }
 
+        $homeTools = Tool::active()->ordered()->limit(12)->get();
+
         $heroMedia = [
             'workshop' => $this->resolveWorkshopHeroMedia($featuredWorkshop, $workshops),
             'recipe' => $this->resolveRecipeHeroMedia($featuredRecipes, $latestRecipes),
             'tool' => $this->resolveToolHeroMedia(),
         ];
 
-        return view('home', compact('workshops', 'featuredWorkshop', 'latestRecipes', 'featuredRecipes', 'hasUpcomingWorkshops', 'heroMedia'));
+        return view('home', compact('workshops', 'featuredWorkshop', 'latestRecipes', 'featuredRecipes', 'hasUpcomingWorkshops', 'heroMedia', 'homeTools'));
     }
 
     /**

@@ -182,6 +182,141 @@
             transform: none;
             box-shadow: none;
         }
+
+        /* Home tools slider */
+        .home-tools-section {
+            background: linear-gradient(145deg, rgba(255, 247, 237, 0.45), rgba(255, 255, 255, 0.85));
+            border-radius: 2rem;
+            box-shadow: 0 30px 60px rgba(249, 115, 22, 0.08);
+            border: 1px solid rgba(249, 115, 22, 0.12);
+        }
+        .home-tools-swiper .swiper-slide {
+            height: auto;
+        }
+        .home-tool-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(249, 115, 22, 0.08);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .home-tool-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 55px rgba(249, 115, 22, 0.16);
+        }
+        .home-tool-card__image {
+            position: relative;
+            background: linear-gradient(140deg, rgba(255, 237, 213, 0.5), rgba(254, 215, 170, 0.35));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.75rem;
+            min-height: 220px;
+        }
+        .home-tool-card__image img {
+            max-width: 100%;
+            max-height: 160px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        .home-tool-card:hover .home-tool-card__image img {
+            transform: scale(1.07);
+        }
+        .home-tool-card__category {
+            position: absolute;
+            inset-inline-end: 1.25rem;
+            inset-block-start: 1.25rem;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 999px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--wasfa-primary-strong);
+            box-shadow: 0 8px 18px rgba(249, 115, 22, 0.18);
+        }
+        .home-tool-card__body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            flex: 1;
+        }
+        .home-tool-card__title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--wasfa-neutral-900);
+            line-height: 1.5;
+        }
+        .home-tool-card__rating {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            color: var(--wasfa-primary-strong);
+            font-size: 0.9rem;
+        }
+        .home-tool-card__rating i {
+            color: #fbbf24;
+        }
+        .home-tool-card__price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--wasfa-primary-strong);
+        }
+        .home-tool-card__actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: auto;
+            flex-wrap: wrap;
+        }
+        .home-tool-card__actions a {
+            flex: 1;
+        }
+        .home-tools-pagination {
+            margin-top: 1.5rem;
+        }
+        .home-tools-pagination .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: rgba(249, 115, 22, 0.28);
+            opacity: 1;
+        }
+        .home-tools-pagination .swiper-pagination-bullet-active {
+            background: var(--wasfa-primary-strong);
+        }
+        .home-tools-nav {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .home-tools-nav button {
+            width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            background: #ffffff;
+            color: var(--wasfa-primary-strong);
+            box-shadow: 0 18px 32px rgba(249, 115, 22, 0.15);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .home-tools-nav button:hover {
+            background: var(--wasfa-primary);
+            color: #ffffff;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+        .home-tools-nav button.swiper-button-disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         
         /* Workshop Card Image Improvements */
         .workshop-card img {
@@ -1099,6 +1234,24 @@
             .hero-latest-card {
                 border-radius: 1.5rem;
             }
+            .home-tools-section {
+                border-radius: 1.5rem;
+                padding: 1.5rem;
+            }
+            .home-tool-card__image {
+                min-height: 160px;
+                padding: 1.25rem;
+            }
+            .home-tool-card__image img {
+                max-height: 120px;
+            }
+            .home-tool-card__body {
+                padding: 1.05rem;
+                gap: 0.7rem;
+            }
+            .home-tool-card__actions {
+                flex-direction: column;
+            }
             .latest-recipe-mini {
                 padding: 0.65rem 0.7rem;
                 border-radius: 1.1rem;
@@ -1571,6 +1724,96 @@
     </section>
     @endif
 
+    <!-- قسم أدوات الشيف -->
+    <section class="container mx-auto px-4 py-10 lg:py-14">
+        <div class="home-tools-section p-6 lg:p-10">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8 lg:mb-10">
+                <div class="text-center lg:text-right max-w-2xl mx-auto lg:mx-0">
+                    <span class="inline-flex items-center gap-2 text-sm font-semibold text-amber-600 bg-amber-100/70 px-4 py-2 rounded-full mb-3">
+                        <i class="fas fa-toolbox text-sm"></i>
+                        مختارات الأدوات
+                    </span>
+                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">أدوات الشيف الموصى بها</h2>
+                    <p class="text-gray-600 text-base lg:text-lg">
+                        أدوات مختارة بعناية تساعدك على تنفيذ وصفاتك باحترافية، مع تقييمات المستخدمين وخيارات شراء مباشرة.
+                    </p>
+                </div>
+                @if($homeTools->count() > 0)
+                    <div class="home-tools-nav hidden lg:flex">
+                        <button type="button" class="home-tools-prev" aria-label="الأداة السابقة">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button type="button" class="home-tools-next" aria-label="الأداة التالية">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                @endif
+            </div>
+
+            @if($homeTools->count() > 0)
+                <div class="swiper home-tools-swiper">
+                    <div class="swiper-wrapper">
+                        @foreach($homeTools as $tool)
+                            <div class="swiper-slide">
+                                <article class="home-tool-card">
+                                    <div class="home-tool-card__image">
+                                        <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" loading="lazy" onerror="this.src='{{ asset('image/logo.png') }}'">
+                                        @if(!empty($tool->category))
+                                            <span class="home-tool-card__category">{{ $tool->category }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="home-tool-card__body">
+                                        <h3 class="home-tool-card__title line-clamp-2">{{ $tool->name }}</h3>
+                                        <div class="home-tool-card__rating">
+                                            <i class="fas fa-star"></i>
+                                            <span>{{ number_format($tool->rating ?? 0, 1) }}</span>
+                                            <span class="text-gray-400 text-sm">/ 5</span>
+                                        </div>
+                                        @if(!is_null($tool->price))
+                                            <div class="home-tool-card__price">{{ number_format($tool->price, 2) }} د.إ</div>
+                                        @endif
+                                        <div class="home-tool-card__actions">
+                                            <a href="{{ route('tools.show', $tool->id) }}" class="hero-action secondary-action text-center text-sm">
+                                                <span>تفاصيل الأداة</span>
+                                                <i class="fas fa-info-circle"></i>
+                                            </a>
+                                            @if($tool->amazon_url)
+                                                <a href="{{ $tool->amazon_url }}" target="_blank" rel="nofollow noopener" class="hero-action primary-action text-center text-sm">
+                                                    <span>شراء الآن</span>
+                                                    <i class="fas fa-shopping-cart"></i>
+                                                </a>
+                                            @else
+                                                <a href="{{ route('tools') }}" class="hero-action primary-action text-center text-sm">
+                                                    <span>استعرض المزيد</span>
+                                                    <i class="fas fa-arrow-left"></i>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="home-tools-pagination swiper-pagination mt-6 lg:hidden"></div>
+            @else
+                <div class="text-center py-16">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-500">
+                        <i class="fas fa-toolbox text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">لا توجد أدوات مميزة حالياً</h3>
+                    <p class="text-gray-600 max-w-lg mx-auto mb-6">
+                        نعمل على تحديث قائمة أدوات الشيف المختارة بشكل مستمر. عد لاحقاً للاطلاع على أحدث التوصيات.
+                    </p>
+                    <a href="{{ route('tools') }}" class="hero-action primary-action">
+                        <span>تصفح جميع الأدوات</span>
+                        <i class="fas fa-toolbox"></i>
+                    </a>
+                </div>
+            @endif
+        </div>
+    </section>
+
     <!-- قسم الوصفات المميزة -->
     <section class="container mx-auto px-4 py-6">
         <div class="text-center mb-6">
@@ -1850,6 +2093,47 @@ document.addEventListener('DOMContentLoaded', function() {
             navigation: { 
                 nextEl: '#nextBtn', 
                 prevEl: '#prevBtn' 
+            },
+        });
+    }
+
+    // Initialize Swiper for tools slider
+    const toolsSwiperEl = document.querySelector('.home-tools-swiper');
+    if (toolsSwiperEl) {
+        new Swiper(toolsSwiperEl, {
+            slidesPerView: 1.1,
+            spaceBetween: 16,
+            grabCursor: true,
+            watchOverflow: true,
+            navigation: {
+                nextEl: '.home-tools-next',
+                prevEl: '.home-tools-prev',
+            },
+            pagination: {
+                el: '.home-tools-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 1.5,
+                    spaceBetween: 18,
+                },
+                768: {
+                    slidesPerView: 2.2,
+                    spaceBetween: 20,
+                },
+                1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 24,
+                },
+                1280: {
+                    slidesPerView: 3.5,
+                    spaceBetween: 28,
+                },
+                1536: {
+                    slidesPerView: 4,
+                    spaceBetween: 32,
+                },
             },
         });
     }
