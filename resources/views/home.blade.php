@@ -222,15 +222,37 @@
             z-index: 1;
         }
         .hero-main-card {
+            position: relative;
             background: #ffffff;
             border-radius: 1.8rem;
             padding: clamp(1.5rem, 3vw, 2.25rem);
+            padding-bottom: clamp(2rem, 4vw, 3rem);
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+        .hero-slider {
+            width: 100%;
+            height: 100%;
+            isolation: isolate;
+            margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+        }
+        .hero-slider .swiper-wrapper {
+            align-items: stretch;
+        }
+        .hero-slider .swiper-slide {
+            display: flex;
+            height: auto;
+        }
+        .hero-slide {
             display: grid;
-            gap: clamp(1.25rem, 3vw, 1.75rem);
             grid-template-areas:
                 "media"
                 "content";
+            gap: clamp(1.25rem, 3vw, 1.75rem);
+            min-height: 100%;
+            width: 100%;
+            align-content: center;
+            flex: 1;
         }
         .hero-media {
             grid-area: media;
@@ -239,6 +261,8 @@
             background: linear-gradient(135deg, rgba(255, 237, 213, 0.7), rgba(254, 215, 170, 0.3));
             position: relative;
             isolation: isolate;
+            min-height: clamp(220px, 32vw, 320px);
+            height: 100%;
         }
         .hero-media::after {
             content: "";
@@ -291,6 +315,26 @@
             flex-wrap: wrap;
             gap: 0.85rem;
         }
+        .hero-features {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 0.6rem;
+        }
+        .hero-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            color: #4b5563;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        .hero-feature i {
+            color: var(--wasfa-primary-strong);
+            font-size: 1rem;
+            margin-top: 0.15rem;
+        }
         .hero-action {
             display: inline-flex;
             align-items: center;
@@ -322,6 +366,56 @@
         }
         .secondary-action:hover {
             background: rgba(255, 237, 213, 0.6);
+        }
+        .hero-slider-pagination {
+            position: static;
+            margin-top: clamp(1.15rem, 2.5vw, 1.75rem);
+            display: flex;
+            justify-content: flex-start;
+            gap: 0.55rem;
+        }
+        .hero-slider-pagination .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: rgba(249, 115, 22, 0.28);
+            opacity: 1;
+        }
+        .hero-slider-pagination .swiper-pagination-bullet-active {
+            background: var(--wasfa-primary-strong);
+        }
+        .hero-slider-nav {
+            position: absolute;
+            inset-inline-end: clamp(1.25rem, 3vw, 2rem);
+            inset-block-end: clamp(1rem, 2.3vw, 1.6rem);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 5;
+        }
+        .hero-slider-nav button {
+            width: 44px;
+            height: 44px;
+            border-radius: 9999px;
+            border: 1px solid rgba(249, 115, 22, 0.28);
+            background: #ffffff;
+            color: var(--wasfa-primary-strong);
+            box-shadow: 0 16px 30px rgba(249, 115, 22, 0.15);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .hero-slider-nav button:hover {
+            background: var(--wasfa-primary);
+            color: #ffffff;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+        .hero-slider-nav button.swiper-button-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .hero-latest-card {
             background: rgba(255, 255, 255, 0.92);
@@ -869,7 +963,7 @@
                 grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
                 align-items: stretch;
             }
-            .hero-main-card {
+            .hero-slide {
                 grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
                 grid-template-areas: "content media";
                 align-items: center;
@@ -897,13 +991,24 @@
                 gap: 1.5rem;
             }
             .hero-main-card {
-                padding: 1.75rem;
+                padding: 1.45rem;
+                padding-bottom: 2rem;
+            }
+            .hero-slider {
+                margin-bottom: 1.1rem;
             }
             .hero-actions {
                 flex-direction: column;
             }
             .hero-action {
                 width: 100%;
+            }
+            .hero-slider-nav {
+                display: none;
+            }
+            .hero-slider-pagination {
+                margin-top: 1.25rem;
+                justify-content: center;
             }
             .hero-latest-card {
                 padding: 1.5rem;
@@ -945,7 +1050,11 @@
                 border-radius: 1.5rem;
             }
             .hero-main-card {
-                padding: 1.4rem;
+                padding: 1.15rem;
+                padding-bottom: 1.75rem;
+            }
+            .hero-slider {
+                margin-bottom: 0.9rem;
             }
             .hero-actions {
                 gap: 0.75rem;
@@ -956,6 +1065,9 @@
             }
             .hero-main-image {
                 max-height: 260px;
+            }
+            .hero-media {
+                min-height: 200px;
             }
             .hero-latest-card {
                 border-radius: 1.5rem;
@@ -978,7 +1090,7 @@
                 width: 100%;
                 height: auto;
             }
-            .swiper-slide {
+            .featured-recipes-swiper .swiper-slide {
                 width: min(88vw, 320px);
                 height: auto;
             }
@@ -1087,7 +1199,7 @@
             margin: 0 !important;
         }
 
-        .swiper-slide {
+        .featured-recipes-swiper .swiper-slide {
             flex: 0 0 auto;
             width: clamp(240px, 28vw, 280px);
             height: 400px;
@@ -1128,25 +1240,132 @@
     <main class="container mx-auto px-4 py-6 lg:py-8">
         <div class="home-hero-shell">
             <div class="home-hero-grid">
+                @php
+                    $heroSlides = [
+                        [
+                            'badge' => 'ورشات العمل',
+                            'title' => 'ورشات حلويات احترافية',
+                            'description' => 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.',
+                            'features' => [
+                                'جلسات تفاعلية محدودة العدد',
+                                'ملفات تطبيقية وشهادة حضور',
+                            ],
+                            'image' => asset('image/wterm.png'),
+                            'image_alt' => 'ورشة عمل للحلويات الاحترافية',
+                            'actions' => [
+                                [
+                                    'label' => 'استكشف الورشات',
+                                    'url' => route('workshops'),
+                                    'icon' => 'fas fa-chalkboard-teacher',
+                                    'type' => 'primary',
+                                ],
+                                [
+                                    'label' => 'جدول الورشات',
+                                    'url' => route('workshops'),
+                                    'icon' => 'fas fa-calendar-alt',
+                                    'type' => 'secondary',
+                                ],
+                            ],
+                        ],
+                        [
+                            'badge' => 'الوصفات',
+                            'title' => 'مكتبة وصفات عالمية',
+                            'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
+                            'features' => [
+                                'تصنيفات حسب المستوى والمناسبة',
+                                'حفظ ومزامنة وصفاتك المفضلة',
+                            ],
+                            'image' => asset('image/Brownies.png'),
+                            'image_alt' => 'حلى براونيز فاخرة',
+                            'actions' => [
+                                [
+                                    'label' => 'ابدأ اكتشاف الوصفات',
+                                    'url' => route('recipes'),
+                                    'icon' => 'fas fa-utensils',
+                                    'type' => 'primary',
+                                ],
+                                [
+                                    'label' => 'الوصفات المحفوظة',
+                                    'url' => route('saved.index'),
+                                    'icon' => 'fas fa-bookmark',
+                                    'type' => 'secondary',
+                                ],
+                            ],
+                        ],
+                        [
+                            'badge' => 'أدوات الشيف',
+                            'title' => 'دليل أدوات الشيف',
+                            'description' => 'اختيارات دقيقة لأدوات تساعدك على الإتقان.',
+                            'features' => [
+                                'قوائم محدثة وروابط موثوقة',
+                                'نصائح استخدام وصيانة مختصرة',
+                            ],
+                            'image' => asset('image/tnl.png'),
+                            'image_alt' => 'مجموعة أدوات لتحضير الحلويات',
+                            'actions' => [
+                                [
+                                    'label' => 'استعرض أدوات الشيف',
+                                    'url' => route('tools'),
+                                    'icon' => 'fas fa-toolbox',
+                                    'type' => 'primary',
+                                ],
+                            ],
+                        ],
+                    ];
+                @endphp
                 <!-- القسم الرئيسي -->
                 <article class="hero-main-card">
-                    <div class="hero-media">
-                        <img src="{{ asset('image/Brownies.png') }}" alt="صورة تيراميسو إيطالي فاخر" class="hero-main-image">
-                    </div>
-                    <div class="hero-content">
-                        <span class="hero-badge">عن الموقع</span>
-                        <h1 class="hero-title">منصّة وصفة للحلويات الراقية</h1>
-                        <p class="hero-description">وصفات عالمية فاخرة وتقنيات احترافية من نخبة الشيفات.</p>
-                        <div class="hero-actions">
-                            <a href="{{ route('recipes') }}" class="hero-action primary-action">
-                                <span>ابدأ اكتشاف الوصفات</span>
-                                <i class="fas fa-arrow-left"></i>
-                            </a>
-                            <a href="{{ route('workshops') }}" class="hero-action secondary-action">
-                                <span>تعرّف على الورشات</span>
-                                <i class="fas fa-chalkboard-teacher"></i>
-                            </a>
+                    <div class="hero-slider swiper">
+                        <div class="swiper-wrapper">
+                            @foreach($heroSlides as $slide)
+                                <div class="swiper-slide">
+                                    <div class="hero-slide">
+                                        <div class="hero-media">
+                                            <img src="{{ $slide['image'] }}" alt="{{ $slide['image_alt'] }}" class="hero-main-image">
+                                        </div>
+                                        <div class="hero-content">
+                                            @if(!empty($slide['badge']))
+                                                <span class="hero-badge">{{ $slide['badge'] }}</span>
+                                            @endif
+                                            <h1 class="hero-title">{{ $slide['title'] }}</h1>
+                                            <p class="hero-description">{{ $slide['description'] }}</p>
+                                            @if(!empty($slide['features']))
+                                                <ul class="hero-features">
+                                                    @foreach($slide['features'] as $feature)
+                                                        <li class="hero-feature">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <span>{{ $feature }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
+                                            @if(!empty($slide['actions']))
+                                                <div class="hero-actions">
+                                                    @foreach($slide['actions'] as $action)
+                                                        <a href="{{ $action['url'] }}"
+                                                           class="hero-action {{ ($action['type'] ?? 'primary') === 'secondary' ? 'secondary-action' : 'primary-action' }}">
+                                                            <span>{{ $action['label'] }}</span>
+                                                            @if(!empty($action['icon']))
+                                                                <i class="{{ $action['icon'] }}"></i>
+                                                            @endif
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
+                        <div class="hero-slider-pagination swiper-pagination"></div>
+                    </div>
+                    <div class="hero-slider-nav">
+                        <button type="button" class="hero-slider-prev" aria-label="الشريحة السابقة">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button type="button" class="hero-slider-next" aria-label="الشريحة التالية">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
                     </div>
                 </article>
                 
@@ -1162,16 +1381,16 @@
                     <ul class="hero-latest-list">
                         @forelse($latestRecipes as $recipe)
                             <x-latest-recipe-item :recipe="$recipe" />
-                    @empty
-                        <li class="hero-latest-empty">
-                            <div class="hero-latest-empty-icon">
-                                <i class="fas fa-utensils"></i>
-                            </div>
-                            <p>لا توجد وصفات متاحة حالياً</p>
-                        </li>
-                    @endforelse
-                </ul>
-            </aside>
+                        @empty
+                            <li class="hero-latest-empty">
+                                <div class="hero-latest-empty-icon">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <p>لا توجد وصفات متاحة حالياً</p>
+                            </li>
+                        @endforelse
+                    </ul>
+                </aside>
             </div>
         </div>
     </main>
@@ -1558,6 +1777,28 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize hero swiper
+    const heroSliderEl = document.querySelector('.hero-slider');
+    if (heroSliderEl) {
+        new Swiper(heroSliderEl, {
+            loop: true,
+            speed: 700,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            grabCursor: true,
+            navigation: {
+                nextEl: '.hero-slider-next',
+                prevEl: '.hero-slider-prev',
+            },
+            pagination: {
+                el: '.hero-slider-pagination',
+                clickable: true,
+            },
+        });
+    }
+
     // Initialize Swiper for recipe cards
     const featuredSwiperEl = document.querySelector('.featured-recipes-swiper');
     if (featuredSwiperEl) {
