@@ -886,8 +886,8 @@
                 font-size: 0.9rem;
             }
             .featured-workshop-section {
-                padding-top: 3.5rem !important;
-                padding-bottom: 3.5rem !important;
+                padding-top: 2.5rem !important;
+                padding-bottom: 2.5rem !important;
             }
         }
 
@@ -938,8 +938,8 @@
                 border-radius: 1.5rem;
             }
             .featured-workshop-section {
-                padding-top: 2.75rem !important;
-                padding-bottom: 2.75rem !important;
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
             }
         }
 
@@ -1077,7 +1077,7 @@
     />
 
     <!-- قسم المحتوى الرئيسي -->
-    <main class="container mx-auto px-4 py-10 lg:py-12">
+    <main class="container mx-auto px-4 py-6 lg:py-8">
         <div class="home-hero-shell">
             <div class="home-hero-grid">
                 <!-- القسم الرئيسي -->
@@ -1135,7 +1135,7 @@
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
         $featuredIsCompleted = $featuredWorkshop->is_completed;
     @endphp
-    <section class="container mx-auto px-4 py-16 featured-workshop-section">
+    <section class="container mx-auto px-4 py-12 featured-workshop-section">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl featured-workshop-card">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <!-- المحتوى النصي -->
@@ -1217,7 +1217,7 @@
     </section>
     @else
     <!-- رسالة عدم وجود ورشات قادمة -->
-    <section class="container mx-auto px-4 py-16 featured-workshop-section">
+    <section class="container mx-auto px-4 py-12 featured-workshop-section">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <!-- المحتوى النصي -->
@@ -1266,7 +1266,7 @@
     @endif
 
     <!-- قسم الوصفات المميزة -->
-    <section class="container mx-auto px-4 py-8">
+    <section class="container mx-auto px-4 py-6">
         <div class="text-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">ابدأ بحفظ هذه الوصفات</h2>
             <p class="text-gray-600 mt-2">اكتشف وصفات حلويات فاخرة من أفضل الشيفات العالميين</p>
@@ -1335,7 +1335,7 @@
             ],
         ];
     @endphp
-    <section class="pt-5 pb-5 md:pt-8 md:pb-10 bg-gradient-to-br from-amber-50 to-orange-50">
+    <section class="pt-4 pb-4 md:pt-6 md:pb-8 bg-gradient-to-br from-amber-50 to-orange-50">
         <div class="container mx-auto px-3 md:px-6 text-center">
             <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1 md:mb-3">لماذا تختار منصّة وصفة ؟</h2>
             <p class="text-gray-600 text-sm md:text-base mb-0 md:mb-2 max-w-2xl mx-auto">نحن نقدم لك تجربة فريدة في عالم الحلويات مع وصفات حصرية وتقنيات احترافية</p>
@@ -1365,7 +1365,7 @@
 
     
     <!-- قسم الورشات المحسن -->
-    <section class="py-16 bg-gradient-to-br from-gray-50 to-white">
+    <section class="py-12 bg-gradient-to-br from-gray-50 to-white">
         <div class="container mx-auto px-4">
             <!-- Header Section -->
             <div class="text-center mb-12">
