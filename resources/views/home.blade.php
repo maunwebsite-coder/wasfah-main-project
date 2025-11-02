@@ -225,16 +225,16 @@
             position: relative;
             background: #ffffff;
             border-radius: 1.8rem;
-            padding: clamp(1.5rem, 3vw, 2.25rem);
-            padding-bottom: clamp(2rem, 4vw, 3rem);
+            padding: 0;
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
             overflow: hidden;
+            display: flex;
         }
         .hero-slider {
             width: 100%;
             height: 100%;
             isolation: isolate;
-            margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+            margin-bottom: 0;
         }
         .hero-slider .swiper-wrapper {
             align-items: stretch;
@@ -253,6 +253,7 @@
             width: 100%;
             align-content: center;
             flex: 1;
+            padding: clamp(1.6rem, 3vw, 2.5rem);
         }
         .hero-media {
             grid-area: media;
@@ -263,6 +264,12 @@
             isolation: isolate;
             min-height: clamp(220px, 32vw, 320px);
             height: 100%;
+            display: flex;
+        }
+        .hero-media picture {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
         .hero-media::after {
             content: "";
@@ -371,7 +378,7 @@
             position: static;
             margin-top: clamp(1.15rem, 2.5vw, 1.75rem);
             display: flex;
-            justify-content: flex-start;
+            justify-content: center;
             gap: 0.55rem;
         }
         .hero-slider-pagination .swiper-pagination-bullet {
@@ -385,8 +392,8 @@
         }
         .hero-slider-nav {
             position: absolute;
-            inset-inline-end: clamp(1.25rem, 3vw, 2rem);
-            inset-block-end: clamp(1rem, 2.3vw, 1.6rem);
+            inset-inline-end: clamp(1.4rem, 3vw, 2.3rem);
+            inset-block-end: clamp(1.2rem, 2.6vw, 1.9rem);
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -991,11 +998,14 @@
                 gap: 1.5rem;
             }
             .hero-main-card {
-                padding: 1.45rem;
-                padding-bottom: 2rem;
+                padding: 1.25rem;
             }
             .hero-slider {
-                margin-bottom: 1.1rem;
+                margin-bottom: 0.8rem;
+            }
+            .hero-slide {
+                padding: 1.25rem;
+                gap: 1.2rem;
             }
             .hero-actions {
                 flex-direction: column;
@@ -1046,15 +1056,19 @@
 
         @media (max-width: 640px) {
             .home-hero-shell {
-                padding: 1.5rem;
+                padding: 0.75rem;
                 border-radius: 1.5rem;
             }
-            .hero-main-card {
-                padding: 1.15rem;
-                padding-bottom: 1.75rem;
+            .hero-slide {
+                padding: 1.05rem;
+                gap: 0.85rem;
             }
             .hero-slider {
-                margin-bottom: 0.9rem;
+                margin-bottom: 0.6rem;
+            }
+            .hero-main-card {
+                padding: 0;
+                border-radius: 1.5rem;
             }
             .hero-actions {
                 gap: 0.75rem;
@@ -1064,10 +1078,10 @@
                 padding: 0.5rem 1.15rem;
             }
             .hero-main-image {
-                max-height: 260px;
+                max-height: 220px;
             }
             .hero-media {
-                min-height: 200px;
+                min-height: 160px;
             }
             .hero-latest-card {
                 border-radius: 1.5rem;
@@ -1251,6 +1265,7 @@
                                 'ملفات تطبيقية وشهادة حضور',
                             ],
                             'image' => asset('image/wterm.png'),
+                            'mobile_image' => asset('image/wterm.png'),
                             'image_alt' => 'ورشة عمل للحلويات الاحترافية',
                             'actions' => [
                                 [
@@ -1276,6 +1291,7 @@
                                 'حفظ ومزامنة وصفاتك المفضلة',
                             ],
                             'image' => asset('image/Brownies.png'),
+                            'mobile_image' => asset('image/tnl.png'),
                             'image_alt' => 'حلى براونيز فاخرة',
                             'actions' => [
                                 [
@@ -1301,6 +1317,7 @@
                                 'نصائح استخدام وصيانة مختصرة',
                             ],
                             'image' => asset('image/tnl.png'),
+                            'mobile_image' => asset('image/tnl.png'),
                             'image_alt' => 'مجموعة أدوات لتحضير الحلويات',
                             'actions' => [
                                 [
@@ -1321,7 +1338,10 @@
                                 <div class="swiper-slide">
                                     <div class="hero-slide">
                                         <div class="hero-media">
-                                            <img src="{{ $slide['image'] }}" alt="{{ $slide['image_alt'] }}" class="hero-main-image">
+                                            <picture>
+                                                <source media="(max-width: 640px)" srcset="{{ $slide['mobile_image'] ?? $slide['image'] }}">
+                                                <img src="{{ $slide['image'] }}" alt="{{ $slide['image_alt'] }}" class="hero-main-image">
+                                            </picture>
                                         </div>
                                         <div class="hero-content">
                                             @if(!empty($slide['badge']))
@@ -1780,9 +1800,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize hero swiper
     const heroSliderEl = document.querySelector('.hero-slider');
     if (heroSliderEl) {
+        const heroInitialSlide = window.innerWidth <= 640 ? 2 : 0;
         new Swiper(heroSliderEl, {
             loop: true,
             speed: 700,
+            initialSlide: heroInitialSlide,
             autoplay: {
                 delay: 5000,
                 disableOnInteraction: false,
