@@ -952,8 +952,8 @@
                     </div>
                     <div class="hero-content">
                         <span class="hero-badge">عن الموقع</span>
-                        <h1 class="hero-title">منصّة وصفة – بوابتك للحلويات الراقية</h1>
-                        <p class="hero-description">اكتشف وصفات عالمية فاخرة من أفضل الشيفات، من التيراميسو الإيطالي إلى الشوكولاتة البلجيكية، مع تقنيات احترافية ومواد مختارة بعناية.</p>
+                        <h1 class="hero-title">منصّة وصفة للحلويات الراقية</h1>
+                        <p class="hero-description">وصفات عالمية فاخرة وتقنيات احترافية من نخبة الشيفات.</p>
                         <div class="hero-actions">
                             <a href="{{ route('recipes') }}" class="hero-action primary-action">
                                 <span>ابدأ اكتشاف الوصفات</span>
