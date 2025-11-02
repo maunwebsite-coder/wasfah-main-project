@@ -1061,11 +1061,11 @@
                 border-radius: 1.5rem;
             }
             .hero-slide {
-                padding: 0.85rem;
-                gap: 0.75rem;
+                padding: 0.75rem;
+                gap: 0.65rem;
             }
             .hero-slider {
-                margin-bottom: 0.45rem;
+                margin-bottom: 0.35rem;
             }
             .hero-main-card {
                 padding: 0;
@@ -1079,10 +1079,22 @@
                 padding: 0.5rem 1.15rem;
             }
             .hero-main-image {
-                max-height: 190px;
+                max-height: 160px;
             }
             .hero-media {
-                min-height: 140px;
+                min-height: 120px;
+            }
+            .hero-content {
+                gap: 0.7rem;
+            }
+            .hero-title {
+                font-size: 1.7rem;
+            }
+            .hero-description {
+                font-size: 0.95rem;
+            }
+            .hero-features {
+                gap: 0.5rem;
             }
             .hero-latest-card {
                 border-radius: 1.5rem;
