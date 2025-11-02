@@ -144,7 +144,7 @@
     .recipes-filter-card {
         background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
         border-radius: 1.75rem;
-        padding: clamp(1.75rem, 4vw, 2.5rem);
+        padding: clamp(1.2rem, 3vw, 2rem);
         box-shadow: 0 28px 60px rgba(249, 115, 22, 0.18);
         border: 1px solid rgba(249, 115, 22, 0.16);
         max-width: 920px;
@@ -152,11 +152,11 @@
     }
     .recipes-filter-form {
         display: grid;
-        gap: 1.5rem;
+        gap: 1.15rem;
     }
     .recipes-filter-grid {
         display: flex;
-        gap: 1rem;
+        gap: 0.85rem;
         align-items: stretch;
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -724,7 +724,7 @@
             border-radius: 0.75rem;
         }
         .recipes-filter-card {
-            padding: 1.25rem;
+            padding: 1rem;
             border-radius: 1.25rem;
         }
         .recipes-field__label {
