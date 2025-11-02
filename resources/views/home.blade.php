@@ -134,6 +134,54 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+        .featured-workshops-swiper {
+            padding-block-end: 1rem;
+        }
+        .featured-workshops-swiper .swiper-slide {
+            display: flex;
+            height: auto;
+        }
+        .featured-workshops-swiper .workshop-card {
+            flex: 1;
+        }
+        .featured-workshops-pagination {
+            position: static;
+            margin-top: 1.5rem;
+        }
+        .featured-workshops-pagination .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background: rgba(249, 115, 22, 0.3);
+            opacity: 1;
+        }
+        .featured-workshops-pagination .swiper-pagination-bullet-active {
+            background: var(--wasfa-primary-strong);
+        }
+        .featured-workshops-nav button {
+            width: 44px;
+            height: 44px;
+            border-radius: 9999px;
+            border: 1px solid rgba(249, 115, 22, 0.28);
+            background: #ffffff;
+            color: var(--wasfa-primary-strong);
+            box-shadow: 0 16px 32px rgba(249, 115, 22, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .featured-workshops-nav button:hover {
+            background: var(--wasfa-primary);
+            color: #ffffff;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+        .featured-workshops-nav button.swiper-button-disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         
         /* Workshop Card Image Improvements */
         .workshop-card img {
@@ -1378,100 +1426,115 @@
             </div>
             
             @if($workshops->count() > 0)
-                <!-- Workshops Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    @foreach($workshops as $workshop)
-                        @php 
-                            $isFull = $workshop->bookings_count >= $workshop->max_participants; 
-                            $isRegistrationClosed = !$workshop->is_registration_open;
-                            
-                            // Debug information (remove in production)
-                            // Uncomment the line below to debug registration status
-                            // dd([
-                            //     'workshop_id' => $workshop->id,
-                            //     'title' => $workshop->title,
-                            //     'registration_deadline' => $workshop->registration_deadline,
-                            //     'is_upcoming' => $workshop->is_upcoming,
-                            //     'is_registration_open' => $workshop->is_registration_open,
-                            //     'isRegistrationClosed' => $isRegistrationClosed,
-                            //     'now' => now(),
-                            // ]);
-                            
-                            // Temporary debug display (remove in production)
-                            // Uncomment the lines below to see debug information
-                            // @if($isRegistrationClosed)
-                            //     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-2">
-                            //         DEBUG: Registration is closed for {{ $workshop->title }}
-                            //     </div>
-                            // @endif
-                        @endphp
-                        <div class="workshop-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-                            <div class="relative">
-                                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
-                                     alt="{{ $workshop->title }}"
-                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                                @if($isFull)
-                                <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                    <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">اكتمل العدد</span>
-                                </div>
-                                @elseif($isRegistrationClosed)
-                                <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                    <span class="text-white font-bold text-lg bg-yellow-500 px-4 py-2 rounded-full">
-                                        <i class="fas fa-clock ml-2"></i>
-                                        انتهى التسجيل
-                                    </span>
-                                </div>
-                                @endif
-                                <div class="absolute top-4 right-4 bg-orange-500 text-white text-sm font-semibold px-3 py-1 rounded-full">{{ $workshop->price }} {{ $workshop->currency }}</div>
-                            </div>
-                            
-                            <div class="p-6 flex flex-col flex-grow">
-                                <div class="mb-2">
-                                    <span class="text-sm font-semibold {{ $workshop->is_online ? 'text-blue-600' : 'text-green-600' }}">
-                                        {{ $workshop->is_online ? 'اونلاين' : 'حضوري' }}
-                                    </span>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $workshop->title }}</h3>
-                                <p class="text-gray-600 mb-4">مع {{ $workshop->instructor }}</p>
-                                <div class="flex items-center text-gray-500 text-sm mb-4">
-                                    <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $workshop->start_date->format('d M, Y') }}
-                                </div>
-                                <div class="flex items-center text-gray-500 text-sm mb-4">
-                                    <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
-                                </div>
-                                <div class="flex items-center text-gray-500 text-sm mb-4">
-                                    <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
-                                </div>
-                                
-                                <!-- الأزرار المثبتة في الأسفل -->
-                                <div class="mt-auto pt-4 border-t border-gray-100">
-                                    <div class="flex gap-3 items-center">
-                                        @if($isFull)
-                                        <button class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
-                                            <i class="fas fa-lock ml-2"></i>
-                                            الورشة مكتملة
-                                        </button>
-                                        @elseif($isRegistrationClosed)
-                                            <button class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
-                                                <i class="fas fa-clock ml-2"></i>
-                                                انتهى التسجيل
-                                            </button>
-                                        @else
-                                            <button onclick="unifiedBooking({{ $workshop->id }}, '{{ $workshop->title }}', '{{ $workshop->formatted_price }}', '{{ $workshop->start_date->format('d M, Y') }}', '{{ $workshop->instructor }}', '{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}', '{{ $workshop->registration_deadline->format('d M, Y') }}')" 
-                                                    class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm">
-                                                <i class="fab fa-whatsapp ml-2"></i>
-                                                احجز الآن
-                                            </button>
-                                        @endif
-                                        <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
-                                            <i class="fas fa-info-circle text-sm ml-2 group-hover:text-orange-500 transition-colors"></i>
-                                            <span class="text-sm">تفاصيل</span>
-                                        </a>
+                <div class="relative">
+                    <div class="swiper featured-workshops-swiper">
+                        <div class="swiper-wrapper">
+                            @foreach($workshops as $workshop)
+                                @php 
+                                    $isFull = $workshop->bookings_count >= $workshop->max_participants; 
+                                    $isRegistrationClosed = !$workshop->is_registration_open;
+                                    
+                                    // Debug information (remove in production)
+                                    // Uncomment the line below to debug registration status
+                                    // dd([
+                                    //     'workshop_id' => $workshop->id,
+                                    //     'title' => $workshop->title,
+                                    //     'registration_deadline' => $workshop->registration_deadline,
+                                    //     'is_upcoming' => $workshop->is_upcoming,
+                                    //     'is_registration_open' => $workshop->is_registration_open,
+                                    //     'isRegistrationClosed' => $isRegistrationClosed,
+                                    //     'now' => now(),
+                                    // ]);
+                                    
+                                    // Temporary debug display (remove in production)
+                                    // Uncomment the lines below to see debug information
+                                    // @if($isRegistrationClosed)
+                                    //     <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-2">
+                                    //         DEBUG: Registration is closed for {{ $workshop->title }}
+                                    //     </div>
+                                    // @endif
+                                @endphp
+                                <div class="swiper-slide">
+                                    <div class="workshop-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+                                        <div class="relative">
+                                            <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
+                                                 alt="{{ $workshop->title }}"
+                                                 onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                            @if($isFull)
+                                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">اكتمل العدد</span>
+                                            </div>
+                                            @elseif($isRegistrationClosed)
+                                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                <span class="text-white font-bold text-lg bg-yellow-500 px-4 py-2 rounded-full">
+                                                    <i class="fas fa-clock ml-2"></i>
+                                                    انتهى التسجيل
+                                                </span>
+                                            </div>
+                                            @endif
+                                            <div class="absolute top-4 right-4 bg-orange-500 text-white text-sm font-semibold px-3 py-1 rounded-full">{{ $workshop->price }} {{ $workshop->currency }}</div>
+                                        </div>
+                                        
+                                        <div class="p-6 flex flex-col flex-grow">
+                                            <div class="mb-2">
+                                                <span class="text-sm font-semibold {{ $workshop->is_online ? 'text-blue-600' : 'text-green-600' }}">
+                                                    {{ $workshop->is_online ? 'اونلاين' : 'حضوري' }}
+                                                </span>
+                                            </div>
+                                            <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $workshop->title }}</h3>
+                                            <p class="text-gray-600 mb-4">مع {{ $workshop->instructor }}</p>
+                                            <div class="flex items-center text-gray-500 text-sm mb-4">
+                                                <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $workshop->start_date->format('d M, Y') }}
+                                            </div>
+                                            <div class="flex items-center text-gray-500 text-sm mb-4">
+                                                <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
+                                            </div>
+                                            <div class="flex items-center text-gray-500 text-sm mb-4">
+                                                <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
+                                            </div>
+                                            
+                                            <!-- الأزرار المثبتة في الأسفل -->
+                                            <div class="mt-auto pt-4 border-t border-gray-100">
+                                                <div class="flex gap-3 items-center">
+                                                    @if($isFull)
+                                                    <button class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
+                                                        <i class="fas fa-lock ml-2"></i>
+                                                        الورشة مكتملة
+                                                    </button>
+                                                    @elseif($isRegistrationClosed)
+                                                        <button class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
+                                                            <i class="fas fa-clock ml-2"></i>
+                                                            انتهى التسجيل
+                                                        </button>
+                                                    @else
+                                                        <button onclick="unifiedBooking({{ $workshop->id }}, '{{ $workshop->title }}', '{{ $workshop->formatted_price }}', '{{ $workshop->start_date->format('d M, Y') }}', '{{ $workshop->instructor }}', '{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}', '{{ $workshop->registration_deadline->format('d M, Y') }}')" 
+                                                                class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm">
+                                                            <i class="fab fa-whatsapp ml-2"></i>
+                                                            احجز الآن
+                                                        </button>
+                                                    @endif
+                                                    <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
+                                                        <i class="fas fa-info-circle text-sm ml-2 group-hover:text-orange-500 transition-colors"></i>
+                                                        <span class="text-sm">تفاصيل</span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endforeach
                         </div>
-                    @endforeach
+                        <div class="featured-workshops-pagination swiper-pagination md:hidden"></div>
+                    </div>
+
+                <div class="featured-workshops-nav hidden md:flex items-center justify-end gap-3 mt-4">
+                        <button type="button" class="featured-workshops-prev" aria-label="الورشة السابقة">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button type="button" class="featured-workshops-next" aria-label="الورشة التالية">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
                 </div>
             @else
                 <!-- Empty State -->
@@ -1505,6 +1568,43 @@ document.addEventListener('DOMContentLoaded', function() {
             navigation: { 
                 nextEl: '#nextBtn', 
                 prevEl: '#prevBtn' 
+            },
+        });
+    }
+
+    // Initialize Swiper for workshops section
+    const workshopsSwiperEl = document.querySelector('.featured-workshops-swiper');
+    if (workshopsSwiperEl) {
+        new Swiper(workshopsSwiperEl, {
+            slidesPerView: 1.05,
+            spaceBetween: 16,
+            grabCursor: true,
+            watchOverflow: true,
+            navigation: {
+                nextEl: '.featured-workshops-next',
+                prevEl: '.featured-workshops-prev',
+            },
+            pagination: {
+                el: '.featured-workshops-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 1.3,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 1.8,
+                    spaceBetween: 24,
+                },
+                1024: {
+                    slidesPerView: 2.4,
+                    spaceBetween: 24,
+                },
+                1280: {
+                    slidesPerView: 3,
+                    spaceBetween: 28,
+                },
             },
         });
     }
