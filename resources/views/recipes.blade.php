@@ -153,20 +153,43 @@
         gap: 1.5rem;
     }
     .recipes-filter-grid {
-        display: grid;
+        display: flex;
         gap: 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        align-items: end;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        touch-action: pan-x;
+    }
+    .recipes-filter-grid::-webkit-scrollbar {
+        display: none;
     }
     .recipes-field {
-        display: grid;
-        gap: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 0 0 auto;
+        min-width: 200px;
+    }
+    .recipes-field--search {
+        flex: 1 1 360px;
+        min-width: min(360px, 65vw);
+    }
+    .recipes-field--select {
+        flex: 0 0 220px;
+        min-width: 220px;
     }
     .recipes-field__label {
+        display: inline-flex;
+        align-items: center;
         font-weight: 700;
         font-size: 0.85rem;
         color: #b45309;
         letter-spacing: 0.01em;
+        white-space: nowrap;
+        margin: 0;
     }
     .recipes-input,
     .recipes-select {
@@ -198,9 +221,14 @@
         border-color: rgba(249, 115, 22, 0.6);
         box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.14);
     }
+    .recipes-field > .recipes-search,
+    .recipes-field > .recipes-select {
+        flex: 1 1 auto;
+    }
     .recipes-search {
         position: relative;
         display: block;
+        width: 100%;
     }
     .recipes-search i {
         position: absolute;
@@ -224,10 +252,12 @@
     }
     .recipes-actions {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0.75rem;
         align-items: center;
         justify-content: flex-start;
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
     .recipes-submit {
         border: none;
@@ -597,22 +627,14 @@
                     </span>
                     <h1 class="recipes-hero__title">كل وصفات الحلويات في تجربة عرض واحدة</h1>
                     <p class="recipes-hero__subtitle">{{ $heroSubtitle }}</p>
-                    <div class="recipes-hero__meta">
+                @if(request('search'))
+                <div class="recipes-hero__meta">
                         <span>
-                            <i class="fas fa-sort-amount-down"></i>
-                            ترتيب: {{ $sortOptions[$currentSort] ?? $currentSort }}
+                            <i class="fas fa-search"></i>
+                            بحث: "{{ \Illuminate\Support\Str::limit(request('search'), 18) }}"
                         </span>
-                        <span>
-                            <i class="fas fa-sliders-h"></i>
-                            {{ $filterCount ? $filterCount . ' عوامل مفعّلة' : 'بدون عوامل تصفية إضافية' }}
-                        </span>
-                        @if(request('search'))
-                            <span>
-                                <i class="fas fa-search"></i>
-                                بحث: "{{ \Illuminate\Support\Str::limit(request('search'), 18) }}"
-                            </span>
-                        @endif
-                    </div>
+                </div>
+                @endif
                 </div>
                 <div class="recipes-hero__stats">
                     @foreach($heroStats as $stat)
@@ -637,7 +659,7 @@
             <div class="recipes-filter-card">
                 <form method="GET" action="{{ route('recipes') }}" class="recipes-filter-form" id="recipes-filter-form" autocomplete="off">
                     <div class="recipes-filter-grid">
-                        <label class="recipes-field">
+                        <label class="recipes-field recipes-field--search">
                             <span class="recipes-field__label">بحث عن وصفة</span>
                             <div class="recipes-search">
                                 <input
@@ -651,7 +673,7 @@
                                 <i class="fas fa-search"></i>
                             </div>
                         </label>
-                        <label class="recipes-field">
+                        <label class="recipes-field recipes-field--select">
                             <span class="recipes-field__label">التصنيفات</span>
                             <select name="category" class="recipes-select" onchange="this.form.submit()">
                                 <option value="">كل التصنيفات</option>
@@ -662,7 +684,7 @@
                                 @endforeach
                             </select>
                         </label>
-                        <label class="recipes-field">
+                        <label class="recipes-field recipes-field--select">
                             <span class="recipes-field__label">ترتيب النتائج</span>
                             <select name="sort" class="recipes-select" onchange="this.form.submit()">
                                 @foreach($sortOptions as $value => $label)

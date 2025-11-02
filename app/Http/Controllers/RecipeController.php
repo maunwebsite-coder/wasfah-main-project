@@ -37,7 +37,7 @@ class RecipeController extends Controller
         // Apply category filter
         if ($request->filled('category')) {
             $query->whereHas('category', function ($q) use ($request) {
-                $q->where('id', $request->get('category'));
+                $q->where('category_id', $request->get('category'));
             });
         }
 
