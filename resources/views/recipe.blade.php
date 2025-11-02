@@ -593,14 +593,14 @@
         }
 
         .hero-stats-grid {
-          grid-template-columns: unset;
-          grid-auto-flow: column;
-          grid-auto-columns: minmax(200px, 1fr);
+          display: flex;
+          gap: 0.55rem;
           overflow-x: auto;
-          padding: 1rem 1rem 0.75rem;
-          margin: 1.75rem -1rem 0;
+          padding: 0.65rem 0.75rem 0.5rem;
+          margin: 1.1rem -0.75rem 0;
           scroll-snap-type: x mandatory;
           -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
         }
 
         .hero-stats-grid::-webkit-scrollbar {
@@ -608,8 +608,32 @@
         }
 
         .hero-stat {
+          flex: 0 0 auto;
+          min-width: 150px;
+          padding: 0.7rem 0.8rem;
+          border-radius: 1.1rem;
+          gap: 0.6rem;
           scroll-snap-align: start;
-          min-width: 200px;
+        }
+
+        .hero-stat-icon {
+          width: 28px;
+          height: 28px;
+          font-size: 0.95rem;
+        }
+
+        .hero-stat-label {
+          font-size: 0.72rem;
+          margin-bottom: 0.1rem;
+        }
+
+        .hero-stat-value {
+          font-size: 0.95rem;
+        }
+
+        .hero-stat-sub {
+          font-size: 0.65rem;
+          margin-right: 0.35rem;
         }
 
         .hero-panel {
@@ -722,6 +746,52 @@
 
         .related-slider {
           padding-bottom: 0.5rem;
+        }
+      }
+
+      @media (max-width: 460px) {
+        .hero-stats-grid {
+          gap: 0.45rem;
+          padding: 0.55rem 0.65rem 0.4rem;
+          margin-top: 0.9rem;
+        }
+
+        .hero-stat {
+          min-width: 135px;
+          padding: 0.6rem 0.65rem;
+          gap: 0.45rem;
+        }
+
+        .hero-stat-icon {
+          width: 24px;
+          height: 24px;
+          font-size: 0.85rem;
+        }
+
+        .hero-stat-label {
+          font-size: 0.66rem;
+        }
+
+        .hero-stat-value {
+          font-size: 0.88rem;
+        }
+
+        .hero-stat-sub {
+          font-size: 0.6rem;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .hero-stat {
+          min-width: 120px;
+        }
+
+        .hero-stat-value {
+          font-size: 0.82rem;
+        }
+
+        .hero-stat-sub {
+          display: none;
         }
       }
       
