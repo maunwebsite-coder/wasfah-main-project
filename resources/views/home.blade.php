@@ -1057,15 +1057,15 @@
 
         @media (max-width: 640px) {
             .home-hero-shell {
-                padding: 0.75rem;
+                padding: 0.6rem;
                 border-radius: 1.5rem;
             }
             .hero-slide {
-                padding: 1.05rem;
-                gap: 0.85rem;
+                padding: 0.85rem;
+                gap: 0.75rem;
             }
             .hero-slider {
-                margin-bottom: 0.6rem;
+                margin-bottom: 0.45rem;
             }
             .hero-main-card {
                 padding: 0;
@@ -1079,10 +1079,10 @@
                 padding: 0.5rem 1.15rem;
             }
             .hero-main-image {
-                max-height: 220px;
+                max-height: 190px;
             }
             .hero-media {
-                min-height: 160px;
+                min-height: 140px;
             }
             .hero-latest-card {
                 border-radius: 1.5rem;
@@ -1326,6 +1326,12 @@
                                     'url' => route('tools'),
                                     'icon' => 'fas fa-toolbox',
                                     'type' => 'primary',
+                                ],
+                                [
+                                    'label' => 'الأدوات المحفوظة',
+                                    'url' => route('saved.index'),
+                                    'icon' => 'fas fa-heart',
+                                    'type' => 'secondary',
                                 ],
                             ],
                         ],
@@ -1801,7 +1807,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize hero swiper
     const heroSliderEl = document.querySelector('.hero-slider');
     if (heroSliderEl) {
-        const heroInitialSlide = window.innerWidth <= 640 ? 2 : 0;
+        const heroInitialSlide = window.innerWidth <= 640 ? 1 : 0;
         new Swiper(heroSliderEl, {
             loop: true,
             speed: 700,
