@@ -193,6 +193,10 @@
         border: 1px solid rgba(249, 115, 22, 0.12);
         box-shadow: 0 12px 30px rgba(249, 115, 22, 0.08);
       }
+      .hero-stat.hero-stat--compact {
+        padding: 0.8rem 1rem;
+        gap: 0.7rem;
+      }
 
       .hero-stat-icon {
         display: flex;
@@ -219,6 +223,19 @@
         font-size: 1.1rem;
         font-weight: 700;
       }
+      .hero-stat-value.hero-stat-value--compact {
+        display: grid;
+        gap: 0.25rem;
+        font-size: 0.95rem;
+      }
+      .hero-stat-value.hero-stat-value--compact .hero-stat-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #4b5563;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
 
       .hero-stat-sub {
         display: inline-block;
@@ -236,15 +253,6 @@
         backdrop-filter: blur(8px);
       }
 
-      .hero-panel .author-meta span {
-        display: block;
-        color: #4b5563;
-        font-size: 0.95rem;
-      }
-
-      .hero-panel .author-meta span + span {
-        margin-top: 0.35rem;
-      }
 
       .hero-actions {
         display: grid;
@@ -638,12 +646,39 @@
 
         .hero-panel {
           width: 100%;
-          padding: 1.5rem;
-          margin-top: 1.25rem;
+          padding: 0 !important;
+          margin-top: 1.1rem;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
         }
 
         .hero-actions {
-          grid-template-columns: 1fr;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: nowrap;
+          gap: 0.2rem;
+          margin-top: 0.12rem !important;
+          padding: 0;
+        }
+
+        .hero-actions .btn,
+        .hero-actions button {
+          flex: 1 1 0%;
+          min-width: 0;
+          min-height: unset;
+          padding: 0.5rem 0.45rem;
+          font-size: 0.74rem;
+          border-radius: 10px;
+          justify-content: center;
+          line-height: 1.3;
+        }
+
+        .hero-actions button i {
+          font-size: 0.75rem;
+          margin-inline-start: 0.35rem;
+          margin-inline-end: 0;
         }
 
         .section-card {
@@ -779,6 +814,23 @@
         .hero-stat-sub {
           font-size: 0.6rem;
         }
+
+        .hero-actions {
+          gap: 0.15rem;
+          margin-top: 0.08rem !important;
+        }
+
+        .hero-actions .btn,
+        .hero-actions button {
+          padding: 0.45rem 0.4rem;
+          font-size: 0.66rem;
+          border-radius: 8px;
+        }
+
+        .hero-actions button i {
+          font-size: 0.62rem;
+          margin-inline-start: 0.25rem;
+        }
       }
 
       @media (max-width: 360px) {
@@ -792,6 +844,16 @@
 
         .hero-stat-sub {
           display: none;
+        }
+
+        .hero-actions .btn,
+        .hero-actions button {
+          padding: 0.38rem 0.3rem;
+          font-size: 0.56rem;
+        }
+
+        .hero-actions {
+          margin-top: 0.05rem !important;
         }
       }
       
@@ -1389,12 +1451,12 @@
                 </div>
               </div>
               @if($recipe->servings || $totalTime)
-                <div class="hero-stat">
-                  <span class="hero-stat-icon">
-                    <i class="fas fa-stopwatch"></i>
-                  </span>
-                  <div>
-                    <span class="hero-stat-label">
+              <div class="hero-stat hero-stat--compact">
+                <span class="hero-stat-icon">
+                  <i class="fas fa-stopwatch"></i>
+                </span>
+                <div>
+                  <span class="hero-stat-label">
                       @if($totalTime)
                         الوقت الإجمالي
                       @else
@@ -1418,20 +1480,21 @@
                   </div>
                 </div>
               @endif
+              <div class="hero-stat hero-stat--compact">
+                <span class="hero-stat-icon">
+                  <i class="fas fa-user"></i>
+                </span>
+                <div>
+                  <span class="hero-stat-label">صدر عن</span>
+                  <span class="hero-stat-value hero-stat-value--compact">
+                    <span class="hero-stat-line">{{ $recipe->author ?? 'فريق وصفة' }}</span>
+                    <span class="hero-stat-line">آخر تحديث {{ $recipe->updated_at->format('Y-m-d') }}</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="hero-panel lg:w-80 xl:w-96 p-6 md:p-7">
-            <div class="flex items-center gap-4 pb-5 border-b border-orange-100/60">
-              <img
-                src="/image/tnl.png"
-                alt="صورة مؤلف"
-                class="rounded-full w-16 h-16 shadow-lg border-2 border-white"
-              />
-              <div class="author-meta">
-                <span>بواسطة {{ $recipe->author ?? 'مجهول' }}</span>
-                <span class="text-sm text-gray-500">آخر تحديث: {{ $recipe->updated_at->format('Y-m-d') }}</span>
-              </div>
-            </div>
             <div class="hero-actions mt-6 no-print">
               <button 
                 id="save-recipe-page-btn"
