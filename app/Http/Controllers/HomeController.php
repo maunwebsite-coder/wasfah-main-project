@@ -75,7 +75,7 @@ class HomeController extends Controller
             }])
             ->withCount(['interactions as interactions_count'])
             ->withAvg('interactions', 'rating')
-            ->orderBy('created_at', 'desc')
+            ->inRandomOrder()
             ->limit(8)
             ->get();
 
