@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
+use Throwable;
 
 class RegisterController extends Controller
 {
@@ -61,9 +62,20 @@ class RegisterController extends Controller
             'expires_at' => now()->addMinutes(15),
         ]);
 
-        Mail::to($verification->email)->send(
-            new RegistrationVerificationCodeMail($verification->name, $verificationCode)
-        );
+        try {
+            Mail::to($verification->email)->send(
+                new RegistrationVerificationCodeMail($verification->name, $verificationCode)
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+            $verification->delete();
+
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withErrors([
+                    'email' => 'تعذر إرسال رسالة التحقق. يرجى المحاولة مرة أخرى لاحقاً أو التواصل معنا للحصول على المساعدة.',
+                ]);
+        }
 
         session([
             'register_verification_token' => $verification->token,
