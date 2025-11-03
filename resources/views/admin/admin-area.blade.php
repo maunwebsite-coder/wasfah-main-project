@@ -209,6 +209,23 @@
             </div>
         </div>
 
+        <!-- صفحة روابط Wasfah -->
+        <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+            <div class="admin-icon" style="background: linear-gradient(135deg, #f97316, #f59e0b);">
+                <i class="fas fa-link"></i>
+            </div>
+            <h3 class="admin-title">صفحة روابط Wasfah</h3>
+            <p class="admin-description">
+                فتح الصفحة الخاصة بالروابط الموحدة لاستخدامها في البايو ومتابعة تصميمها بسرعة.
+            </p>
+            <div class="mt-6">
+                <a href="{{ route('links') }}" target="_blank" rel="noopener" class="admin-btn">
+                    <i class="fas fa-external-link-alt ml-2"></i>
+                    فتح صفحة الروابط
+                </a>
+            </div>
+        </div>
+
         <!-- لوحة التحكم -->
         <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
             <div class="admin-icon">
@@ -284,4 +301,3 @@
     </div>
 </div>
 @endsection
-
