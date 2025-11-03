@@ -75,10 +75,18 @@ class ChefPublicProfileController extends Controller
 
         $stats = $this->buildChefStats($recipes);
 
-        return ViewFacade::first([
+        $viewName = collect([
             'chef.public-profile',
             'chef.profile-fallback',
-        ], [
+        ])->first(function (string $candidate): bool {
+            return ViewFacade::exists($candidate);
+        });
+
+        if (!$viewName) {
+            abort(500, 'Chef public profile view is missing.');
+        }
+
+        return view($viewName, [
             'chef' => $chef,
             'avatarUrl' => $this->resolveAvatarUrl($chef->avatar),
             'publicRecipes' => $publicRecipes,
