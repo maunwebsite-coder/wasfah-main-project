@@ -219,9 +219,9 @@
                 فتح الصفحة الخاصة بالروابط الموحدة لاستخدامها في البايو ومتابعة تصميمها بسرعة.
             </p>
             <div class="mt-6">
-                <a href="https://wasfah.ae/links" target="_blank" rel="noopener" class="admin-btn">
+                <a href="https://wasfah.ae/wasfah-links" target="_blank" rel="noopener" class="admin-btn">
                     <i class="fas fa-external-link-alt ml-2"></i>
-                    https://wasfah.ae/links
+                    https://wasfah.ae/wasfah-links
                 </a>
             </div>
         </div>

@@ -12,7 +12,7 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->n
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // صفحة روابط Wasfah للمنصات الاجتماعية
-Route::view('/links', 'links')->name('links');
+Route::view('/wasfah-links', 'links')->name('links');
 
 // مسار صفحة المصادقة الموحدة (تسجيل الدخول + إنشاء حساب)
 Route::get('/login', function () {
