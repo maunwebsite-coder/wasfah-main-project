@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>روابط وصفة | Wasfah Links</title>
-    <meta name="description" content="اكتشف أهم الروابط لخدمة Wasfah من مكان واحد؛ دورات، وصفات، متجر الهدايا، والنشرة البريدية.">
+    <meta name="description" content="اكتشف أهم الروابط لخدمة Wasfah من مكان واحد؛ دورات، وصفات، متجر الهدايا.">
     <meta property="og:title" content="روابط وصفة | Wasfah Links">
     <meta property="og:description" content="كل ما تحتاجه من Wasfah في صفحة واحدة.">
     <meta property="og:image" content="{{ asset('image/logo.png') }}">
@@ -528,7 +528,7 @@
             @endif
             <img class="hero-image" src="{{ asset('image/Brownies.png') }}" alt="صورة من وصفات وصفة">
             <h1 class="title">WASFAH</h1>
-            <p class="subtitle">كل الروابط التي تحتاجها لتجربة وصفة: ورش عمل، صناديق موسمية، أدوات، ونشرة ملهمة.</p>
+            <p class="subtitle">كل الروابط التي تحتاجها لتجربة وصفة: ورش عمل، أدوات.</p>
         </header>
 
         <nav class="socials" aria-label="روابط التواصل الاجتماعي">
