@@ -6,7 +6,9 @@ use App\Models\Recipe;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\View\View;
 
 class ChefPublicProfileController extends Controller
@@ -23,6 +25,7 @@ class ChefPublicProfileController extends Controller
         $viewer = Auth::user();
         $isOwner = $viewer && $viewer->id === $chef->id;
         $canViewExclusive = $isOwner;
+        $visibilityColumnExists = Schema::hasColumn('recipes', 'visibility');
 
         $recipes = $chef->recipes()
             ->approved()
@@ -42,11 +45,19 @@ class ChefPublicProfileController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $publicRecipes = $recipes
-            ->where('visibility', Recipe::VISIBILITY_PUBLIC)
-            ->values();
+        if (!$visibilityColumnExists) {
+            $recipes->each(function (Recipe $recipe) {
+                if (empty($recipe->visibility)) {
+                    $recipe->visibility = Recipe::VISIBILITY_PUBLIC;
+                }
+            });
+        }
 
-        $exclusiveRecipes = $canViewExclusive
+        $publicRecipes = $visibilityColumnExists
+            ? $recipes->where('visibility', Recipe::VISIBILITY_PUBLIC)->values()
+            : $recipes->values();
+
+        $exclusiveRecipes = ($visibilityColumnExists && $canViewExclusive)
             ? $recipes->where('visibility', Recipe::VISIBILITY_PRIVATE)->values()
             : collect();
 
@@ -64,7 +75,10 @@ class ChefPublicProfileController extends Controller
 
         $stats = $this->buildChefStats($recipes);
 
-        return view('chef.public-profile', [
+        return ViewFacade::first([
+            'chef.public-profile',
+            'chef.profile-fallback',
+        ], [
             'chef' => $chef,
             'avatarUrl' => $this->resolveAvatarUrl($chef->avatar),
             'publicRecipes' => $publicRecipes,
