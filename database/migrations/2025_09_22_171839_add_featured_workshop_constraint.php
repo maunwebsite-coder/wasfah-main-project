@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // إنشاء trigger للتحقق من أن ورشة واحدة فقط يمكن أن تكون مميزة
         DB::statement('
             CREATE TRIGGER check_featured_workshop_before_insert
@@ -45,6 +49,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('DROP TRIGGER IF EXISTS check_featured_workshop_before_insert');
         DB::statement('DROP TRIGGER IF EXISTS check_featured_workshop_before_update');
     }

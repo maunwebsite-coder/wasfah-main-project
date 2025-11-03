@@ -124,8 +124,11 @@ class DashboardController extends Controller
         // إحصائيات التقييمات
         $workshopReviews = WorkshopReview::count();
         $averageWorkshopRating = WorkshopReview::avg('rating') ?? 0;
-        $highRatedWorkshops = Workshop::whereHas('reviews', function($query) {
-            $query->havingRaw('AVG(rating) >= 4.5');
+        $highRatedWorkshops = Workshop::whereIn('id', function ($subquery) {
+            $subquery->select('workshop_id')
+                ->from('workshop_reviews')
+                ->groupBy('workshop_id')
+                ->havingRaw('AVG(rating) >= 4.5');
         })->count();
 
         // إحصائيات البحث والاستخدام
