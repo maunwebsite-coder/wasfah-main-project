@@ -1449,32 +1449,6 @@
                             ],
                         ],
                         [
-                            'badge' => 'الوصفات',
-                            'title' => 'مكتبة وصفات عالمية',
-                            'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
-                            'features' => [
-                                'تصنيفات حسب المستوى والمناسبة',
-                                'حفظ ومزامنة وصفاتك المفضلة',
-                            ],
-                            'image' => data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png')),
-                            'mobile_image' => data_get($heroMedia ?? [], 'recipe.mobile', data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png'))),
-                            'image_alt' => 'حلى براونيز فاخرة',
-                            'actions' => [
-                                [
-                                    'label' => 'ابدأ اكتشاف الوصفات',
-                                    'url' => route('recipes'),
-                                    'icon' => 'fas fa-utensils',
-                                    'type' => 'primary',
-                                ],
-                                [
-                                    'label' => 'الوصفات المحفوظة',
-                                    'url' => route('saved.index'),
-                                    'icon' => 'fas fa-bookmark',
-                                    'type' => 'secondary',
-                                ],
-                            ],
-                        ],
-                        [
                             'badge' => 'أدوات الشيف',
                             'title' => 'دليل أدوات الشيف',
                             'description' => 'اختيارات دقيقة لأدوات تساعدك على الإتقان.',
@@ -1496,6 +1470,32 @@
                                     'label' => 'الأدوات المحفوظة',
                                     'url' => route('saved.index'),
                                     'icon' => 'fas fa-heart',
+                                    'type' => 'secondary',
+                                ],
+                            ],
+                        ],
+                        [
+                            'badge' => 'الوصفات',
+                            'title' => 'مكتبة وصفات عالمية',
+                            'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
+                            'features' => [
+                                'تصنيفات حسب المستوى والمناسبة',
+                                'حفظ ومزامنة وصفاتك المفضلة',
+                            ],
+                            'image' => data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png')),
+                            'mobile_image' => data_get($heroMedia ?? [], 'recipe.mobile', data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png'))),
+                            'image_alt' => 'حلى براونيز فاخرة',
+                            'actions' => [
+                                [
+                                    'label' => 'ابدأ اكتشاف الوصفات',
+                                    'url' => route('recipes'),
+                                    'icon' => 'fas fa-utensils',
+                                    'type' => 'primary',
+                                ],
+                                [
+                                    'label' => 'الوصفات المحفوظة',
+                                    'url' => route('saved.index'),
+                                    'icon' => 'fas fa-bookmark',
                                     'type' => 'secondary',
                                 ],
                             ],
