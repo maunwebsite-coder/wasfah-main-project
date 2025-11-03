@@ -3,7 +3,57 @@
 @section('title', 'إدارة الوصفات - موقع وصفة')
 
 @php
-use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Facades\Storage;
+    use App\Models\Recipe;
+
+    $currentStatus = $status ?? 'all';
+    $statusCounts = $statusCounts ?? [];
+
+    $statusFilters = [
+        'all' => [
+            'label' => 'كل الوصفات',
+            'hint' => 'عرض جميع الحالات',
+            'value' => 'all',
+            'badge' => 'bg-gray-200 text-gray-700',
+        ],
+        'pending' => [
+            'label' => 'وصفات جديدة',
+            'hint' => 'تنتظر المراجعة والموافقة',
+            'value' => Recipe::STATUS_PENDING,
+            'badge' => 'bg-orange-100 text-orange-700',
+        ],
+        'approved' => [
+            'label' => 'وصفات معتمدة',
+            'hint' => 'منشورة في الموقع',
+            'value' => Recipe::STATUS_APPROVED,
+            'badge' => 'bg-emerald-100 text-emerald-700',
+        ],
+        'draft' => [
+            'label' => 'مسودات',
+            'hint' => 'لم يتم إرسالها بعد',
+            'value' => Recipe::STATUS_DRAFT,
+            'badge' => 'bg-slate-100 text-slate-600',
+        ],
+        'rejected' => [
+            'label' => 'مرفوضة',
+            'hint' => 'تحتاج تعديلات قبل الاعتماد',
+            'value' => Recipe::STATUS_REJECTED,
+            'badge' => 'bg-red-100 text-red-600',
+        ],
+    ];
+
+    $statusMeta = [
+        Recipe::STATUS_DRAFT => ['label' => 'مسودة', 'classes' => 'bg-gray-100 text-gray-700'],
+        Recipe::STATUS_PENDING => ['label' => 'قيد المراجعة', 'classes' => 'bg-orange-100 text-orange-700'],
+        Recipe::STATUS_APPROVED => ['label' => 'معتمدة', 'classes' => 'bg-emerald-100 text-emerald-700'],
+        Recipe::STATUS_REJECTED => ['label' => 'مرفوضة', 'classes' => 'bg-red-100 text-red-700'],
+    ];
+
+    $difficultyLabels = [
+        'easy' => 'سهل',
+        'medium' => 'متوسط',
+        'hard' => 'صعب',
+    ];
 @endphp
 
 @push('styles')
@@ -106,6 +156,38 @@ use Illuminate\Support\Facades\Storage;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
     }
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-success:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 9999px;
+        padding: 0.35rem 0.875rem;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+    .status-badge .dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 9999px;
+        background-color: currentColor;
+    }
+    .pending-row {
+        background: #fff7ed;
+    }
 </style>
 @endpush
 
@@ -135,9 +217,43 @@ use Illuminate\Support\Facades\Storage;
                 {{ session('success') }}
             </div>
         @endif
+        @if(session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <i class="fas fa-exclamation-triangle ml-2"></i>
+                {{ session('error') }}
+            </div>
+        @endif
 
         <!-- Recipes Table -->
         <div class="admin-card overflow-hidden">
+            <div class="px-6 pt-6 pb-4 border-b border-gray-100 bg-gray-50">
+                <div class="flex flex-wrap gap-3 items-center">
+                    @foreach($statusFilters as $key => $filter)
+                        @php
+                            $isActive = $currentStatus === $filter['value'];
+                            $count = $statusCounts[$key] ?? 0;
+                            $routeParams = $filter['value'] === 'all' ? [] : ['status' => $filter['value']];
+                            $url = empty($routeParams)
+                                ? route('admin.recipes.index')
+                                : route('admin.recipes.index', $routeParams);
+                        @endphp
+                        <a href="{{ $url }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl border transition {{ $isActive ? 'border-orange-300 bg-orange-50 shadow-sm' : 'border-gray-200 hover:border-orange-200 hover:bg-orange-50/50' }}">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-sm {{ $isActive ? 'text-orange-700' : 'text-gray-700' }}">
+                                    {{ $filter['label'] }}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    {{ $filter['hint'] }}
+                                </span>
+                            </div>
+                            <span class="ml-2 inline-flex items-center justify-center min-w-[2.5rem] px-2 py-1 text-xs font-semibold rounded-full {{ $filter['badge'] }}">
+                                {{ $count }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
             @if($recipes->count())
                 <div class="overflow-x-auto">
                     <table class="recipes-table">
@@ -145,45 +261,76 @@ use Illuminate\Support\Facades\Storage;
                             <tr>
                                 <th class="text-right">الوصفة</th>
                                 <th class="text-right">صاحب الوصفة</th>
+                                <th class="text-right">الحالة</th>
                                 <th class="text-right">المدة الإجمالية</th>
                                 <th class="text-right">عدد الحصص</th>
                                 <th class="text-right">التصنيف</th>
-                                <th class="text-right w-48">الإجراءات</th>
+                                <th class="text-right w-64">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($recipes as $recipe)
-                                <tr>
+                                @php
+                                    $statusInfo = $statusMeta[$recipe->status] ?? $statusMeta[Recipe::STATUS_DRAFT];
+                                    $difficultyLabel = $recipe->difficulty ? ($difficultyLabels[$recipe->difficulty] ?? ucfirst($recipe->difficulty)) : null;
+                                    $totalDuration = (int) ($recipe->prep_time ?? 0) + (int) ($recipe->cook_time ?? 0);
+                                    $servings = (int) ($recipe->servings ?? 0);
+                                    $imageSrc = $recipe->image
+                                        ? Storage::disk('public')->url($recipe->image)
+                                        : ($recipe->image_url ?: asset('image/logo.png'));
+                                    $ownerName = $recipe->chef?->name ?? ($recipe->author ?: 'فريق وصفة');
+                                    $ownerSubtitle = $recipe->chef ? 'شيف مسجل' : 'فريق وصفة';
+                                @endphp
+                                <tr class="{{ $recipe->status === Recipe::STATUS_PENDING ? 'pending-row' : '' }}">
                                     <td>
                                         <div class="flex items-center gap-4">
                                             <div class="relative flex-shrink-0">
                                                 <img 
-                                                    src="{{ $recipe->image ? Storage::disk('public')->url($recipe->image) : $recipe->image_url }}" 
+                                                    src="{{ $imageSrc }}" 
                                                     alt="{{ $recipe->title }}" 
                                                     class="recipe-thumbnail"
                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
-                                                <span class="difficulty-badge">
-                                                    {{ ucfirst($recipe->difficulty) }}
-                                                </span>
+                                                @if($difficultyLabel)
+                                                    <span class="difficulty-badge">
+                                                        {{ $difficultyLabel }}
+                                                    </span>
+                                                @endif
                                             </div>
                                             <div class="space-y-1">
                                                 <div class="font-semibold text-gray-900">
                                                     {{ $recipe->title }}
                                                 </div>
                                                 <p class="text-sm text-gray-500 line-clamp-2 max-w-xs">
-                                                    {{ $recipe->description }}
+                                                    {{ \Illuminate\Support\Str::limit($recipe->description, 110) }}
                                                 </p>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="text-sm text-gray-600">
-                                        {{ $recipe->author }}
+                                        <div class="font-semibold text-gray-900">{{ $ownerName }}</div>
+                                        <p class="text-xs text-gray-500">{{ $ownerSubtitle }}</p>
+                                        @if($recipe->chef)
+                                            <p class="text-xs text-gray-400">{{ $recipe->chef->email }}</p>
+                                        @endif
                                     </td>
                                     <td class="text-sm text-gray-600">
-                                        {{ (int)$recipe->prep_time + (int)$recipe->cook_time }} دقيقة
+                                        <span class="status-badge {{ $statusInfo['classes'] }}">
+                                            <span class="dot"></span>
+                                            {{ $statusInfo['label'] }}
+                                        </span>
+                                        @if($recipe->status === Recipe::STATUS_PENDING)
+                                            <p class="mt-1 text-xs text-orange-600">بانتظار مراجعة الإدارة</p>
+                                        @elseif($recipe->status === Recipe::STATUS_REJECTED)
+                                            <p class="mt-1 text-xs text-red-600">تمت إعادتها للشيف للتعديل</p>
+                                        @elseif($recipe->status === Recipe::STATUS_APPROVED && $recipe->approved_at)
+                                            <p class="mt-1 text-xs text-emerald-600">اعتمدت بتاريخ {{ $recipe->approved_at->locale('ar')->translatedFormat('d F Y') }}</p>
+                                        @endif
                                     </td>
                                     <td class="text-sm text-gray-600">
-                                        {{ (int)$recipe->servings }} حصة
+                                        {{ $totalDuration > 0 ? $totalDuration . ' دقيقة' : 'غير محدد' }}
+                                    </td>
+                                    <td class="text-sm text-gray-600">
+                                        {{ $servings > 0 ? $servings . ' حصة' : 'غير محدد' }}
                                     </td>
                                     <td class="text-sm text-gray-600">
                                         {{ $recipe->category->name ?? 'غير محدد' }}
@@ -203,7 +350,7 @@ use Illuminate\Support\Facades\Storage;
                                             <form action="{{ route('admin.recipes.destroy', $recipe) }}" 
                                                   method="POST" 
                                                   class="inline-flex"
-                                                  onsubmit="return confirm('هل أنت متأكد من حذف هذه الوصفة؟')">
+                                                  onsubmit="return confirm('هل أنت متأكد من حذف هذه الوصفة؟');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn-danger btn-sm inline-flex items-center gap-1">
@@ -211,6 +358,30 @@ use Illuminate\Support\Facades\Storage;
                                                     حذف
                                                 </button>
                                             </form>
+                                            @if($recipe->status !== Recipe::STATUS_APPROVED)
+                                                <form method="POST" 
+                                                      action="{{ route('admin.recipes.approve', $recipe) }}" 
+                                                      class="inline-flex"
+                                                      onsubmit="return confirm('هل تريد اعتماد هذه الوصفة ونشرها الآن؟');">
+                                                    @csrf
+                                                    <button type="submit" class="btn-success btn-sm inline-flex items-center gap-1">
+                                                        <i class="fas fa-check ml-1"></i>
+                                                        اعتماد
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            @if($recipe->status === Recipe::STATUS_PENDING)
+                                                <form method="POST" 
+                                                      action="{{ route('admin.recipes.reject', $recipe) }}" 
+                                                      class="inline-flex"
+                                                      onsubmit="return confirm('هل تريد رفض هذه الوصفة وإعادتها للشيف؟');">
+                                                    @csrf
+                                                    <button type="submit" class="btn-danger btn-sm inline-flex items-center gap-1">
+                                                        <i class="fas fa-times ml-1"></i>
+                                                        رفض
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

@@ -2,6 +2,23 @@
 
 @section('title', $recipe->title . ' - إدارة الوصفات')
 
+@php
+    use App\Models\Recipe;
+
+    $statusMeta = [
+        Recipe::STATUS_DRAFT => ['label' => 'مسودة', 'classes' => 'bg-gray-100 text-gray-700'],
+        Recipe::STATUS_PENDING => ['label' => 'قيد المراجعة', 'classes' => 'bg-orange-100 text-orange-700'],
+        Recipe::STATUS_APPROVED => ['label' => 'معتمدة', 'classes' => 'bg-emerald-100 text-emerald-700'],
+        Recipe::STATUS_REJECTED => ['label' => 'مرفوضة', 'classes' => 'bg-red-100 text-red-700'],
+    ];
+
+    $difficultyLabels = [
+        'easy' => 'سهل',
+        'medium' => 'متوسط',
+        'hard' => 'صعب',
+    ];
+@endphp
+
 @push('styles')
 <style>
     .admin-card {
@@ -58,6 +75,40 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
     }
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-success:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 9999px;
+        padding: 0.35rem 0.875rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    .status-badge .dot {
+        width: 0.6rem;
+        height: 0.6rem;
+        border-radius: 9999px;
+        background-color: currentColor;
+    }
+    .status-note {
+        font-size: 0.85rem;
+    }
     .info-item {
         display: flex;
         align-items: center;
@@ -91,14 +142,49 @@
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4 max-w-6xl">
+        @php
+            $status = $statusMeta[$recipe->status] ?? $statusMeta[Recipe::STATUS_DRAFT];
+            $difficultyLabel = $recipe->difficulty ? ($difficultyLabels[$recipe->difficulty] ?? 'غير محدد') : 'غير محدد';
+        @endphp
         <!-- Header -->
         <div class="admin-card p-6 mb-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $recipe->title }}</h1>
-                    <p class="text-gray-600">عرض تفاصيل الوصفة</p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <p class="text-gray-600">عرض تفاصيل الوصفة</p>
+                        <span class="status-badge {{ $status['classes'] }}">
+                            <span class="dot"></span>
+                            {{ $status['label'] }}
+                        </span>
+                    </div>
+                    @if($recipe->status === Recipe::STATUS_PENDING)
+                        <p class="status-note text-orange-600 mt-2">هذه الوصفة بانتظار موافقة الإدارة قبل النشر للجمهور.</p>
+                    @elseif($recipe->status === Recipe::STATUS_REJECTED)
+                        <p class="status-note text-red-600 mt-2">تم رفض الوصفة. يرجى التواصل مع الشيف لتوضيح التعديلات المطلوبة.</p>
+                    @elseif($recipe->status === Recipe::STATUS_APPROVED && $recipe->approved_at)
+                        <p class="status-note text-emerald-600 mt-2">تم اعتماد الوصفة بتاريخ {{ $recipe->approved_at->locale('ar')->translatedFormat('d F Y - h:i a') }}.</p>
+                    @endif
                 </div>
-                <div class="flex space-x-4 rtl:space-x-reverse mt-4 md:mt-0">
+                <div class="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
+                    @if($recipe->status !== Recipe::STATUS_APPROVED)
+                        <form method="POST" action="{{ route('admin.recipes.approve', $recipe) }}" onsubmit="return confirm('هل تريد اعتماد هذه الوصفة ونشرها الآن؟');">
+                            @csrf
+                            <button type="submit" class="btn-success">
+                                <i class="fas fa-check ml-2"></i>
+                                اعتماد الوصفة
+                            </button>
+                        </form>
+                    @endif
+                    @if($recipe->status === Recipe::STATUS_PENDING)
+                        <form method="POST" action="{{ route('admin.recipes.reject', $recipe) }}" onsubmit="return confirm('هل تريد رفض هذه الوصفة وإعادتها للشيف؟');">
+                            @csrf
+                            <button type="submit" class="btn-danger">
+                                <i class="fas fa-times ml-2"></i>
+                                رفض الوصفة
+                            </button>
+                        </form>
+                    @endif
                     <a href="{{ route('admin.recipes.edit', $recipe) }}" class="btn-primary">
                         <i class="fas fa-edit ml-2"></i>
                         تعديل
@@ -150,8 +236,11 @@
                         <div class="info-item">
                             <i class="fas fa-user info-icon"></i>
                             <div>
-                                <span class="text-gray-500 text-sm">المؤلف</span>
-                                <p class="font-semibold text-gray-900">{{ $recipe->author }}</p>
+                                <span class="text-gray-500 text-sm">صاحب الوصفة</span>
+                                <p class="font-semibold text-gray-900">{{ $recipe->chef?->name ?? $recipe->author }}</p>
+                                @if($recipe->chef)
+                                    <p class="text-xs text-gray-500">{{ $recipe->chef->email }}</p>
+                                @endif
                             </div>
                         </div>
                         
@@ -167,14 +256,7 @@
                             <i class="fas fa-signal info-icon"></i>
                             <div>
                                 <span class="text-gray-500 text-sm">مستوى الصعوبة</span>
-                                <p class="font-semibold text-gray-900">
-                                    @switch($recipe->difficulty)
-                                        @case('easy') سهل @break
-                                        @case('medium') متوسط @break
-                                        @case('hard') صعب @break
-                                        @default غير محدد
-                                    @endswitch
-                                </p>
+                                <p class="font-semibold text-gray-900">{{ $difficultyLabel }}</p>
                             </div>
                         </div>
                         
@@ -182,7 +264,7 @@
                             <i class="fas fa-clock info-icon"></i>
                             <div>
                                 <span class="text-gray-500 text-sm">وقت التحضير</span>
-                                <p class="font-semibold text-gray-900">{{ (int)$recipe->prep_time }} دقيقة</p>
+                                <p class="font-semibold text-gray-900">{{ (int) ($recipe->prep_time ?? 0) > 0 ? (int) $recipe->prep_time . ' دقيقة' : 'غير محدد' }}</p>
                             </div>
                         </div>
                         
@@ -190,7 +272,7 @@
                             <i class="fas fa-fire info-icon"></i>
                             <div>
                                 <span class="text-gray-500 text-sm">وقت الطبخ</span>
-                                <p class="font-semibold text-gray-900">{{ (int)$recipe->cook_time }} دقيقة</p>
+                                <p class="font-semibold text-gray-900">{{ (int) ($recipe->cook_time ?? 0) > 0 ? (int) $recipe->cook_time . ' دقيقة' : 'غير محدد' }}</p>
                             </div>
                         </div>
                         
@@ -198,7 +280,7 @@
                             <i class="fas fa-users info-icon"></i>
                             <div>
                                 <span class="text-gray-500 text-sm">عدد الحصص</span>
-                                <p class="font-semibold text-gray-900">{{ (int)$recipe->servings }} حصة</p>
+                                <p class="font-semibold text-gray-900">{{ (int) ($recipe->servings ?? 0) > 0 ? (int) $recipe->servings . ' حصة' : 'غير محدد' }}</p>
                             </div>
                         </div>
                         

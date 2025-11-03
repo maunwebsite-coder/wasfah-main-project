@@ -22,6 +22,9 @@ class AdminUserSeeder extends Seeder
                 'email' => 'admin@wasfah.com',
                 'password' => Hash::make('password'),
                 'is_admin' => true,
+                'role' => \App\Models\User::ROLE_ADMIN,
+                'chef_status' => \App\Models\User::CHEF_STATUS_APPROVED,
+                'chef_approved_at' => now(),
             ]
         );
     }

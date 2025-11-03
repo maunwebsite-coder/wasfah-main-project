@@ -46,6 +46,8 @@ class SearchController extends Controller
                     }])
                     ->withCount(['interactions as interactions_count'])
                     ->withAvg('interactions', 'rating')
+                    ->where('recipes.status', Recipe::STATUS_APPROVED)
+                    ->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC)
                     ->where(function ($q) use ($query) {
                         $q->where('recipes.title', 'like', "%{$query}%")
                           ->orWhere('recipes.description', 'like', "%{$query}%")
@@ -301,6 +303,8 @@ class SearchController extends Controller
             }])
             ->withCount(['interactions as interactions_count'])
             ->withAvg('interactions', 'rating')
+            ->where('recipes.status', Recipe::STATUS_APPROVED)
+            ->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC)
             ->where(function ($q) use ($query) {
                 $q->where('recipes.title', 'like', "%{$query}%")
                   ->orWhere('recipes.description', 'like', "%{$query}%")

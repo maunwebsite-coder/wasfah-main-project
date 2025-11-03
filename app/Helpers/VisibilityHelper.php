@@ -127,7 +127,7 @@ class VisibilityHelper
             return false;
         }
 
-        return Auth::user()->is_admin ?? false;
+        return Auth::user()->isAdmin();
     }
 
     /**

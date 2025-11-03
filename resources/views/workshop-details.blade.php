@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', $workshop->title . ' - موقع وصفة')
 
@@ -455,7 +455,7 @@
 
 @section('content')
 @php
-    $showAdminMetrics = auth()->check() && auth()->user()->is_admin;
+    $showAdminMetrics = auth()->check() && auth()->user()->isAdmin();
 @endphp
 <div class="min-h-screen" style="background-color: #f3f4f6;">
     <!-- Workshop Hero Section -->

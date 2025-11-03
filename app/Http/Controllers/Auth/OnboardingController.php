@@ -1,0 +1,224 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
+class OnboardingController extends Controller
+{
+    /**
+     * Supported countries for phone dialing codes.
+     *
+     * @var array<string, array{name: string, dial_code: string}>
+     */
+    private const COUNTRIES = [
+        'SA' => ['name' => 'المملكة العربية السعودية', 'dial_code' => '+966'],
+        'AE' => ['name' => 'الإمارات العربية المتحدة', 'dial_code' => '+971'],
+        'KW' => ['name' => 'الكويت', 'dial_code' => '+965'],
+        'QA' => ['name' => 'قطر', 'dial_code' => '+974'],
+        'BH' => ['name' => 'البحرين', 'dial_code' => '+973'],
+        'OM' => ['name' => 'سلطنة عُمان', 'dial_code' => '+968'],
+        'JO' => ['name' => 'الأردن', 'dial_code' => '+962'],
+        'EG' => ['name' => 'مصر', 'dial_code' => '+20'],
+        'IQ' => ['name' => 'العراق', 'dial_code' => '+964'],
+        'MA' => ['name' => 'المغرب', 'dial_code' => '+212'],
+        'LB' => ['name' => 'لبنان', 'dial_code' => '+961'],
+    ];
+
+    /**
+     * Display the onboarding form for newly authenticated users.
+     */
+    public function show(Request $request)
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if (!$this->requiresOnboarding($user)) {
+            if ($user->chef_status === User::CHEF_STATUS_PENDING) {
+                return view('auth.onboarding-status', [
+                    'user' => $user,
+                ]);
+            }
+
+            $messageType = 'success';
+            $messageText = 'ملفك الشخصي مكتمل بالفعل.';
+
+            return redirect()
+                ->intended($this->redirectPath($user))
+                ->with($messageType, $messageText);
+        }
+
+        return view('auth.onboarding', [
+            'user' => $user,
+            'pendingWorkshopId' => session('pending_workshop_booking'),
+            'countries' => $this->availableCountries(),
+        ]);
+    }
+
+    /**
+     * Handle onboarding submission.
+     */
+    public function store(Request $request)
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $countries = $this->availableCountries();
+        $countryCodes = array_keys($countries);
+
+        $data = $request->validate([
+            'country_code' => ['required', Rule::in($countryCodes)],
+            'phone' => ['required', 'string', 'max:30'],
+            'instagram_url' => ['nullable', 'url', 'max:255', 'required_without:youtube_url'],
+            'instagram_followers' => ['nullable', 'integer', 'min:0', 'required_with:instagram_url'],
+            'youtube_url' => ['nullable', 'url', 'max:255', 'required_without:instagram_url'],
+            'youtube_followers' => ['nullable', 'integer', 'min:0', 'required_with:youtube_url'],
+            'chef_specialty_area' => ['required', 'in:food'],
+            'chef_specialty_description' => ['required', 'string', 'min:20', 'max:2000'],
+        ], [
+            'country_code.required' => 'يرجى اختيار الدولة.',
+            'country_code.in' => 'الدولة المختارة غير مدعومة حالياً.',
+            'instagram_url.required_without' => 'يرجى إدخال حساب إنستغرام أو قناة يوتيوب واحدة على الأقل.',
+            'youtube_url.required_without' => 'يرجى إدخال حساب إنستغرام أو قناة يوتيوب واحدة على الأقل.',
+            'instagram_followers.required_with' => 'يرجى إدخال عدد المتابعين لحساب إنستغرام.',
+            'youtube_followers.required_with' => 'يرجى إدخال عدد المتابعين لقناة يوتيوب.',
+            'chef_specialty_area.in' => 'يجب أن يكون تخصصك الرئيسي في مجال الطعام والطبخ للانضمام كـ شيف.',
+            'chef_specialty_description.min' => 'يرجى تقديم وصف مفصل عن خبرتك في مجال الطبخ (20 حرفاً على الأقل).',
+        ]);
+
+        $countryCode = $data['country_code'];
+        $dialCode = $countries[$countryCode]['dial_code'] ?? null;
+        $fullPhone = $this->normalizePhoneNumber($dialCode, $data['phone']);
+
+        if (!$fullPhone) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'phone' => 'يرجى إدخال رقم جوال صالح.',
+                ]);
+        }
+
+        $instagramFollowers = (int) ($data['instagram_followers'] ?? 0);
+        $youtubeFollowers = (int) ($data['youtube_followers'] ?? 0);
+        $maxFollowers = max($instagramFollowers, $youtubeFollowers);
+
+        if ($maxFollowers < 500) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'instagram_followers' => 'يجب أن تمتلك ما لا يقل عن 500 متابع على إحدى المنصات للانضمام كـ شيف.',
+                ]);
+        }
+
+        $user->country_code = $countryCode;
+        $user->phone_country_code = $this->ensureDialCodePrefix($dialCode ?? '');
+        $user->phone = $fullPhone;
+        $user->instagram_url = $data['instagram_url'] ?? null;
+        $user->instagram_followers = $instagramFollowers;
+        $user->youtube_url = $data['youtube_url'] ?? null;
+        $user->youtube_followers = $youtubeFollowers;
+        $user->chef_specialty_area = $data['chef_specialty_area'];
+        $user->chef_specialty_description = $data['chef_specialty_description'];
+
+        if (!$user->isAdmin()) {
+            $user->role = User::ROLE_CHEF;
+
+            if ($user->chef_status !== User::CHEF_STATUS_APPROVED) {
+                $user->chef_status = User::CHEF_STATUS_PENDING;
+                $user->chef_approved_at = null;
+            }
+        }
+
+        $user->save();
+
+        $redirectTo = $this->redirectPath($user);
+
+        return redirect($redirectTo)
+            ->with('success', 'شكراً لك! تم استلام طلبك للانضمام كـ شيف، وسيتم مراجعته من قِبل الإدارة.');
+    }
+
+    private function requiresOnboarding(User $user): bool
+    {
+        if ($user->isAdmin()) {
+            return false;
+        }
+
+        if (is_null($user->chef_status)) {
+            return true;
+        }
+
+        if (!$user->hasCompletedChefProfile()) {
+            return true;
+        }
+
+        return in_array($user->chef_status, [
+            User::CHEF_STATUS_NEEDS_PROFILE,
+            User::CHEF_STATUS_REJECTED,
+        ], true);
+    }
+
+    private function redirectPath(User $user): string
+    {
+        $pendingWorkshopId = session('pending_workshop_booking');
+        if ($pendingWorkshopId) {
+            $workshop = \App\Models\Workshop::find($pendingWorkshopId);
+            if ($workshop) {
+                session()->forget('pending_workshop_booking');
+                return route('workshop.show', $workshop->slug);
+            }
+        }
+
+        session()->forget('pending_workshop_booking');
+
+        if ($user->isChef()) {
+            return route('chef.recipes.index');
+        }
+
+        return route('home');
+    }
+
+    /**
+     * @return array<string, array{name: string, dial_code: string}>
+     */
+    private function availableCountries(): array
+    {
+        return self::COUNTRIES;
+    }
+
+    private function normalizePhoneNumber(?string $dialCode, string $number): ?string
+    {
+        if (!$dialCode) {
+            return null;
+        }
+
+        $normalizedDialCode = $this->ensureDialCodePrefix($dialCode);
+        $digits = preg_replace('/\D+/', '', $number) ?? '';
+        $digits = ltrim($digits, '0');
+
+        if ($digits === '') {
+            return null;
+        }
+
+        return $normalizedDialCode . $digits;
+    }
+
+    private function ensureDialCodePrefix(string $dialCode): string
+    {
+        $cleanDialCode = preg_replace('/[^0-9+]/', '', $dialCode) ?? '';
+
+        return str_starts_with($cleanDialCode, '+')
+            ? $cleanDialCode
+            : '+' . ltrim($cleanDialCode, '+');
+    }
+}

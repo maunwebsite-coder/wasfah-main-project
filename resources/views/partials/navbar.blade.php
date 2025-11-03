@@ -5,6 +5,31 @@
         ['route' => 'workshops', 'icon' => 'fas fa-graduation-cap', 'label' => 'ورشات العمل'],
         ['route' => 'tools', 'icon' => 'fas fa-kitchen-set', 'label' => 'أدوات الشيف'],
     ];
+    $authUser = Auth::user();
+    $chefLinkData = null;
+    if ($authUser) {
+        if ($authUser->role !== \App\Models\User::ROLE_CHEF) {
+            $chefLinkData = [
+                'route' => route('onboarding.show'),
+                'icon' => 'fas fa-hat-chef',
+                'label' => 'التقديم كـ شيف',
+            ];
+        } elseif ($authUser->needsChefProfile()) {
+            if ($authUser->chef_status === \App\Models\User::CHEF_STATUS_PENDING) {
+                $chefLinkData = [
+                    'route' => route('onboarding.show'),
+                    'icon' => 'fas fa-hourglass-half',
+                    'label' => 'متابعة حالة الطلب',
+                ];
+            } else {
+                $chefLinkData = [
+                    'route' => route('onboarding.show'),
+                    'icon' => 'fas fa-clipboard-list',
+                    'label' => 'إكمال بيانات الشيف',
+                ];
+            }
+        }
+    }
 @endphp
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-orange-100 shadow-sm">
@@ -122,7 +147,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div id="user-menu-container" class="relative user-menu-container">
                             <button
                                 id="user-menu-button"
@@ -145,7 +169,19 @@
                                     <i class="fas fa-user text-orange-500"></i>
                                     <span class="font-semibold">ملفي الشخصي</span>
                                 </a>
-                                @if(Auth::user()->is_admin)
+                                @if($chefLinkData)
+                                    <a href="{{ $chefLinkData['route'] }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
+                                        <i class="{{ $chefLinkData['icon'] }} text-orange-500"></i>
+                                        <span class="font-semibold">{{ $chefLinkData['label'] }}</span>
+                                    </a>
+                                @endif
+                                @if(Auth::user()->isChef())
+                                    <a href="{{ route('chef.dashboard') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
+                                        <i class="fas fa-hat-chef text-orange-500"></i>
+                                        <span class="font-semibold">منطقة الشيف</span>
+                                    </a>
+                                @endif
+                                @if(Auth::user()->isAdmin())
                                     <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
                                         <i class="fas fa-crown text-orange-500"></i>
                                         <span class="font-semibold">منطقة الإدمن</span>
@@ -204,7 +240,19 @@
                     <i class="fas fa-user text-orange-500"></i>
                     <span>ملفي الشخصي</span>
                 </a>
-                @if(Auth::user()->is_admin)
+                @if($chefLinkData)
+                    <a href="{{ $chefLinkData['route'] }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
+                        <i class="{{ $chefLinkData['icon'] }} text-orange-500"></i>
+                        <span>{{ $chefLinkData['label'] }}</span>
+                    </a>
+                @endif
+                @if(Auth::user()->isChef())
+                    <a href="{{ route('chef.dashboard') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
+                        <i class="fas fa-hat-chef text-orange-500"></i>
+                        <span>منطقة الشيف</span>
+                    </a>
+                @endif
+                @if(Auth::user()->isAdmin())
                     <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
                         <i class="fas fa-crown text-orange-500"></i>
                         <span>منطقة الإدمن</span>

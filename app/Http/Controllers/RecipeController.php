@@ -15,7 +15,9 @@ class RecipeController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Recipe::with(['category', 'interactions'])
+        $query = Recipe::approved()
+            ->public()
+            ->with(['category', 'interactions'])
             ->withCount(['interactions as saved_count' => function ($query) {
                 $query->where('is_saved', true);
             }])
@@ -97,7 +99,9 @@ class RecipeController extends Controller
     public function apiIndex(Request $request): JsonResponse
     {
         try {
-            $recipes = Recipe::with(['category', 'interactions'])
+            $recipes = Recipe::approved()
+                ->public()
+                ->with(['category', 'interactions'])
                 ->withCount(['interactions as saved_count' => function ($query) {
                     $query->where('is_saved', true);
                 }])
@@ -135,7 +139,13 @@ class RecipeController extends Controller
     public function show(Recipe $recipe): View
     {
         try {
-            $recipe->load(['category', 'interactions', 'ingredients']);
+            $canViewPrivate = auth()->check() && (auth()->user()->isAdmin() || auth()->id() === $recipe->user_id);
+
+            if ((!$recipe->isApproved() || $recipe->isPrivate()) && !$canViewPrivate) {
+                abort(404);
+            }
+
+            $recipe->load(['category', 'interactions', 'ingredients', 'chef']);
             
             // Load counts and averages
             $recipe->loadCount(['interactions as saved_count' => function ($query) {
@@ -201,8 +211,16 @@ class RecipeController extends Controller
                 $recipe->tools = collect($recipe->tools);
             }
 
+            if (!$recipe->isApproved()) {
+                if (!auth()->check() || (!auth()->user()->isAdmin() && auth()->id() !== $recipe->user_id)) {
+                    abort(404);
+                }
+            }
+
             // Get random recipes from the same category (excluding current recipe)
-            $relatedRecipes = Recipe::with(['category', 'interactions'])
+            $relatedRecipes = Recipe::approved()
+                ->public()
+                ->with(['category', 'interactions'])
                 ->withCount(['interactions as saved_count' => function ($query) {
                     $query->where('is_saved', true);
                 }])
@@ -243,7 +261,13 @@ class RecipeController extends Controller
     public function apiShow(Recipe $recipe): JsonResponse
     {
         try {
-            $recipe->load(['category', 'interactions', 'ingredients']);
+            $canViewPrivate = auth()->check() && (auth()->user()->isAdmin() || auth()->id() === $recipe->user_id);
+
+            if ((!$recipe->isApproved() || $recipe->isPrivate()) && !$canViewPrivate) {
+                return response()->json(['message' => 'Recipe not found'], 404);
+            }
+
+            $recipe->load(['category', 'interactions', 'ingredients', 'chef']);
             
             // Load counts and averages
             $recipe->loadCount(['interactions as saved_count' => function ($query) {

@@ -236,6 +236,18 @@
         font-size: 0.9rem;
         font-weight: 600;
       }
+      .hero-stat-link {
+        color: #ea580c;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      .hero-stat-link:hover {
+        color: #c2410c;
+        text-decoration: underline;
+      }
 
       .hero-stat-sub {
         display: inline-block;
@@ -1487,7 +1499,15 @@
                 <div>
                   <span class="hero-stat-label">صدر عن</span>
                   <span class="hero-stat-value hero-stat-value--compact">
-                    <span class="hero-stat-line">{{ $recipe->author ?? 'فريق وصفة' }}</span>
+                    <span class="hero-stat-line">
+                      @if ($recipe->chef)
+                        <a href="{{ route('chefs.show', ['chef' => $recipe->chef->id]) }}" class="hero-stat-link">
+                          الشيف {{ $recipe->chef->name }}
+                        </a>
+                      @else
+                        {{ $recipe->author ?? 'فريق وصفة' }}
+                      @endif
+                    </span>
                     <span class="hero-stat-line">آخر تحديث {{ $recipe->updated_at->format('Y-m-d') }}</span>
                   </span>
                 </div>
@@ -1696,13 +1716,17 @@
 
           <ul class="ingredient-list mt-6">
             @foreach($recipe->ingredients as $ingredient)
+              @php
+                $ingredientFullText = trim(($ingredient->quantity ?? 'كمية حسب الحاجة') . ' ' . $ingredient->name);
+              @endphp
               <li class="ingredient-item" 
                   data-original-quantity="{{ $ingredient->quantity ?? '' }}"
-                  data-name="{{ $ingredient->name }}">
+                  data-name="{{ $ingredient->name }}"
+                  data-full-text="{{ $ingredientFullText }}">
                 <span class="ingredient-icon">
                   <i class="fas fa-check"></i>
                 </span>
-                <span class="full-ingredient-text">{{ $ingredient->quantity ?? 'كمية حسب الحاجة' }} {{ $ingredient->name }}</span>
+                <span class="full-ingredient-text">{{ $ingredientFullText }}</span>
               </li>
             @endforeach
           </ul>

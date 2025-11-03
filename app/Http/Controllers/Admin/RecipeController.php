@@ -70,13 +70,60 @@ class RecipeController extends Controller
         
         return null;
     }
-    public function index()
+    public function index(Request $request)
     {
-        $recipes = Recipe::with(['category', 'ingredients'])
+        $status = $request->query('status', 'all');
+        $allowedStatuses = [
+            'all',
+            Recipe::STATUS_PENDING,
+            Recipe::STATUS_DRAFT,
+            Recipe::STATUS_APPROVED,
+            Recipe::STATUS_REJECTED,
+        ];
+
+        if (!in_array($status, $allowedStatuses, true)) {
+            $status = 'all';
+        }
+
+        $query = Recipe::with(['category', 'ingredients', 'chef']);
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($status === 'all') {
+            $query->orderByRaw("
+                CASE
+                    WHEN status = ? THEN 0
+                    WHEN status = ? THEN 1
+                    WHEN status = ? THEN 2
+                    ELSE 3
+                END
+            ", [
+                Recipe::STATUS_PENDING,
+                Recipe::STATUS_REJECTED,
+                Recipe::STATUS_DRAFT,
+            ]);
+        }
+
+        $recipes = $query
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        
-        return view('admin.recipes.index', compact('recipes'));
+            ->paginate(10)
+            ->withQueryString();
+
+        $statusCounts = [
+            'pending' => Recipe::where('status', Recipe::STATUS_PENDING)->count(),
+            'draft' => Recipe::where('status', Recipe::STATUS_DRAFT)->count(),
+            'approved' => Recipe::where('status', Recipe::STATUS_APPROVED)->count(),
+            'rejected' => Recipe::where('status', Recipe::STATUS_REJECTED)->count(),
+        ];
+        $statusCounts['all'] = array_sum($statusCounts);
+
+        return view('admin.recipes.index', [
+            'recipes' => $recipes,
+            'status' => $status,
+            'statusCounts' => $statusCounts,
+        ]);
     }
 
     public function create()
@@ -159,6 +206,8 @@ class RecipeController extends Controller
             'category_id' => $request->category_id,
             'steps' => $request->steps,
             'tools' => $request->tools ?? [],
+            'status' => Recipe::STATUS_APPROVED,
+            'approved_at' => now(),
         ]);
 
         // إضافة المكونات - تصفية المكونات الفارغة
@@ -181,7 +230,7 @@ class RecipeController extends Controller
 
     public function show(Recipe $recipe)
     {
-        $recipe->load(['category', 'ingredients']);
+        $recipe->load(['category', 'ingredients', 'chef']);
         
         // تحويل IDs إلى أسماء للعرض
         if ($recipe->tools && is_array($recipe->tools)) {
@@ -196,6 +245,32 @@ class RecipeController extends Controller
         $recipe->image_url_display = $this->getImageUrl($recipe);
         
         return view('admin.recipes.show', compact('recipe'));
+    }
+
+    /**
+     * Approve a pending recipe.
+     */
+    public function approve(Recipe $recipe)
+    {
+        $recipe->update([
+            'status' => Recipe::STATUS_APPROVED,
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'تمت الموافقة على الوصفة ونشرها بنجاح.');
+    }
+
+    /**
+     * Reject a recipe and return it to the chef for updates.
+     */
+    public function reject(Recipe $recipe)
+    {
+        $recipe->update([
+            'status' => Recipe::STATUS_REJECTED,
+            'approved_at' => null,
+        ]);
+
+        return back()->with('success', 'تم رفض الوصفة. يرجى إبلاغ الشيف بالتعديلات المطلوبة.');
     }
 
     public function edit(Recipe $recipe)

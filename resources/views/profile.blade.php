@@ -1,13 +1,22 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'الملف الشخصي - موقع وصفة')
 
 @php
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 @endphp
 
 @section('content')
+@php
+    $avatarUrl = null;
+    if ($user->avatar) {
+        $avatarUrl = Str::startsWith($user->avatar, ['http://', 'https://'])
+            ? $user->avatar
+            : Storage::disk('public')->url($user->avatar);
+    }
+@endphp
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
         <!-- Header Section -->
@@ -20,7 +29,7 @@ use Carbon\Carbon;
                 <div class="relative">
                     <div class="w-32 h-32 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl ring-8 ring-white/60">
                         @if($user->avatar)
-                            <img src="{{ $user->avatar }}" alt="صورة الملف الشخصي" class="w-full h-full rounded-full object-cover">
+                            <img src="{{ $avatarUrl }}" alt="صورة الملف الشخصي" class="w-full h-full rounded-full object-cover">
                         @else
                             {{ substr($user->name, 0, 1) }}
                         @endif
@@ -44,8 +53,14 @@ use Carbon\Carbon;
                             @endif
                         </div>
 
-                        <!-- Edit Profile Button -->
-                        <div class="flex justify-center md:justify-start">
+                        <!-- Actions -->
+                        <div class="flex flex-wrap justify-center md:justify-start gap-3">
+                            @if($user->isChef())
+                                <a href="{{ route('chefs.show', ['chef' => $user->id]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all border border-orange-200 bg-white text-orange-600 shadow hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700">
+                                    <i class="fas fa-eye"></i>
+                                    <span>عرض صفحتي العامة</span>
+                                </a>
+                            @endif
                             <button id="editProfileBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 shadow-md hover:shadow-lg">
                                 <i class="fas fa-edit"></i>
                                 <span>تعديل الملف الشخصي</span>
@@ -80,7 +95,7 @@ use Carbon\Carbon;
                             <span class="font-semibold text-gray-800">{{ $upcomingCount }}</span>
                         </span>
 
-                        @if($user->is_admin)
+                        @if($user->isAdmin())
                             <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-orange-500/10 border border-orange-200 text-orange-700 font-medium">
                                 <i class="fas fa-crown"></i>
                                 مدير الموقع
@@ -1127,14 +1142,17 @@ use Carbon\Carbon;
             </button>
         </div>
         
-        <form method="POST" action="{{ route('profile.update') }}">
+        <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">الاسم</label>
-                    <input type="text" name="name" value="{{ $user->name }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
+                    <input type="text" name="name" value="{{ old('name', $user->name) }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
+                    @error('name')
+                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
                 
                 <div>
@@ -1148,9 +1166,26 @@ use Carbon\Carbon;
                         <i class="fas fa-phone text-orange-500 ml-2"></i>
                         رقم الهاتف
                     </label>
-                    <input type="tel" name="phone" value="{{ $user->phone }}" placeholder="أدخل رقم هاتفك" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" pattern="[0-9+\-\s\(\)]+">
+                    <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="أدخل رقم هاتفك" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" pattern="[0-9+\-\s\(\)]+">
                     <p class="text-xs text-gray-500 mt-1">أضف رقم هاتفك للتواصل معك بخصوص الورشات</p>
+                    @error('phone')
+                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+
+                @if($user->isChef())
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-camera text-orange-500 ml-2"></i>
+                        صورة الشيف
+                    </label>
+                    <input type="file" name="avatar" accept="image/*" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">اختر صورة بصيغة JPG أو PNG بحد أقصى 2 ميجابايت لعرضها في صفحة الشيف العامة.</p>
+                    @error('avatar')
+                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                @endif
             </div>
             
             <div class="flex space-x-4 rtl:space-x-reverse mt-8">

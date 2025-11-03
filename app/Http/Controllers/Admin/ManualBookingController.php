@@ -147,6 +147,8 @@ class ManualBookingController extends Controller
                 'phone' => $request->user_phone,
                 'password' => bcrypt('temp_password_' . time()),
                 'is_admin' => false,
+                'role' => \App\Models\User::ROLE_CUSTOMER,
+                'chef_status' => \App\Models\User::CHEF_STATUS_NEEDS_PROFILE,
             ]);
         }
 

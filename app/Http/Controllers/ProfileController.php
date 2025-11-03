@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use App\Models\UserInteraction;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Services\ContentModerationService;
 
 class ProfileController extends Controller
 {
@@ -261,12 +264,46 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20|regex:/^[0-9+\-\s\(\)]+$/',
+            'avatar' => 'nullable|image|max:2048',
         ]);
+
+        if (ContentModerationService::containsProhibitedLanguage($request->name)) {
+            return back()
+                ->withErrors(['name' => 'الاسم يحتوي على كلمات غير لائقة.'])
+                ->withInput();
+        }
         
-        $user->update([
+        $updateData = [
             'name' => $request->name,
             'phone' => $request->phone,
-        ]);
+        ];
+
+        if ($user->isChef() && $request->hasFile('avatar')) {
+            $originalName = $request->file('avatar')->getClientOriginalName();
+
+            if (ContentModerationService::containsProhibitedLanguage($originalName)) {
+                return back()
+                    ->withErrors(['avatar' => 'اسم الملف يحتوي على كلمات غير لائقة.'])
+                    ->withInput();
+            }
+
+            if (ContentModerationService::imageAppearsExplicit($request->file('avatar'))) {
+                return back()
+                    ->withErrors(['avatar' => 'الرجاء اختيار صورة احترافية مناسبة.'])
+                    ->withInput();
+            }
+
+            $newAvatarPath = $request->file('avatar')->store('avatars', 'public');
+
+            $oldAvatar = $user->avatar;
+            if ($oldAvatar && !Str::startsWith($oldAvatar, ['http://', 'https://']) && Storage::disk('public')->exists($oldAvatar)) {
+                Storage::disk('public')->delete($oldAvatar);
+            }
+
+            $updateData['avatar'] = $newAvatarPath;
+        }
+
+        $user->update($updateData);
         
         return redirect()->route('profile')->with('success', 'تم تحديث الملف الشخصي بنجاح');
     }

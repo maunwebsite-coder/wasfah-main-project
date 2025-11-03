@@ -24,7 +24,10 @@ Route::middleware('auth:sanctum')->group(function () {
             'name' => $user->name,
             'email' => $user->email,
             'avatar' => $user->avatar,
-            'is_admin' => $user->is_admin ?? false,
+            'is_admin' => $user->isAdmin(),
+            'role' => $user->role,
+            'chef_status' => $user->chef_status,
+            'is_chef' => $user->isChef(),
         ]);
     });
 });

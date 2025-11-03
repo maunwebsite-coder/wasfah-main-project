@@ -119,7 +119,7 @@
                                     <i class="fas fa-user text-orange-500"></i>
                                     <span class="font-semibold">ملفي الشخصي</span>
                                 </a>
-                                @if(Auth::user()->is_admin)
+                                @if(Auth::user()->isAdmin())
                                     <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
                                         <i class="fas fa-crown text-orange-500"></i>
                                         <span class="font-semibold">منطقة الإدمن</span>

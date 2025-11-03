@@ -1,6 +1,14 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\OnboardingController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Chef\LinkItemController as ChefLinkItemController;
+use App\Http\Controllers\Chef\LinkPageController as ChefLinkPageController;
+use App\Http\Controllers\Chef\RecipeController as ChefRecipeController;
+use App\Http\Controllers\ChefLinkPublicController;
+use App\Http\Controllers\ChefPublicProfileController;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +44,8 @@ Route::get('/wasfah-links', function () {
         ],
     ]);
 
-    $monthlySelections = Recipe::query()
+    $monthlySelections = Recipe::approved()
+        ->public()
         ->inRandomOrder()
         ->take(3)
         ->get()
@@ -88,6 +97,14 @@ Route::get('/wasfah-links', function () {
     ]);
 })->name('links');
 
+Route::get('/wasfah-links/{chefLinkPage:slug}', [ChefLinkPublicController::class, 'show'])
+    ->name('links.chef');
+
+// صفحة عامة لعرض بروفايلات الشيف مع وصفاتهم
+Route::get('/chefs/{chef}', [ChefPublicProfileController::class, 'show'])
+    ->whereNumber('chef')
+    ->name('chefs.show');
+
 // مسار صفحة المصادقة الموحدة (تسجيل الدخول + إنشاء حساب)
 Route::get('/login', function () {
     // إذا كان المستخدم مسجل دخول، أعد توجيهه للصفحة الرئيسية
@@ -96,32 +113,22 @@ Route::get('/login', function () {
     }
     return view('auth');
 })->name('login');
+Route::post('/login', [LoginController::class, 'store'])
+    ->middleware('guest')
+    ->name('login.password');
 
-// مسار تسجيل الدخول POST
-Route::post('/login', function (Illuminate\Http\Request $request) {
-    $credentials = $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
-        return redirect()->intended('/')->with('success', 'تم تسجيل الدخول بنجاح');
-    }
-
-    return back()->withErrors([
-        'email' => 'بيانات الدخول غير صحيحة',
-    ])->onlyInput('email');
-})->name('login.post');
-
-// مسارات المحفوظات - فقط للمستخدمين المسجلين
-Route::prefix('saved')->middleware(['web', 'auth'])->group(function () {
-    Route::get('/', [App\Http\Controllers\SavedController::class, 'index'])->name('saved.index');
-    Route::post('/add', [App\Http\Controllers\SavedController::class, 'add'])->name('saved.add');
-    Route::post('/remove', [App\Http\Controllers\SavedController::class, 'remove'])->name('saved.remove');
+// مسارات المحفوظات
+Route::prefix('saved')->middleware(['web'])->group(function () {
+    // عداد المحفوظات متاح للضيوف ويعيد 0 عند عدم تسجيل الدخول
     Route::get('/count', [App\Http\Controllers\SavedController::class, 'count'])->name('saved.count');
     Route::post('/count', [App\Http\Controllers\SavedController::class, 'count'])->name('saved.count.post');
-    Route::get('/status', [App\Http\Controllers\SavedController::class, 'status'])->name('saved.status');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [App\Http\Controllers\SavedController::class, 'index'])->name('saved.index');
+        Route::post('/add', [App\Http\Controllers\SavedController::class, 'add'])->name('saved.add');
+        Route::post('/remove', [App\Http\Controllers\SavedController::class, 'remove'])->name('saved.remove');
+        Route::get('/status', [App\Http\Controllers\SavedController::class, 'status'])->name('saved.status');
+    });
 });
 
 
@@ -133,6 +140,37 @@ Route::get('/register', function () {
     }
     return view('auth');
 })->name('register');
+Route::post('/register', [RegisterController::class, 'store'])
+    ->middleware('guest')
+    ->name('register.password');
+Route::get('/register/verify', [RegisterController::class, 'showVerificationForm'])
+    ->middleware('guest')
+    ->name('register.verify.show');
+Route::post('/register/verify', [RegisterController::class, 'verifyCode'])
+    ->middleware('guest')
+    ->name('register.verify');
+Route::post('/register/verify/resend', [RegisterController::class, 'resendCode'])
+    ->middleware('guest')
+    ->name('register.verify.resend');
+
+// إكمال بيانات الشيف بعد تسجيل الدخول عبر Google
+Route::middleware(['auth'])->group(function () {
+    Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+});
+
+// منطقة الشيف - إدارة الوصفات الخاصة
+Route::middleware(['auth', 'chef'])->prefix('chef')->name('chef.')->group(function () {
+    Route::get('/', [ChefRecipeController::class, 'index'])->name('dashboard');
+    Route::get('links', [ChefLinkPageController::class, 'edit'])->name('links.edit');
+    Route::put('links', [ChefLinkPageController::class, 'update'])->name('links.update');
+    Route::post('links/items', [ChefLinkItemController::class, 'store'])->name('links.items.store');
+    Route::put('links/items/{item}', [ChefLinkItemController::class, 'update'])->name('links.items.update');
+    Route::delete('links/items/{item}', [ChefLinkItemController::class, 'destroy'])->name('links.items.destroy');
+    Route::post('recipes/{recipe}/submit', [ChefRecipeController::class, 'submit'])->name('recipes.submit');
+    Route::resource('recipes', ChefRecipeController::class)->except(['show']);
+});
+
 Route::get('/recipe/{recipe:slug}', [App\Http\Controllers\RecipeController::class, 'show'])->name('recipe.show');
 
 // مسار ورشات العمل
@@ -205,7 +243,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('bookings/manual/add', [App\Http\Controllers\Admin\ManualBookingController::class, 'index'])->name('bookings.manual');
     Route::post('bookings/manual/add', [App\Http\Controllers\Admin\ManualBookingController::class, 'store'])->name('bookings.manual.store');
     Route::post('bookings/quick-add', [App\Http\Controllers\Admin\ManualBookingController::class, 'quickAdd'])->name('bookings.quick-add');
-    
+
+    // إدارة طلبات الشيفات الجدد
+    Route::get('chefs/requests', [App\Http\Controllers\Admin\ChefApprovalController::class, 'index'])->name('chefs.requests');
+    Route::post('chefs/{user}/approve', [App\Http\Controllers\Admin\ChefApprovalController::class, 'approve'])->name('chefs.approve');
+    Route::post('chefs/{user}/reject', [App\Http\Controllers\Admin\ChefApprovalController::class, 'reject'])->name('chefs.reject');
+
     // إدارة إعدادات الرؤية
     Route::get('visibility', [App\Http\Controllers\Admin\VisibilityController::class, 'index'])->name('visibility.index');
     Route::put('visibility/{section}', [App\Http\Controllers\Admin\VisibilityController::class, 'update'])->name('visibility.update');
@@ -227,6 +270,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/recipes', [App\Http\Controllers\Admin\RecipeController::class, 'index'])->name('recipes.index');
     Route::get('/recipes/create', [App\Http\Controllers\Admin\RecipeController::class, 'create'])->name('recipes.create');
     Route::post('/recipes', [App\Http\Controllers\Admin\RecipeController::class, 'store'])->name('recipes.store');
+    Route::post('/recipes/{recipe}/approve', [App\Http\Controllers\Admin\RecipeController::class, 'approve'])->name('recipes.approve');
+    Route::post('/recipes/{recipe}/reject', [App\Http\Controllers\Admin\RecipeController::class, 'reject'])->name('recipes.reject');
     Route::get('/recipes/{recipe}', [App\Http\Controllers\Admin\RecipeController::class, 'show'])->name('recipes.show');
     Route::get('/recipes/{recipe}/edit', [App\Http\Controllers\Admin\RecipeController::class, 'edit'])->name('recipes.edit');
     Route::put('/recipes/{recipe}', [App\Http\Controllers\Admin\RecipeController::class, 'update'])->name('recipes.update');
@@ -263,3 +308,4 @@ Route::post('/test-amazon-extraction', [App\Http\Controllers\Admin\AdminToolsCon
 // مسارات الاتصال
 Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/contact/send', [App\Http\Controllers\ContactController::class, 'sendMessage'])->name('contact.send');
+

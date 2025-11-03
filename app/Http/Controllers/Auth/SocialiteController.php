@@ -23,6 +23,9 @@ class SocialiteController extends Controller
         if ($pendingWorkshopId) {
             session(['pending_workshop_booking' => $pendingWorkshopId]);
         }
+
+        $intent = $request->input('intent', 'customer');
+        session(['auth_login_intent' => $intent]);
         
         return Socialite::driver('google')->redirect();
     }
@@ -56,6 +59,8 @@ class SocialiteController extends Controller
                     'provider_id' => $socialUser->getId(),
                     'provider_token' => $socialUser->token,
                     'password' => Hash::make(uniqid()), // Random password for social login users
+                    'role' => User::ROLE_CUSTOMER,
+                    'chef_status' => User::CHEF_STATUS_NEEDS_PROFILE,
                 ]);
                 $isNewUser = true;
                 
@@ -65,6 +70,11 @@ class SocialiteController extends Controller
 
             // Log the user in
             Auth::login($user);
+
+            // Redirect to onboarding if profile incomplete
+            if ($this->shouldRedirectToOnboarding($user)) {
+                return redirect()->route('onboarding.show');
+            }
 
             // التحقق من وجود معرف ورشة محفوظ في session
             $pendingWorkshopId = session('pending_workshop_booking');
@@ -97,7 +107,7 @@ class SocialiteController extends Controller
             return redirect('/login')->with('error', 'حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.');
         }
     }
-    
+
     /**
      * إنشاء إشعارات ترحيبية للمستخدم الجديد
      */
@@ -151,4 +161,29 @@ class SocialiteController extends Controller
             ]
         );
     }
+
+    /**
+     * Determine if user should complete onboarding.
+     */
+    private function shouldRedirectToOnboarding(User $user): bool
+    {
+        if ($user->isAdmin()) {
+            return false;
+        }
+
+        if (is_null($user->chef_status)) {
+            return false;
+        }
+
+        if (!$user->hasCompletedChefProfile()) {
+            return true;
+        }
+
+        return in_array($user->chef_status, [
+            User::CHEF_STATUS_NEEDS_PROFILE,
+            User::CHEF_STATUS_REJECTED,
+        ], true);
+    }
 }
+
+

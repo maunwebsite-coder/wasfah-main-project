@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         // ترتيب مهم حتى ما يصير أخطاء
         $this->call([
             UserSeeder::class,
+            SampleUsersSeeder::class,
             CategorySeeder::class,
             RecipeSeeder::class,
             IngredientSeeder::class,

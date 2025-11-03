@@ -21,7 +21,7 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        if (!Auth::user()->is_admin) {
+        if (!Auth::user()->isAdmin()) {
             abort(403, 'ليس لديك صلاحية للوصول إلى هذه الصفحة');
         }
 

@@ -24,14 +24,18 @@ class DashboardController extends Controller
         $newUsersThisMonth = User::whereMonth('created_at', now()->month)
                                 ->whereYear('created_at', now()->year)
                                 ->count();
-        $adminUsers = User::where('is_admin', true)->count();
+        $adminUsers = User::where(function ($query) {
+                                $query->where('is_admin', true)
+                                      ->orWhere('role', User::ROLE_ADMIN);
+                            })->count();
 
         // إحصائيات الوصفات
         $totalRecipes = Recipe::count();
         $newRecipesThisMonth = Recipe::whereMonth('created_at', now()->month)
                                     ->whereYear('created_at', now()->year)
                                     ->count();
-        $mostPopularRecipe = Recipe::withCount('interactions')
+        $mostPopularRecipe = Recipe::approved()->public()
+                                  ->withCount('interactions')
                                   ->orderBy('interactions_count', 'desc')
                                   ->first();
 
@@ -74,7 +78,8 @@ class DashboardController extends Controller
         $lastWeekBookings = WorkshopBooking::where('created_at', '>=', now()->subWeek())->count();
 
         // الوصفات الأكثر شعبية (آخر 30 يوم)
-        $popularRecipes = Recipe::withCount(['interactions' => function($query) {
+        $popularRecipes = Recipe::approved()->public()
+                                ->withCount(['interactions' => function($query) {
                                     $query->where('created_at', '>=', now()->subDays(30));
                                 }])
                                 ->orderBy('interactions_count', 'desc')

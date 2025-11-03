@@ -54,7 +54,9 @@ class HomeController extends Controller
         $workshops = $workshopsQuery->limit(4)->get();
 
         // جلب أحدث الوصفات للعرض في الشريط الجانبي
-        $latestRecipes = Recipe::with(['category'])
+        $latestRecipes = Recipe::approved()
+            ->public()
+            ->with(['category'])
             ->withCount(['interactions as saved_count' => function ($query) {
                 $query->where('is_saved', true);
             }])
@@ -64,11 +66,13 @@ class HomeController extends Controller
             ->withCount(['interactions as interactions_count'])
             ->withAvg('interactions', 'rating')
             ->orderBy('created_at', 'desc')
-            ->limit(6)
+            ->limit(4)
             ->get();
 
         // جلب الوصفات المميزة للعرض في القسم الرئيسي
-        $featuredRecipes = Recipe::with(['category'])
+        $featuredRecipes = Recipe::approved()
+            ->public()
+            ->with(['category'])
             ->withCount(['interactions as saved_count' => function ($query) {
                 $query->where('is_saved', true);
             }])
@@ -169,7 +173,7 @@ class HomeController extends Controller
         }
 
         if ($candidates->isEmpty()) {
-            $randomRecipe = Recipe::with(['category'])->inRandomOrder()->first();
+            $randomRecipe = Recipe::approved()->public()->with(['category'])->inRandomOrder()->first();
             if ($randomRecipe) {
                 $candidates = collect([$randomRecipe]);
             }

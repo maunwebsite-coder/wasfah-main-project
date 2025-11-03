@@ -2,6 +2,20 @@
 
 @section('title', 'منطقة الإدمن')
 
+@php
+    use App\Models\User;
+    use App\Models\Recipe;
+
+    $pendingChefCount = User::query()
+        ->where('role', User::ROLE_CHEF)
+        ->where('chef_status', User::CHEF_STATUS_PENDING)
+        ->count();
+
+    $pendingRecipeCount = Recipe::query()
+        ->where('status', Recipe::STATUS_PENDING)
+        ->count();
+@endphp
+
 @push('styles')
 <style>
     .admin-card {
@@ -124,7 +138,7 @@
 
     <!-- Admin Actions Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
+
         <!-- إدارة الوصفات -->
         <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
             <div class="admin-icon">
@@ -146,6 +160,26 @@
             </div>
         </div>
 
+        <!-- طلبات الشيفات الجديدة -->
+        <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+            <div class="admin-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h3 class="admin-title">طلبات الشيفات الجديدة</h3>
+            <p class="admin-description">
+                مراجعة طلبات الانضمام واعتماد الشيفات الجدد قبل منحهم الصلاحيات
+            </p>
+            <div class="mt-6 space-y-3">
+                <div class="text-sm text-gray-500 text-center">
+                    {{ number_format($pendingChefCount) }} طلب قيد المراجعة
+                </div>
+                <a href="{{ route('admin.chefs.requests') }}" class="admin-btn" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                    <i class="fas fa-list-check ml-2"></i>
+                    مراجعة طلبات الشيفات
+                </a>
+            </div>
+        </div>
+
         <!-- إدارة الورشات -->
         <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
             <div class="admin-icon">
@@ -163,6 +197,26 @@
                 <a href="{{ route('admin.workshops.create') }}" class="admin-btn" style="background: linear-gradient(135deg, #10b981, #059669);">
                     <i class="fas fa-plus ml-2"></i>
                     إضافة ورشة جديدة
+                </a>
+            </div>
+        </div>
+
+        <!-- مراجعة الوصفات الجديدة -->
+        <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+            <div class="admin-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h3 class="admin-title">مراجعة الوصفات الجديدة</h3>
+            <p class="admin-description">
+                الاطلاع على الوصفات التي رفعها الشيفات واعتمادها قبل النشر
+            </p>
+            <div class="mt-6 space-y-3">
+                <div class="text-sm text-gray-500 text-center">
+                    {{ number_format($pendingRecipeCount) }} وصفة تنتظر المراجعة
+                </div>
+                <a href="{{ route('admin.recipes.index', ['status' => Recipe::STATUS_PENDING]) }}" class="admin-btn" style="background: linear-gradient(135deg, #10b981, #047857);">
+                    <i class="fas fa-check-double ml-2"></i>
+                    استعراض الوصفات المعلقة
                 </a>
             </div>
         </div>
@@ -274,17 +328,27 @@
                 <i class="fas fa-plus-circle text-2xl text-green-500 mb-2"></i>
                 <div class="font-semibold text-gray-800">وصفة جديدة</div>
             </a>
-            
+
+            <a href="{{ route('admin.recipes.index', ['status' => Recipe::STATUS_PENDING]) }}" class="bg-white rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
+                <i class="fas fa-clipboard-list text-2xl text-teal-500 mb-2"></i>
+                <div class="font-semibold text-gray-800">وصفات تنتظر المراجعة</div>
+            </a>
+
             <a href="{{ route('admin.workshops.create') }}" class="bg-white rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
                 <i class="fas fa-chalkboard text-2xl text-blue-500 mb-2"></i>
                 <div class="font-semibold text-gray-800">ورشة جديدة</div>
             </a>
-            
+
             <a href="{{ route('admin.bookings.manual') }}" class="bg-white rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
                 <i class="fas fa-user-plus text-2xl text-purple-500 mb-2"></i>
                 <div class="font-semibold text-gray-800">حجز يدوي</div>
             </a>
-            
+
+            <a href="{{ route('admin.chefs.requests') }}" class="bg-white rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
+                <i class="fas fa-user-check text-2xl text-rose-500 mb-2"></i>
+                <div class="font-semibold text-gray-800">طلبات الشيفات</div>
+            </a>
+
             <a href="{{ route('admin.tools.create') }}" class="bg-white rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
                 <i class="fas fa-tools text-2xl text-orange-500 mb-2"></i>
                 <div class="font-semibold text-gray-800">أداة جديدة</div>

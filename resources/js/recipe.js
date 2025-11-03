@@ -445,20 +445,89 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @param {string} value - النص المراد تحليله (مثل "1" أو "1/2").
 	 * @returns {number|null} - القيمة الرقمية أو null إذا لم تكن رقمًا صالحًا.
 	 */
-	function parseNumericValue(value) {
-		if (!value || typeof value !== 'string') return null;
-		if (value.includes('/')) {
-			const parts = value.split('/');
-			if (parts.length === 2) {
-				const num = parseFloat(parts[0]);
-				const den = parseFloat(parts[1]);
-				if (!isNaN(num) && !isNaN(den) && den !== 0) {
-					return num / den;
-				}
+	function normalizeNumerals(value) {
+		if (!value || typeof value !== 'string') {
+			return '';
+		}
+
+		const map = {
+			'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+			'٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+			'۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+			'۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+		};
+
+		return value.replace(/[٠-٩۰-۹]/g, (digit) => map[digit] ?? digit);
+	}
+
+	function parseQuantity(value) {
+		const result = { amount: null, unit: '' };
+
+		if (!value || typeof value !== 'string') {
+			return result;
+		}
+
+		const normalized = normalizeNumerals(value).replace(/،/g, ',').trim();
+		if (!normalized) {
+			return result;
+		}
+
+		let match = normalized.match(/^(-?\d+)\s+(\d+)\/(\d+)\s*(.*)$/);
+		if (match) {
+			const whole = parseFloat(match[1]);
+			const numerator = parseFloat(match[2]);
+			const denominator = parseFloat(match[3]);
+			const unit = match[4]?.trim() ?? '';
+
+			if (!Number.isNaN(whole) && !Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
+				result.amount = whole + numerator / denominator;
+				result.unit = unit;
+				return result;
 			}
 		}
-		const num = parseFloat(value);
-		return isNaN(num) ? null : num;
+
+		match = normalized.match(/^(\d+)\/(\d+)\s*(.*)$/);
+		if (match) {
+			const numerator = parseFloat(match[1]);
+			const denominator = parseFloat(match[2]);
+			const unit = match[3]?.trim() ?? '';
+
+			if (!Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
+				result.amount = numerator / denominator;
+				result.unit = unit;
+				return result;
+			}
+		}
+
+		match = normalized.match(/^(-?\d+(?:[.,]\d+)?)\s*(.*)$/);
+		if (match) {
+			const numericPart = parseFloat(match[1].replace(',', '.'));
+			if (!Number.isNaN(numericPart)) {
+				result.amount = numericPart;
+				result.unit = match[2]?.trim() ?? '';
+				return result;
+			}
+		}
+
+		return result;
+	}
+
+	function formatQuantity(value) {
+		if (value === null || Number.isNaN(value)) {
+			return '';
+		}
+
+		const rounded = Math.round(value * 100) / 100;
+
+		if (Math.abs(rounded - 0.25) < 0.001) return '1/4';
+		if (Math.abs(rounded - 0.5) < 0.001) return '1/2';
+		if (Math.abs(rounded - 0.75) < 0.001) return '3/4';
+
+		if (Number.isInteger(rounded)) {
+			return rounded.toString();
+		}
+
+		return rounded.toString().replace('.', '.');
 	}
 
 	/**
@@ -466,26 +535,30 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @param {number} multiplier - معامل الضرب (مثل 0.5 لنصف الكمية).
 	 */
 	function updateIngredients(multiplier) {
+		if (!ingredientsListEl) {
+			return;
+		}
+
 		ingredientsListEl.querySelectorAll("li").forEach((item) => {
-			const originalQuantity = item.getAttribute("data-original-quantity");
-			const unit = item.getAttribute("data-unit") || '';
+			const originalQuantity = item.getAttribute("data-original-quantity") || '';
 			const name = item.getAttribute("data-name") || '';
-			const numericValue = parseNumericValue(originalQuantity);
+			const fullText = item.getAttribute("data-full-text") || `${originalQuantity} ${name}`.trim();
+			const textElement = item.querySelector(".full-ingredient-text");
 
-			if (numericValue !== null) {
-				const newQuantity = numericValue * multiplier;
+			if (!textElement) {
+				return;
+			}
 
-				let displayQuantity;
-				if (newQuantity === 0.25) displayQuantity = "1/4";
-				else if (newQuantity === 0.5) displayQuantity = "1/2";
-				else if (newQuantity === 0.75) displayQuantity = "3/4";
-				else if (newQuantity % 1 === 0) displayQuantity = newQuantity.toString();
-				else displayQuantity = newQuantity.toFixed(2).replace(/\.00$/, '');
+			const { amount, unit } = parseQuantity(originalQuantity);
 
-				item.textContent = `${displayQuantity} ${unit} ${name}`.trim();
+			if (amount !== null) {
+				const newQuantity = amount * multiplier;
+				const displayQuantity = formatQuantity(newQuantity);
+
+				const parts = [displayQuantity, unit, name].filter((part) => part && part.trim().length > 0);
+				textElement.textContent = parts.join(" ").trim();
 			} else {
-			
-				item.textContent = `${originalQuantity} ${unit} ${name}`.trim();
+				textElement.textContent = fullText;
 			}
 		});
 	}

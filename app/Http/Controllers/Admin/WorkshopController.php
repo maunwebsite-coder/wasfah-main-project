@@ -56,7 +56,7 @@ class WorkshopController extends Controller
      */
     public function create()
     {
-        $recipes = Recipe::orderBy('title')->get();
+        $recipes = Recipe::approved()->public()->orderBy('title')->get();
         return view('admin.workshops.create', compact('recipes'));
     }
 
@@ -171,7 +171,7 @@ class WorkshopController extends Controller
     public function edit($id)
     {
         $workshop = Workshop::with('recipes')->findOrFail($id);
-        $recipes = Recipe::orderBy('title')->get();
+        $recipes = Recipe::approved()->public()->orderBy('title')->get();
         return view('admin.workshops.edit', compact('workshop', 'recipes'));
     }
 

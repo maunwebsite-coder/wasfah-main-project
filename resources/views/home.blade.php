@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'موقع وصفه - دليلك لعالم الحلويات')
 
@@ -1412,7 +1412,7 @@
 
 @section('content')
     @php
-        $showAdminMetrics = auth()->check() && auth()->user()->is_admin;
+        $showAdminMetrics = auth()->check() && auth()->user()->isAdmin();
     @endphp
     <link
       rel="stylesheet"
