@@ -454,6 +454,9 @@
 @endpush
 
 @section('content')
+@php
+    $showAdminMetrics = auth()->check() && auth()->user()->is_admin;
+@endphp
 <div class="min-h-screen" style="background-color: #f3f4f6;">
     <!-- Workshop Hero Section -->
     <section class="workshop-hero-container">
@@ -503,10 +506,12 @@
                         <i class="fas fa-clock w-5 text-center ml-3"></i>
                         <span class="font-medium">{{ $workshop->formatted_duration }}</span>
                     </div>
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas fa-users w-5 text-center ml-3"></i>
-                        <span class="font-medium">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</span>
-                    </div>
+                    @if($showAdminMetrics)
+                        <div class="flex items-center text-amber-100">
+                            <i class="fas fa-users w-5 text-center ml-3"></i>
+                            <span class="font-medium">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</span>
+                        </div>
+                    @endif
                 </div>
                 
                 <!-- Price and Rating -->
@@ -699,15 +704,17 @@
                                         <p class="text-lg font-semibold text-gray-900">{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}</p>
                                     </div>
                                 </div>
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <i class="fas fa-users"></i>
+                                @if($showAdminMetrics)
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm text-gray-500">عدد المشاركين</p>
+                                            <p class="text-lg font-semibold text-gray-900">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</p>
+                                        </div>
                                     </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-gray-500">عدد المشاركين</p>
-                                        <p class="text-lg font-semibold text-gray-900">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</p>
-                                    </div>
-                                </div>
+                                @endif
                             </div>
 
                             @if($workshop->is_completed)

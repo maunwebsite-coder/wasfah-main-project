@@ -15,6 +15,69 @@
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
         pointer-events: none;
     }
+    .tools-hero-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+        text-align: center;
+        padding-block: 1rem;
+    }
+    .tools-hero-intro {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-width: 36rem;
+    }
+    .tools-hero-intro h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin: 0;
+        color: #fff;
+    }
+    .tools-hero-intro p {
+        margin: 0;
+        line-height: 1.8;
+        color: rgba(241, 245, 249, 0.88);
+        font-size: 0.95rem;
+    }
+    .tools-hero-actions {
+        display: inline-flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .tools-hero-actions a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.4rem;
+        border-radius: 0.9rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        text-decoration: none;
+    }
+    .tools-hero-actions .intro-primary {
+        background: #fff;
+        color: #f97316;
+        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.18);
+    }
+    .tools-hero-actions .intro-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 40px rgba(15, 23, 42, 0.22);
+    }
+    .tools-hero-actions .intro-secondary {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .tools-hero-actions .intro-secondary:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.22);
+    }
     .tool-card {
         position: relative;
         display: flex;
@@ -57,6 +120,48 @@
         justify-content: center;
         padding: 1rem;
         height: 100%;
+    }
+    .why-section {
+        padding-block: 3.5rem;
+    }
+    .why-section .container {
+        padding-inline: 1.25rem;
+    }
+    @media (min-width: 768px) {
+        .why-section {
+            padding-block: 4rem;
+        }
+        .why-section .container {
+            padding-inline: 1.5rem;
+        }
+    }
+    .why-slider {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    .why-slider .swiper-wrapper {
+        padding-bottom: 0.5rem;
+    }
+    .why-slider .swiper-slide {
+        display: flex;
+        justify-content: center;
+        padding: 0.5rem;
+    }
+    .why-feature-card {
+        width: 100%;
+        max-width: 18rem;
+    }
+    .why-slider .swiper-pagination {
+        bottom: 0;
+    }
+    .why-slider .swiper-pagination-bullet {
+        width: 10px;
+        height: 10px;
+        background: rgba(249, 115, 22, 0.3);
+        opacity: 1;
+    }
+    .why-slider .swiper-pagination-bullet-active {
+        background: #f97316;
     }
     .tool-card__image {
         max-width: 100%;
@@ -249,6 +354,19 @@
         #tools-grid {
             gap: 1rem;
         }
+        .why-section {
+            padding-block: 2.75rem;
+        }
+        .why-section .container {
+            padding-inline: 1rem;
+        }
+        .why-slider .swiper-slide {
+            padding: 0.15rem;
+        }
+        .why-feature-card {
+            max-width: 100%;
+            padding: 1.25rem;
+        }
     }
 </style>
 @endpush
@@ -257,35 +375,21 @@
 <div class="min-h-screen bg-gray-50">
     <!-- Header Section -->
     <section class="tools-hero relative bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 text-white py-20">
-        <div class="container mx-auto px-4 text-center relative z-10">
-            <h1 class="text-4xl sm:text-5xl font-extrabold mb-4">أدوات الشيف الاحترافية</h1>
-            <p class="text-base sm:text-lg max-w-3xl mx-auto leading-relaxed">
-                اكتشف مجموعة مختارة بعناية من أدوات الحلويات الموثوقة من أمازون لتطوير مهاراتك في المطبخ.
-            </p>
-            <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto text-sm">
-                <div class="bg-white/15 border border-white/25 rounded-2xl px-5 py-4 shadow-lg backdrop-blur flex items-center justify-center">
-                    <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20">
-                            <i class="fas fa-star text-lg"></i>
-                        </span>
-                        <span class="leading-6 text-right">ترشيحات مبنية على أعلى تقييمات أمازون</span>
-                    </div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="tools-hero-inner">
+                <div class="tools-hero-intro">
+                    <h1>أدوات الشيف الاحترافية</h1>
+                    <p>تعرف على أبرز أدوات الحلويات التي نعتمد عليها في وصفة، مع روابط شراء موثوقة تلائم العمل المنزلي والمشاريع الصغيرة.</p>
                 </div>
-                <div class="bg-white/15 border border-white/25 rounded-2xl px-5 py-4 shadow-lg backdrop-blur flex items-center justify-center">
-                    <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20">
-                            <i class="fas fa-book-open text-lg"></i>
-                        </span>
-                        <span class="leading-6 text-right">ملخصات سريعة لأهم المزايا قبل الشراء</span>
-                    </div>
-                </div>
-                <div class="bg-white/15 border border-white/25 rounded-2xl px-5 py-4 shadow-lg backdrop-blur flex items-center justify-center">
-                    <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20">
-                            <i class="fas fa-sync-alt text-lg"></i>
-                        </span>
-                        <span class="leading-6 text-right">تحديثات مستمرة لأحدث الإصدارات والعروض</span>
-                    </div>
+                <div class="tools-hero-actions">
+                    <a href="#tools-grid" class="intro-primary">
+                        <span>تصفح الأدوات الآن</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <a href="{{ route('saved.index') }}" class="intro-secondary">
+                        <span>الأدوات التي قمت بحفظها</span>
+                        <i class="fas fa-bookmark"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -429,42 +533,65 @@
             </div>
         </div>
     </section>
+    @php
+        $whyFeatures = [
+            [
+                'icon' => 'fas fa-check-circle',
+                'title' => 'ترشيحات موثوقة',
+                'description' => 'نراجع تقييمات وآراء العملاء على أمازون لنرشح المنتجات الأعلى جودة.'
+            ],
+            [
+                'icon' => 'fas fa-book-reader',
+                'title' => 'معلومات واضحة',
+                'description' => 'نلخّص أهم المواصفات لتتخذ قرار الشراء بثقة وفي وقت قصير.'
+            ],
+            [
+                'icon' => 'fas fa-sync',
+                'title' => 'تحديثات مستمرة',
+                'description' => 'نحدّث القوائم باستمرار بحسب توفر المنتجات وأفضل العروض.'
+            ],
+            [
+                'icon' => 'fas fa-shopping-bag',
+                'title' => 'شراء مباشر من أمازون',
+                'description' => 'إتمام الطلب يتم على موقع أمازون. نحن لا نوفر البيع أو الشحن بأنفسنا.'
+            ],
+        ];
+    @endphp
     <!-- Why Choose Our Tools Section -->
-    <section class="py-16 bg-gradient-to-br from-amber-50 via-orange-50/70 to-white">
+    <section class="why-section py-16 bg-gradient-to-br from-amber-50 via-orange-50/70 to-white">
         <div class="container mx-auto px-6 text-center">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">لماذا نعرض أدوات الشيف الموصى بها؟</h2>
             <p class="text-gray-600 mb-12 max-w-3xl mx-auto">
                 نعمل كمسوّقين بالعمولة مع أمازون، ونختار بعناية أدوات الحلويات الأعلى تقييماً لمساعدتك في العثور على المنتجات المناسبة دون عناء.
             </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="md:hidden mb-10">
+                <div class="why-slider swiper">
+                    <div class="swiper-wrapper">
+                        @foreach($whyFeatures as $feature)
+                        <div class="swiper-slide">
+                            <div class="why-feature-card flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+                                <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
+                                    <i class="{{ $feature['icon'] }} text-4xl"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $feature['title'] }}</h3>
+                                <p class="text-gray-600 text-center">{{ $feature['description'] }}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+            <div class="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-8">
+                @foreach($whyFeatures as $feature)
                 <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
                     <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-check-circle text-4xl"></i>
+                        <i class="{{ $feature['icon'] }} text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">ترشيحات موثوقة</h3>
-                    <p class="text-gray-600 text-center">نراجع تقييمات وآراء العملاء على أمازون لنرشح المنتجات الأعلى جودة.</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $feature['title'] }}</h3>
+                    <p class="text-gray-600 text-center">{{ $feature['description'] }}</p>
                 </div>
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-book-reader text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">معلومات واضحة</h3>
-                    <p class="text-gray-600 text-center">نلخّص أهم المواصفات لتتخذ قرار الشراء بثقة وفي وقت قصير.</p>
-                </div>
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-sync text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">تحديثات مستمرة</h3>
-                    <p class="text-gray-600 text-center">نحدّث القوائم باستمرار بحسب توفر المنتجات وأفضل العروض.</p>
-                </div>
-                <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                    <div class="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-full h-20 w-20 flex items-center justify-center mb-4 shadow-lg">
-                        <i class="fas fa-shopping-bag text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">شراء مباشر من أمازون</h3>
-                    <p class="text-gray-600 text-center">إتمام الطلب يتم على موقع أمازون. نحن لا نوفر البيع أو الشحن بأنفسنا.</p>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -519,6 +646,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
             new Swiper(el, options);
         });
+
+        const whySliderEl = document.querySelector('.why-slider');
+        if (whySliderEl) {
+            new Swiper(whySliderEl, {
+                slidesPerView: 1,
+                spaceBetween: 16,
+                pagination: {
+                    el: whySliderEl.querySelector('.swiper-pagination'),
+                    clickable: true
+                }
+            });
+        }
     }
 
     // Load saved status for all tools

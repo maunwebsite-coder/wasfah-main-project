@@ -94,6 +94,9 @@
 @endpush
 
 @section('content')
+@php
+    $showAdminMetrics = auth()->check() && auth()->user()->is_admin;
+@endphp
 <div class="min-h-screen bg-gray-50">
 
     <!-- Featured Workshop -->
@@ -103,25 +106,25 @@
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
         $featuredIsCompleted = $featuredWorkshop->is_completed;
     @endphp
-    <section class="container mx-auto px-4 pt-12 md:pt-16 relative z-20">
+    <section class="container mx-auto px-4 pt-10 md:pt-16 relative z-20">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <!-- المحتوى النصي -->
-                <div class="p-6 sm:p-8 lg:p-12 text-white flex flex-col justify-center">
-                    <div class="mb-6">
-                        <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-block mb-4">
+                <div class="p-5 sm:p-8 lg:p-12 text-white flex flex-col justify-center">
+                    <div class="mb-5 sm:mb-6">
+                        <span class="bg-white/20 text-white text-sm font-semibold px-3.5 py-1.5 rounded-full inline-block mb-3.5 sm:mb-4">
                             الورشة القادمة
                         </span>
-                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight">
                             {{ $featuredWorkshop->title }}
                         </h2>
-                        <p class="text-base sm:text-lg text-amber-100 mb-6 leading-relaxed">
+                        <p class="text-base sm:text-lg text-amber-100 mb-5 sm:mb-6 leading-relaxed">
                             {{ $featuredWorkshop->featured_description ?: $featuredWorkshop->description }}
                         </p>
                     </div>
                     
                     <!-- تفاصيل الورشة -->
-                    <div class="space-y-2 sm:space-y-3 mb-8">
+                    <div class="space-y-1.5 sm:space-y-3 mb-6 sm:mb-8">
                         <div class="flex items-center text-amber-100">
                             <i class="fas fa-calendar-alt w-5 text-center ml-3"></i>
                             <span class="font-medium">{{ $featuredWorkshop->start_date->format('d/m/Y') }}</span>
@@ -134,38 +137,40 @@
                             <i class="fas fa-user w-5 text-center ml-3"></i>
                             <span class="font-medium">مع {{ $featuredWorkshop->instructor }}</span>
                         </div>
-                        <div class="flex items-center text-amber-100">
-                            <i class="fas fa-users w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} مشارك</span>
-                        </div>
+                        @if($showAdminMetrics)
+                            <div class="flex items-center text-amber-100">
+                                <i class="fas fa-users w-5 text-center ml-3"></i>
+                                <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} مشارك</span>
+                            </div>
+                        @endif
                     </div>
                     
                     <!-- أزرار الإجراءات -->
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         @if($featuredIsCompleted)
-                            <button class="bg-gray-400 text-gray-600 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                            <button class="bg-gray-400 text-gray-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-check-circle ml-2 text-xl"></i>
                                 الورشة مكتملة
                             </button>
                         @elseif($featuredIsFull)
-                            <button class="bg-gray-400 text-gray-600 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                            <button class="bg-gray-400 text-gray-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-lock ml-2 text-xl"></i>
                                 الورشة مكتملة
                             </button>
                         @elseif($featuredIsRegistrationClosed)
-                            <button class="bg-yellow-400 text-yellow-800 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
+                            <button class="bg-yellow-400 text-yellow-800 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-clock ml-2 text-xl"></i>
                                 انتهى التسجيل
                             </button>
                         @else
                             <button onclick="unifiedBooking({{ $featuredWorkshop->id }}, '{{ $featuredWorkshop->title }}', '{{ $featuredWorkshop->formatted_price }}', '{{ $featuredWorkshop->start_date->format('d/m/Y') }}', '{{ $featuredWorkshop->instructor }}', '{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}', '{{ $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}')" 
-                                    class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
+                                    class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
                                 <i class="fab fa-whatsapp ml-2 text-xl"></i>
                                 التسجيل في الورشة
                             </button>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
-                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
+                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-info-circle ml-2"></i>
                             تفاصيل أكثر
                         </a>
@@ -173,7 +178,7 @@
                 </div>
                 
                 <!-- الصورة -->
-                <div class="relative h-56 sm:h-64 lg:h-auto">
+                <div class="relative h-48 sm:h-64 lg:h-auto">
                     <img src="{{ $featuredWorkshop->image ? asset('storage/' . $featuredWorkshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=ورشة+فاخرة' }}" 
                          alt="{{ $featuredWorkshop->title }}" 
                          class="w-full h-full object-cover">
@@ -184,19 +189,19 @@
     </section>
     @else
     <!-- رسالة عدم وجود ورشات قادمة -->
-    <section class="container mx-auto px-4 pt-12 md:pt-16 relative z-20">
+    <section class="container mx-auto px-4 pt-10 md:pt-16 relative z-20">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <!-- المحتوى النصي -->
-                <div class="p-6 sm:p-8 lg:p-12 text-white flex flex-col justify-center">
-                    <div class="mb-6">
-                        <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-block mb-4">
+                <div class="p-5 sm:p-8 lg:p-12 text-white flex flex-col justify-center">
+                    <div class="mb-5 sm:mb-6">
+                        <span class="bg-white/20 text-white text-sm font-semibold px-3.5 py-1.5 rounded-full inline-block mb-3.5 sm:mb-4">
                             الورشة القادمة
                         </span>
-                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight">
                             لا توجد ورشات قادمة الآن
                         </h2>
-                        <p class="text-base sm:text-lg text-amber-100 mb-8 leading-relaxed">
+                        <p class="text-base sm:text-lg text-amber-100 mb-6 sm:mb-8 leading-relaxed">
                             نحن نعمل على إعداد ورشات جديدة ومميزة لك. انتظرونا في الورشة القادمة!
                         </p>
                     </div>
@@ -204,12 +209,12 @@
                     <!-- أزرار الإجراءات -->
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <a href="{{ route('workshops') }}" 
-                           class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
+                           class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
                             <i class="fas fa-list ml-2 text-xl"></i>
                             تصفح جميع الورشات
                         </a>
                         <a href="{{ route('recipes') }}" 
-                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
+                           class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-utensils ml-2"></i>
                             اكتشف الوصفات
                         </a>
@@ -217,10 +222,10 @@
                 </div>
                 
                 <!-- الصورة/الأيقونة -->
-                <div class="relative h-56 sm:h-64 lg:h-auto overflow-hidden flex items-center justify-center">
+                <div class="relative h-48 sm:h-64 lg:h-auto overflow-hidden flex items-center justify-center">
                     <div class="w-full h-full flex items-center justify-center">
-                        <div class="w-40 h-40 sm:w-48 sm:h-48 bg-white/20 rounded-full flex items-center justify-center">
-                            <i class="fas fa-calendar-alt text-6xl sm:text-8xl text-white/80"></i>
+                        <div class="w-36 h-36 sm:w-48 sm:h-48 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-calendar-alt text-5xl sm:text-8xl text-white/80"></i>
                         </div>
                     </div>
                     <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
@@ -299,9 +304,11 @@
                                 <div class="flex items-center text-gray-500 text-sm mb-4">
                                     <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
                                 </div>
-                                <div class="flex items-center text-gray-500 text-sm mb-4">
-                                    <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
-                                </div>
+                                @if($showAdminMetrics)
+                                    <div class="flex items-center text-gray-500 text-sm mb-4">
+                                        <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
+                                    </div>
+                                @endif
                                 
                                 <!-- الأزرار المثبتة في الأسفل -->
                                 <div class="mt-auto pt-4 border-t border-gray-100">

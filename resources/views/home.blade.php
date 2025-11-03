@@ -1411,6 +1411,9 @@
 @endpush
 
 @section('content')
+    @php
+        $showAdminMetrics = auth()->check() && auth()->user()->is_admin;
+    @endphp
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -1625,10 +1628,12 @@
                             <i class="fas fa-user w-5 text-center ml-3"></i>
                             <span class="font-medium">مع {{ $featuredWorkshop->instructor }}</span>
                         </div>
-                        <div class="flex items-center text-amber-100">
-                            <i class="fas fa-users w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} مشارك</span>
-                        </div>
+                        @if($showAdminMetrics)
+                            <div class="flex items-center text-amber-100">
+                                <i class="fas fa-users w-5 text-center ml-3"></i>
+                                <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} مشارك</span>
+                            </div>
+                        @endif
                     </div>
                     
                     <!-- أزرار الإجراءات -->
@@ -1990,9 +1995,11 @@
                                             <div class="flex items-center text-gray-500 text-sm mb-4">
                                                 <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
                                             </div>
-                                            <div class="flex items-center text-gray-500 text-sm mb-4">
-                                                <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
-                                            </div>
+                                            @if($showAdminMetrics)
+                                                <div class="flex items-center text-gray-500 text-sm mb-4">
+                                                    <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
+                                                </div>
+                                            @endif
                                             
                                             <!-- الأزرار المثبتة في الأسفل -->
                                             <div class="mt-auto pt-4 border-t border-gray-100">
