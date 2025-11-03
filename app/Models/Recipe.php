@@ -80,6 +80,9 @@ class Recipe extends Model
     protected static bool $visibilityColumnChecked = false;
     protected static bool $visibilityColumnExists = false;
 
+    protected static bool $statusColumnChecked = false;
+    protected static bool $statusColumnExists = false;
+
     /**
      * العلاقات
      */
@@ -230,7 +233,7 @@ class Recipe extends Model
                 $recipe->slug = $recipe->generateSlug();
             }
 
-            if (empty($recipe->status)) {
+            if (static::statusColumnExists() && empty($recipe->status)) {
                 $recipe->status = self::STATUS_DRAFT;
             }
 
@@ -251,6 +254,10 @@ class Recipe extends Model
      */
     public function scopeApproved($query)
     {
+        if (!static::statusColumnExists()) {
+            return $query;
+        }
+
         return $query->where('status', self::STATUS_APPROVED);
     }
 
@@ -271,6 +278,10 @@ class Recipe extends Model
      */
     public function scopePending($query)
     {
+        if (!static::statusColumnExists()) {
+            return $query;
+        }
+
         return $query->where('status', self::STATUS_PENDING);
     }
 
@@ -279,6 +290,10 @@ class Recipe extends Model
      */
     public function isApproved(): bool
     {
+        if (!static::statusColumnExists()) {
+            return true;
+        }
+
         return $this->status === self::STATUS_APPROVED;
     }
 
@@ -287,6 +302,10 @@ class Recipe extends Model
      */
     public function isPending(): bool
     {
+        if (!static::statusColumnExists()) {
+            return false;
+        }
+
         return $this->status === self::STATUS_PENDING;
     }
 
@@ -295,6 +314,10 @@ class Recipe extends Model
      */
     public function isDraft(): bool
     {
+        if (!static::statusColumnExists()) {
+            return false;
+        }
+
         return $this->status === self::STATUS_DRAFT;
     }
 
@@ -342,5 +365,35 @@ class Recipe extends Model
         }
 
         return static::$visibilityColumnExists;
+    }
+
+    /**
+     * Determine if the recipes table has the status column.
+     */
+    protected static function statusColumnExists(): bool
+    {
+        if (!static::$statusColumnChecked) {
+            $table = (new static())->getTable();
+            static::$statusColumnExists = Schema::hasColumn($table, 'status');
+            static::$statusColumnChecked = true;
+        }
+
+        return static::$statusColumnExists;
+    }
+
+    /**
+     * Expose status column availability for external callers.
+     */
+    public static function supportsModerationStatus(): bool
+    {
+        return static::statusColumnExists();
+    }
+
+    /**
+     * Expose visibility column availability for external callers.
+     */
+    public static function supportsVisibilityFlag(): bool
+    {
+        return static::visibilityColumnExists();
     }
 }

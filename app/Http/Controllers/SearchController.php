@@ -46,8 +46,6 @@ class SearchController extends Controller
                     }])
                     ->withCount(['interactions as interactions_count'])
                     ->withAvg('interactions', 'rating')
-                    ->where('recipes.status', Recipe::STATUS_APPROVED)
-                    ->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC)
                     ->where(function ($q) use ($query) {
                         $q->where('recipes.title', 'like', "%{$query}%")
                           ->orWhere('recipes.description', 'like', "%{$query}%")
@@ -59,6 +57,14 @@ class SearchController extends Controller
                               $subQ->where('name', 'like', "%{$query}%");
                           });
                     });
+
+                if (Recipe::supportsModerationStatus()) {
+                    $recipesQuery->where('recipes.status', Recipe::STATUS_APPROVED);
+                }
+
+                if (Recipe::supportsVisibilityFlag()) {
+                    $recipesQuery->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC);
+                }
 
                 // Apply recipe filters
                 if ($request->has('recipe_category') && $request->recipe_category) {
@@ -282,7 +288,7 @@ class SearchController extends Controller
      */
     private function searchRecipes($query)
     {
-        return Recipe::select([
+        $recipesQuery = Recipe::select([
                 'recipes.recipe_id',
                 'recipes.title',
                 'recipes.slug',
@@ -303,8 +309,6 @@ class SearchController extends Controller
             }])
             ->withCount(['interactions as interactions_count'])
             ->withAvg('interactions', 'rating')
-            ->where('recipes.status', Recipe::STATUS_APPROVED)
-            ->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC)
             ->where(function ($q) use ($query) {
                 $q->where('recipes.title', 'like', "%{$query}%")
                   ->orWhere('recipes.description', 'like', "%{$query}%")
@@ -315,7 +319,17 @@ class SearchController extends Controller
                   ->orWhereHas('ingredients', function ($subQ) use ($query) {
                       $subQ->where('name', 'like', "%{$query}%");
                   });
-            })
+            });
+
+        if (Recipe::supportsModerationStatus()) {
+            $recipesQuery->where('recipes.status', Recipe::STATUS_APPROVED);
+        }
+
+        if (Recipe::supportsVisibilityFlag()) {
+            $recipesQuery->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC);
+        }
+
+        return $recipesQuery
             ->orderBy('recipes.created_at', 'desc')
             ->limit(5)
             ->get();
