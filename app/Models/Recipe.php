@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Recipe extends Model
 {
@@ -72,6 +73,12 @@ class Recipe extends Model
      */
     public const VISIBILITY_PUBLIC = 'public';
     public const VISIBILITY_PRIVATE = 'private';
+
+    /**
+     * Cached visibility column detection.
+     */
+    protected static bool $visibilityColumnChecked = false;
+    protected static bool $visibilityColumnExists = false;
 
     /**
      * العلاقات
@@ -227,7 +234,7 @@ class Recipe extends Model
                 $recipe->status = self::STATUS_DRAFT;
             }
 
-            if (empty($recipe->visibility)) {
+            if (static::visibilityColumnExists() && empty($recipe->visibility)) {
                 $recipe->visibility = self::VISIBILITY_PUBLIC;
             }
         });
@@ -252,6 +259,10 @@ class Recipe extends Model
      */
     public function scopePublic($query)
     {
+        if (!static::visibilityColumnExists()) {
+            return $query;
+        }
+
         return $query->where('visibility', self::VISIBILITY_PUBLIC);
     }
 
@@ -292,6 +303,10 @@ class Recipe extends Model
      */
     public function isPublic(): bool
     {
+        if (!static::visibilityColumnExists()) {
+            return true;
+        }
+
         return $this->visibility === self::VISIBILITY_PUBLIC;
     }
 
@@ -300,6 +315,10 @@ class Recipe extends Model
      */
     public function isPrivate(): bool
     {
+        if (!static::visibilityColumnExists()) {
+            return false;
+        }
+
         return $this->visibility === self::VISIBILITY_PRIVATE;
     }
 
@@ -309,5 +328,19 @@ class Recipe extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Determine if the recipes table has the visibility column.
+     */
+    protected static function visibilityColumnExists(): bool
+    {
+        if (!static::$visibilityColumnChecked) {
+            $table = (new static())->getTable();
+            static::$visibilityColumnExists = Schema::hasColumn($table, 'visibility');
+            static::$visibilityColumnChecked = true;
+        }
+
+        return static::$visibilityColumnExists;
     }
 }
