@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialiteController;
-use Illuminate\Support\Facades\Route;
+use App\Models\Recipe;
+use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // مسارات المصادقة عبر Google
 Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('google.redirect');
@@ -12,7 +14,79 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->n
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // صفحة روابط Wasfah للمنصات الاجتماعية
-Route::view('/wasfah-links', 'links')->name('links');
+Route::get('/wasfah-links', function () {
+    $fallbackSelections = collect([
+        [
+            'title' => 'صندوق وصفة الموسمي',
+            'image' => asset('image/tnl.png'),
+            'alt' => 'صندوق وصفة الموسمي',
+            'url' => url('/recipes'),
+        ],
+        [
+            'title' => 'ورش عمل مباشرة عبر Google Meet',
+            'image' => asset('image/wterm.png'),
+            'alt' => 'ورش عمل مباشرة عبر Google Meet',
+            'url' => url('/workshops'),
+        ],
+        [
+            'title' => 'أدوات المطبخ المختارة',
+            'image' => asset('image/term.png'),
+            'alt' => 'أدوات المطبخ المختارة',
+            'url' => url('/tools'),
+        ],
+    ]);
+
+    $monthlySelections = Recipe::query()
+        ->inRandomOrder()
+        ->take(3)
+        ->get()
+        ->map(function (Recipe $recipe) {
+            return [
+                'title' => $recipe->title,
+                'image' => $recipe->image_url ?? asset('image/Brownies.png'),
+                'alt' => $recipe->title,
+                'url' => route('recipe.show', ['recipe' => $recipe->slug]),
+            ];
+        });
+
+    if ($monthlySelections->isEmpty()) {
+        $monthlySelections = $fallbackSelections->values();
+    } elseif ($monthlySelections->count() < 3) {
+        $monthlySelections = $monthlySelections->concat(
+            $fallbackSelections->take(3 - $monthlySelections->count())
+        )->values();
+    } else {
+        $monthlySelections = $monthlySelections->values();
+    }
+
+    $nextWorkshop = Workshop::query()
+        ->active()
+        ->upcoming()
+        ->orderBy('start_date')
+        ->first();
+
+    $upcomingWorkshop = null;
+
+    if ($nextWorkshop) {
+        $upcomingWorkshop = [
+            'title' => $nextWorkshop->title,
+            'slug' => $nextWorkshop->slug,
+            'instructor' => $nextWorkshop->instructor,
+            'start_date' => $nextWorkshop->start_date?->locale('ar')->translatedFormat('d F Y • h:i a'),
+            'mode' => $nextWorkshop->is_online
+                ? 'أونلاين عبر Google Meet'
+                : ($nextWorkshop->location ?? 'حضوري'),
+            'image' => $nextWorkshop->image
+                ? \Storage::disk('public')->url($nextWorkshop->image)
+                : asset('image/wterm.png'),
+        ];
+    }
+
+    return view('links', [
+        'monthlySelections' => $monthlySelections,
+        'upcomingWorkshop' => $upcomingWorkshop,
+    ]);
+})->name('links');
 
 // مسار صفحة المصادقة الموحدة (تسجيل الدخول + إنشاء حساب)
 Route::get('/login', function () {
@@ -59,10 +133,6 @@ Route::get('/register', function () {
     }
     return view('auth');
 })->name('register');
-
-
-use App\Models\Recipe; // Make sure to add this at the top of the file
-
 Route::get('/recipe/{recipe:slug}', [App\Http\Controllers\RecipeController::class, 'show'])->name('recipe.show');
 
 // مسار ورشات العمل

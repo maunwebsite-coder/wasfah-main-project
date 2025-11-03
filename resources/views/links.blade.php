@@ -95,6 +95,104 @@
             box-shadow: 0 22px 40px rgba(249, 115, 22, 0.18);
         }
 
+        .upcoming-banner {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            padding: 22px 24px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0.04) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.18);
+            margin: 20px 0 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upcoming-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(90% 120% at 0% 0%, rgba(249, 115, 22, 0.18) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .upcoming-banner .banner-content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            text-align: start;
+        }
+
+        .upcoming-banner .banner-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 18px 36px rgba(249, 115, 22, 0.2);
+        }
+
+        .upcoming-banner .banner-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upcoming-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(249, 115, 22, 0.16);
+            color: #9a3412;
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upcoming-banner h2 {
+            margin: 0 0 8px;
+            font-size: 1.35rem;
+            color: var(--heading);
+        }
+
+        .upcoming-meta {
+            margin: 0 0 16px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .upcoming-meta span {
+            color: var(--heading);
+            font-weight: 500;
+        }
+
+        .upcoming-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 14px 28px rgba(249, 115, 22, 0.25);
+        }
+
+        .upcoming-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 34px rgba(249, 115, 22, 0.3);
+        }
+
+        .upcoming-cta svg {
+            width: 18px;
+            height: 18px;
+        }
+
         .title {
             font-size: clamp(1.95rem, 4vw, 2.5rem);
             font-weight: 700;
@@ -360,6 +458,27 @@
                 padding: 24px;
             }
 
+            .upcoming-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 24px 20px;
+            }
+
+            .upcoming-banner .banner-image {
+                width: 100%;
+                max-width: 180px;
+                height: auto;
+            }
+
+            .upcoming-banner .banner-image img {
+                aspect-ratio: 1;
+            }
+
+            .upcoming-cta {
+                justify-content: center;
+                width: 100%;
+            }
+
             .hero-image {
                 width: 132px;
                 height: 132px;
@@ -376,32 +495,37 @@
     </style>
 </head>
 <body>
-    @php
-        $favorites = [
-            [
-                'title' => 'صندوق وصفة الموسمي',
-                'image' => asset('image/tnl.png'),
-                'alt' => 'صندوق وصفة الموسمي',
-                'url' => url('/recipes'),
-            ],
-            [
-                'title' => 'ورش عمل مباشرة عبر Google Meet',
-                'image' => asset('image/wterm.png'),
-                'alt' => 'ورش عمل مباشرة عبر Google Meet',
-                'url' => url('/workshops'),
-            ],
-            [
-                'title' => 'أدوات المطبخ المختارة',
-                'image' => asset('image/term.png'),
-                'alt' => 'أدوات المطبخ المختارة',
-                'url' => url('/tools'),
-            ],
-        ];
-        shuffle($favorites);
-    @endphp
     <main class="page-frame">
         <header class="header">
             <span class="wordmark">Wasfah Links</span>
+            @if ($upcomingWorkshop)
+                <div class="upcoming-banner" role="region" aria-label="الورشة القادمة">
+                    <div class="banner-content">
+                        <span class="upcoming-badge">الورشة القادمة</span>
+                        <h2>{{ $upcomingWorkshop['title'] }}</h2>
+                        <p class="upcoming-meta">
+                            @if (!empty($upcomingWorkshop['start_date']))
+                                <span>{{ $upcomingWorkshop['start_date'] }}</span>
+                            @endif
+                            @if (!empty($upcomingWorkshop['mode']))
+                                <span> · {{ $upcomingWorkshop['mode'] }}</span>
+                            @endif
+                            @if (!empty($upcomingWorkshop['instructor']))
+                                <span> · بإشراف {{ $upcomingWorkshop['instructor'] }}</span>
+                            @endif
+                        </p>
+                        <a class="upcoming-cta" href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop['slug']]) }}">
+                            احجز مقعدك الآن
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z"></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="banner-image">
+                        <img src="{{ $upcomingWorkshop['image'] }}" alt="صورة الورشة القادمة">
+                    </div>
+                </div>
+            @endif
             <img class="hero-image" src="{{ asset('image/Brownies.png') }}" alt="صورة من وصفات وصفة">
             <h1 class="title">WASFAH</h1>
             <p class="subtitle">كل الروابط التي تحتاجها لتجربة وصفة: ورش عمل، صناديق موسمية، أدوات، ونشرة ملهمة.</p>
@@ -420,18 +544,18 @@
             </a>
         </nav>
 
-        <section aria-labelledby="favorites" style="position: relative; z-index: 2;">
+        <section aria-labelledby="monthly-selections" style="position: relative; z-index: 2;">
             <div class="section-title">
-                <span id="favorites">مفضلات المجتمع</span>
-                <span>مختارات هذا الشهر</span>
+                <span id="monthly-selections">مختارات هذا الشهر</span>
+                <span>وصفات مختارة تتجدد مع كل زيارة</span>
             </div>
             <div class="carousel" role="list">
-                @foreach ($favorites as $favorite)
-                    <a class="carousel-card" role="listitem" href="{{ $favorite['url'] }}">
+                @foreach ($monthlySelections as $selection)
+                    <a class="carousel-card" role="listitem" href="{{ $selection['url'] }}">
                         <div class="carousel-photo">
-                            <img src="{{ $favorite['image'] }}" alt="{{ $favorite['alt'] }}">
+                            <img src="{{ $selection['image'] }}" alt="{{ $selection['alt'] }}">
                         </div>
-                        <div class="carousel-caption">{{ $favorite['title'] }}</div>
+                        <div class="carousel-caption">{{ $selection['title'] }}</div>
                     </a>
                 @endforeach
             </div>
