@@ -819,7 +819,7 @@
                                 <label for="meeting_link" class="form-label">رابط الاجتماع (للورش الأونلاين)</label>
                                 <input id="meeting_link" name="meeting_link" type="url" value="{{ old('meeting_link') }}"
                                        class="form-input @error('meeting_link') is-invalid @enderror"
-                                       placeholder="https://zoom.us/j/123456789">
+                                       placeholder="https://meet.google.com/abc-defg-hij">
                                 <p id="meeting-link-help" class="form-hint">سيظهر الرابط للمشاركين بعد تأكيد حجزهم في الورشة الأونلاين.</p>
                                 @error('meeting_link')
                                     <p class="error-text">{{ $message }}</p>
@@ -1257,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (locationInput) {
             locationInput.required = !isOnline;
-            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Zoom' : 'مثال: عمان - شارع الملكة رانيا';
+            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Google Meet' : 'مثال: عمان - شارع الملكة رانيا';
             locationInput.classList.toggle('border-emerald-400', isOnline);
             if (locationHelp) {
                 locationHelp.textContent = isOnline
@@ -1268,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (meetingLinkInput) {
             meetingLinkInput.required = isOnline;
-            meetingLinkInput.placeholder = isOnline ? 'https://zoom.us/j/123456789' : 'يمكن ترك الحقل فارغاً للورش الحضورية';
+            meetingLinkInput.placeholder = isOnline ? 'https://meet.google.com/abc-defg-hij' : 'يمكن ترك الحقل فارغاً للورش الحضورية';
             meetingLinkInput.classList.toggle('ring-2', isOnline);
             meetingLinkInput.classList.toggle('ring-amber-400', isOnline);
             if (meetingLinkHelp) {

@@ -352,7 +352,7 @@
                             <label for="meeting_link" class="block text-sm font-semibold text-slate-700 mb-2">رابط الاجتماع (للورش الأونلاين)</label>
                             <input id="meeting_link" name="meeting_link" type="url" value="{{ old('meeting_link', $workshop->meeting_link) }}"
                                    class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200 @error('meeting_link') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror"
-                                   placeholder="https://zoom.us/your-meeting-link">
+                                   placeholder="https://meet.google.com/abc-defg-hij">
                             <p id="meeting-link-help" class="mt-2 text-xs text-slate-500">سيظهر الرابط للمشاركين بعد تأكيد حجزهم في الورشة الأونلاين.</p>
                             @error('meeting_link')
                                 <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
@@ -837,7 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (locationInput) {
             locationInput.required = !isOnline;
-            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Zoom' : 'مثال: عمان - شارع الملكة رانيا';
+            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Google Meet' : 'مثال: عمان - شارع الملكة رانيا';
             locationInput.classList.toggle('border-emerald-400', isOnline);
             if (locationHelp) {
                 locationHelp.textContent = isOnline
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (meetingLinkInput) {
             meetingLinkInput.required = isOnline;
-            meetingLinkInput.placeholder = isOnline ? 'https://zoom.us/j/123456789' : 'يمكن ترك الحقل فارغاً للورش الحضورية';
+            meetingLinkInput.placeholder = isOnline ? 'https://meet.google.com/abc-defg-hij' : 'يمكن ترك الحقل فارغاً للورش الحضورية';
             meetingLinkInput.classList.toggle('ring-2', isOnline);
             meetingLinkInput.classList.toggle('ring-amber-400', isOnline);
             if (meetingLinkHelp) {

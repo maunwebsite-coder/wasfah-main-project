@@ -1092,62 +1092,74 @@
     </script>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 py-8">
+    <footer class="bg-gray-100 pt-12 pb-6">
         <div class="container mx-auto px-4">
             <!-- Main Footer Content -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 footer-content">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-10 border-b border-gray-200 footer-content">
                 <!-- Brand & Social -->
-                <div>
-                    <div class="flex items-center mb-4">
-                        <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-10 w-auto">
+                <div class="space-y-4 text-center sm:text-right">
+                    <div class="flex items-center justify-center sm:justify-end space-x-3 rtl:space-x-reverse">
+                        <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-12 w-auto">
+                        <span class="text-lg font-semibold text-gray-800 hidden sm:inline">وصفة</span>
                     </div>
-                    <p class="text-gray-600 mb-4">منصّة وصفة للحلويات الفاخرة والراقية</p>
-                    <div class="flex space-x-4 rtl:space-x-reverse">
-                        <a href="https://www.instagram.com/wasfah.jo/" target="_blank" class="text-gray-600 hover:text-orange-500 transition-colors">
+                    <p class="text-gray-600 leading-relaxed">
+                        منصّة وصفة للحلويات الفاخرة والراقية، نرافقك في كل خطوة لتقديم أطيب الحلويات.
+                    </p>
+                    <div class="flex items-center justify-center sm:justify-end space-x-4 rtl:space-x-reverse">
+                        <a href="https://www.instagram.com/wasfah.jo/" target="_blank" class="text-gray-600 hover:text-orange-500 transition-colors" aria-label="Instagram">
                             <i class="fab fa-instagram text-2xl"></i>
                         </a>
                     </div>
                 </div>
-                
-                <!-- Quick Links -->
-                <div>
-                    <h3 class="font-bold text-gray-800 mb-4">روابط سريعة</h3>
-                    <ul class="space-y-3 text-gray-600">
+
+                <!-- Explore -->
+                <div class="space-y-4 text-center sm:text-right">
+                    <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">اكتشف</h3>
+                    <ul class="space-y-2 text-gray-600">
                         <li><a href="{{ route('recipes') }}" class="hover:text-orange-500 transition-colors">جميع الوصفات</a></li>
-                        <li><a href="{{ route('tools') }}" class="hover:text-orange-500 transition-colors">أدوات الشيف</a></li>
-                        <li><a href="{{ route('search') }}" class="hover:text-orange-500 transition-colors">البحث</a></li>
                         <li><a href="{{ route('workshops') }}" class="hover:text-orange-500 transition-colors">ورشات العمل</a></li>
                         <li><a href="{{ route('baking-tips') }}" class="hover:text-orange-500 transition-colors">نصائح الحلويات</a></li>
                     </ul>
                 </div>
-                
+
+                <!-- Resources -->
+                <div class="space-y-4 text-center sm:text-right">
+                    <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">الدليل السريع</h3>
+                    <div class="grid grid-cols-1 gap-3 text-gray-600 sm:grid-cols-1">
+                        <a href="{{ route('tools') }}" class="hover:text-orange-500 transition-colors">أدوات الشيف</a>
+                        <a href="{{ route('search') }}" class="hover:text-orange-500 transition-colors">البحث عن وصفة</a>
+                        <a href="{{ route('about') }}" class="hover:text-orange-500 transition-colors">من نحن</a>
+                    </div>
+                </div>
+
                 <!-- Contact Info -->
-                <div>
-                    <h3 class="font-bold text-gray-800 mb-4">تواصل معنا</h3>
+                <div class="space-y-4 text-center sm:text-right">
+                    <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">تواصل معنا</h3>
                     <div class="space-y-3 text-gray-600">
-                        <div class="flex items-center">
-                            <i class="fas fa-envelope text-orange-500 ml-2"></i>
+                        <div class="flex items-center justify-center sm:justify-end space-x-2 rtl:space-x-reverse">
+                            <i class="fas fa-envelope text-orange-500"></i>
                             <span>wasfah99@gmail.com</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-phone text-orange-500 ml-2"></i>
+                        <div class="flex items-center justify-center sm:justify-end space-x-2 rtl:space-x-reverse">
+                            <i class="fas fa-phone text-orange-500"></i>
                             <span>+962 6 123 4567</span>
                         </div>
-                        <div class="space-y-2 mt-4">
-                            <a href="{{ route('about') }}" class="block hover:text-orange-500 transition-colors">من نحن</a>
-                            <a href="{{ route('contact') }}" class="block hover:text-orange-500 transition-colors">اتصل بنا</a>
+                        <div class="pt-2">
+                            <a href="{{ route('contact') }}" class="inline-block hover:text-orange-500 transition-colors">اتصل بنا</a>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Bottom Bar -->
-            <div class="border-t border-gray-300 pt-6 flex flex-col md:flex-row justify-between items-center text-gray-500 footer-bottom">
-                <div class="text-sm mb-4 md:mb-0">
-                    <span>&copy; 2024 وصفة. جميع الحقوق محفوظة.</span>
+            <div class="pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-sm text-gray-500 footer-bottom">
+                <div class="text-center md:text-right">
+                    <span>&copy; {{ now()->year }} وصفة. جميع الحقوق محفوظة.</span>
                 </div>
-                <div class="text-sm">
-                    <span>موقع وصفه هو جزء من شركة وصفة الاردن</span>
+                <div class="flex flex-col items-center gap-1 text-center md:flex-row md:items-center md:gap-4">
+                    <span>موقع وصفة هو جزء من شركة وصفة الأردن.</span>
+                    <span class="hidden md:inline-block text-gray-300">|</span>
+                    <span>نهتم بجودة تفاصيل كل وصفة.</span>
                 </div>
             </div>
         </div>

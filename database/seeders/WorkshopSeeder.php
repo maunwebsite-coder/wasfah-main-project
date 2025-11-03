@@ -110,7 +110,7 @@ class WorkshopSeeder extends Seeder
                 'end_date' => Carbon::now()->addDays(5)->setTime(21, 0),
                 'registration_deadline' => Carbon::now()->addDays(3),
                 'is_online' => true,
-                'meeting_link' => 'https://zoom.us/j/123456789',
+                'meeting_link' => 'https://meet.google.com/abc-defg-hij',
                 'requirements' => 'مطبخ مجهز، اتصال إنترنت جيد',
                 'what_you_will_learn' => 'مبادئ الطبخ الصحي، تحضير وجبات متوازنة، اختيار المكونات الصحية',
                 'materials_needed' => 'قائمة المكونات ستُرسل قبل الورشة',

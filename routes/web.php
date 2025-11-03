@@ -11,6 +11,9 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->n
 // المسار الرئيسي لعرض الصفحة الرئيسية
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+// صفحة روابط Wasfah للمنصات الاجتماعية
+Route::view('/links', 'links')->name('links');
+
 // مسار صفحة المصادقة الموحدة (تسجيل الدخول + إنشاء حساب)
 Route::get('/login', function () {
     // إذا كان المستخدم مسجل دخول، أعد توجيهه للصفحة الرئيسية
