@@ -293,12 +293,12 @@
             <div class="hero-meta-grid">
                 <div class="hero-meta-card">
                     <span class="hero-meta-label">تاريخ البداية</span>
-                    <span class="hero-meta-value">{{ optional($workshop->start_date)->format('d M Y، H:i') ?? 'غير محدد' }}</span>
+                    <span class="hero-meta-value">{{ optional($workshop->start_date)->format('d/m/Y، H:i') ?? 'غير محدد' }}</span>
                     <span class="hero-meta-sub">موعد انطلاق الورشة.</span>
                 </div>
                 <div class="hero-meta-card">
                     <span class="hero-meta-label">تاريخ النهاية</span>
-                    <span class="hero-meta-value">{{ optional($workshop->end_date)->format('d M Y، H:i') ?? 'غير محدد' }}</span>
+                    <span class="hero-meta-value">{{ optional($workshop->end_date)->format('d/m/Y، H:i') ?? 'غير محدد' }}</span>
                     <span class="hero-meta-sub">خاتمة الورشة أو آخر جلسة.</span>
                 </div>
                 <div class="hero-meta-card">
@@ -336,15 +336,15 @@
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">البداية</span>
-                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->start_date)->format('d M Y، H:i') ?? 'غير محدد' }}</p>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->start_date)->format('d/m/Y، H:i') ?? 'غير محدد' }}</p>
                             </div>
                             <div>
                                 <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">النهاية</span>
-                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->end_date)->format('d M Y، H:i') ?? 'غير محدد' }}</p>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->end_date)->format('d/m/Y، H:i') ?? 'غير محدد' }}</p>
                             </div>
                             <div>
                                 <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">التسجيل متاح حتى</span>
-                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->registration_deadline)->format('d M Y، H:i') ?? 'لم يحدد' }}</p>
+                                <p class="mt-2 text-slate-800 font-semibold">{{ optional($workshop->registration_deadline)->format('d/m/Y، H:i') ?? 'لم يحدد' }}</p>
                             </div>
                             <div>
                                 <span class="text-xs font-semibold uppercase tracking-widest text-slate-400">عدد المقاعد</span>
@@ -472,7 +472,7 @@
                     <div class="mt-6 space-y-4">
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500">تاريخ الإنشاء</span>
-                            <span class="font-semibold text-slate-800">{{ optional($workshop->created_at)->format('d M Y') }}</span>
+                            <span class="font-semibold text-slate-800">{{ optional($workshop->created_at)->format('d/m/Y') }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500">آخر تحديث</span>

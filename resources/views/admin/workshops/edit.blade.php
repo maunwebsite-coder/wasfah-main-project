@@ -110,7 +110,7 @@
                             {{ optional($workshop->updated_at)->diffForHumans() ?? 'غير متاح' }}
                         </div>
                         <div class="mt-2 text-sm text-slate-500">
-                            تم إنشاء الورشة في {{ optional($workshop->created_at)->format('d M Y') }}
+                            تم إنشاء الورشة في {{ optional($workshop->created_at)->format('d/m/Y') }}
                         </div>
                     </div>
                     <div class="rounded-2xl border border-white/70 bg-white/80 backdrop-blur shadow-md p-5">
@@ -129,14 +129,14 @@
                 <div class="rounded-2xl bg-white/85 border border-white/70 shadow-md p-5">
                     <div class="text-xs font-semibold tracking-widest text-slate-400 uppercase">تاريخ البداية</div>
                     <div class="mt-2 text-sm font-bold text-slate-800">
-                        {{ optional($workshop->start_date)->format('d M Y، H:i') ?? 'غير محدد' }}
+                        {{ optional($workshop->start_date)->format('d/m/Y، H:i') ?? 'غير محدد' }}
                     </div>
                     <div class="mt-1 text-xs text-slate-500">بداية الجلسة الأولى</div>
                 </div>
                 <div class="rounded-2xl bg-white/85 border border-white/70 shadow-md p-5">
                     <div class="text-xs font-semibold tracking-widest text-slate-400 uppercase">تاريخ النهاية</div>
                     <div class="mt-2 text-sm font-bold text-slate-800">
-                        {{ optional($workshop->end_date)->format('d M Y، H:i') ?? 'غير محدد' }}
+                        {{ optional($workshop->end_date)->format('d/m/Y، H:i') ?? 'غير محدد' }}
                     </div>
                     <div class="mt-1 text-xs text-slate-500">الختام المتوقع</div>
                 </div>

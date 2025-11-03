@@ -1100,7 +1100,7 @@
                 <div class="space-y-4 text-center sm:text-right">
                     <div class="flex items-center justify-center sm:justify-end space-x-3 rtl:space-x-reverse">
                         <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-12 w-auto">
-                        <span class="text-lg font-semibold text-gray-800 hidden sm:inline">وصفة</span>
+                        <!-- <span class="text-lg font-semibold text-gray-800 hidden sm:inline">وصفة</span> -->
                     </div>
                     <p class="text-gray-600 leading-relaxed">
                         منصّة وصفة للحلويات الفاخرة والراقية، نرافقك في كل خطوة لتقديم أطيب الحلويات.

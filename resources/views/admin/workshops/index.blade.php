@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'إدارة الورشات - لوحة الإدارة')
 
@@ -65,7 +65,7 @@
                                     <h2 class="text-lg font-bold leading-tight">{{ $featuredWorkshop->title }}</h2>
                                     @if($featuredWorkshop->start_date)
                                         <p class="text-sm text-white text-opacity-80">
-                                            {{ $featuredWorkshop->start_date->format('d M Y - h:i A') }}
+                                            {{ $featuredWorkshop->start_date->format('d/m/Y - h:i A') }}
                                         </p>
                                     @endif
                                 </div>
@@ -211,10 +211,10 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm space-y-1">
-                                    <p class="font-semibold text-gray-800">{{ $workshop->start_date->format('d M, Y') }}</p>
+                                    <p class="font-semibold text-gray-800">{{ $workshop->start_date->format('d/m/Y') }}</p>
                                     <p class="text-xs text-gray-500">{{ $workshop->start_date->format('H:i') }}</p>
                                     @if($workshop->end_date)
-                                        <p class="text-xs text-gray-400">حتى {{ $workshop->end_date->format('d M, Y') }}</p>
+                                        <p class="text-xs text-gray-400">حتى {{ $workshop->end_date->format('d/m/Y') }}</p>
                                     @endif
                                 </div>
                             </td>

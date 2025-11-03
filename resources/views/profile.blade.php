@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'الملف الشخصي - موقع وصفة')
 
@@ -61,7 +61,7 @@ use Carbon\Carbon;
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-5 text-sm text-gray-600">
                         <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-orange-100">
                             <i class="fas fa-calendar-alt text-orange-500"></i>
-                            عضو منذ {{ $user->created_at->format('M Y') }}
+                            عضو منذ {{ $user->created_at->format('m/Y') }}
                         </span>
 
                         <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-orange-100">
@@ -186,7 +186,7 @@ use Carbon\Carbon;
                                 <div class="flex flex-wrap gap-4 text-sm text-gray-600">
                                     <span class="inline-flex items-center gap-2">
                                         <i class="fas fa-calendar text-orange-500"></i>
-                                        {{ optional($nextWorkshop->workshop->start_date)->format('d M Y') }}
+                                        {{ optional($nextWorkshop->workshop->start_date)->format('d/m/Y') }}
                                     </span>
                                     <span class="inline-flex items-center gap-2">
                                         <i class="fas fa-clock text-orange-500"></i>
@@ -231,7 +231,7 @@ use Carbon\Carbon;
                                             <div>
                                                 <p class="font-semibold text-gray-800">{{ $booking->workshop->title }}</p>
                                                 <p class="text-xs text-gray-500">
-                                                    {{ optional($booking->workshop->start_date)->format('d M Y h:i A') }}
+                                                    {{ optional($booking->workshop->start_date)->format('d/m/Y h:i A') }}
                                                 </p>
                                             </div>
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusClasses[$booking->status] ?? 'bg-gray-100 text-gray-600' }}">
@@ -407,13 +407,13 @@ use Carbon\Carbon;
                                         @if(!empty($activity['meta']['start_date']))
                                             <span class="inline-flex items-center gap-1">
                                                 <i class="fas fa-calendar-alt text-orange-500"></i>
-                                                يبدأ في {{ optional($activity['meta']['start_date'])->format('d M Y h:i A') }}
+                                                يبدأ في {{ optional($activity['meta']['start_date'])->format('d/m/Y h:i A') }}
                                             </span>
                                         @endif
                                         @if(!empty($activity['meta']['end_date']))
                                             <span class="inline-flex items-center gap-1">
                                                 <i class="fas fa-clock text-orange-500"></i>
-                                                ينتهي {{ optional($activity['meta']['end_date'])->format('d M Y h:i A') }}
+                                                ينتهي {{ optional($activity['meta']['end_date'])->format('d/m/Y h:i A') }}
                                             </span>
                                         @endif
                                     </div>
@@ -548,7 +548,7 @@ use Carbon\Carbon;
                 @if($nextWorkshop && $nextWorkshop->workshop)
                     <p class="text-gray-500 text-sm leading-relaxed">
                         الورشة التالية: <span class="font-semibold text-gray-700">{{ $nextWorkshop->workshop->title }}</span><br>
-                        <span class="text-xs">{{ optional($nextWorkshop->workshop->start_date)->format('d M Y h:i A') }}</span>
+                        <span class="text-xs">{{ optional($nextWorkshop->workshop->start_date)->format('d/m/Y h:i A') }}</span>
                     </p>
                 @else
                     <p class="text-gray-500 text-sm">

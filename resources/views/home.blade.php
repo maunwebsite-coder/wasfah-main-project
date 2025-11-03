@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'موقع وصفه - دليلك لعالم الحلويات')
 
@@ -1615,7 +1615,7 @@
                     <div class="space-y-3 mb-5">
                         <div class="flex items-center text-amber-100">
                             <i class="fas fa-calendar-alt w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $featuredWorkshop->start_date->format('d M Y') }}</span>
+                            <span class="font-medium">{{ $featuredWorkshop->start_date->format('d/m/Y') }}</span>
                         </div>
                         <div class="flex items-center text-amber-100">
                             <i class="fas {{ $featuredWorkshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }} w-5 text-center ml-3"></i>
@@ -1649,7 +1649,7 @@
                                 انتهى التسجيل
                             </button>
                         @else
-                            <button onclick="unifiedBooking({{ $featuredWorkshop->id }}, '{{ $featuredWorkshop->title }}', '{{ $featuredWorkshop->formatted_price }}', '{{ $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d M, Y') : 'غير محدد' }}', '{{ $featuredWorkshop->instructor }}', '{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}', '{{ $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d M, Y') : 'غير محدد' }}')" 
+                            <button onclick="unifiedBooking({{ $featuredWorkshop->id }}, '{{ $featuredWorkshop->title }}', '{{ $featuredWorkshop->formatted_price }}', '{{ $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d/m/Y') : 'غير محدد' }}', '{{ $featuredWorkshop->instructor }}', '{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}', '{{ $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}')" 
                                     class="bg-white text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl w-full sm:w-auto">
                                 <i class="fab fa-whatsapp ml-2 text-xl"></i>
                                 احجز مقعدك الآن
@@ -1985,7 +1985,7 @@
                                             <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $workshop->title }}</h3>
                                             <p class="text-gray-600 mb-4">مع {{ $workshop->instructor }}</p>
                                             <div class="flex items-center text-gray-500 text-sm mb-4">
-                                                <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $workshop->start_date->format('d M, Y') }}
+                                                <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $workshop->start_date->format('d/m/Y') }}
                                             </div>
                                             <div class="flex items-center text-gray-500 text-sm mb-4">
                                                 <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
@@ -2008,7 +2008,7 @@
                                                             انتهى التسجيل
                                                         </button>
                                                     @else
-                                                        <button onclick="unifiedBooking({{ $workshop->id }}, '{{ $workshop->title }}', '{{ $workshop->formatted_price }}', '{{ $workshop->start_date->format('d M, Y') }}', '{{ $workshop->instructor }}', '{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}', '{{ $workshop->registration_deadline->format('d M, Y') }}')" 
+                                                        <button onclick="unifiedBooking({{ $workshop->id }}, '{{ $workshop->title }}', '{{ $workshop->formatted_price }}', '{{ $workshop->start_date->format('d/m/Y') }}', '{{ $workshop->instructor }}', '{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}', '{{ $workshop->registration_deadline->format('d/m/Y') }}')" 
                                                                 class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm">
                                                             <i class="fab fa-whatsapp ml-2"></i>
                                                             احجز الآن

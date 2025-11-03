@@ -63,6 +63,6 @@ class WorkshopReview extends Model
 
     public function getFormattedDateAttribute()
     {
-        return $this->created_at->format('d M Y');
+        return $this->created_at->format('d/m/Y');
     }
 }

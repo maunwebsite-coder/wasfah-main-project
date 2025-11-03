@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', $workshop->title . ' - موقع وصفة')
 
@@ -481,7 +481,7 @@
                 <div class="space-y-3 mb-8 workshop-hero-details">
                     <div class="flex items-center text-amber-100">
                         <i class="fas fa-calendar-alt w-5 text-center ml-3"></i>
-                        <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d M Y') : 'غير محدد' }}</span>
+                        <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
                     </div>
                     <div class="flex items-center text-amber-100">
                         <i class="fas fa-play-circle w-5 text-center ml-3"></i>
@@ -696,7 +696,7 @@
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-sm text-gray-500">آخر موعد للتسجيل</p>
-                                        <p class="text-lg font-semibold text-gray-900">{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d M, Y') : 'غير محدد' }}</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}</p>
                                     </div>
                                 </div>
                                 <div class="info-item">
@@ -940,7 +940,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="space-y-1 text-sm text-gray-600">
                                 <div class="flex justify-between">
                                     <span>التاريخ:</span>
-                                    <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d M, Y') : 'غير محدد' }}</span>
+                                    <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>تاريخ البداية:</span>
@@ -1045,10 +1045,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // الحصول على تفاصيل الورشة
         const workshopTitle = "{{ $workshop->title }}";
         const workshopPrice = "{{ $workshop->formatted_price }}";
-        const workshopDate = "{{ $workshop->start_date ? $workshop->start_date->format('d M, Y') : 'غير محدد' }}";
+        const workshopDate = "{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}";
         const workshopInstructor = "{{ $workshop->instructor_name }}";
         const workshopLocation = "{{ $workshop->location }}";
-        const workshopDeadline = "{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d M, Y') : 'غير محدد' }}";
+        const workshopDeadline = "{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}";
 
         // إنشاء modal التأكيد الجميل
         const modalHTML = `
@@ -1156,12 +1156,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // إنشاء رسالة الواتساب مع تفاصيل الورشة
         const workshopTitle = "{{ $workshop->title }}";
         const workshopPrice = "{{ $workshop->formatted_price }}";
-        const workshopDate = "{{ $workshop->start_date ? $workshop->start_date->format('d M, Y') : 'غير محدد' }}";
+        const workshopDate = "{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}";
         const workshopStartDate = "{{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}";
         const workshopEndDate = "{{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}";
         const workshopInstructor = "{{ $workshop->instructor }}";
         const workshopLocation = "{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}";
-        const registrationDeadline = "{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d M, Y') : 'غير محدد' }}";
+        const registrationDeadline = "{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}";
         
         // معلومات المستخدم
         const userName = "{{ auth()->check() ? auth()->user()->name : 'مستخدم' }}";
