@@ -47,4 +47,8 @@ return [
     'marketplace' => env('AMAZON_MARKETPLACE', 'ae'),
 ],
 
+'registration' => [
+    'require_email_verification' => env('REGISTRATION_REQUIRE_EMAIL_VERIFICATION', false),
+],
+
 ];

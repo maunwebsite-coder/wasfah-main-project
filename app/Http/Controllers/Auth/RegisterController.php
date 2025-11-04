@@ -50,6 +50,13 @@ class RegisterController extends Controller
 
         $role = $data['role'] ?? User::ROLE_CUSTOMER;
 
+        $requireVerification = (bool) config('services.registration.require_email_verification', false);
+
+        if (!$requireVerification) {
+            return $this->registerWithoutEmailVerification($request, $data, $role)
+                ->with('info', 'تم إنشاء الحساب مباشرةً بدون الحاجة لتفعيل البريد الإلكتروني.');
+        }
+
         if (!Schema::hasTable('email_verification_codes')) {
             Log::warning('email_verification_codes table missing; falling back to direct registration.');
 
@@ -102,6 +109,10 @@ class RegisterController extends Controller
      */
     public function showVerificationForm(Request $request)
     {
+        if (!config('services.registration.require_email_verification', false)) {
+            return redirect()->route('login')->with('info', 'التسجيل حالياً لا يتطلب التحقق من البريد الإلكتروني.');
+        }
+
         $token = session('register_verification_token') ?? $request->query('token');
 
         if (!$token) {
@@ -129,6 +140,10 @@ class RegisterController extends Controller
      */
     public function verifyCode(Request $request)
     {
+        if (!config('services.registration.require_email_verification', false)) {
+            return redirect()->route('login')->with('info', 'التسجيل حالياً لا يتطلب التحقق من البريد الإلكتروني.');
+        }
+
         $token = session('register_verification_token');
 
         if (!$token) {
@@ -212,6 +227,10 @@ class RegisterController extends Controller
      */
     public function resendCode()
     {
+        if (!config('services.registration.require_email_verification', false)) {
+            return redirect()->route('login')->with('info', 'التسجيل حالياً لا يتطلب التحقق من البريد الإلكتروني.');
+        }
+
         $token = session('register_verification_token');
 
         if (!$token) {

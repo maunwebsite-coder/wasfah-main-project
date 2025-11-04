@@ -37,6 +37,12 @@ class SocialiteController extends Controller
     {
         try {
             $socialUser = Socialite::driver('google')->user();
+            $intent = session('auth_login_intent', User::ROLE_CUSTOMER);
+            session()->forget('auth_login_intent');
+
+            if (!in_array($intent, [User::ROLE_CUSTOMER, User::ROLE_CHEF], true)) {
+                $intent = User::ROLE_CUSTOMER;
+            }
 
             // Check if user exists by email first
             $existingUser = User::where('email', $socialUser->getEmail())->first();
@@ -44,11 +50,22 @@ class SocialiteController extends Controller
             
             if ($existingUser) {
                 // User exists, update their social login info
-                $existingUser->update([
+                $updates = [
                     'provider' => 'google',
                     'provider_id' => $socialUser->getId(),
                     'provider_token' => $socialUser->token,
-                ]);
+                ];
+
+                if (
+                    $intent === User::ROLE_CHEF
+                    && !$existingUser->isAdmin()
+                    && $existingUser->role !== User::ROLE_CHEF
+                ) {
+                    $updates['role'] = User::ROLE_CHEF;
+                    $updates['chef_status'] = $existingUser->chef_status ?? User::CHEF_STATUS_NEEDS_PROFILE;
+                }
+
+                $existingUser->update($updates);
                 $user = $existingUser;
             } else {
                 // Create new user
@@ -59,8 +76,10 @@ class SocialiteController extends Controller
                     'provider_id' => $socialUser->getId(),
                     'provider_token' => $socialUser->token,
                     'password' => Hash::make(uniqid()), // Random password for social login users
-                    'role' => User::ROLE_CUSTOMER,
-                    'chef_status' => User::CHEF_STATUS_NEEDS_PROFILE,
+                    'role' => $intent === User::ROLE_CHEF ? User::ROLE_CHEF : User::ROLE_CUSTOMER,
+                    'chef_status' => $intent === User::ROLE_CHEF
+                        ? User::CHEF_STATUS_NEEDS_PROFILE
+                        : null,
                 ]);
                 $isNewUser = true;
                 
@@ -73,7 +92,9 @@ class SocialiteController extends Controller
 
             // Redirect to onboarding if profile incomplete
             if ($this->shouldRedirectToOnboarding($user)) {
-                return redirect()->route('onboarding.show');
+                return redirect()
+                    ->route('onboarding.show')
+                    ->with('success', 'مرحباً بك! نحتاج لبعض التفاصيل الإضافية لاعتمادك كشيف في وصفة.');
             }
 
             // التحقق من وجود معرف ورشة محفوظ في session
