@@ -14,23 +14,23 @@ return new class extends Migration
         // إضافة فهارس للوصفات
         Schema::table('recipes', function (Blueprint $table) {
             // فهارس للبحث في النص
-            $table->index('title');
-            $table->index('description');
-            $table->index('author');
+          //  $table->index('title');
+          //  $table->fulltext('description');
+           // $table->index('author');
             
             // فهارس مركبة للبحث السريع
-            $table->index(['title', 'created_at']);
-            $table->index(['category_id', 'created_at']);
+       //     $table->index(['title', 'created_at']);
+     //       $table->index(['category_id', 'created_at']);
             
             // فهارس للترتيب
-            $table->index('created_at');
+//            $table->index('created_at');
         });
         
         // إضافة فهارس للورشات
         Schema::table('workshops', function (Blueprint $table) {
             // فهارس للبحث في النص
-            $table->index('title');
-            $table->index('description');
+//            $table->index('title');
+            $table->fulltext('description');
             $table->index('instructor');
             $table->index('category');
             
