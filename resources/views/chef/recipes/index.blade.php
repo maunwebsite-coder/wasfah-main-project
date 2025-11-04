@@ -51,6 +51,10 @@
                         عرض صفحتي العامة
                     </a>
                 @endif
+                <a href="{{ route('chef.workshops.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-5 py-3 text-indigo-600 font-semibold shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition">
+                    <i class="fas fa-video"></i>
+                    ورش العمل
+                </a>
                 <a href="{{ route('chef.recipes.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
                     <i class="fas fa-plus"></i>
                     إضافة وصفة جديدة

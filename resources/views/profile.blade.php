@@ -1222,10 +1222,9 @@ use Carbon\Carbon;
                                                         <div class="flex items-center text-purple-600">
                                                             <i class="fas fa-video ml-2"></i>
                                                             <span class="font-medium">رابط الاجتماع:</span>
-                                                            <a href="{{ $booking->workshop->meeting_link }}" 
-                                                               target="_blank" 
+                                                            <a href="{{ route('bookings.join', $booking) }}"
                                                                class="mr-2 text-purple-600 hover:text-purple-800 underline font-medium">
-                                                                انضم للورشة
+                                                                دخول الغرفة من داخل الموقع
                                                             </a>
                                                         </div>
                                                     @elseif($booking->workshop->is_online && $booking->status !== 'confirmed')
@@ -1280,14 +1279,13 @@ use Carbon\Carbon;
                                                             </div>
                                                             <div>
                                                                 <h4 class="font-bold text-purple-800">ورشة أونلاين</h4>
-                                                                <p class="text-sm text-purple-600">انضم للورشة عبر الرابط أدناه</p>
+                                                                <p class="text-sm text-purple-600">ادخل إلى غرفة الورشة داخل موقع وصفة</p>
                                                             </div>
                                                         </div>
-                                                        <a href="{{ $booking->workshop->meeting_link }}" 
-                                                           target="_blank" 
+                                                        <a href="{{ route('bookings.join', $booking) }}"
                                                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse">
                                                             <i class="fas fa-external-link-alt"></i>
-                                                            <span>انضم الآن</span>
+                                                            <span>دخول الغرفة</span>
                                                         </a>
                                                     </div>
                                                 </div>

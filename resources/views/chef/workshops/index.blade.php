@@ -104,21 +104,31 @@
                         </div>
                         <div class="flex flex-col items-start gap-3 md:w-64">
                             @if ($workshop->is_online)
-                                <div class="w-full rounded-2xl bg-slate-50 p-3 text-xs text-slate-600">
-                                    <p class="font-semibold text-slate-800">رابط اللقاء:</p>
+                                <div class="w-full rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
+                                    <p class="font-semibold text-slate-800 flex items-center gap-2">
+                                        <i class="fas fa-shield-alt text-indigo-500"></i>
+                                        جلسة أونلاين عبر Jitsi
+                                    </p>
+                                    <p class="mt-1 text-slate-500">
+                                        الرابط مخفي عن الجميع، ويمكن فتح الغرفة من خلال الزر التالي فقط.
+                                    </p>
                                     @if ($workshop->meeting_link)
-                                        <div class="mt-1 flex items-center gap-2">
-                                            <code class="truncate rounded-xl bg-white px-2 py-1">{{ $workshop->meeting_link }}</code>
-                                            <button type="button" class="copy-link-btn text-slate-500 hover:text-slate-800"
-                                                    data-link="{{ $workshop->meeting_link }}">
-                                                <i class="fas fa-copy"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ route('chef.workshops.join', $workshop) }}"
+                                           class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
+                                            <i class="fas fa-play"></i>
+                                            تشغيل الجلسة
+                                        </a>
                                     @else
-                                        <p class="mt-1 text-orange-500">سيتم توليد رابط بعد الحفظ.</p>
+                                        <button type="button"
+                                                class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-3 py-2 text-sm font-semibold text-slate-400"
+                                                disabled>
+                                            سيتم تفعيل الزر بعد توليد الرابط
+                                        </button>
                                     @endif
                                     @if ($workshop->jitsi_passcode)
-                                        <p class="mt-1 text-xs text-slate-500">رمز الدخول: {{ $workshop->jitsi_passcode }}</p>
+                                        <p class="mt-2 text-xs text-slate-500">
+                                            رمز الدخول للمشاركين: <span class="font-semibold text-slate-700">{{ $workshop->jitsi_passcode }}</span>
+                                        </p>
                                     @endif
                                 </div>
                             @endif
@@ -169,27 +179,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('click', async (event) => {
-        const target = event.target.closest('.copy-link-btn');
-        if (!target) return;
-        event.preventDefault();
-        const link = target.dataset.link;
-        if (!link) return;
-
-        try {
-            await navigator.clipboard.writeText(link);
-            target.classList.add('text-emerald-600');
-            target.innerHTML = '<i class="fas fa-check"></i>';
-            setTimeout(() => {
-                target.classList.remove('text-emerald-600');
-                target.innerHTML = '<i class="fas fa-copy"></i>';
-            }, 1500);
-        } catch (error) {
-            alert('تعذر نسخ الرابط، حاول مرة أخرى.');
-        }
-    });
-</script>
-@endpush

@@ -7,6 +7,7 @@ use App\Models\WorkshopBooking;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class WorkshopBookingController extends Controller
@@ -103,20 +104,13 @@ class WorkshopBookingController extends Controller
 
     public function show(WorkshopBooking $booking)
     {
-        // التحقق من أن الحجز يخص المستخدم الحالي
-        if ($booking->user_id !== Auth::id()) {
-            abort(403);
-        }
-
+        $this->ensureBookingOwner($booking);
         return view('bookings.show', compact('booking'));
     }
 
     public function cancel(WorkshopBooking $booking)
     {
-        // التحقق من أن الحجز يخص المستخدم الحالي
-        if ($booking->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->ensureBookingOwner($booking);
 
         // التحقق من إمكانية الإلغاء
         if ($booking->status === 'cancelled') {
@@ -146,5 +140,83 @@ class WorkshopBookingController extends Controller
             'success' => true,
             'message' => 'تم إلغاء الحجز بنجاح'
         ]);
+    }
+
+    /**
+     * عرض غرفة الاجتماع داخل موقع وصفة دون مشاركة الرابط الخارجي.
+     */
+    public function join(WorkshopBooking $booking)
+    {
+        $this->ensureBookingOwner($booking);
+        $booking->loadMissing('workshop');
+        $workshop = $booking->workshop;
+
+        if ($booking->status !== 'confirmed') {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'لا يمكنك الدخول للورشة قبل تأكيد الحجز.');
+        }
+
+        if (!$workshop || !$workshop->is_online || !$workshop->meeting_link) {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
+        }
+
+        if ($workshop->meeting_provider !== 'jitsi') {
+            return redirect()->away($workshop->meeting_link);
+        }
+
+        $embedConfig = $this->buildJitsiEmbedConfig($workshop);
+        unset($embedConfig['passcode']);
+
+        return view('bookings.join', [
+            'booking' => $booking,
+            'workshop' => $workshop,
+            'embedConfig' => $embedConfig,
+            'user' => Auth::user(),
+        ]);
+    }
+
+    protected function ensureBookingOwner(WorkshopBooking $booking): void
+    {
+        if ($booking->user_id !== Auth::id()) {
+            abort(403);
+        }
+    }
+
+    protected function buildJitsiEmbedConfig(Workshop $workshop): array
+    {
+        $meetingUrl = $workshop->meeting_link;
+        $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
+        $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));
+
+        $domain = $parsedMeeting['host']
+            ?? ($fallbackBase['host'] ?? 'meet.jit.si');
+
+        $scheme = $parsedMeeting['scheme']
+            ?? ($fallbackBase['scheme'] ?? 'https');
+
+        $room = $workshop->jitsi_room
+            ?? ltrim($parsedMeeting['path'] ?? '', '/')
+            ?? Str::slug($workshop->title . '-' . $workshop->id, '-');
+
+        $room = trim($room);
+
+        if (str_contains($room, '/')) {
+            $segments = array_filter(explode('/', $room));
+            $room = end($segments);
+        }
+
+        if (!$room) {
+            $room = Str::slug($workshop->title . '-' . $workshop->id, '-');
+        }
+
+        return [
+            'domain' => $domain,
+            'room' => $room,
+            'passcode' => $workshop->jitsi_passcode,
+            'external_api_url' => "{$scheme}://{$domain}/external_api.js",
+        ];
     }
 }

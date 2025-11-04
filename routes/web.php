@@ -214,6 +214,7 @@ Route::middleware(['auth', 'chef'])->prefix('chef')->name('chef.')->group(functi
     Route::delete('links/items/{item}', [ChefLinkItemController::class, 'destroy'])->name('links.items.destroy');
     Route::post('recipes/{recipe}/submit', [ChefRecipeController::class, 'submit'])->name('recipes.submit');
     Route::resource('recipes', ChefRecipeController::class)->except(['show']);
+    Route::get('workshops/{workshop}/join', [ChefWorkshopController::class, 'join'])->name('workshops.join');
     Route::post('workshops/generate-meeting-link', [ChefWorkshopController::class, 'generateMeetingLink'])->name('workshops.generate-link');
     Route::resource('workshops', ChefWorkshopController::class)->except(['show']);
 });
@@ -240,6 +241,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [App\Http\Controllers\WorkshopBookingController::class, 'show'])->name('bookings.show');
+    Route::get('/bookings/{booking}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])->name('bookings.join');
     Route::post('/bookings/{booking}/cancel', [App\Http\Controllers\WorkshopBookingController::class, 'cancel'])->name('bookings.cancel');
 });
 
