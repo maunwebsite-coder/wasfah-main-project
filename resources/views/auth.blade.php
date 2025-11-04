@@ -1,306 +1,525 @@
 @extends('layouts.auth')
 
-@section('title', 'تسجيل الدخول أو إنشاء حساب عبر Google - وصفة')
+@section('title', 'Wasfah | تسجيل الدخول أو إنشاء حساب')
+
+@php
+    $oldSource = old('form_source');
+    $pendingWorkshop = request('pending_workshop_booking');
+    $loginOldEmail = $oldSource === 'login' ? old('email') : '';
+    $rememberOld = $oldSource === 'login' ? (bool) old('remember') : false;
+@endphp
 
 @push('styles')
 <style>
-    .auth-shell {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: clamp(2rem, 3vw, 4rem);
-        background: #fff7ed;
-    }
-    .auth-card {
-        width: min(100%, 860px);
-        background: #ffffff;
-        border-radius: 2rem;
-        padding: clamp(2rem, 4vw, 3.5rem);
-        box-shadow: 0 35px 60px rgba(15, 23, 42, 0.08);
-        border: 1px solid rgba(249, 115, 22, 0.12);
-        display: flex;
+:root {
+    --auth-bg: #fff6ef;
+    --auth-card: #ffffff;
+    --auth-primary: #f97316;
+    --auth-primary-dark: #ea580c;
+    --auth-primary-soft: #ffedd5;
+    --auth-accent: #fb923c;
+    --auth-text: #1f2937;
+    --auth-muted: #6b7280;
+    --auth-border: rgba(249, 115, 22, 0.14);
+}
+
+.auth-shell {
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 55%),
+        radial-gradient(circle at bottom left, rgba(251, 146, 60, 0.15), transparent 45%),
+        var(--auth-bg);
+    padding: clamp(1.5rem, 4vw, 4rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-stack {
+    width: min(100%, 1100px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1rem, 2vw, 1.75rem);
+}
+
+.auth-card {
+    width: 100%;
+    background: var(--auth-card);
+    border-radius: 28px;
+    box-shadow: 0 45px 120px rgba(15, 23, 42, 0.14);
+    padding: clamp(1.75rem, 3vw, 3.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    border: 1px solid rgba(249, 115, 22, 0.15);
+}
+
+.brand-banner {
+    width: 100%;
+    background: var(--auth-card);
+    border-radius: 24px;
+    padding: clamp(1.2rem, 2vw, 1.8rem);
+    border: 1px solid rgba(249, 115, 22, 0.15);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+    text-align: center;
+    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+.brand-block {
+    display: flex;
+    justify-content: center;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-logo img {
+    width: 78px;
+    height: 78px;
+    object-fit: contain;
+}
+
+
+.panel-layout {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.75rem;
+}
+
+.panel-card {
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 1.5rem;
+    border: 1px solid var(--auth-border);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.panel-card--center {
+    max-width: 480px;
+    margin: 0 auto;
+    align-items: stretch;
+    text-align: right;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #fffaf4, #ffe8d5);
+    border-radius: 22px;
+    padding: 1.75rem;
+    border: 1px solid rgba(249, 115, 22, 0.2);
+    display: grid;
+    gap: 1rem;
+}
+
+.info-card__title {
+    font-size: 1.1rem;
+    color: var(--auth-primary-dark);
+    font-weight: 700;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.info-list li {
+    display: flex;
+    gap: 0.6rem;
+    color: var(--auth-muted);
+    line-height: 1.6;
+}
+
+.info-list i {
+    color: var(--auth-primary);
+    margin-top: 0.2rem;
+}
+
+.google-stack {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.google-btn {
+    border-radius: 18px;
+    border: 1px solid rgba(249, 115, 22, 0.18);
+    padding: 0.95rem 1.2rem;
+    font-weight: 700;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ffffff, #fff8f1);
+    color: var(--auth-text);
+    box-shadow: 0 22px 45px rgba(249, 115, 22, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.google-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 30px 55px rgba(249, 115, 22, 0.25);
+}
+
+.google-btn img {
+    width: 28px;
+    height: 28px;
+}
+
+.micro-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.micro-flag {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(249, 115, 22, 0.12);
+    color: var(--auth-primary-dark);
+    font-weight: 600;
+}
+
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--auth-muted);
+    font-size: 0.9rem;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(249, 115, 22, 0.15);
+}
+
+.auth-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.field-group {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.field-group label {
+    font-weight: 600;
+    color: var(--auth-text);
+}
+
+.input-control {
+    border-radius: 14px;
+    border: 1px solid var(--auth-border);
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: #fff;
+}
+
+.input-control.has-error {
+    border-color: #f87171;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+}
+
+.input-control:focus {
+    outline: none;
+    border-color: var(--auth-primary);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.field-hint {
+    font-size: 0.85rem;
+    color: var(--auth-muted);
+}
+
+.field-error {
+    font-size: 0.85rem;
+    color: #b42318;
+}
+
+.actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.remember {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--auth-muted);
+}
+
+.ghost-link {
+    color: var(--auth-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.ghost-link:hover {
+    color: var(--auth-primary-dark);
+}
+
+.primary-action {
+    border: none;
+    border-radius: 16px;
+    padding: 0.95rem 1.6rem;
+    background: linear-gradient(135deg, var(--auth-primary), var(--auth-primary-dark));
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.primary-action:hover {
+    background: linear-gradient(135deg, var(--auth-primary-dark), var(--auth-primary));
+    transform: translateY(-2px);
+}
+
+.intent-switch {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.intent-pill {
+    border: 1px solid rgba(249, 115, 22, 0.25);
+    background: #fff1e5;
+    padding: 0.45rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--auth-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.intent-pill.is-active {
+    background: #fff;
+    color: var(--auth-primary-dark);
+    box-shadow: 0 12px 20px rgba(249, 115, 22, 0.18);
+    border-color: rgba(249, 115, 22, 0.45);
+}
+
+.intent-pill[data-role="chef"].is-active {
+    background: #fff7eb;
+    border-color: rgba(234, 88, 12, 0.8);
+    color: #ea580c;
+}
+
+.inline-alerts {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.inline-alert {
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    border: 1px solid transparent;
+}
+
+.inline-alert__icon {
+    font-size: 1rem;
+}
+
+.inline-alert--success {
+    background: #ecfdf3;
+    border-color: #bbf7d0;
+    color: #047857;
+}
+
+.inline-alert--error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.inline-alert--warning {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+.inline-alert--info {
+    background: #f0f9ff;
+    border-color: #bae6fd;
+    color: #075985;
+}
+
+[data-intent-state="chef"] .google-btn {
+    background: linear-gradient(135deg, #fef3c7, #fcd34d);
+    color: #b45309;
+}
+
+[data-intent-state="chef"] .google-btn img {
+    filter: drop-shadow(0 2px 4px rgba(180, 83, 9, 0.2));
+}
+
+[data-intent-state="chef"] .divider {
+    color: #b45309;
+}
+
+[data-intent-state="chef"] .field-hint {
+    color: #b45309;
+}
+
+[data-intent-state="chef"] .ghost-link {
+    color: #b45309;
+}
+
+@media (max-width: 640px) {
+    .brand-logo {
         flex-direction: column;
-        gap: 2.5rem;
     }
-    .auth-header {
-        text-align: center;
-        display: flex;
+
+    .actions-row {
         flex-direction: column;
-        gap: 1rem;
+        align-items: stretch;
     }
-    .auth-badge {
-        align-self: center;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.6rem 1.4rem;
-        border-radius: 999px;
-        background: rgba(249, 115, 22, 0.12);
-        color: #c2410c;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    .auth-header h1 {
-        font-size: clamp(2rem, 2.6vw + 1rem, 2.8rem);
-        color: #1f2937;
-        line-height: 1.2;
-    }
-    .auth-header p {
-        color: #6b7280;
-        font-size: 1rem;
-        max-width: 40rem;
-        margin: 0 auto;
-        line-height: 1.8;
-    }
-    .persona-grid {
-        display: grid;
-        gap: 1.5rem;
-    }
-    .persona-card {
-        border-radius: 1.75rem;
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        background: linear-gradient(145deg, #ffffff, #fff9f1);
-        box-shadow: 0 25px 45px rgba(15, 23, 42, 0.08);
-        padding: clamp(1.6rem, 2.8vw, 2.4rem);
-        display: grid;
-        gap: 1.1rem;
-    }
-    .persona-card h2 {
-        font-size: 1.4rem;
-        color: #1f2937;
-        margin: 0;
-    }
-    .persona-card p {
-        color: #6b7280;
-        font-size: 0.98rem;
-        line-height: 1.8;
-        margin: 0;
-    }
-    .persona-highlights {
-        display: grid;
-        gap: 0.75rem;
-        font-size: 0.94rem;
-        color: #7c2d12;
-    }
-    .persona-highlights li {
-        list-style: none;
-        position: relative;
-        padding-right: 1.8rem;
-        line-height: 1.7;
-    }
-    [dir="rtl"] .persona-highlights li::before {
-        content: '✓';
-        position: absolute;
-        top: 0;
-        right: 0;
-        color: #f97316;
-        font-weight: 700;
-    }
-    .google-actions {
-        display: grid;
-        gap: 0.75rem;
-    }
-    .google-btn {
-        border-radius: 1rem;
-        padding: 0.95rem 1.2rem;
-        font-size: 1.05rem;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.85rem;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    .primary-action {
         width: 100%;
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        background: #ffffff;
-        color: #1f2937;
-        box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
-    }
-    .google-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
-        border-color: rgba(249, 115, 22, 0.35);
-    }
-    .google-btn--outline {
-        background: #ffffff;
-    }
-    .google-btn--accent {
-        background: linear-gradient(135deg, #fb923c, #f97316);
-        color: #ffffff;
-        border: none;
-        box-shadow: 0 22px 38px rgba(249, 115, 22, 0.28);
-    }
-    .google-btn--accent:hover {
-        box-shadow: 0 26px 46px rgba(249, 115, 22, 0.36);
-    }
-    .google-btn--chef {
-        background: linear-gradient(135deg, #f97316, #ea580c);
-        color: #ffffff;
-        border: none;
-        box-shadow: 0 24px 40px rgba(249, 115, 22, 0.32);
-    }
-    .google-btn--chef:hover {
-        box-shadow: 0 28px 48px rgba(249, 115, 22, 0.4);
-    }
-    .support-note {
         text-align: center;
-        font-size: 0.92rem;
-        color: #9a3412;
-        background: rgba(253, 230, 216, 0.6);
-        border: 1px solid rgba(249, 115, 22, 0.25);
-        border-radius: 1.2rem;
-        padding: 1rem;
-        line-height: 1.8;
     }
-    .legal-note {
-        text-align: center;
-        color: #94a3b8;
-        font-size: 0.88rem;
-        line-height: 1.6;
-    }
-    @media (min-width: 768px) {
-        .persona-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-    @media (max-width: 640px) {
-        .auth-card {
-            border-radius: 1.5rem;
-            padding: 2.2rem 1.6rem;
-            gap: 2rem;
-        }
-        .persona-card {
-            border-radius: 1.4rem;
-        }
-    }
+}
 </style>
 @endpush
 
 @section('content')
 <div class="auth-shell">
-    <div class="auth-card">
-        <div class="auth-header">
-            <span class="auth-badge">
-                <i class="fas fa-hat-chef"></i>
-                وصفة لكل عشاق المذاق
-            </span>
-            <h1>تسجيل الدخول أو إنشاء حساب عبر Google فقط</h1>
-            <p>
-                وفرنا لك تجربة موحدة بنقرة واحدة. كل الحسابات تُفعّل فوراً عبر Google بدون رسائل تحقق بالبريد.
-                اختر ما إذا كنت تريد تسجيل الدخول لحسابك الحالي أو إنشاء حساب جديد (مستخدم أو شيف) وسنقودك للخطوات التالية فوراً.
-            </p>
-            <p class="text-sm text-[#9a3412] leading-relaxed">
-                إذا كان لديك حجز ورشة قيد الإكمال فسنحتفظ به لك بعد تسجيل الدخول.
-            </p>
-        </div>
-
-        @if (session('error'))
-            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 text-right">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        @if (session('info'))
-            <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600 text-right">
-                {{ session('info') }}
-            </div>
-        @endif
-
-        @if (session('success'))
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-600 text-right">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 text-right">
-                <ul class="list-disc space-y-1 pe-4">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <div class="persona-grid">
-            <div class="persona-card">
-                <h2>المتابعة كمستخدم وصفة</h2>
-                <p>
-                    مناسب للباحثين عن ورشات الطبخ، الوصفات المحفوظة، والتنبيهات الشخصية.
-                    سيتم إنشاء أو تسجيل دخول حسابك مباشرةً عبر Google.
-                </p>
-                <ul class="persona-highlights">
-                    <li>احجز الورشات المباشرة واطّلع على مواعيدها فوراً.</li>
-                    <li>احفظ الوصفات المفضلة لديك وتابع تحديثاتها بسهولة.</li>
-                    <li>استفد من الإشعارات المخصصة لتحسين تجربتك.</li>
-                </ul>
-                <div class="google-actions">
-                    <button
-                        type="button"
-                        class="google-btn google-btn--outline"
-                        data-google-intent="customer"
-                        data-google-flow="login"
-                    >
-                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
-                        تسجيل الدخول عبر Google
-                    </button>
-                    <button
-                        type="button"
-                        class="google-btn google-btn--accent"
-                        data-google-intent="customer"
-                        data-google-flow="register_customer"
-                    >
-                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
-                        إنشاء حساب مستخدم جديد عبر Google
-                    </button>
-                </div>
-            </div>
-
-            <div class="persona-card">
-                <h2>الانضمام كشيف محترف</h2>
-                <p>
-                    مثالي للشيف المحترف الذي يرغب بنشر ورشاته ودوراته والوصفات الخاصة به مع جمهور وصفة.
-                    بعد تسجيل الدخول سنرشدك لإكمال بيانات الاعتماد المهنية.
-                </p>
-                <ul class="persona-highlights">
-                    <li>اعرض ورشاتك ووصفاتك أمام مجتمع وصفة.</li>
-                    <li>استقبل طلبات الحجز والتفاعل مع المتابعين بسهولة.</li>
-                    <li>إكمال ملفك الاحترافي وخطوات الاعتماد بعد تسجيل الدخول مباشرةً.</li>
-                </ul>
-                <div class="google-actions">
-                    <button
-                        type="button"
-                        class="google-btn google-btn--outline"
-                        data-google-intent="chef"
-                        data-google-flow="login"
-                    >
-                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
-                        تسجيل الدخول كشيف عبر Google
-                    </button>
-                    <button
-                        type="button"
-                        class="google-btn google-btn--chef"
-                        data-google-intent="chef"
-                        data-google-flow="register_chef"
-                    >
-                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
-                        إنشاء حساب شيف جديد عبر Google
-                    </button>
+    <div class="auth-stack">
+        <div class="brand-banner">
+            <div class="brand-block">
+                <div class="brand-logo">
+                    <img src="{{ asset('image/logo.png') }}" alt="شعار Wasfah">
                 </div>
             </div>
         </div>
 
-        <div class="support-note">
-            في حال واجهت أي مشكلة أثناء تسجيل الدخول عبر Google، تواصل معنا عبر البريد
-            <a href="mailto:support@wasfah.com" class="font-semibold text-[#b45309] underline underline-offset-4">support@wasfah.com</a>
-            وسنساعدك فوراً.
+        <div class="auth-card">
+            <div class="inline-alerts" aria-live="polite" data-copy-switch>
+                    @foreach (['success' => 'inline-alert--success', 'status' => 'inline-alert--info', 'info' => 'inline-alert--info', 'error' => 'inline-alert--error'] as $key => $class)
+                    @if (session($key))
+                    <div class="inline-alert {{ $class }}">
+                        <span class="inline-alert__icon">
+                            @switch($key)
+                                @case('success') ✅ @break
+                                @case('error') ⚠️ @break
+                                @default ℹ️
+                            @endswitch
+                        </span>
+                        <div>{{ session($key) }}</div>
+                    </div>
+                @endif
+            @endforeach
+
+            @if ($errors->any())
+                <div class="inline-alert inline-alert--warning">
+                    <span class="inline-alert__icon">⚠️</span>
+                    <div>
+                        <strong>يرجى مراجعة الحقول باللون الأحمر.</strong>
+                        <ul class="list-disc space-y-1 pe-4">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
         </div>
 
-        <p class="legal-note">
-            بالمتابعة عبر Google فإنك توافق على شروط الخدمة وسياسة الخصوصية الخاصة بوصفة.
-        </p>
+        <div class="panel-layout" data-intent-state="customer">
+            <div class="panel-card panel-card--center">
+                <div class="google-stack">
+                    <p data-text-switch="intro-default">أفضل تجربة لدينا هي المصادقة عبر Google. اختر نوع حسابك ثم تابع بزر واحد.</p>
+                    <p class="hidden" data-text-switch="intro-chef">متابعة كشيف تمنحك أدوات إضافية لعرض ورشاتك واعتماد ملفك المهني بعد تسجيل الدخول.</p>
+                    <div class="intent-switch" data-intent-switch="login">
+                        <button type="button" class="intent-pill is-active" data-role="customer">حساب مستخدم</button>
+                        <button type="button" class="intent-pill" data-role="chef">حساب شيف</button>
+                    </div>
+                    <button type="button" class="google-btn" data-google-button data-sync-role="hybrid">
+                        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+                        متابعة عبر Google (تسجيل / إنشاء حساب)
+                    </button>
+                    <div class="micro-flags">
+                        <span class="micro-flag">مصادقة آمنة</span>
+                        <span class="micro-flag">دعم عربي مباشر</span>
+                    </div>
+                </div>
+
+                <div class="divider">أو باستخدام البريد الإلكتروني</div>
+
+                <form action="{{ route('login.password') }}" method="POST" class="auth-form" novalidate>
+                    @csrf
+                    <input type="hidden" name="form_source" value="login">
+                    @if ($pendingWorkshop)
+                        <input type="hidden" name="pending_workshop_booking" value="{{ $pendingWorkshop }}">
+                    @endif
+                    <div class="field-group" data-field-switch="email">
+                        <label for="login-email">البريد الإلكتروني</label>
+                        <input
+                            id="login-email"
+                            name="email"
+                            type="email"
+                            dir="ltr"
+                            autocomplete="email"
+                            value="{{ $loginOldEmail }}"
+                            class="input-control {{ $errors->has('email') && $oldSource === 'login' ? 'has-error' : '' }}"
+                        >
+                        <p class="field-hint">استخدم البريد المسجل في Wasfah.</p>
+                        @if ($errors->has('email') && $oldSource === 'login')
+                            <p class="field-error">{{ $errors->first('email') }}</p>
+                        @endif
+                    </div>
+
+                    <div class="field-group" data-field-switch="password">
+                        <label for="login-password">كلمة المرور</label>
+                        <input
+                            id="login-password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            class="input-control {{ $errors->has('password') && $oldSource === 'login' ? 'has-error' : '' }}"
+                        >
+                        <p class="field-hint">اخترنا كلمة مرور قوية عند تسجيلك السابق.</p>
+                        @if ($errors->has('password') && $oldSource === 'login')
+                            <p class="field-error">{{ $errors->first('password') }}</p>
+                        @endif
+                    </div>
+
+                    <div class="actions-row">
+                        <label class="remember" data-field-switch="remember">
+                            <input type="checkbox" name="remember" value="1" {{ $rememberOld ? 'checked' : '' }}>
+                            تذكرني لهذه الجلسة
+                        </label>
+                        <a href="{{ route('login') }}#support" class="ghost-link">بحاجة لمساعدة؟</a>
+                    </div>
+
+                    <button type="submit" class="primary-action">تسجيل الدخول الآن</button>
+                </form>
+            </div>
+        </div>
+        </div>
     </div>
 </div>
 @endsection
@@ -310,6 +529,20 @@
 document.addEventListener('DOMContentLoaded', function () {
     const params = new URLSearchParams(window.location.search);
     const pendingWorkshop = params.get('pending_workshop_booking');
+    const intentContainer = document.querySelector('[data-intent-state]');
+    const introDefault = document.querySelector('[data-text-switch="intro-default"]');
+    const introChef = document.querySelector('[data-text-switch="intro-chef"]');
+    const toggleIntroText = (intent) => {
+        if (!introDefault || !introChef) {
+            return;
+        }
+        const isChef = intent === 'chef';
+        introDefault.classList.toggle('hidden', isChef);
+        introChef.classList.toggle('hidden', !isChef);
+        if (intentContainer) {
+            intentContainer.dataset.intentState = intent;
+        }
+    };
 
     const redirectToGoogleAuth = (intent, flow) => {
         const url = new URL('{{ route('google.redirect') }}', window.location.origin);
@@ -325,10 +558,38 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = url.toString();
     };
 
-    document.querySelectorAll('[data-google-intent]').forEach((button) => {
+    const loginIntentSwitch = document.querySelector('[data-intent-switch="login"]');
+    if (loginIntentSwitch) {
+        loginIntentSwitch.addEventListener('click', (event) => {
+            const pill = event.target.closest('.intent-pill');
+            if (!pill) {
+                return;
+            }
+            loginIntentSwitch.querySelectorAll('.intent-pill').forEach((btn) => {
+                btn.classList.toggle('is-active', btn === pill);
+            });
+            toggleIntroText(pill.dataset.role);
+        });
+    }
+
+    const getSelectedIntent = () => {
+        const activePill = loginIntentSwitch?.querySelector('.intent-pill.is-active');
+        return activePill ? activePill.dataset.role : 'customer';
+    };
+
+    document.querySelectorAll('[data-google-button]').forEach((button) => {
         button.addEventListener('click', () => {
-            const intent = button.dataset.googleIntent || 'customer';
-            const flow = button.dataset.googleFlow || 'login';
+            let intent = button.dataset.googleIntent || getSelectedIntent();
+            let flow = button.dataset.googleFlow || 'login';
+
+            if (button.dataset.syncRole === 'hybrid' || button.dataset.syncRole === 'register') {
+                intent = getSelectedIntent();
+                flow = intent === 'chef' ? 'register_chef' : 'register_customer';
+            } else if (button.dataset.syncRole === 'login') {
+                intent = getSelectedIntent();
+                flow = 'login';
+            }
+
             redirectToGoogleAuth(intent, flow);
         });
     });

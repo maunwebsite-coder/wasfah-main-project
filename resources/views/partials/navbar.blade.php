@@ -8,7 +8,13 @@
     $authUser = Auth::user();
     $chefLinkData = null;
     if ($authUser) {
-        if ($authUser->role !== \App\Models\User::ROLE_CHEF) {
+        if ($authUser->isChef()) {
+            $chefLinkData = [
+                'route' => route('chef.dashboard'),
+                'icon' => 'fas fa-tachometer-alt',
+                'label' => 'لوحة الشيف',
+            ];
+        } elseif ($authUser->role !== \App\Models\User::ROLE_CHEF) {
             $chefLinkData = [
                 'route' => route('onboarding.show'),
                 'icon' => 'fas fa-hat-chef',
@@ -175,12 +181,6 @@
                                         <span class="font-semibold">{{ $chefLinkData['label'] }}</span>
                                     </a>
                                 @endif
-                                @if(Auth::user()->isChef())
-                                    <a href="{{ route('chef.dashboard') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
-                                        <i class="fas fa-hat-chef text-orange-500"></i>
-                                        <span class="font-semibold">منطقة الشيف</span>
-                                    </a>
-                                @endif
                                 @if(Auth::user()->isAdmin())
                                     <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
                                         <i class="fas fa-crown text-orange-500"></i>
@@ -244,12 +244,6 @@
                     <a href="{{ $chefLinkData['route'] }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
                         <i class="{{ $chefLinkData['icon'] }} text-orange-500"></i>
                         <span>{{ $chefLinkData['label'] }}</span>
-                    </a>
-                @endif
-                @if(Auth::user()->isChef())
-                    <a href="{{ route('chef.dashboard') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                        <i class="fas fa-hat-chef text-orange-500"></i>
-                        <span>منطقة الشيف</span>
                     </a>
                 @endif
                 @if(Auth::user()->isAdmin())
