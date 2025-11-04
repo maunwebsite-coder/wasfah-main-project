@@ -77,8 +77,8 @@ class SocialiteController extends Controller
                 $user = $existingUser;
             } else {
                 // Create new user
-                $stage = 'create-new-user';
-                $user = User::create([
+                $stage = 'prepare-new-user-data';
+                $newUserData = [
                     'name' => $socialUser->getName(),
                     'email' => $socialUser->getEmail(),
                     'provider' => 'google',
@@ -86,10 +86,14 @@ class SocialiteController extends Controller
                     'provider_token' => $socialUser->token,
                     'password' => Hash::make(uniqid()), // Random password for social login users
                     'role' => $intent === User::ROLE_CHEF ? User::ROLE_CHEF : User::ROLE_CUSTOMER,
-                    'chef_status' => $intent === User::ROLE_CHEF
-                        ? User::CHEF_STATUS_NEEDS_PROFILE
-                        : null,
-                ]);
+                ];
+
+                if ($intent === User::ROLE_CHEF) {
+                    $newUserData['chef_status'] = User::CHEF_STATUS_NEEDS_PROFILE;
+                }
+
+                $stage = 'create-new-user';
+                $user = User::create($newUserData);
                 $isNewUser = true;
 
                 // إنشاء إشعارات ترحيبية للمستخدم الجديد بدون تعطيل عملية تسجيل الدخول في حال الفشل
