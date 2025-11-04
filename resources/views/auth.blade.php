@@ -97,8 +97,11 @@
         color: #f97316;
         font-weight: 700;
     }
+    .google-actions {
+        display: grid;
+        gap: 0.75rem;
+    }
     .google-btn {
-        border: none;
         border-radius: 1rem;
         padding: 0.95rem 1.2rem;
         font-size: 1.05rem;
@@ -110,24 +113,36 @@
         cursor: pointer;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         width: 100%;
-        box-shadow: 0 20px 35px rgba(249, 115, 22, 0.18);
+        border: 1px solid rgba(148, 163, 184, 0.25);
         background: #ffffff;
         color: #1f2937;
-        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
     }
     .google-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 25px 45px rgba(249, 115, 22, 0.24);
+        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
         border-color: rgba(249, 115, 22, 0.35);
     }
-    .google-btn.google-chef {
-        background: linear-gradient(135deg, #f97316, #fb923c);
+    .google-btn--outline {
+        background: #ffffff;
+    }
+    .google-btn--accent {
+        background: linear-gradient(135deg, #fb923c, #f97316);
         color: #ffffff;
         border: none;
-        box-shadow: 0 24px 40px rgba(249, 115, 22, 0.35);
+        box-shadow: 0 22px 38px rgba(249, 115, 22, 0.28);
     }
-    .google-btn.google-chef:hover {
-        box-shadow: 0 28px 48px rgba(249, 115, 22, 0.42);
+    .google-btn--accent:hover {
+        box-shadow: 0 26px 46px rgba(249, 115, 22, 0.36);
+    }
+    .google-btn--chef {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 24px 40px rgba(249, 115, 22, 0.32);
+    }
+    .google-btn--chef:hover {
+        box-shadow: 0 28px 48px rgba(249, 115, 22, 0.4);
     }
     .support-note {
         text-align: center;
@@ -174,7 +189,7 @@
             <h1>تسجيل الدخول أو إنشاء حساب عبر Google فقط</h1>
             <p>
                 وفرنا لك تجربة موحدة بنقرة واحدة. كل الحسابات تُفعّل فوراً عبر Google بدون رسائل تحقق بالبريد.
-                اختر نوع حسابك أدناه وسنقودك للخطوات التالية خلال لحظات.
+                اختر ما إذا كنت تريد تسجيل الدخول لحسابك الحالي أو إنشاء حساب جديد (مستخدم أو شيف) وسنقودك للخطوات التالية فوراً.
             </p>
             <p class="text-sm text-[#9a3412] leading-relaxed">
                 إذا كان لديك حجز ورشة قيد الإكمال فسنحتفظ به لك بعد تسجيل الدخول.
@@ -221,10 +236,26 @@
                     <li>احفظ الوصفات المفضلة لديك وتابع تحديثاتها بسهولة.</li>
                     <li>استفد من الإشعارات المخصصة لتحسين تجربتك.</li>
                 </ul>
-                <button type="button" class="google-btn" data-google-intent="customer">
-                    <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
-                    دخول / إنشاء حساب عبر Google
-                </button>
+                <div class="google-actions">
+                    <button
+                        type="button"
+                        class="google-btn google-btn--outline"
+                        data-google-intent="customer"
+                        data-google-flow="login"
+                    >
+                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
+                        تسجيل الدخول عبر Google
+                    </button>
+                    <button
+                        type="button"
+                        class="google-btn google-btn--accent"
+                        data-google-intent="customer"
+                        data-google-flow="register_customer"
+                    >
+                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
+                        إنشاء حساب مستخدم جديد عبر Google
+                    </button>
+                </div>
             </div>
 
             <div class="persona-card">
@@ -238,10 +269,26 @@
                     <li>استقبل طلبات الحجز والتفاعل مع المتابعين بسهولة.</li>
                     <li>إكمال ملفك الاحترافي وخطوات الاعتماد بعد تسجيل الدخول مباشرةً.</li>
                 </ul>
-                <button type="button" class="google-btn google-chef" data-google-intent="chef">
-                    <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
-                    المتابعة كشيف عبر Google
-                </button>
+                <div class="google-actions">
+                    <button
+                        type="button"
+                        class="google-btn google-btn--outline"
+                        data-google-intent="chef"
+                        data-google-flow="login"
+                    >
+                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
+                        تسجيل الدخول كشيف عبر Google
+                    </button>
+                    <button
+                        type="button"
+                        class="google-btn google-btn--chef"
+                        data-google-intent="chef"
+                        data-google-flow="register_chef"
+                    >
+                        <img src="https://img.icons8.com/color/32/google-logo.png" alt="Google">
+                        إنشاء حساب شيف جديد عبر Google
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -264,12 +311,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const params = new URLSearchParams(window.location.search);
     const pendingWorkshop = params.get('pending_workshop_booking');
 
-    const redirectToGoogleAuth = (intent) => {
+    const redirectToGoogleAuth = (intent, flow) => {
         const url = new URL('{{ route('google.redirect') }}', window.location.origin);
         if (pendingWorkshop) {
             url.searchParams.set('pending_workshop_booking', pendingWorkshop);
         }
-        if (intent && intent !== 'customer') {
+        if (flow) {
+            url.searchParams.set('flow', flow);
+        }
+        if (intent) {
             url.searchParams.set('intent', intent);
         }
         window.location.href = url.toString();
@@ -277,7 +327,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('[data-google-intent]').forEach((button) => {
         button.addEventListener('click', () => {
-            redirectToGoogleAuth(button.dataset.googleIntent || 'customer');
+            const intent = button.dataset.googleIntent || 'customer';
+            const flow = button.dataset.googleFlow || 'login';
+            redirectToGoogleAuth(intent, flow);
         });
     });
 });
