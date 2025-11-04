@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
@@ -47,6 +49,13 @@ class RegisterController extends Controller
         }
 
         $role = $data['role'] ?? User::ROLE_CUSTOMER;
+
+        if (!Schema::hasTable('email_verification_codes')) {
+            Log::warning('email_verification_codes table missing; falling back to direct registration.');
+
+            return $this->registerWithoutEmailVerification($request, $data, $role)
+                ->with('info', 'تم إنشاء الحساب مباشرةً بسبب صيانة نظام التحقق.');
+        }
 
         EmailVerificationCode::where('email', $data['email'])->delete();
 
@@ -285,5 +294,26 @@ class RegisterController extends Controller
 
         return redirect()->intended('/')
             ->with('success', 'تم إنشاء الحساب بنجاح! مرحباً بك في وصفة 🎉');
+    }
+
+    /**
+     * Create the user immediately when verification storage is unavailable.
+     */
+    private function registerWithoutEmailVerification(Request $request, array $data, string $role): RedirectResponse
+    {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'provider' => null,
+            'provider_id' => null,
+            'provider_token' => null,
+            'role' => $role,
+            'chef_status' => $role === User::ROLE_CHEF
+                ? User::CHEF_STATUS_NEEDS_PROFILE
+                : null,
+        ]);
+
+        return $this->completeRegistration($request, $user);
     }
 }
