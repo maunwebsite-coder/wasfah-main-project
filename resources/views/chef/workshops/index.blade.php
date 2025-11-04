@@ -118,6 +118,16 @@
                                             <i class="fas fa-play"></i>
                                             تشغيل الجلسة
                                         </a>
+                                        @if ($workshop->meeting_started_at)
+                                            <p class="mt-2 text-xs text-emerald-600 flex items-center gap-2">
+                                                <i class="fas fa-check-circle"></i>
+                                                تم فتح الغرفة {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}
+                                            </p>
+                                        @else
+                                            <p class="mt-2 text-[11px] text-slate-400">
+                                                لن يتمكن المشتركون من الدخول حتى تضغط زر "بدء الاجتماع" داخل صفحة التشغيل.
+                                            </p>
+                                        @endif
                                     @else
                                         <button type="button"
                                                 class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-3 py-2 text-sm font-semibold text-slate-400"

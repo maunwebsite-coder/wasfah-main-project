@@ -68,17 +68,30 @@
             </div>
         </div>
 
-        <div class="jitsi-shell" id="jitsi-shell">
-            <button type="button" class="fullscreen-btn" id="fullscreenToggle">
-                <i class="fas fa-expand"></i>
-                ملء الشاشة
-            </button>
-            <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
-                <div class="absolute inset-x-0 top-5 mx-auto max-w-md rounded-2xl bg-slate-900/70 px-4 py-3 text-center text-sm text-slate-100 backdrop-blur" id="lobbyHint">
-                    سيتم فتح الغرفة بعد موافقة الشيف. يرجى البقاء في الصفحة.
+        @if ($workshop->meeting_started_at)
+            <div class="jitsi-shell" id="jitsi-shell">
+                <button type="button" class="fullscreen-btn" id="fullscreenToggle">
+                    <i class="fas fa-expand"></i>
+                    ملء الشاشة
+                </button>
+                <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
+                    <div class="absolute inset-x-0 top-5 mx-auto max-w-md rounded-2xl bg-slate-900/70 px-4 py-3 text-center text-sm text-slate-100 backdrop-blur" id="lobbyHint">
+                        سيتم فتح الغرفة بعد موافقة الشيف. يرجى البقاء في الصفحة.
+                    </div>
                 </div>
             </div>
-        </div>
+        @else
+            <div class="rounded-3xl border border-indigo-200 bg-white/95 px-6 py-10 text-center text-slate-700 shadow-xl">
+                <div class="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                    <i class="fas fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">ننتظر دخول الشيف</h2>
+                <p class="text-sm text-slate-500">
+                    لا نسمح للمشتركين بالدخول قبل أن يؤكد المضيف "أنا المضيف" ويبدأ الاجتماع. سيتم فتح الغرفة تلقائياً بعد موافقة الشيف، يرجى البقاء في هذه الصفحة.
+                </p>
+                <div class="mt-6 text-xs text-slate-400" id="pollStatusHint">يتم التحقق من حالة الغرفة كل بضع ثوانٍ...</div>
+            </div>
+        @endif
 
         <div class="mt-6 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
             <div class="flex items-center gap-3">
@@ -100,6 +113,7 @@
 </div>
 @endsection
 
+@if ($workshop->meeting_started_at)
 @push('scripts')
 <script src="{{ $embedConfig['external_api_url'] }}"></script>
 <script>
@@ -223,3 +237,29 @@
     });
 </script>
 @endpush
+@else
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const statusUrl = @json(route('bookings.status', $booking));
+        const hint = document.getElementById('pollStatusHint');
+
+        const pollStatus = () => {
+            fetch(statusUrl, { headers: { 'Accept': 'application/json' } })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.meeting_started) {
+                        hint.textContent = 'يتم فتح الغرفة الآن...';
+                        window.location.reload();
+                    } else {
+                        setTimeout(pollStatus, 8000);
+                    }
+                })
+                .catch(() => setTimeout(pollStatus, 10000));
+        };
+
+        setTimeout(pollStatus, 5000);
+    });
+</script>
+@endpush
+@endif

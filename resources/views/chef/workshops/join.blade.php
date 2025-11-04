@@ -68,6 +68,33 @@
             </div>
         </div>
 
+        <div class="mb-6 rounded-3xl border border-indigo-400/40 bg-indigo-900/40 px-6 py-5 text-sm text-slate-100 shadow-lg">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.4em] text-indigo-200">وضع الدخول</p>
+                    <h2 class="mt-1 text-lg font-semibold text-white">المشاركون بانتظار تأكيدك كمضيف</h2>
+                    <p class="text-slate-300 text-sm mt-1">
+                        لن يتمكن المشتركون من دخول الغرفة حتى تضغط زر <strong>بدء الاجتماع</strong> أدناه. يمكنك الضغط عليه بمجرد أن تصبح جاهزاً.
+                    </p>
+                </div>
+                <div class="flex flex-col items-start gap-2 text-xs text-slate-200" id="meetingStateLabel">
+                    @if ($workshop->meeting_started_at)
+                        <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold text-emerald-200">
+                            <i class="fas fa-check-circle"></i>
+                            تم بدء الاجتماع {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}
+                        </span>
+                    @else
+                        <button type="button" id="startMeetingBtn"
+                                class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600">
+                            <i class="fas fa-play"></i>
+                            بدء الاجتماع الآن
+                        </button>
+                        <span class="mt-1 text-slate-400">سيظهر الزر كمؤشر للمشاركين بأن الغرفة مفتوحة.</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="jitsi-shell" id="jitsi-shell">
             <button type="button" class="fullscreen-btn" id="fullscreenToggle">
                 <i class="fas fa-expand"></i>
@@ -103,6 +130,9 @@
         const container = document.getElementById('jitsi-container');
         const shell = document.getElementById('jitsi-shell');
         const fullscreenBtn = document.getElementById('fullscreenToggle');
+        const startBtn = document.getElementById('startMeetingBtn');
+        const stateLabel = document.getElementById('meetingStateLabel');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -205,6 +235,45 @@
         document.addEventListener('mozfullscreenchange', updateFullscreenState);
         document.addEventListener('MSFullscreenChange', updateFullscreenState);
         updateFullscreenState();
+
+        const handleMeetingStart = async () => {
+            if (!startBtn || !csrfToken) {
+                return;
+            }
+
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> يتم البدء...';
+
+            try {
+                const response = await fetch(@json(route('chef.workshops.start', $workshop)), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'تعذر بدء الاجتماع، حاول مرة أخرى.');
+                }
+
+                if (stateLabel) {
+                    stateLabel.innerHTML = `
+                        <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold text-emerald-200">
+                            <i class="fas fa-check-circle"></i>
+                            تم بدء الاجتماع للتو
+                        </span>
+                    `;
+                }
+            } catch (error) {
+                alert(error?.message || 'تعذر بدء الاجتماع، حاول مرة أخرى.');
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<i class="fas fa-play"></i> بدء الاجتماع الآن';
+            }
+        };
+
+        startBtn?.addEventListener('click', handleMeetingStart);
     });
 </script>
 @endpush

@@ -133,6 +133,32 @@ class WorkshopController extends Controller
         ]);
     }
 
+    public function startMeeting(Workshop $workshop)
+    {
+        $this->authorizeWorkshop($workshop);
+
+        if (!$workshop->is_online || !$workshop->meeting_link) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن بدء اجتماع لورشة غير أونلاين أو بدون رابط جاهز.',
+            ], 422);
+        }
+
+        $alreadyStarted = (bool) $workshop->meeting_started_at;
+
+        if (!$alreadyStarted) {
+            $workshop->meeting_started_at = now();
+            $workshop->meeting_started_by = Auth::id();
+            $workshop->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'already_started' => $alreadyStarted,
+            'started_at' => $workshop->meeting_started_at->toIso8601String(),
+        ]);
+    }
+
     public function generateMeetingLink(Request $request)
     {
         $validated = $request->validate([
@@ -181,7 +207,7 @@ class WorkshopController extends Controller
             'requirements' => ['nullable', 'string'],
             'materials_needed' => ['nullable', 'string'],
             'meeting_link' => ['nullable', 'url', 'max:255'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'remove_image' => ['sometimes', 'boolean'],
             'auto_generate_meeting' => ['sometimes', 'boolean'],
         ];
@@ -189,7 +215,7 @@ class WorkshopController extends Controller
         $messages = [
             'image.image' => 'يرجى اختيار ملف صورة صالح.',
             'image.mimes' => 'الصيغ المدعومة هي JPG, PNG, GIF أو WebP فقط.',
-            'image.max' => 'حجم الصورة كبير جداً. الحد الأقصى هو 5 ميجابايت.',
+            'image.max' => 'حجم الصورة كبير جداً. الحد الأقصى هو 2 ميجابايت.',
         ];
 
         $data = $request->validate($rules, $messages);
@@ -275,10 +301,15 @@ class WorkshopController extends Controller
             $workshop->meeting_provider = 'manual';
             $workshop->jitsi_room = null;
             $workshop->jitsi_passcode = null;
+            $workshop->meeting_started_at = null;
+            $workshop->meeting_started_by = null;
             return;
         }
 
         $autoGenerate = $request->boolean('auto_generate_meeting');
+
+        $workshop->meeting_started_at = null;
+        $workshop->meeting_started_by = null;
 
         if ($autoGenerate || empty($inputLink)) {
             $meeting = $this->jitsiMeetingService->createMeeting(

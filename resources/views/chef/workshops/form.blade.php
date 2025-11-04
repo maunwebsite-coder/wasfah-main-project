@@ -278,7 +278,7 @@
         <div class="mb-6">
             <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">صورة الورشة</p>
             <h2 class="mt-1 text-2xl font-bold text-slate-900">إبهار بصري</h2>
-            <p class="mt-1 text-sm text-slate-500">صور بدقة جيدة (حتى 5MB) لتحفيز الحجز.</p>
+            <p class="mt-1 text-sm text-slate-500">صور بدقة جيدة (حتى 2MB) لتحفيز الحجز.</p>
         </div>
         <div class="grid gap-5 lg:grid-cols-[2fr,1fr]">
             <div class="space-y-3">

@@ -178,6 +178,18 @@ class WorkshopBookingController extends Controller
         ]);
     }
 
+    public function status(WorkshopBooking $booking)
+    {
+        $this->ensureBookingOwner($booking);
+        $booking->loadMissing('workshop');
+        $workshop = $booking->workshop;
+
+        return response()->json([
+            'meeting_started' => (bool) ($workshop?->meeting_started_at),
+            'started_at' => $workshop?->meeting_started_at?->toIso8601String(),
+        ]);
+    }
+
     protected function ensureBookingOwner(WorkshopBooking $booking): void
     {
         if ($booking->user_id !== Auth::id()) {

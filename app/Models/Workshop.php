@@ -38,6 +38,8 @@ class Workshop extends Model
         'meeting_provider',
         'jitsi_room',
         'jitsi_passcode',
+        'meeting_started_at',
+        'meeting_started_by',
         'requirements',
         'what_you_will_learn',
         'materials_needed',
@@ -54,6 +56,7 @@ class Workshop extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'registration_deadline' => 'datetime',
+        'meeting_started_at' => 'datetime',
         'is_online' => 'boolean',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
@@ -85,6 +88,11 @@ class Workshop extends Model
     public function chef()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function meetingStarter()
+    {
+        return $this->belongsTo(User::class, 'meeting_started_by');
     }
 
     // العلاقة مع الوصفات (many-to-many)
@@ -214,7 +222,7 @@ class Workshop extends Model
             'meeting_provider' => ['nullable', 'string', 'max:50'],
             'jitsi_room' => ['nullable', 'string', 'max:255'],
             'jitsi_passcode' => ['nullable', 'string', 'max:20'],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
 
         // إضافة validation خاص للورشة المميزة

@@ -47,12 +47,12 @@ class EnhancedImageUploadService
                 ];
             }
 
-            // التحقق من حجم الملف (5MB)
-            $maxSize = 5 * 1024 * 1024; // 5MB
+            // التحقق من حجم الملف (2MB)
+            $maxSize = 2 * 1024 * 1024; // 2MB
             if ($file->getSize() > $maxSize) {
                 return [
                     'success' => false,
-                    'error' => 'حجم الصورة كبير جداً. الحد الأقصى المسموح هو 5 ميجابايت.',
+                    'error' => 'حجم الصورة كبير جداً. الحد الأقصى المسموح هو 2 ميجابايت.',
                     'file_size' => $file->getSize(),
                     'max_size' => $maxSize
                 ];

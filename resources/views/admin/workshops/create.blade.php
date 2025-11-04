@@ -933,7 +933,7 @@
                         <div>
                             <h2 class="section-title">الصورة الرئيسية</h2>
                             <p class="section-description">
-                                اختر صورة جذابة تمثل أجواء الورشة. ندعم صوراً حتى 5 ميجابايت مع ضغط تلقائي للحفاظ على الجودة.
+                                اختر صورة جذابة تمثل أجواء الورشة. ندعم صوراً حتى 2 ميجابايت مع ضغط تلقائي للحفاظ على الجودة.
                             </p>
                         </div>
                     </div>
@@ -943,7 +943,7 @@
                             <div class="flex flex-col items-center gap-3 text-slate-600">
                                 <i class="fas fa-cloud-upload-alt text-3xl text-purple-400"></i>
                                 <h3 class="text-lg font-semibold text-slate-800">اسحب وأفلت الصورة هنا</h3>
-                                <p class="text-sm text-slate-500">أو انقر للاختيار من جهازك (JPEG، PNG، GIF، WebP حتى 5MB)</p>
+                                <p class="text-sm text-slate-500">أو انقر للاختيار من جهازك (JPEG، PNG، GIF، WebP حتى 2MB)</p>
                                 <span class="upload-badge">
                                     <i class="fas fa-folder-open"></i>
                                     اختر صورة
@@ -1161,9 +1161,9 @@ function handleImageUpload(input) {
         return;
     }
 
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
-        showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        showNotification('حجم الصورة يجب أن يكون أقل من 2 ميجابايت', 'error');
         input.value = '';
         return;
     }
