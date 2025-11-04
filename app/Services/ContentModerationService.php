@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Config;
 
 class ContentModerationService
 {
@@ -13,7 +13,7 @@ class ContentModerationService
      */
     public static function containsProhibitedLanguage(?string $text): bool
     {
-        if (!filled($text)) {
+        if (!filled($text) || !static::isEnabled()) {
             return false;
         }
 
@@ -38,6 +38,10 @@ class ContentModerationService
      */
     public static function imageAppearsExplicit(UploadedFile $file): bool
     {
+        if (!static::isEnabled() || !Config::get('content_moderation.image.review.enabled', true)) {
+            return false;
+        }
+
         $path = $file->getRealPath();
 
         if (!$path || !is_readable($path)) {
@@ -63,7 +67,10 @@ class ContentModerationService
                 return false;
             }
 
-            $sampleTarget = 2000;
+            $sampleConfig = Config::get('content_moderation.image.review', []);
+            $sampleTarget = (int) ($sampleConfig['sample_target'] ?? 2000);
+            $threshold = (float) ($sampleConfig['skin_tone_threshold'] ?? 0.38);
+
             $totalPixels = $width * $height;
             $samples = min($sampleTarget, $totalPixels);
 
@@ -91,13 +98,9 @@ class ContentModerationService
 
             imagedestroy($image);
 
-            if ($samples === 0) {
-                return false;
-            }
-
             $ratio = $skinPixels / $samples;
 
-            return $ratio > 0.38;
+            return $ratio > $threshold;
         } catch (\Throwable $e) {
             return false;
         }
@@ -131,7 +134,7 @@ class ContentModerationService
      */
     protected static function bannedTerms(): array
     {
-        return [
+        $default = [
             'لعنة',
             'قذر',
             'حقير',
@@ -150,5 +153,17 @@ class ContentModerationService
             'whore',
             'sexy',
         ];
+
+        $configured = Config::get('content_moderation.blocked_terms', []);
+
+        return array_values(array_unique(array_filter(array_merge($configured, $default))));
+    }
+
+    /**
+     * Determine if the moderation checks are enabled.
+     */
+    protected static function isEnabled(): bool
+    {
+        return (bool) Config::get('content_moderation.enabled', true);
     }
 }
