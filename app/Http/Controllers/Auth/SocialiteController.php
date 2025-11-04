@@ -82,9 +82,16 @@ class SocialiteController extends Controller
                         : null,
                 ]);
                 $isNewUser = true;
-                
-                // إنشاء إشعارات ترحيبية للمستخدم الجديد
-                $this->createWelcomeNotifications($user);
+
+                // إنشاء إشعارات ترحيبية للمستخدم الجديد بدون تعطيل عملية تسجيل الدخول في حال الفشل
+                try {
+                    $this->createWelcomeNotifications($user);
+                } catch (\Throwable $notificationException) {
+                    \Log::warning('Failed to create welcome notifications', [
+                        'user_id' => $user->id,
+                        'error' => $notificationException->getMessage(),
+                    ]);
+                }
             }
 
             // Log the user in
@@ -110,8 +117,8 @@ class SocialiteController extends Controller
                 }
 
                 $successMessage = $isNewUser
-                    ? 'تم إنشاء حساب جديد بنجاح! مرحباً بك في وصفة 🎉 يمكنك الآن حجز الورشة.'
-                    : 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة 👋 يمكنك الآن حجز الورشة.';
+                    ? 'تم إنشاء حساب جديد بنجاح! مرحباً بك في وصفة، يمكنك الآن حجز الورشة.'
+                    : 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة، يمكنك الآن حجز الورشة.';
 
                 return redirect()
                     ->route('workshop.show', $workshop->slug)
@@ -120,9 +127,9 @@ class SocialiteController extends Controller
 
             // Redirect with appropriate message based on whether it's a new user or existing user
             if ($isNewUser) {
-                return redirect('/')->with('success', 'تم إنشاء حساب جديد بنجاح! مرحباً بك في وصفة 🎉');
+                return redirect('/')->with('success', 'تم إنشاء حساب جديد بنجاح! مرحباً بك في وصفة.');
             } else {
-                return redirect('/')->with('success', 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة 👋');
+                return redirect('/')->with('success', 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة.');
             }
 
         } catch (Exception $e) {
@@ -143,7 +150,7 @@ class SocialiteController extends Controller
         Notification::createNotification(
             $user->id,
             'general',
-            'مرحباً بك في موقع وصفة! 🎉',
+            'مرحباً بك في موقع وصفة!',
             "أهلاً وسهلاً بك {$user->name}! نحن سعداء لانضمامك إلى مجتمع وصفة. استكشف ورشات الطبخ المتنوعة واكتشف وصفات جديدة.",
             [
                 'welcome' => true,
