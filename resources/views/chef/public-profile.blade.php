@@ -13,6 +13,29 @@
     $statsAverage = $stats['average_rating']
         ? number_format($stats['average_rating'], 1)
         : '—';
+    $wasfahFollowers = max(
+        0,
+        (int) data_get(
+            $chef,
+            'followers_count',
+            data_get(
+                $chef,
+                'wasfah_followers',
+                data_get($chef, 'subscribers_count', data_get($chef, 'wasfah_subscribers', 0))
+            )
+        )
+    );
+
+    if ($wasfahFollowers === 0) {
+        $maybeFollowersRelation = data_get($chef, 'followers');
+
+        if (is_countable($maybeFollowersRelation)) {
+            $wasfahFollowers = count($maybeFollowersRelation);
+        }
+    }
+
+    $platformFollowers = $totalFollowers;
+    $recipesCount = max(0, (int) $stats['recipes_count']);
 @endphp
 
 @push('styles')
@@ -122,12 +145,12 @@
 
         .chef-profile-hero__avatar img {
             position: relative;
-            width: clamp(210px, 26vw, 260px);
-            height: clamp(210px, 26vw, 260px);
+            width: clamp(115px, 18vw, 170px);
+            height: clamp(115px, 18vw, 170px);
             border-radius: 50%;
-            border: 6px solid #ffffff;
+            border: 5px solid #ffffff;
             object-fit: cover;
-            box-shadow: 0 28px 55px -25px rgba(15, 23, 42, 0.55);
+            box-shadow: 0 20px 34px -30px rgba(15, 23, 42, 0.5);
             z-index: 1;
         }
 
@@ -137,29 +160,25 @@
             gap: clamp(1.5rem, 3vw, 2.25rem);
         }
 
-        .chef-profile-hero__badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.55rem;
-            padding: 0.55rem 1.5rem;
-            border-radius: 999px;
-            background: rgba(249, 115, 22, 0.12);
-            color: var(--chef-primary-strong);
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        .chef-profile-hero__title {
+        .chef-profile-hero__identity {
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: 0.2rem;
+            align-items: flex-end;
+            text-align: right;
         }
 
-        .chef-profile-hero__title h1 {
+        .chef-profile-hero__identity h1 {
             margin: 0;
-            font-size: clamp(2.6rem, 5vw, 3.4rem);
+            font-size: clamp(1.8rem, 3.5vw, 2.4rem);
             font-weight: 800;
             color: var(--chef-neutral-900);
+        }
+
+        .chef-profile-hero__bio-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
         }
 
         .chef-profile-hero__bio {
@@ -183,33 +202,27 @@
 
         .chef-meta-card {
             background: #ffffff;
-            border-radius: 1.5rem;
-            padding: 1.2rem 1.35rem;
-            border: 1px solid rgba(249, 115, 22, 0.08);
-            box-shadow: 0 22px 50px -38px rgba(15, 23, 42, 0.55);
+            border-radius: 1.25rem;
+            padding: 0.85rem 1.1rem;
+            border: none;
+            box-shadow: 0 16px 35px -32px rgba(15, 23, 42, 0.55);
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
+            gap: 0.25rem;
         }
 
         .chef-meta-card span {
-            font-size: 0.82rem;
+            font-size: 0.65rem;
             font-weight: 600;
             color: var(--chef-neutral-500);
             letter-spacing: 0.02em;
         }
 
         .chef-meta-card strong {
-            font-size: 1.9rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--chef-neutral-900);
-            line-height: 1.2;
-        }
-
-        .chef-meta-card small {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--chef-neutral-500);
+            line-height: 1.1;
         }
 
         .chef-profile-hero__actions {
@@ -583,34 +596,155 @@
             }
 
             .chef-profile-hero {
-                padding: 2rem 1.5rem;
+                padding: 1.75rem 1.35rem;
+                border-radius: 2rem;
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 238, 0.98));
+                border: 1px solid rgba(249, 115, 22, 0.18);
+                color: var(--chef-neutral-900);
+            }
+
+            .chef-profile-hero__grid {
+                gap: 1.15rem 1rem;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "stats avatar"
+                    "name name"
+                    "bio bio"
+                    "actions actions"
+                    "social social";
+                align-items: flex-start;
+            }
+
+            .chef-profile-hero__details {
+                display: contents;
+            }
+
+            .chef-profile-hero__avatar {
+                grid-area: avatar;
+                justify-self: end;
             }
 
             .chef-profile-hero__avatar img {
-                width: 200px;
-                height: 200px;
-                border-width: 4px;
+                width: 95px;
+                height: 95px;
+                border-width: 3px;
+                box-shadow: 0 18px 26px -24px rgba(15, 23, 42, 0.85);
             }
 
             .chef-profile-hero__meta {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                grid-area: stats;
+                direction: rtl;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.85rem;
+                align-items: stretch;
+            }
+
+            .chef-meta-card {
+                padding: 0.75rem 0.85rem;
+                background: #ffffff;
+                border-radius: 1rem;
+                text-align: right;
+                box-shadow: 0 12px 30px -28px rgba(15, 23, 42, 0.25);
+            }
+
+            .chef-meta-card--rating {
+                display: none;
+            }
+
+            .chef-meta-card span {
+                font-size: 0.68rem;
+                color: var(--chef-neutral-500);
+            }
+
+            .chef-meta-card strong {
+                font-size: 1.15rem;
+                color: var(--chef-neutral-900);
+            }
+
+            .chef-profile-hero__identity {
+                grid-area: name;
+                align-items: flex-end;
+                text-align: right;
+                gap: 0.45rem;
+            }
+
+            .chef-profile-hero__identity h1 {
+                font-size: 1.2rem;
+                letter-spacing: 0.01em;
+                color: var(--chef-neutral-900);
+            }
+
+            .chef-profile-hero__subtitle {
+                font-size: 0.82rem;
+                color: var(--chef-primary-strong);
+            }
+
+            .chef-profile-hero__bio-block {
+                grid-area: bio;
+                text-align: right;
+                gap: 0.35rem;
+            }
+
+            .chef-profile-hero__bio {
+                font-size: 0.95rem;
+                line-height: 1.6;
+                max-width: 100%;
+                color: var(--chef-neutral-500);
+            }
+
+            .chef-profile-hero__actions {
+                grid-area: actions;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.8rem;
+                width: 100%;
+            }
+
+            .chef-follow-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.9rem 1.1rem;
+                font-size: 0.95rem;
+                border-radius: 999px;
+                box-shadow: 0 18px 30px -18px rgba(234, 88, 12, 0.25);
+            }
+
+            .chef-profile-hero__social {
+                grid-area: social;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .chef-profile-hero__social .social-link {
+                flex: 1 1 auto;
+                justify-content: center;
+                padding-inline: 1rem;
+                min-width: 0;
+                background: #ffffff;
+                border-color: rgba(249, 115, 22, 0.2);
+                color: var(--chef-primary-strong);
+                box-shadow: 0 12px 24px -20px rgba(15, 23, 42, 0.25);
+            }
+
+            .chef-profile-hero__social .social-link span.text-xs {
+                color: var(--chef-primary-strong);
             }
 
             .chef-tab-btn {
-                padding-inline: 1.4rem;
-                font-size: 0.95rem;
+                padding-inline: 1.2rem;
+                font-size: 0.92rem;
             }
 
             .chef-recipe-card__body {
-                padding: 1.3rem;
+                padding: 1.2rem;
             }
 
             .chef-recipe-card__title {
-                font-size: 1.15rem;
+                font-size: 1.05rem;
             }
 
             .chef-popular-card__body {
-                padding: 1.4rem;
+                padding: 1.25rem;
             }
         }
     </style>
@@ -625,32 +759,29 @@
                         <img src="{{ $avatarUrl }}" alt="صورة الشيف {{ $chef->name }}">
                     </div>
                     <div class="chef-profile-hero__details">
-                        <div>
-                            <span class="chef-profile-hero__badge">
-                                <i class="fa-solid fa-award"></i>
-                                شيف معتمد في وصفه
-                            </span>
-                        </div>
-                        <div class="chef-profile-hero__title">
+                        <div class="chef-profile-hero__identity">
                             <h1>الشيف {{ $chef->name }}</h1>
+                        </div>
+                        <div class="chef-profile-hero__bio-block">
                             <p class="chef-profile-hero__bio">{{ $bio }}</p>
                             <span class="chef-profile-hero__subtitle">{{ $specialty }}</span>
                         </div>
                         <div class="chef-profile-hero__meta">
-                            <div class="chef-meta-card">
-                                <span>إجمالي المتابعين</span>
-                                <strong>{{ number_format($totalFollowers) }}</strong>
-                                <small>إنستغرام + يوتيوب</small>
+                            <div class="chef-meta-card chef-meta-card--followers">
+                                <strong>{{ number_format($wasfahFollowers) }}</strong>
+                                <span>عدد المشتركين</span>
                             </div>
-                            <div class="chef-meta-card">
-                                <span>عدد الوصفات المعتمدة</span>
-                                <strong>{{ number_format($stats['recipes_count']) }}</strong>
-                                <small>متاحة للعرض</small>
+                            <div class="chef-meta-card chef-meta-card--platforms">
+                                <strong>{{ number_format($platformFollowers) }}</strong>
+                                <span>مشتركو المنصات الأخرى</span>
                             </div>
-                            <div class="chef-meta-card">
-                                <span>متوسط التقييم</span>
+                            <div class="chef-meta-card chef-meta-card--recipes">
+                                <strong>{{ number_format($recipesCount) }}</strong>
+                                <span>عدد الوصفات</span>
+                            </div>
+                            <div class="chef-meta-card chef-meta-card--rating">
                                 <strong>{{ $statsAverage }}</strong>
-                                <small>{{ number_format($stats['rating_count']) }} تقييم</small>
+                                <span>متوسط التقييم</span>
                             </div>
                         </div>
                         <div class="chef-profile-hero__actions">
@@ -667,25 +798,25 @@
                                     </a>
                                 @endauth
                             @endif
-
-                            @if ($socialLinks->isNotEmpty())
-                                <ul class="chef-profile-hero__social">
-                                    @foreach ($socialLinks as $link)
-                                        <li>
-                                            <a href="{{ $link['url'] }}" target="_blank" rel="noopener" class="social-link">
-                                                <i class="{{ $link['icon'] }}"></i>
-                                                <span>{{ $link['label'] }}</span>
-                                                @if (! empty($link['followers']))
-                                                    <span class="text-xs font-semibold text-orange-500">
-                                                        {{ number_format($link['followers']) }}
-                                                    </span>
-                                                @endif
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @endif
                         </div>
+
+                        @if ($socialLinks->isNotEmpty())
+                            <ul class="chef-profile-hero__social">
+                                @foreach ($socialLinks as $link)
+                                    <li>
+                                        <a href="{{ $link['url'] }}" target="_blank" rel="noopener" class="social-link">
+                                            <i class="{{ $link['icon'] }}"></i>
+                                            <span>{{ $link['label'] }}</span>
+                                            @if (! empty($link['followers']))
+                                                <span class="text-xs font-semibold text-orange-500">
+                                                    {{ number_format($link['followers']) }}
+                                                </span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </div>
                 </div>
             </section>

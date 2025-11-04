@@ -56,6 +56,10 @@ use Carbon\Carbon;
                         <!-- Actions -->
                         <div class="flex flex-wrap justify-center md:justify-start gap-3">
                             @if($user->isChef())
+                                <a href="{{ route('chef.dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all bg-orange-500 text-white shadow-md hover:bg-orange-600 hover:shadow-lg">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>لوحة الشيف</span>
+                                </a>
                                 <a href="{{ route('chefs.show', ['chef' => $user->id]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all border border-orange-200 bg-white text-orange-600 shadow hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700">
                                     <i class="fas fa-eye"></i>
                                     <span>عرض صفحتي العامة</span>
@@ -105,6 +109,244 @@ use Carbon\Carbon;
                 </div>
             </div>
         </div>
+
+        @if($chefOverview)
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6 xl:col-span-2 hover:shadow-xl transition-shadow">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                        <div>
+                            <p class="text-sm uppercase tracking-wider text-orange-500 font-semibold mb-2">ملخص الشيف</p>
+                            <h2 class="text-2xl font-bold text-gray-900">كل ما يتعلق بوصفاتك في لمحة</h2>
+                            <p class="text-gray-500 text-sm">تابع أداء الوصفات واعرف ما يحتاج إلى تحديث أو مراجعة.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 text-xs md:text-sm text-gray-600">
+                            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-orange-500/10 text-orange-700 font-semibold">
+                                <i class="fas fa-book-open"></i>
+                                {{ number_format($chefOverview['recipes_total'] ?? 0) }} وصفة
+                            </span>
+                            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-50 text-emerald-600">
+                                <i class="fas fa-earth-americas"></i>
+                                {{ number_format($chefOverview['public_recipes'] ?? 0) }} عامة
+                            </span>
+                            @if(($chefOverview['exclusive_recipes'] ?? 0) > 0)
+                                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 text-slate-600">
+                                    <i class="fas fa-lock"></i>
+                                    {{ number_format($chefOverview['exclusive_recipes']) }} خاصة
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    @php
+                        $chefStatusCounts = $chefOverview['status_counts'] ?? [];
+                        $chefStatCards = [
+                            [
+                                'label' => 'وصفات معتمدة',
+                                'value' => number_format($chefStatusCounts['approved'] ?? 0),
+                                'icon' => 'fa-circle-check',
+                                'classes' => 'bg-emerald-50 text-emerald-600',
+                            ],
+                            [
+                                'label' => 'قيد المراجعة',
+                                'value' => number_format($chefStatusCounts['pending'] ?? 0),
+                                'icon' => 'fa-clipboard-check',
+                                'classes' => 'bg-orange-50 text-orange-600',
+                            ],
+                            [
+                                'label' => 'مسودات',
+                                'value' => number_format($chefStatusCounts['draft'] ?? 0),
+                                'icon' => 'fa-pen-to-square',
+                                'classes' => 'bg-slate-100 text-slate-600',
+                            ],
+                            [
+                                'label' => 'وصفات مرفوضة',
+                                'value' => number_format($chefStatusCounts['rejected'] ?? 0),
+                                'icon' => 'fa-circle-xmark',
+                                'classes' => 'bg-red-50 text-red-500',
+                            ],
+                        ];
+                    @endphp
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        @foreach($chefStatCards as $card)
+                            <div class="border border-gray-100 rounded-2xl p-5 bg-gradient-to-br from-white to-orange-50/10 hover:shadow-md transition-shadow">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-11 w-11 items-center justify-center rounded-xl {{ $card['classes'] }}">
+                                        <i class="fas {{ $card['icon'] }} text-lg"></i>
+                                    </span>
+                                    <div>
+                                        <p class="text-sm text-gray-500">{{ $card['label'] }}</p>
+                                        <p class="text-2xl font-bold text-gray-800">{{ $card['value'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="rounded-2xl border border-orange-100 bg-orange-50/30 p-5">
+                            <p class="text-sm font-semibold text-orange-600 mb-1">التقييمات والتجارب</p>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-3xl font-bold text-gray-900">
+                                    {{ $chefOverview['average_rating'] ? number_format($chefOverview['average_rating'], 1) : '—' }}
+                                </span>
+                                <span class="text-sm text-gray-500">متوسط التقييم</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                {{ number_format($chefOverview['ratings_count'] ?? 0) }} تقييم موثق · {{ number_format($chefOverview['total_made'] ?? 0) }} تجربة فعلية
+                            </p>
+                        </div>
+                        <div class="rounded-2xl border border-gray-100 bg-white p-5">
+                            <p class="text-sm font-semibold text-gray-700 mb-1">مدى انتشار الوصفات</p>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-3xl font-bold text-gray-900">{{ number_format($chefOverview['total_saves'] ?? 0) }}</span>
+                                <span class="text-sm text-gray-500">حفظ في مكتبات المتابعين</span>
+                            </div>
+                            @if(($chefOverview['status_counts']['pending'] ?? 0) > 0)
+                                <p class="mt-3 inline-flex items-center gap-2 text-sm text-orange-600">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    لديك {{ number_format($chefOverview['status_counts']['pending']) }} وصفة بانتظار الموافقة.
+                                </p>
+                            @else
+                                <p class="mt-3 inline-flex items-center gap-2 text-sm text-emerald-600">
+                                    <i class="fas fa-check-circle"></i>
+                                    جميع وصفاتك الحالية منشورة للجمهور.
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">روابط سريعة للشيف</h3>
+                    @php
+                        $chefQuickLinks = [
+                            [
+                                'href' => $chefOverview['dashboard_url'] ?? '#',
+                                'label' => 'إدارة الوصفات',
+                                'description' => 'أضف وصفة جديدة أو راجع حالة المراجعة.',
+                                'icon' => 'fa-kitchen-set',
+                                'external' => false,
+                            ],
+                            [
+                                'href' => $chefOverview['links_url'] ?? '#',
+                                'label' => 'تعديل روابط Wasfah',
+                                'description' => 'حدث صفحة الروابط الخاصة بك وأضف روابط جديدة.',
+                                'icon' => 'fa-link',
+                                'external' => false,
+                            ],
+                            [
+                                'href' => $chefOverview['public_profile_url'] ?? '#',
+                                'label' => 'عرض الصفحة العامة',
+                                'description' => 'شاهد كيف يظهر ملفك للزوار والمتابعين.',
+                                'icon' => 'fa-eye',
+                                'external' => true,
+                            ],
+                        ];
+                        $chefLinkPage = $chefOverview['link_page'] ?? [];
+                    @endphp
+                    <div class="space-y-3">
+                        @foreach($chefQuickLinks as $link)
+                            <a
+                                href="{{ $link['href'] }}"
+                                @if($link['external']) target="_blank" rel="noopener" @endif
+                                class="flex items-start gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 hover:border-orange-300 hover:bg-orange-50 transition">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600">
+                                    <i class="fas {{ $link['icon'] }}"></i>
+                                </span>
+                                <span>
+                                    <span class="block font-semibold text-gray-800">{{ $link['label'] }}</span>
+                                    <span class="text-sm text-gray-500">{{ $link['description'] }}</span>
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-6 rounded-2xl border {{ ($chefLinkPage['is_published'] ?? false) ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50/40' }} p-4">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-full {{ ($chefLinkPage['is_published'] ?? false) ? 'bg-emerald-500 text-white' : 'bg-slate-400 text-white' }}">
+                                <i class="fas {{ ($chefLinkPage['is_published'] ?? false) ? 'fa-bullhorn' : 'fa-trowel-bricks' }}"></i>
+                            </span>
+                            <div>
+                                <p class="font-semibold text-gray-800">صفحة روابط Wasfah</p>
+                                <p class="text-xs text-gray-500">
+                                    {{ number_format($chefLinkPage['items_count'] ?? 0) }} روابط مضافة ·
+                                    {{ ($chefLinkPage['is_published'] ?? false) ? 'منشورة للجمهور' : 'غير منشورة بعد' }}
+                                </p>
+                            </div>
+                        </div>
+                        @if(!empty($chefLinkPage['public_url']))
+                            <a href="{{ $chefLinkPage['public_url'] }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-semibold">
+                                زيارة صفحة الروابط
+                                <i class="fas fa-arrow-left text-xs"></i>
+                            </a>
+                        @else
+                            <p class="mt-3 text-sm text-gray-500">
+                                ابدأ بإضافة روابطك المهمة ثم فعّل النشر من خلال خيار "تعديل روابط Wasfah".
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            @if(($chefOverview['popular_recipes'] ?? collect())->isNotEmpty())
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-shadow">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">أبرز وصفاتك أداءً</h2>
+                            <p class="text-gray-500 text-sm">اعتمدنا على معدل الحفظ، التجربة، والتقييم لتحديد هذه القائمة.</p>
+                        </div>
+                        <a href="{{ $chefOverview['dashboard_url'] ?? '#' }}" class="inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-semibold">
+                            إدارة كل الوصفات
+                            <i class="fas fa-arrow-left text-xs"></i>
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @foreach($chefOverview['popular_recipes'] as $recipe)
+                            @php
+                                $recipeImage = $recipe->image_url ?? asset('image/Brownies.png');
+                            @endphp
+                            <article class="group border border-gray-100 rounded-2xl overflow-hidden bg-white/80 hover:shadow-md transition-shadow h-full flex flex-col">
+                                <div class="relative h-40 bg-gray-100">
+                                    <img src="{{ $recipeImage }}" alt="{{ $recipe->title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200">
+                                    @if(isset($recipe->visibility) && $recipe->visibility === \App\Models\Recipe::VISIBILITY_PRIVATE)
+                                        <span class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-700/80 px-3 py-1 text-[11px] font-semibold text-white">
+                                            <i class="fas fa-lock"></i>
+                                            خاص
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex-1 p-5 flex flex-col gap-3">
+                                    <div>
+                                        <p class="text-xs uppercase tracking-wide text-orange-500 font-semibold mb-1">
+                                            آخر تحديث {{ optional($recipe->updated_at ?? $recipe->created_at)->diffForHumans() }}
+                                        </p>
+                                        <h3 class="font-semibold text-gray-900 text-base">{{ $recipe->title }}</h3>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-[13px] text-gray-500">
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="fas fa-bookmark text-orange-500"></i>
+                                            {{ number_format($recipe->saved_count ?? 0) }}
+                                        </span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="fas fa-utensils text-emerald-500"></i>
+                                            {{ number_format($recipe->made_count ?? 0) }}
+                                        </span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="fas fa-star text-yellow-400"></i>
+                                            {{ $recipe->interactions_avg_rating ? number_format($recipe->interactions_avg_rating, 1) : '—' }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" target="_blank" rel="noopener" class="mt-auto inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-semibold">
+                                        عرض الوصفة
+                                        <i class="fas fa-arrow-left text-xs"></i>
+                                    </a>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endif
 
         <!-- Upcoming Workshops & Smart Suggestions -->
         @php

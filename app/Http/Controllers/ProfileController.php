@@ -240,6 +240,104 @@ class ProfileController extends Controller
             ])),
         ];
         
+        $chefOverview = null;
+
+        if ($user->isChef()) {
+            $chefRecipes = $user->recipes()
+                ->with(['category'])
+                ->withCount([
+                    'interactions as saved_count' => function ($query) {
+                        $query->where('is_saved', true);
+                    },
+                    'interactions as made_count' => function ($query) {
+                        $query->where('is_made', true);
+                    },
+                    'interactions as rating_count' => function ($query) {
+                        $query->whereNotNull('rating');
+                    },
+                ])
+                ->withAvg('interactions', 'rating')
+                ->orderByDesc('created_at')
+                ->get();
+
+            $supportsVisibility = Recipe::supportsVisibilityFlag();
+
+            if (!$supportsVisibility) {
+                $chefRecipes->each(static function (Recipe $recipe): void {
+                    if (empty($recipe->visibility)) {
+                        $recipe->visibility = Recipe::VISIBILITY_PUBLIC;
+                    }
+                });
+            }
+
+            $supportsModeration = Recipe::supportsModerationStatus();
+
+            $statusCounts = [
+                'approved' => $supportsModeration
+                    ? $chefRecipes->where('status', Recipe::STATUS_APPROVED)->count()
+                    : $chefRecipes->count(),
+                'pending' => $supportsModeration
+                    ? $chefRecipes->where('status', Recipe::STATUS_PENDING)->count()
+                    : 0,
+                'draft' => $supportsModeration
+                    ? $chefRecipes->where('status', Recipe::STATUS_DRAFT)->count()
+                    : 0,
+                'rejected' => $supportsModeration
+                    ? $chefRecipes->where('status', Recipe::STATUS_REJECTED)->count()
+                    : 0,
+            ];
+
+            $publicRecipes = $supportsVisibility
+                ? $chefRecipes->where('visibility', Recipe::VISIBILITY_PUBLIC)->values()
+                : $chefRecipes->values();
+
+            $exclusiveRecipeCount = $supportsVisibility
+                ? $chefRecipes->where('visibility', Recipe::VISIBILITY_PRIVATE)->count()
+                : 0;
+
+            $privateRecipes = $supportsVisibility
+                ? $chefRecipes->where('visibility', Recipe::VISIBILITY_PRIVATE)->values()
+                : collect();
+
+            $popularRecipes = $publicRecipes
+                ->merge($privateRecipes)
+                ->sortByDesc(static function (Recipe $recipe): int {
+                    $ratingScore = (float) ($recipe->interactions_avg_rating ?? 0);
+
+                    return ($recipe->saved_count * 100000)
+                        + ($ratingScore * 1000)
+                        + (int) optional($recipe->created_at)->getTimestamp();
+                })
+                ->take(3)
+                ->values();
+
+            $averageRating = $chefRecipes->pluck('interactions_avg_rating')
+                ->filter()
+                ->average();
+
+            $linkPage = $user->linkPage()->withCount('items')->first();
+
+            $chefOverview = [
+                'recipes_total' => $chefRecipes->count(),
+                'public_recipes' => $publicRecipes->count(),
+                'exclusive_recipes' => $exclusiveRecipeCount,
+                'status_counts' => $statusCounts,
+                'total_saves' => (int) $chefRecipes->sum('saved_count'),
+                'total_made' => (int) $chefRecipes->sum('made_count'),
+                'average_rating' => $averageRating ? round((float) $averageRating, 1) : null,
+                'ratings_count' => (int) $chefRecipes->sum('rating_count'),
+                'popular_recipes' => $popularRecipes,
+                'public_profile_url' => route('chefs.show', ['chef' => $user->id]),
+                'dashboard_url' => route('chef.dashboard'),
+                'links_url' => route('chef.links.edit'),
+                'link_page' => [
+                    'public_url' => $linkPage ? route('links.chef', $linkPage) : null,
+                    'items_count' => $linkPage?->items_count ?? 0,
+                    'is_published' => (bool) ($linkPage?->is_published ?? false),
+                ],
+            ];
+        }
+        
         return view('profile', compact(
             'user',
             'savedRecipes',
@@ -250,7 +348,8 @@ class ProfileController extends Controller
             'activityFeed',
             'achievements',
             'nextWorkshop',
-            'upcomingWorkshops'
+            'upcomingWorkshops',
+            'chefOverview'
         ));
     }
     
