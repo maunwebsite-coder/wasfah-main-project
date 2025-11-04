@@ -140,7 +140,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                     <div class="badge-tip">
                         <i class="fas fa-check-circle"></i>
-                        يجب أن تمتلك 500 متابع على الأقل على إحدى المنصات
+                        تتم الموافقة فورياً بعد إرسال هذا النموذج
                     </div>
                     <div class="text-sm text-gray-500">
                         تم تسجيل الدخول بواسطة {{ $user->email }}
@@ -150,9 +150,9 @@
                 <div class="info-card mb-8">
                     <h2 class="text-lg font-semibold mb-2 text-orange-800">لماذا نطلب هذه البيانات؟</h2>
                     <ul class="list-disc list-inside text-sm space-y-1 text-orange-700/90">
-                        <li>نضمن أن الشيف يمتلك تأثيراً حقيقياً على منصات التواصل.</li>
-                        <li>نؤكد أن المحتوى الذي يقدمه متخصص في عالم الغذاء والطبخ.</li>
-                        <li>نساعد الشيف على إبراز قنواته الاجتماعية لزوار وصفة.</li>
+                        <li>نستخدم رقم جوالك للتواصل معك بشأن الحجوزات والورشات.</li>
+                        <li>روابطك الاجتماعية تساعد الزوار على معرفة أسلوبك بسرعة.</li>
+                        <li>الوصف التفصيلي يسهّل إبراز خبرتك داخل مجتمع وصفة.</li>
                     </ul>
                 </div>
 
@@ -209,18 +209,6 @@
                             @enderror
                         </div>
                         <div>
-                            <label class="input-label">عدد المتابعين في إنستغرام (اختياري)</label>
-                            <input type="number"
-                                   name="instagram_followers"
-                                   value="{{ old('instagram_followers', $user->instagram_followers) }}"
-                                   min="0"
-                                   class="input-control"
-                                   placeholder="مثال: 1200">
-                            @error('instagram_followers')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
                             <label class="input-label">رابط قناة يوتيوب (اختياري)</label>
                             <input type="url"
                                    name="youtube_url"
@@ -228,18 +216,6 @@
                                    class="input-control"
                                    placeholder="https://www.youtube.com/channel/...">
                             @error('youtube_url')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="input-label">عدد المتابعين في يوتيوب (اختياري)</label>
-                            <input type="number"
-                                   name="youtube_followers"
-                                   value="{{ old('youtube_followers', $user->youtube_followers) }}"
-                                   min="0"
-                                   class="input-control"
-                                   placeholder="مثال: 800">
-                            @error('youtube_followers')
                                 <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
@@ -267,7 +243,7 @@
                         </div>
                     </div>
 
-                    <p class="text-xs text-gray-500">يكفي إضافة منصة واحدة (إنستغرام أو يوتيوب) مع عدد المتابعين الخاص بها.</p>
+                    <p class="text-xs text-gray-500">يكفي مشاركة رابط واحد (إنستغرام أو يوتيوب) للتعريف بنفسك.</p>
 
                     <div>
                         <label class="input-label">صف لنا خبرتك في عالم الطعام *</label>
@@ -281,12 +257,12 @@
                     </div>
 
                     <div class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                        سيتم مراجعة طلبك من قبل فريق وصفة، وسنقوم بإشعارك فور اعتمادك كـ شيف.
+                        بمجرد إرسال هذه البيانات سيتم تفعيل حساب الشيف فوراً ويمكنك استخدام كل الأدوات المتقدمة.
                     </div>
 
                     <div class="text-center pt-4">
                         <button type="submit" class="submit-btn">
-                            إرسال الطلب للمراجعة
+                            إكمال التسجيل كشيف
                         </button>
                     </div>
                 </form>

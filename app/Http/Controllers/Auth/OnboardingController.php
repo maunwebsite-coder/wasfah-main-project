@@ -81,9 +81,7 @@ class OnboardingController extends Controller
             'country_code' => ['required', Rule::in($countryCodes)],
             'phone' => ['required', 'string', 'max:30'],
             'instagram_url' => ['nullable', 'url', 'max:255', 'required_without:youtube_url'],
-            'instagram_followers' => ['nullable', 'integer', 'min:0', 'required_with:instagram_url'],
             'youtube_url' => ['nullable', 'url', 'max:255', 'required_without:instagram_url'],
-            'youtube_followers' => ['nullable', 'integer', 'min:0', 'required_with:youtube_url'],
             'chef_specialty_area' => ['required', 'in:food'],
             'chef_specialty_description' => ['required', 'string', 'min:20', 'max:2000'],
         ], [
@@ -91,8 +89,6 @@ class OnboardingController extends Controller
             'country_code.in' => 'الدولة المختارة غير مدعومة حالياً.',
             'instagram_url.required_without' => 'يرجى إدخال حساب إنستغرام أو قناة يوتيوب واحدة على الأقل.',
             'youtube_url.required_without' => 'يرجى إدخال حساب إنستغرام أو قناة يوتيوب واحدة على الأقل.',
-            'instagram_followers.required_with' => 'يرجى إدخال عدد المتابعين لحساب إنستغرام.',
-            'youtube_followers.required_with' => 'يرجى إدخال عدد المتابعين لقناة يوتيوب.',
             'chef_specialty_area.in' => 'يجب أن يكون تخصصك الرئيسي في مجال الطعام والطبخ للانضمام كـ شيف.',
             'chef_specialty_description.min' => 'يرجى تقديم وصف مفصل عن خبرتك في مجال الطبخ (20 حرفاً على الأقل).',
         ]);
@@ -109,35 +105,18 @@ class OnboardingController extends Controller
                 ]);
         }
 
-        $instagramFollowers = (int) ($data['instagram_followers'] ?? 0);
-        $youtubeFollowers = (int) ($data['youtube_followers'] ?? 0);
-        $maxFollowers = max($instagramFollowers, $youtubeFollowers);
-
-        if ($maxFollowers < 500) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'instagram_followers' => 'يجب أن تمتلك ما لا يقل عن 500 متابع على إحدى المنصات للانضمام كـ شيف.',
-                ]);
-        }
-
         $user->country_code = $countryCode;
         $user->phone_country_code = $this->ensureDialCodePrefix($dialCode ?? '');
         $user->phone = $fullPhone;
         $user->instagram_url = $data['instagram_url'] ?? null;
-        $user->instagram_followers = $instagramFollowers;
         $user->youtube_url = $data['youtube_url'] ?? null;
-        $user->youtube_followers = $youtubeFollowers;
         $user->chef_specialty_area = $data['chef_specialty_area'];
         $user->chef_specialty_description = $data['chef_specialty_description'];
 
         if (!$user->isAdmin()) {
             $user->role = User::ROLE_CHEF;
-
-            if ($user->chef_status !== User::CHEF_STATUS_APPROVED) {
-                $user->chef_status = User::CHEF_STATUS_PENDING;
-                $user->chef_approved_at = null;
-            }
+            $user->chef_status = User::CHEF_STATUS_APPROVED;
+            $user->chef_approved_at = now();
         }
 
         $user->save();
@@ -145,7 +124,7 @@ class OnboardingController extends Controller
         $redirectTo = $this->redirectPath($user);
 
         return redirect($redirectTo)
-            ->with('success', 'شكراً لك! تم استلام طلبك للانضمام كـ شيف، وسيتم مراجعته من قِبل الإدارة.');
+            ->with('success', 'تهانينا! تم اعتمادك فوراً كشيف ويمكنك البدء في مشاركة وصفاتك وورشاتك الآن.');
     }
 
     private function requiresOnboarding(User $user): bool
