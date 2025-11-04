@@ -159,6 +159,7 @@
             if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
             if (element.mozRequestFullScreen) return element.mozRequestFullScreen();
             if (element.msRequestFullscreen) return element.msRequestFullscreen();
+            return Promise.reject();
         };
 
         const exitFullscreen = () => {
@@ -166,6 +167,7 @@
             if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
             if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
             if (document.msExitFullscreen) return document.msExitFullscreen();
+            return Promise.reject();
         };
 
         const getFullscreenElement = () =>
@@ -181,11 +183,20 @@
                 : '<i class="fas fa-expand"></i> ملء الشاشة';
         }
 
+        const tryEnterFullscreen = () => {
+            return requestFullscreen(shell)
+                .catch(() => requestFullscreen(container))
+                .catch(() => requestFullscreen(document.documentElement));
+        };
+
         fullscreenBtn?.addEventListener('click', () => {
-            if (getFullscreenElement() === shell) {
-                exitFullscreen();
+            const current = getFullscreenElement();
+            if (current === shell || current === container || current === document.documentElement) {
+                exitFullscreen().catch(() => {});
             } else {
-                requestFullscreen(shell);
+                tryEnterFullscreen().catch(() => {
+                    alert('لا يمكن تفعيل ملء الشاشة. تأكد من السماح للمتصفح أو جرّب مستعرضاً آخر.');
+                });
             }
         });
 

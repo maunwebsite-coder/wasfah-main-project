@@ -186,7 +186,13 @@ class WorkshopController extends Controller
             'auto_generate_meeting' => ['sometimes', 'boolean'],
         ];
 
-        $data = $request->validate($rules);
+        $messages = [
+            'image.image' => 'يرجى اختيار ملف صورة صالح.',
+            'image.mimes' => 'الصيغ المدعومة هي JPG, PNG, GIF أو WebP فقط.',
+            'image.max' => 'حجم الصورة كبير جداً. الحد الأقصى هو 5 ميجابايت.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         if (!empty($data['is_online']) && empty($data['meeting_link']) && !$request->boolean('auto_generate_meeting')) {
             throw ValidationException::withMessages([
