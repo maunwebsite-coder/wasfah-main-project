@@ -102,15 +102,20 @@ class SocialiteController extends Controller
             if ($pendingWorkshopId) {
                 // مسح معرف الورشة من session
                 session()->forget('pending_workshop_booking');
-                
-                // توجيه المستخدم إلى صفحة الورشة
-                if ($isNewUser) {
-                    $workshop = \App\Models\Workshop::find($pendingWorkshopId);
-                    return redirect()->route('workshop.show', $workshop->slug)->with('success', 'تم إنشاء حساب جديد بنجاح! مرحباً بك في وصفة 🎉 يمكنك الآن حجز الورشة.');
-                } else {
-                    $workshop = \App\Models\Workshop::find($pendingWorkshopId);
-                    return redirect()->route('workshop.show', $workshop->slug)->with('success', 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة 👋 يمكنك الآن حجز الورشة.');
+
+                $workshop = \App\Models\Workshop::find($pendingWorkshopId);
+                if (!$workshop) {
+                    return redirect('/')
+                        ->with('info', 'تم تسجيل الدخول بنجاح، لكن لم يتم العثور على الورشة المطلوبة. يمكنك تصفح الورشات المتاحة الآن.');
                 }
+
+                $successMessage = $isNewUser
+                    ? 'تم إنشاء حساب جديد بنجاح! مرحباً بك في وصفة 🎉 يمكنك الآن حجز الورشة.'
+                    : 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة 👋 يمكنك الآن حجز الورشة.';
+
+                return redirect()
+                    ->route('workshop.show', $workshop->slug)
+                    ->with('success', $successMessage);
             }
 
             // Redirect with appropriate message based on whether it's a new user or existing user
