@@ -20,11 +20,21 @@ return Application::configure(basePath: dirname(__DIR__))
 			'admin' => \App\Http\Middleware\AdminMiddleware::class,
 			'update.last.login' => \App\Http\Middleware\UpdateLastLogin::class,
 			'chef' => \App\Http\Middleware\EnsureUserIsChef::class,
+			'moderate.content' => \App\Http\Middleware\EnforceContentModeration::class,
 		]);
 		
 		// إضافة middleware لتحديث آخر تسجيل دخول لجميع الطلبات المصادق عليها
-		$middleware->web(append: [
-			\App\Http\Middleware\UpdateLastLogin::class,
+		$middleware->web(
+			prepend: [
+				\App\Http\Middleware\EnforceContentModeration::class,
+			],
+			append: [
+				\App\Http\Middleware\UpdateLastLogin::class,
+			]
+		);
+
+		$middleware->api(prepend: [
+			\App\Http\Middleware\EnforceContentModeration::class,
 		]);
 	})
 	->withExceptions(function (Exceptions $exceptions): void {

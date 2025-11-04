@@ -82,6 +82,12 @@ return [
             'image/webp',
         ],
 
+        'processing' => [
+            'quality' => (int) env('IMAGE_PROCESSING_QUALITY', 85),
+            'max_width' => (int) env('IMAGE_PROCESSING_MAX_WIDTH', 1200),
+            'max_height' => (int) env('IMAGE_PROCESSING_MAX_HEIGHT', 1200),
+        ],
+
         'review' => [
             'enabled' => env('IMAGE_EXPLICIT_SCAN', true),
             'skin_tone_threshold' => 0.38,

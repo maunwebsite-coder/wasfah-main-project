@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\ContentModerationService;
+use App\Services\EnhancedImageUploadService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -23,6 +24,14 @@ class EnforceContentModeration
 
         $errors = [];
         $blockedKeys = config('content_moderation.excluded_input_keys', []);
+        $compressedTempPaths = [];
+
+        $maxKilobytes = (int) config('content_moderation.image.max_kilobytes', 2048);
+        $maxBytes = $maxKilobytes * 1024;
+        $processing = config('content_moderation.image.processing', []);
+        $targetQuality = (int) ($processing['quality'] ?? 85);
+        $targetMaxWidth = (int) ($processing['max_width'] ?? 1200);
+        $targetMaxHeight = (int) ($processing['max_height'] ?? 1200);
 
         foreach ($this->stringInputs($request) as $key => $value) {
             if ($this->isExcludedKey($key, $blockedKeys)) {
@@ -57,19 +66,53 @@ class EnforceContentModeration
                 continue;
             }
 
-            $maxBytes = (int) config('content_moderation.image.max_kilobytes', 2048) * 1024;
+            $preparedFile = $file;
+
             if ($file->getSize() > $maxBytes) {
-                $errors[$this->formatAttribute($key)][] = 'حجم الصورة يتجاوز الحد المسموح (2 ميجابايت). يرجى اختيار صورة أصغر.';
-                continue;
+                $compression = EnhancedImageUploadService::compressUploadedFile(
+                    $file,
+                    $maxBytes,
+                    $targetQuality,
+                    $targetMaxWidth,
+                    $targetMaxHeight
+                );
+
+                if (!$compression['success'] || empty($compression['file'])) {
+                    $errors[$this->formatAttribute($key)][] = $compression['error']
+                        ?? 'تعذر ضغط الصورة لتتناسب مع الحجم المسموح.';
+                    continue;
+                }
+
+                if ($compression['file'] instanceof UploadedFile) {
+                    $preparedFile = $compression['file'];
+                    $this->replaceUploadedFile($request, $key, $preparedFile);
+                    $cleanupPath = $compression['temp_path'] ?? $preparedFile->getRealPath();
+
+                    if ($cleanupPath) {
+                        $compressedTempPaths[] = $cleanupPath;
+                    }
+
+                    $mimeType = $preparedFile->getMimeType() ?? $mimeType;
+                }
             }
 
-            if (ContentModerationService::imageAppearsExplicit($file)) {
+            if (ContentModerationService::imageAppearsExplicit($preparedFile)) {
                 $errors[$this->formatAttribute($key)][] = 'تم رفض الصورة لأنها قد تحتوي على محتوى غير لائق.';
             }
         }
 
         if (!empty($errors)) {
             throw ValidationException::withMessages($errors);
+        }
+
+        if (!empty($compressedTempPaths)) {
+            app()->terminating(function () use ($compressedTempPaths): void {
+                foreach ($compressedTempPaths as $path) {
+                    if ($path && is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+            });
         }
 
         return $next($request);
@@ -146,5 +189,15 @@ class EnforceContentModeration
     protected function formatAttribute(string $key): string
     {
         return str_replace('.', ' ', $key);
+    }
+
+    /**
+     * استبدال ملف مرفوع داخل الطلب بعد ضغطه.
+     */
+    protected function replaceUploadedFile(Request $request, string $key, UploadedFile $file): void
+    {
+        $files = $request->files->all();
+        Arr::set($files, $key, $file);
+        $request->files->replace($files);
     }
 }
