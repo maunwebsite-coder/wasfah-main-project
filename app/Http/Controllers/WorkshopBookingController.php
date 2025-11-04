@@ -148,7 +148,7 @@ class WorkshopBookingController extends Controller
     public function join(WorkshopBooking $booking)
     {
         $this->ensureBookingOwner($booking);
-        $booking->loadMissing('workshop');
+        $booking->load('workshop');
         $workshop = $booking->workshop;
 
         if ($booking->status !== 'confirmed') {
@@ -181,7 +181,7 @@ class WorkshopBookingController extends Controller
     public function status(WorkshopBooking $booking)
     {
         $this->ensureBookingOwner($booking);
-        $booking->loadMissing('workshop');
+        $booking->load('workshop');
         $workshop = $booking->workshop;
 
         return response()->json([
