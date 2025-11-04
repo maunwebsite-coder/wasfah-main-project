@@ -250,7 +250,10 @@
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
+                        'Content-Type': 'application/json',
                     },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({}),
                 });
                 const data = await response.json();
 
@@ -262,7 +265,7 @@
                     stateLabel.innerHTML = `
                         <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold text-emerald-200">
                             <i class="fas fa-check-circle"></i>
-                            تم بدء الاجتماع للتو
+                            تم بدء الاجتماع ${data.already_started ? 'سابقاً' : 'الآن'}
                         </span>
                     `;
                 }
