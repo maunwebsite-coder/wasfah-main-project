@@ -111,7 +111,29 @@ Route::get('/login', function () {
     if (Auth::check()) {
         return redirect('/')->with('info', 'أنت مسجل دخول بالفعل');
     }
-    return view('auth');
+    request()->session()->regenerateToken();
+
+    $response = response()
+        ->view('auth')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+
+    $response->withCookie(
+        cookie(
+            'XSRF-TOKEN',
+            csrf_token(),
+            config('session.lifetime'),
+            '/',
+            config('session.domain'),
+            (bool) config('session.secure', false),
+            false,
+            false,
+            config('session.same_site', 'lax')
+        )
+    );
+
+    return $response;
 })->name('login');
 Route::post('/login', [LoginController::class, 'store'])
     ->middleware('guest')
@@ -138,7 +160,29 @@ Route::get('/register', function () {
     if (Auth::check()) {
         return redirect('/')->with('info', 'أنت مسجل دخول بالفعل');
     }
-    return view('auth');
+    request()->session()->regenerateToken();
+
+    $response = response()
+        ->view('auth')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+
+    $response->withCookie(
+        cookie(
+            'XSRF-TOKEN',
+            csrf_token(),
+            config('session.lifetime'),
+            '/',
+            config('session.domain'),
+            (bool) config('session.secure', false),
+            false,
+            false,
+            config('session.same_site', 'lax')
+        )
+    );
+
+    return $response;
 })->name('register');
 Route::post('/register', [RegisterController::class, 'store'])
     ->middleware('guest')

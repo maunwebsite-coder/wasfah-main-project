@@ -69,6 +69,7 @@ class RegisterController extends Controller
         } catch (Throwable $exception) {
             report($exception);
             $verification->delete();
+            $request->session()->regenerateToken();
 
             return back()
                 ->withInput($request->except(['password', 'password_confirmation']))
