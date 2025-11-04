@@ -152,11 +152,17 @@ class WorkshopController extends Controller
             $workshop->save();
         }
 
-        return response()->json([
+        $payload = [
             'success' => true,
             'already_started' => $alreadyStarted,
             'started_at' => $workshop->meeting_started_at->toIso8601String(),
-        ]);
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json($payload);
+        }
+
+        return back()->with('success', $alreadyStarted ? 'تم بدء الاجتماع مسبقاً.' : 'تم فتح الغرفة ويمكن للمشاركين الدخول الآن.');
     }
 
     public function generateMeetingLink(Request $request)

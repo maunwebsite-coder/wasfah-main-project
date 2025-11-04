@@ -84,11 +84,14 @@
                             تم بدء الاجتماع {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}
                         </span>
                     @else
-                        <button type="button" id="startMeetingBtn"
-                                class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600">
-                            <i class="fas fa-play"></i>
-                            بدء الاجتماع الآن
-                        </button>
+                        <form id="startMeetingForm" method="POST" action="{{ route('chef.workshops.start', $workshop) }}">
+                            @csrf
+                            <button type="submit" id="startMeetingBtn"
+                                    class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600">
+                                <i class="fas fa-play"></i>
+                                بدء الاجتماع الآن
+                            </button>
+                        </form>
                         <span class="mt-1 text-slate-400">سيظهر الزر كمؤشر للمشاركين بأن الغرفة مفتوحة.</span>
                     @endif
                 </div>
@@ -131,8 +134,8 @@
         const shell = document.getElementById('jitsi-shell');
         const fullscreenBtn = document.getElementById('fullscreenToggle');
         const startBtn = document.getElementById('startMeetingBtn');
+        const startForm = document.getElementById('startMeetingForm');
         const stateLabel = document.getElementById('meetingStateLabel');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -236,47 +239,11 @@
         document.addEventListener('MSFullscreenChange', updateFullscreenState);
         updateFullscreenState();
 
-        const handleMeetingStart = async () => {
-            if (!startBtn || !csrfToken) {
-                return;
-            }
-
+        startForm?.addEventListener('submit', () => {
+            if (!startBtn) return;
             startBtn.disabled = true;
             startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> يتم البدء...';
-
-            try {
-                const response = await fetch(@json(route('chef.workshops.start', $workshop)), {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({}),
-                });
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.message || 'تعذر بدء الاجتماع، حاول مرة أخرى.');
-                }
-
-                if (stateLabel) {
-                    stateLabel.innerHTML = `
-                        <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold text-emerald-200">
-                            <i class="fas fa-check-circle"></i>
-                            تم بدء الاجتماع ${data.already_started ? 'سابقاً' : 'الآن'}
-                        </span>
-                    `;
-                }
-            } catch (error) {
-                alert(error?.message || 'تعذر بدء الاجتماع، حاول مرة أخرى.');
-                startBtn.disabled = false;
-                startBtn.innerHTML = '<i class="fas fa-play"></i> بدء الاجتماع الآن';
-            }
-        };
-
-        startBtn?.addEventListener('click', handleMeetingStart);
+        });
     });
 </script>
 @endpush
