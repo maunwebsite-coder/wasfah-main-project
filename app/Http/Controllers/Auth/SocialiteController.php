@@ -35,8 +35,14 @@ class SocialiteController extends Controller
      */
     public function callback()
     {
+        $stage = 'start';
+        $socialUser = null;
+
         try {
+            $stage = 'fetch-social-user';
             $socialUser = Socialite::driver('google')->user();
+
+            $stage = 'resolve-intent';
             $intent = session('auth_login_intent', User::ROLE_CUSTOMER);
             session()->forget('auth_login_intent');
 
@@ -45,11 +51,13 @@ class SocialiteController extends Controller
             }
 
             // Check if user exists by email first
+            $stage = 'find-existing-user';
             $existingUser = User::where('email', $socialUser->getEmail())->first();
             $isNewUser = false;
             
             if ($existingUser) {
                 // User exists, update their social login info
+                $stage = 'update-existing-user';
                 $updates = [
                     'provider' => 'google',
                     'provider_id' => $socialUser->getId(),
@@ -69,6 +77,7 @@ class SocialiteController extends Controller
                 $user = $existingUser;
             } else {
                 // Create new user
+                $stage = 'create-new-user';
                 $user = User::create([
                     'name' => $socialUser->getName(),
                     'email' => $socialUser->getEmail(),
@@ -85,6 +94,7 @@ class SocialiteController extends Controller
 
                 // إنشاء إشعارات ترحيبية للمستخدم الجديد بدون تعطيل عملية تسجيل الدخول في حال الفشل
                 try {
+                    $stage = 'create-welcome-notifications';
                     $this->createWelcomeNotifications($user);
                 } catch (\Throwable $notificationException) {
                     \Log::warning('Failed to create welcome notifications', [
@@ -95,9 +105,11 @@ class SocialiteController extends Controller
             }
 
             // Log the user in
+            $stage = 'login-user';
             Auth::login($user);
 
             // Redirect to onboarding if profile incomplete
+            $stage = 'redirect-onboarding-check';
             if ($this->shouldRedirectToOnboarding($user)) {
                 return redirect()
                     ->route('onboarding.show')
@@ -105,6 +117,7 @@ class SocialiteController extends Controller
             }
 
             // التحقق من وجود معرف ورشة محفوظ في session
+            $stage = 'pending-workshop-check';
             $pendingWorkshopId = session('pending_workshop_booking');
             if ($pendingWorkshopId) {
                 // مسح معرف الورشة من session
@@ -134,7 +147,12 @@ class SocialiteController extends Controller
 
         } catch (Exception $e) {
             // Log the error for debugging
-            \Log::error('Google OAuth Error: ' . $e->getMessage());
+            \Log::error('Google OAuth Error', [
+                'stage' => $stage,
+                'message' => $e->getMessage(),
+                'email' => $socialUser ? $socialUser->getEmail() : null,
+                'exception' => $e,
+            ]);
             
             // Handle exceptions, e.g., redirect to login with an error message
             return redirect('/login')->with('error', 'حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.');
