@@ -10,6 +10,7 @@ use App\Services\SimpleImageCompressionService;
 use App\Services\EnhancedImageUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class WorkshopController extends Controller
 {
@@ -68,6 +69,7 @@ class WorkshopController extends Controller
         $request->validate(Workshop::validationRules());
 
         $workshop = new Workshop();
+        $workshop->user_id = Auth::id();
         $workshop->title = $request->title;
         $workshop->description = $request->description;
         $workshop->instructor = $request->instructor;
@@ -84,8 +86,16 @@ class WorkshopController extends Controller
             $meetingLink = trim((string) ($request->meeting_link ?? ''));
             $workshop->meeting_link = $meetingLink !== '' ? $meetingLink : null;
             $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
+            $workshop->meeting_provider = $this->detectMeetingProvider($workshop->meeting_link);
+            if ($workshop->meeting_provider !== 'jitsi') {
+                $workshop->jitsi_room = null;
+                $workshop->jitsi_passcode = null;
+            }
         } else {
             $workshop->meeting_link = null;
+            $workshop->meeting_provider = 'manual';
+            $workshop->jitsi_room = null;
+            $workshop->jitsi_passcode = null;
             $workshop->location = $locationValue;
         }
         
@@ -220,8 +230,16 @@ class WorkshopController extends Controller
             $meetingLink = trim((string) ($request->meeting_link ?? ''));
             $workshop->meeting_link = $meetingLink !== '' ? $meetingLink : null;
             $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
+            $workshop->meeting_provider = $this->detectMeetingProvider($workshop->meeting_link);
+            if ($workshop->meeting_provider !== 'jitsi') {
+                $workshop->jitsi_room = null;
+                $workshop->jitsi_passcode = null;
+            }
         } else {
             $workshop->meeting_link = null;
+            $workshop->meeting_provider = 'manual';
+            $workshop->jitsi_room = null;
+            $workshop->jitsi_passcode = null;
             $workshop->location = $locationValue;
         }
         
@@ -385,5 +403,20 @@ class WorkshopController extends Controller
         return response()->json([
             'hasFeatured' => $hasFeatured
         ]);
+    }
+
+    protected function detectMeetingProvider(?string $url): string
+    {
+        if (!$url) {
+            return 'manual';
+        }
+
+        $jitsiBase = rtrim((string) config('services.jitsi.base_url'), '/');
+
+        if ($jitsiBase && Str::contains($url, $jitsiBase)) {
+            return 'jitsi';
+        }
+
+        return 'manual';
     }
 }

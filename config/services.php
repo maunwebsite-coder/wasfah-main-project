@@ -47,6 +47,12 @@ return [
     'marketplace' => env('AMAZON_MARKETPLACE', 'ae'),
 ],
 
+'jitsi' => [
+    'base_url' => env('JITSI_BASE_URL', 'https://meet.jit.si'),
+    'room_prefix' => env('JITSI_ROOM_PREFIX', 'wasfah'),
+    'default_duration' => (int) env('JITSI_DEFAULT_DURATION', 90),
+],
+
 'registration' => [
     'require_email_verification' => env('REGISTRATION_REQUIRE_EMAIL_VERIFICATION', false),
 ],

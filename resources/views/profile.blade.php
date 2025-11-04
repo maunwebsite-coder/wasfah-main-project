@@ -60,6 +60,10 @@ use Carbon\Carbon;
                                     <i class="fas fa-tachometer-alt"></i>
                                     <span>لوحة الشيف</span>
                                 </a>
+                                <a href="{{ route('chef.workshops.index') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all border border-indigo-200 bg-white text-indigo-600 shadow hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700">
+                                    <i class="fas fa-video"></i>
+                                    <span>ورش العمل</span>
+                                </a>
                                 <a href="{{ route('chefs.show', ['chef' => $user->id]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all border border-orange-200 bg-white text-orange-600 shadow hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700">
                                     <i class="fas fa-eye"></i>
                                     <span>عرض صفحتي العامة</span>

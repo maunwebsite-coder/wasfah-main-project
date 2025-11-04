@@ -10,6 +10,7 @@ class Workshop extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'title',
         'slug',
         'description',
@@ -34,6 +35,9 @@ class Workshop extends Model
         'registration_deadline',
         'is_online',
         'meeting_link',
+        'meeting_provider',
+        'jitsi_room',
+        'jitsi_passcode',
         'requirements',
         'what_you_will_learn',
         'materials_needed',
@@ -73,6 +77,14 @@ class Workshop extends Model
     public function views()
     {
         return $this->hasMany(WorkshopView::class);
+    }
+
+    /**
+     * الشيف المسؤول عن الورشة (إن وجد).
+     */
+    public function chef()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // العلاقة مع الوصفات (many-to-many)
@@ -190,7 +202,7 @@ class Workshop extends Model
             'duration' => 'required|integer|min:30',
             'max_participants' => 'required|integer|min:1|max:1000',
             'price' => 'required|numeric|min:0',
-            'currency' => 'required|string|in:JOD,AED',
+            'currency' => 'required|string|in:JOD,AED,SAR',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'location' => ['required_unless:is_online,1', 'nullable', 'string', 'max:255'],
@@ -199,6 +211,9 @@ class Workshop extends Model
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'meeting_link' => ['nullable', 'url', 'max:255', 'required_if:is_online,1'],
+            'meeting_provider' => ['nullable', 'string', 'max:50'],
+            'jitsi_room' => ['nullable', 'string', 'max:255'],
+            'jitsi_passcode' => ['nullable', 'string', 'max:20'],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
 

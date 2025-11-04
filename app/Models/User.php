@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Recipe;
 use App\Models\ChefLinkPage;
+use App\Models\Workshop;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -215,6 +216,14 @@ class User extends Authenticatable
     public function interactions()
     {
         return $this->hasMany(UserInteraction::class);
+    }
+
+    /**
+     * الورش التي ينشئها الشيف.
+     */
+    public function workshops()
+    {
+        return $this->hasMany(Workshop::class);
     }
 
     // الورشات المحجوزة والمؤكدة

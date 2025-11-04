@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Chef\LinkItemController as ChefLinkItemController;
 use App\Http\Controllers\Chef\LinkPageController as ChefLinkPageController;
 use App\Http\Controllers\Chef\RecipeController as ChefRecipeController;
+use App\Http\Controllers\Chef\WorkshopController as ChefWorkshopController;
 use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
 use App\Models\Recipe;
@@ -213,6 +214,8 @@ Route::middleware(['auth', 'chef'])->prefix('chef')->name('chef.')->group(functi
     Route::delete('links/items/{item}', [ChefLinkItemController::class, 'destroy'])->name('links.items.destroy');
     Route::post('recipes/{recipe}/submit', [ChefRecipeController::class, 'submit'])->name('recipes.submit');
     Route::resource('recipes', ChefRecipeController::class)->except(['show']);
+    Route::post('workshops/generate-meeting-link', [ChefWorkshopController::class, 'generateMeetingLink'])->name('workshops.generate-link');
+    Route::resource('workshops', ChefWorkshopController::class)->except(['show']);
 });
 
 Route::get('/recipe/{recipe:slug}', [App\Http\Controllers\RecipeController::class, 'show'])->name('recipe.show');
