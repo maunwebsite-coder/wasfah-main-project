@@ -107,7 +107,24 @@ class WorkshopController extends Controller
             ->groupBy('level')
             ->get();
 
-        return view('workshops', compact('workshops', 'featuredWorkshop', 'categories', 'levels'));
+        $bookedWorkshopIds = [];
+
+        if (auth()->check()) {
+            $bookedWorkshopIds = auth()->user()
+                ->workshopBookings()
+                ->pluck('workshop_id')
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return view('workshops', compact(
+            'workshops',
+            'featuredWorkshop',
+            'categories',
+            'levels',
+            'bookedWorkshopIds'
+        ));
     }
 
     /**
@@ -150,7 +167,16 @@ class WorkshopController extends Controller
             ->limit(4)
             ->get();
 
-        return view('workshop-details', compact('workshop', 'relatedWorkshops'));
+        $userBooking = null;
+
+        if (auth()->check()) {
+            $userBooking = $workshop->bookings()
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->first();
+        }
+
+        return view('workshop-details', compact('workshop', 'relatedWorkshops', 'userBooking'));
     }
 
     /**

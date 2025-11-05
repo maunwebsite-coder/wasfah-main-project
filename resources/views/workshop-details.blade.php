@@ -722,6 +722,11 @@
                                     <i class="fas fa-check-circle ml-2"></i>
                                     الورشة مكتملة
                                 </button>
+                            @elseif($userBooking)
+                                <button class="w-full bg-green-500 text-white font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button" disabled>
+                                    <i class="fas fa-check ml-2 booking-button-icon"></i>
+                                    <span class="booking-button-label">تم الحجز بالفعل</span>
+                                </button>
                             @elseif($workshop->is_fully_booked)
                                 <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
                                     <i class="fas fa-times-circle ml-2"></i>
@@ -734,8 +739,8 @@
                                 </button>
                             @else
                                 <button id="unifiedBookingBtn" class="booking-btn w-full text-white font-bold py-4 px-6 rounded-xl text-lg booking-button bg-green-500 hover:bg-green-600 transition-all duration-300 transform hover:scale-105">
-                                    <i class="fab fa-whatsapp ml-2"></i>
-                                    احجز الآن
+                                    <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
+                                    <span class="booking-button-label">احجز الآن</span>
                                 </button>
                             @endif
                         </div>
@@ -902,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (unifiedBookingBtn) {
         unifiedBookingBtn.addEventListener('click', function() {
             // التحقق من حالة تسجيل الدخول
-            const isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
+            const isLoggedIn = @json(auth()->check());
             
             if (isLoggedIn) {
                 // المستخدم مسجل دخول - حفظ الحجز + إرسال واتساب
@@ -1024,13 +1029,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     location.reload();
                 }, 2000);
             } else {
-                showCustomAlert('خطأ في حفظ الحجز: ' + data.message, 'error');
+                if (data.message && data.message.includes('حجز')) {
+                    setBookingButtonToBooked();
+                    showCustomAlert('تم حجز هذه الورشة بالفعل.', 'success');
+                } else {
+                    showCustomAlert('خطأ في حفظ الحجز: ' + data.message, 'error');
+                }
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showCustomAlert('حدث خطأ أثناء حفظ الحجز', 'error');
         });
+    }
+
+    function setBookingButtonToBooked() {
+        const button = document.getElementById('unifiedBookingBtn');
+        if (!button) {
+            return;
+        }
+
+        button.disabled = true;
+        button.dataset.isBooked = 'true';
+        button.classList.add('cursor-not-allowed', 'bg-green-500', 'text-white');
+        button.classList.remove('hover:bg-green-600', 'transform', 'hover:scale-105');
+
+        const icon = button.querySelector('.booking-button-icon');
+        if (icon) {
+            const hadTextXl = icon.classList.contains('text-xl');
+            icon.className = 'fas fa-check ml-2 booking-button-icon';
+            if (hadTextXl) {
+                icon.classList.add('text-xl');
+            }
+        }
+
+        const label = button.querySelector('.booking-button-label');
+        if (label) {
+            label.textContent = 'تم الحجز بالفعل';
+        } else {
+            button.textContent = 'تم الحجز بالفعل';
+        }
     }
 
     // دالة إغلاق modal التأكيد
@@ -1050,12 +1088,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // الحصول على تفاصيل الورشة
-        const workshopTitle = "{{ $workshop->title }}";
-        const workshopPrice = "{{ $workshop->formatted_price }}";
-        const workshopDate = "{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}";
-        const workshopInstructor = "{{ $workshop->instructor_name }}";
-        const workshopLocation = "{{ $workshop->location }}";
-        const workshopDeadline = "{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}";
+        const workshopTitle = @json($workshop->title);
+        const workshopPrice = @json($workshop->formatted_price);
+        const workshopDate = @json($workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد');
+        const workshopInstructor = @json($workshop->instructor_name ?? $workshop->instructor ?? 'غير محدد');
+        const workshopLocation = @json($workshop->location ?? ($workshop->is_online ? 'ورشة أونلاين' : 'غير محدد'));
+        const workshopDeadline = @json($workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد');
 
         // إنشاء modal التأكيد الجميل
         const modalHTML = `
@@ -1161,19 +1199,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // إرسال رسالة الواتساب
     function sendWhatsAppMessage() {
         // إنشاء رسالة الواتساب مع تفاصيل الورشة
-        const workshopTitle = "{{ $workshop->title }}";
-        const workshopPrice = "{{ $workshop->formatted_price }}";
-        const workshopDate = "{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}";
-        const workshopStartDate = "{{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}";
-        const workshopEndDate = "{{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}";
-        const workshopInstructor = "{{ $workshop->instructor }}";
-        const workshopLocation = "{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}";
-        const registrationDeadline = "{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}";
+        const workshopTitle = @json($workshop->title);
+        const workshopPrice = @json($workshop->formatted_price);
+        const workshopDate = @json($workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد');
+        const workshopStartDate = @json($workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد');
+        const workshopEndDate = @json($workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد');
+        const workshopInstructor = @json($workshop->instructor ?? 'غير محدد');
+        const workshopLocation = @json($workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية'));
+        const registrationDeadline = @json($workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد');
         
         // معلومات المستخدم
-        const userName = "{{ auth()->check() ? auth()->user()->name : 'مستخدم' }}";
-        const userPhone = "{{ auth()->check() && auth()->user()->phone ? auth()->user()->phone : 'غير محدد' }}";
-        const userEmail = "{{ auth()->check() ? auth()->user()->email : 'غير محدد' }}";
+        const userName = @json(auth()->check() ? auth()->user()->name : 'مستخدم');
+        const userPhone = @json(auth()->check() && auth()->user()->phone ? auth()->user()->phone : 'غير محدد');
+        const userEmail = @json(auth()->check() ? auth()->user()->email : 'غير محدد');
         
         // إنشاء رسالة الواتساب
         const whatsappMessage = `مرحباً! أريد حجز مقعد في الورشة التالية:

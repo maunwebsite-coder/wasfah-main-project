@@ -118,7 +118,27 @@ class HomeController extends Controller
             'tool' => $this->resolveToolHeroMedia(),
         ];
 
-        return view('home', compact('workshops', 'featuredWorkshop', 'latestRecipes', 'featuredRecipes', 'hasUpcomingWorkshops', 'heroMedia', 'homeTools'));
+        $bookedWorkshopIds = [];
+
+        if (auth()->check()) {
+            $bookedWorkshopIds = auth()->user()
+                ->workshopBookings()
+                ->pluck('workshop_id')
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return view('home', compact(
+            'workshops',
+            'featuredWorkshop',
+            'latestRecipes',
+            'featuredRecipes',
+            'hasUpcomingWorkshops',
+            'heroMedia',
+            'homeTools',
+            'bookedWorkshopIds'
+        ));
     }
 
     /**

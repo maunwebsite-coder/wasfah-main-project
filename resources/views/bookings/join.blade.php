@@ -9,8 +9,8 @@
     }
 
     .jitsi-wrapper {
-        min-height: 65vh;
-        height: clamp(560px, 75vh, 900px);
+        min-height: 72vh;
+        height: clamp(620px, 78vh, 980px);
         border-radius: 1.5rem;
         overflow: hidden;
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
@@ -40,7 +40,7 @@
 
     @media (max-width: 640px) {
         .jitsi-wrapper {
-            min-height: 60vh;
+            min-height: 65vh;
             border-radius: 1rem;
         }
     }
@@ -49,14 +49,14 @@
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-10 text-white">
-    <div class="mx-auto max-w-5xl px-4">
+    <div class="mx-auto max-w-7xl px-4">
         @if (session('success') || session('error'))
             <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-emerald-300 bg-emerald-500/10 text-emerald-100' : 'border-rose-300 bg-rose-500/10 text-rose-100' }} px-6 py-4 text-sm shadow-lg">
                 {{ session('success') ?? session('error') }}
             </div>
         @endif
 
-        <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.9fr)]">
             <div class="space-y-4">
                 <div>
                     <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">جلسة مباشرة</p>
@@ -366,10 +366,12 @@
                     startWithVideoMuted: false,
                     disableReactions: true,
                     disableInviteFunctions: true,
+                    disableSelfViewSettings: true,
                     toolbarButtons: [
                         'microphone',
                         'camera',
                         'tileview',
+                        'fullscreen',
                         'hangup',
                     ],
                 },
@@ -384,6 +386,7 @@
                         'microphone',
                         'camera',
                         'tileview',
+                        'fullscreen',
                         'hangup',
                     ],
                 },
@@ -518,7 +521,7 @@
                 }, 5000);
             }
         @else
-            const statusUrl = @json(route('bookings.status', $booking));
+            const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
             const hint = document.getElementById('pollStatusHint');
             const refreshButton = document.getElementById('manualRefreshButton');
             let nextPollTimeout = null;

@@ -1222,7 +1222,7 @@ use Carbon\Carbon;
                                                         <div class="flex items-center text-purple-600">
                                                             <i class="fas fa-video ml-2"></i>
                                                             <span class="font-medium">رابط الاجتماع:</span>
-                                                            <a href="{{ route('bookings.join', $booking) }}"
+                                                            <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
                                                                class="mr-2 text-purple-600 hover:text-purple-800 underline font-medium">
                                                                 دخول الغرفة من داخل الموقع
                                                             </a>
@@ -1282,7 +1282,7 @@ use Carbon\Carbon;
                                                                 <p class="text-sm text-purple-600">ادخل إلى غرفة الورشة داخل موقع وصفة</p>
                                                             </div>
                                                         </div>
-                                                        <a href="{{ route('bookings.join', $booking) }}"
+                                                        <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
                                                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse">
                                                             <i class="fas fa-external-link-alt"></i>
                                                             <span>دخول الغرفة</span>

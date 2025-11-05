@@ -242,8 +242,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [App\Http\Controllers\WorkshopBookingController::class, 'show'])->name('bookings.show');
-    Route::get('/bookings/{booking}/status', [App\Http\Controllers\WorkshopBookingController::class, 'status'])->name('bookings.status');
-    Route::get('/bookings/{booking}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])->name('bookings.join');
+    Route::get('/bookings/{booking:public_code}/status', [App\Http\Controllers\WorkshopBookingController::class, 'status'])->name('bookings.status');
+    Route::get('/bookings/{booking:public_code}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])->name('bookings.join');
     Route::post('/bookings/{booking}/cancel', [App\Http\Controllers\WorkshopBookingController::class, 'cancel'])->name('bookings.cancel');
 });
 

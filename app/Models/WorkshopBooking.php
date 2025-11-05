@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class WorkshopBooking extends Model
 {
@@ -12,6 +13,12 @@ class WorkshopBooking extends Model
     protected static function boot()
     {
         parent::boot();
+
+        static::creating(function ($booking) {
+            if (empty($booking->public_code)) {
+                $booking->public_code = static::generateUniquePublicCode();
+            }
+        });
 
         // عند إنشاء حجز جديد
         static::created(function ($booking) {
@@ -55,6 +62,7 @@ class WorkshopBooking extends Model
         'confirmed_at',
         'cancelled_at',
         'cancellation_reason',
+        'public_code',
     ];
 
     protected $casts = [
@@ -115,5 +123,20 @@ class WorkshopBooking extends Model
     public function getIsPaidAttribute()
     {
         return $this->payment_status === 'paid';
+    }
+
+    protected static function generateUniquePublicCode(int $length = 10): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+        do {
+            $code = '';
+
+            for ($i = 0; $i < $length; $i++) {
+                $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+        } while (static::where('public_code', $code)->exists());
+
+        return $code;
     }
 }

@@ -1637,6 +1637,11 @@
         $featuredIsFull = $featuredWorkshop->bookings_count >= $featuredWorkshop->max_participants; 
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
         $featuredIsCompleted = $featuredWorkshop->is_completed;
+        $featuredStartDateLabel = $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d/m/Y') : 'غير محدد';
+        $featuredLocationLabel = $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية');
+        $featuredDeadlineLabel = $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : 'غير محدد';
+        $featuredInstructorLabel = $featuredWorkshop->instructor ?? 'غير محدد';
+        $featuredIsBooked = !empty($bookedWorkshopIds) && in_array($featuredWorkshop->id, $bookedWorkshopIds, true);
     @endphp
     <section class="container mx-auto px-4 py-12 featured-workshop-section">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-xl featured-workshop-card">
@@ -1680,25 +1685,38 @@
                     <!-- أزرار الإجراءات -->
                     <div class="flex flex-col sm:flex-row gap-3 featured-workshop-actions">
                         @if($featuredIsCompleted)
-                            <button class="bg-gray-400 text-gray-600 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
+                            <button type="button" class="bg-gray-400 text-gray-600 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-check-circle ml-2 text-xl"></i>
                                 الورشة مكتملة
                             </button>
+                        @elseif($featuredIsBooked)
+                            <button type="button" class="bg-green-500 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto" disabled>
+                                <i class="fas fa-check ml-2 text-xl booking-button-icon"></i>
+                                <span class="booking-button-label">تم الحجز بالفعل</span>
+                            </button>
                         @elseif($featuredIsFull)
-                            <button class="bg-gray-400 text-gray-600 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
+                            <button type="button" class="bg-gray-400 text-gray-600 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-lock ml-2 text-xl"></i>
                                 الورشة مكتملة
                             </button>
                         @elseif($featuredIsRegistrationClosed)
-                            <button class="bg-yellow-400 text-yellow-800 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
+                            <button type="button" class="bg-yellow-400 text-yellow-800 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-clock ml-2 text-xl"></i>
                                 انتهى التسجيل
                             </button>
                         @else
-                            <button onclick="unifiedBooking({{ $featuredWorkshop->id }}, '{{ $featuredWorkshop->title }}', '{{ $featuredWorkshop->formatted_price }}', '{{ $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d/m/Y') : 'غير محدد' }}', '{{ $featuredWorkshop->instructor }}', '{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}', '{{ $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}')" 
-                                    class="bg-white text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl w-full sm:w-auto">
-                                <i class="fab fa-whatsapp ml-2 text-xl"></i>
-                                احجز مقعدك الآن
+                            <button type="button"
+                                    class="js-unified-booking bg-white text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl w-full sm:w-auto"
+                                    data-workshop-id="{{ $featuredWorkshop->id }}"
+                                    data-title="{{ e($featuredWorkshop->title) }}"
+                                    data-price="{{ e($featuredWorkshop->formatted_price) }}"
+                                    data-date="{{ e($featuredStartDateLabel) }}"
+                                    data-instructor="{{ e($featuredInstructorLabel) }}"
+                                    data-location="{{ e($featuredLocationLabel) }}"
+                                    data-deadline="{{ e($featuredDeadlineLabel) }}"
+                                    data-is-booked="false">
+                                <i class="fab fa-whatsapp ml-2 text-xl booking-button-icon"></i>
+                                <span class="booking-button-label">احجز مقعدك الآن</span>
                             </button>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
@@ -1980,6 +1998,15 @@
                                 @php 
                                     $isFull = $workshop->bookings_count >= $workshop->max_participants; 
                                     $isRegistrationClosed = !$workshop->is_registration_open;
+                                    $isCompleted = $workshop->is_completed;
+                                    $isBooked = !empty($bookedWorkshopIds) && in_array($workshop->id, $bookedWorkshopIds, true);
+                                    $startDateLabel = $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد';
+                                    $bookingLocationLabel = $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية');
+                                    $bookingDeadlineLabel = $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد';
+                                    $bookingInstructor = $workshop->instructor ?? 'غير محدد';
+                                    $bookingButtonStateClasses = $isBooked
+                                        ? 'bg-green-500 text-white cursor-not-allowed'
+                                        : 'bg-green-500 hover:bg-green-600 text-white';
                                     
                                     // Debug information (remove in production)
                                     // Uncomment the line below to debug registration status
@@ -2045,21 +2072,39 @@
                                             <!-- الأزرار المثبتة في الأسفل -->
                                             <div class="mt-auto pt-4 border-t border-gray-100">
                                                 <div class="flex gap-3 items-center">
-                                                    @if($isFull)
-                                                    <button class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
+                                                    @if($isCompleted)
+                                                    <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
+                                                        <i class="fas fa-check-circle ml-2"></i>
+                                                        الورشة مكتملة
+                                                    </button>
+                                                    @elseif($isBooked)
+                                                    <button type="button" class="flex-1 bg-green-500 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm" disabled>
+                                                        <i class="fas fa-check ml-2 booking-button-icon"></i>
+                                                        <span class="booking-button-label">تم الحجز بالفعل</span>
+                                                    </button>
+                                                    @elseif($isFull)
+                                                    <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                                         <i class="fas fa-lock ml-2"></i>
                                                         الورشة مكتملة
                                                     </button>
                                                     @elseif($isRegistrationClosed)
-                                                        <button class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
+                                                        <button type="button" class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                                             <i class="fas fa-clock ml-2"></i>
                                                             انتهى التسجيل
                                                         </button>
                                                     @else
-                                                        <button onclick="unifiedBooking({{ $workshop->id }}, '{{ $workshop->title }}', '{{ $workshop->formatted_price }}', '{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}', '{{ $workshop->instructor }}', '{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}', '{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}')" 
-                                                                class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm">
-                                                            <i class="fab fa-whatsapp ml-2"></i>
-                                                            احجز الآن
+                                                        <button type="button"
+                                                                class="js-unified-booking flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}"
+                                                                data-workshop-id="{{ $workshop->id }}"
+                                                                data-title="{{ e($workshop->title) }}"
+                                                                data-price="{{ e($workshop->formatted_price) }}"
+                                                                data-date="{{ e($startDateLabel) }}"
+                                                                data-instructor="{{ e($bookingInstructor) }}"
+                                                                data-location="{{ e($bookingLocationLabel) }}"
+                                                                data-deadline="{{ e($bookingDeadlineLabel) }}"
+                                                                data-is-booked="false">
+                                                            <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
+                                                            <span class="booking-button-label">احجز الآن</span>
                                                         </button>
                                                     @endif
                                                     <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
@@ -2107,6 +2152,28 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const bookingButtons = document.querySelectorAll('.js-unified-booking');
+
+    bookingButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            if (button.disabled || button.dataset.isBooked === 'true') {
+                return;
+            }
+
+            unifiedBooking(
+                Number(button.dataset.workshopId),
+                button.dataset.title || '',
+                button.dataset.price || '',
+                button.dataset.date || '',
+                button.dataset.instructor || '',
+                button.dataset.location || '',
+                button.dataset.deadline || ''
+            );
+        });
+    });
+
     // Initialize hero swiper
     const heroSliderEl = document.querySelector('.hero-slider');
     if (heroSliderEl) {
@@ -2381,7 +2448,7 @@ function showNotification(message, type = 'info') {
 
 // الحجز الموحد (يتطلب تسجيل الدخول)
 function unifiedBooking(workshopId, title, price, date, instructor, location, deadline) {
-    const isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
+    const isLoggedIn = @json(auth()->check());
     
     if (isLoggedIn) {
         // المستخدم مسجل دخول - حفظ الحجز + إرسال واتساب
@@ -2489,7 +2556,12 @@ function confirmBooking(workshopId, title, price, date, instructor, location, de
                 location.reload();
             }, 2000);
         } else {
-            showCustomAlert('خطأ في حفظ الحجز: ' + data.message, 'error');
+            if (data.message && data.message.includes('حجز')) {
+                markWorkshopAsBooked(workshopId);
+                showCustomAlert('تم حجز هذه الورشة بالفعل.', 'success');
+            } else {
+                showCustomAlert('خطأ في حفظ الحجز: ' + data.message, 'error');
+            }
         }
     })
     .catch(error => {
@@ -2606,6 +2678,34 @@ function closeLoginRequiredModal(event) {
     }
 }
 
+function markWorkshopAsBooked(workshopId) {
+    const buttons = document.querySelectorAll(`.js-unified-booking[data-workshop-id="${workshopId}"]`);
+
+    buttons.forEach(button => {
+        const existingIcon = button.querySelector('.booking-button-icon');
+        const hadTextXlIcon = existingIcon ? existingIcon.classList.contains('text-xl') : false;
+
+        button.disabled = true;
+        button.dataset.isBooked = 'true';
+        button.classList.add('cursor-not-allowed', 'bg-green-500', 'text-white');
+        button.classList.remove('hover:bg-green-600', 'hover:bg-green-50', 'bg-white', 'text-green-600');
+
+        if (existingIcon) {
+            existingIcon.className = 'fas fa-check ml-2 booking-button-icon';
+            if (hadTextXlIcon) {
+                existingIcon.classList.add('text-xl');
+            }
+        }
+
+        const label = button.querySelector('.booking-button-label');
+        if (label) {
+            label.textContent = 'تم الحجز بالفعل';
+        } else {
+            button.textContent = 'تم الحجز بالفعل';
+        }
+    });
+}
+
 // جعل الدوال متاحة عالمياً
 window.confirmBooking = confirmBooking;
 window.closeBookingConfirmation = closeBookingConfirmation;
@@ -2616,12 +2716,13 @@ window.unifiedBooking = unifiedBooking;
 window.sendWhatsAppMessage = sendWhatsAppMessage;
 window.showCustomAlert = showCustomAlert;
 window.closeCustomAlert = closeCustomAlert;
+window.markWorkshopAsBooked = markWorkshopAsBooked;
 
 // إرسال رسالة الواتساب
 function sendWhatsAppMessage(title, price, date, instructor, location, deadline) {
-    const userName = "{{ auth()->check() ? auth()->user()->name : 'مستخدم' }}";
-    const userPhone = "{{ auth()->check() && auth()->user()->phone ? auth()->user()->phone : 'غير محدد' }}";
-    const userEmail = "{{ auth()->check() ? auth()->user()->email : 'غير محدد' }}";
+    const userName = @json(auth()->check() ? auth()->user()->name : 'مستخدم');
+    const userPhone = @json(auth()->check() && auth()->user()->phone ? auth()->user()->phone : 'غير محدد');
+    const userEmail = @json(auth()->check() ? auth()->user()->email : 'غير محدد');
     
     const whatsappMessage = `مرحباً! أريد حجز مقعد في الورشة التالية:
 
