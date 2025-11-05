@@ -11,6 +11,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -125,12 +126,48 @@ class WorkshopController extends Controller
         }
 
         $currentUser = Auth::user();
-        $embedConfig = $this->buildJitsiEmbedConfig(
-            $workshop,
-            $currentUser?->name,
-            $currentUser?->email,
-            true
-        );
+        if ($workshop->meeting_provider === 'jaas') {
+            $missingJaasConfig = $this->getMissingJaasConfigKeys();
+
+            if (!empty($missingJaasConfig)) {
+                Log::error('JaaS configuration is incomplete for chef workshop join.', [
+                    'workshop_id' => $workshop->id,
+                    'user_id' => $currentUser?->id,
+                    'missing_keys' => $missingJaasConfig,
+                ]);
+
+                $message = 'لا يمكن فتح غرفة الاجتماع لأن إعدادات Jitsi JaaS غير مكتملة. يرجى التواصل مع فريق الدعم.';
+
+                if ($workshop->meeting_link) {
+                    $message .= ' يمكنك استخدام رابط الاجتماع الخارجي مؤقتاً: ' . $workshop->meeting_link;
+                }
+
+                return redirect()
+                    ->route('chef.workshops.index')
+                    ->with('error', $message);
+            }
+        }
+
+        try {
+            $embedConfig = $this->buildJitsiEmbedConfig(
+                $workshop,
+                $currentUser?->name,
+                $currentUser?->email,
+                true
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Failed to build Jitsi embed configuration for chef workshop.', [
+                'workshop_id' => $workshop->id,
+                'user_id' => $currentUser?->id,
+                'provider' => $workshop->meeting_provider,
+                'exception_message' => $exception->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('chef.workshops.index')
+                ->with('error', 'تعذر تحميل غرفة الاجتماع بسبب خطأ غير متوقع. يرجى المحاولة لاحقاً أو التواصل مع فريق الدعم.');
+        }
+
         $recentParticipants = $workshop->bookings()
             ->with('user:id,name,email')
             ->where('status', 'confirmed')
@@ -436,6 +473,24 @@ class WorkshopController extends Controller
         if ($workshop->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الورشة.');
         }
+    }
+
+    protected function getMissingJaasConfigKeys(): array
+    {
+        $jaasConfig = config('services.jitsi.jaas', []);
+
+        $requiredKeys = ['app_id', 'api_key', 'private_key_path'];
+        $missing = [];
+
+        foreach ($requiredKeys as $key) {
+            $value = $jaasConfig[$key] ?? null;
+
+            if (blank($value)) {
+                $missing[] = $key;
+            }
+        }
+
+        return $missing;
     }
 
     protected function buildJitsiEmbedConfig(Workshop $workshop, ?string $displayName = null, ?string $email = null, bool $isModerator = true): array

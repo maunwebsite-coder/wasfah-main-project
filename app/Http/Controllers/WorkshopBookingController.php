@@ -7,6 +7,7 @@ use App\Models\WorkshopBooking;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -197,12 +198,44 @@ class WorkshopBookingController extends Controller
         $shouldPromptForDisplayName = !$user;
         $effectiveName = $user?->name ?? $guestDisplayName;
 
-        $embedConfig = $this->buildJitsiEmbedConfig(
-            $workshop,
-            $effectiveName,
-            $user?->email,
-            false
-        );
+        if ($workshop->meeting_provider === 'jaas') {
+            $missingJaasConfig = $this->getMissingJaasConfigKeys();
+
+            if (!empty($missingJaasConfig)) {
+                Log::error('JaaS configuration is incomplete for booking join.', [
+                    'booking_id' => $booking->id,
+                    'workshop_id' => $workshop->id,
+                    'user_id' => $user?->id,
+                    'missing_keys' => $missingJaasConfig,
+                ]);
+
+                return redirect()
+                    ->route('bookings.show', $booking)
+                    ->with('error', 'لا يمكن فتح غرفة الاجتماع حالياً بسبب مشكلة في الإعدادات. يرجى التواصل مع فريق الدعم أو المحاولة لاحقاً.');
+            }
+        }
+
+        try {
+            $embedConfig = $this->buildJitsiEmbedConfig(
+                $workshop,
+                $effectiveName,
+                $user?->email,
+                false
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Failed to build Jitsi embed configuration for booking join.', [
+                'booking_id' => $booking->id,
+                'workshop_id' => $workshop->id,
+                'user_id' => $user?->id,
+                'provider' => $workshop->meeting_provider,
+                'exception_message' => $exception->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'حدث خطأ أثناء تجهيز غرفة الاجتماع. يرجى المحاولة لاحقاً أو التواصل مع فريق الدعم.');
+        }
+
         unset($embedConfig['passcode']);
 
         return view('bookings.join', [
@@ -261,6 +294,24 @@ class WorkshopBookingController extends Controller
         if ($booking->user_id !== Auth::id()) {
             abort(403);
         }
+    }
+
+    protected function getMissingJaasConfigKeys(): array
+    {
+        $jaasConfig = config('services.jitsi.jaas', []);
+
+        $requiredKeys = ['app_id', 'api_key', 'private_key_path'];
+        $missing = [];
+
+        foreach ($requiredKeys as $key) {
+            $value = $jaasConfig[$key] ?? null;
+
+            if (blank($value)) {
+                $missing[] = $key;
+            }
+        }
+
+        return $missing;
     }
 
     protected function buildJitsiEmbedConfig(Workshop $workshop, ?string $displayName = null, ?string $email = null, bool $isModerator = false): array
