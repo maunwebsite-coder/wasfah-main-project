@@ -125,11 +125,20 @@ class WorkshopController extends Controller
         }
 
         $embedConfig = $this->buildJitsiEmbedConfig($workshop);
+        $recentParticipants = $workshop->bookings()
+            ->with('user:id,name,email')
+            ->where('status', 'confirmed')
+            ->orderByDesc('confirmed_at')
+            ->orderByDesc('updated_at')
+            ->limit(6)
+            ->get();
 
         return view('chef.workshops.join', [
             'workshop' => $workshop,
             'embedConfig' => $embedConfig,
             'user' => Auth::user(),
+            'recentParticipants' => $recentParticipants,
+            'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
         ]);
     }
 

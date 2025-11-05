@@ -170,11 +170,21 @@ class WorkshopBookingController extends Controller
         $embedConfig = $this->buildJitsiEmbedConfig($workshop);
         unset($embedConfig['passcode']);
 
+        $workshop->loadMissing('chef');
+        $workshop->loadCount([
+            'bookings as confirmed_bookings_count' => fn ($query) => $query->where('status', 'confirmed'),
+        ]);
+
+        $hostName = $workshop->instructor ?: optional($workshop->chef)->name;
+
         return view('bookings.join', [
             'booking' => $booking,
             'workshop' => $workshop,
             'embedConfig' => $embedConfig,
             'user' => Auth::user(),
+            'hostName' => $hostName,
+            'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
+            'meetingStartedAtIso' => optional($workshop->meeting_started_at)->toIso8601String(),
         ]);
     }
 
