@@ -31,6 +31,7 @@ class LinkPageUpdateRequest extends FormRequest
             'cta_url' => ['nullable', 'url', 'max:255'],
             'accent_color' => ['nullable', 'regex:/^#?[0-9a-fA-F]{3,8}$/'],
             'is_published' => ['nullable', 'boolean'],
+            'show_upcoming_workshop' => ['nullable', 'boolean'],
             'hero_image' => ['nullable', 'image', 'max:3072'],
             'remove_hero_image' => ['nullable', 'boolean'],
         ];
@@ -51,6 +52,7 @@ class LinkPageUpdateRequest extends FormRequest
             'cta_url' => 'رابط زر الدعوة',
             'accent_color' => 'لون التمييز',
             'hero_image' => 'صورة العرض',
+            'show_upcoming_workshop' => 'عرض الورشة القادمة',
         ];
     }
 }

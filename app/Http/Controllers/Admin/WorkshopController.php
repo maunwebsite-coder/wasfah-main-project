@@ -176,6 +176,33 @@ class WorkshopController extends Controller
     }
 
     /**
+     * عرض غرفة الاجتماع الخاصة بالإدمن مع كامل أدوات التحكم.
+     */
+    public function meeting(Workshop $workshop)
+    {
+        if (!$workshop->is_online || !$workshop->meeting_link) {
+            return redirect()
+                ->route('admin.workshops.show', $workshop)
+                ->with('error', 'هذه الورشة لا تحتوي على رابط اجتماع نشط بعد.');
+        }
+
+        if ($workshop->meeting_provider !== 'jitsi') {
+            return redirect()
+                ->route('admin.workshops.show', $workshop)
+                ->with('error', 'رابط الاجتماع الحالي ليس من نوع Jitsi، لذا لا يمكن فتح غرفة الإدارة.');
+        }
+
+        $embedConfig = $this->buildJitsiEmbedConfig($workshop);
+
+        return view('admin.workshops.meeting', [
+            'workshop' => $workshop,
+            'embedConfig' => $embedConfig,
+            'user' => Auth::user(),
+            'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
+        ]);
+    }
+
+    /**
      * عرض نموذج تعديل ورشة
      */
     public function edit($id)
@@ -403,6 +430,41 @@ class WorkshopController extends Controller
         return response()->json([
             'hasFeatured' => $hasFeatured
         ]);
+    }
+
+    protected function buildJitsiEmbedConfig(Workshop $workshop): array
+    {
+        $meetingUrl = $workshop->meeting_link;
+        $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
+        $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));
+
+        $domain = $parsedMeeting['host']
+            ?? ($fallbackBase['host'] ?? 'meet.jit.si');
+
+        $scheme = $parsedMeeting['scheme']
+            ?? ($fallbackBase['scheme'] ?? 'https');
+
+        $room = $workshop->jitsi_room
+            ?? ltrim($parsedMeeting['path'] ?? '', '/')
+            ?? Str::slug($workshop->title . '-' . $workshop->id, '-');
+
+        $room = trim($room);
+
+        if (str_contains($room, '/')) {
+            $segments = array_filter(explode('/', $room));
+            $room = end($segments);
+        }
+
+        if (!$room) {
+            $room = Str::slug($workshop->title . '-' . $workshop->id, '-');
+        }
+
+        return [
+            'domain' => $domain,
+            'room' => $room,
+            'passcode' => $workshop->jitsi_passcode,
+            'external_api_url' => "{$scheme}://{$domain}/external_api.js",
+        ];
     }
 
     protected function detectMeetingProvider(?string $url): string

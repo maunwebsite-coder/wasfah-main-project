@@ -270,6 +270,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 // مسارات الملف الشخصي - محمية بـ middleware المصادقة
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+    Route::get('/profile/statistics', [App\Http\Controllers\ProfileController::class, 'statistics'])->name('profile.statistics');
+    Route::get('/profile/activity', [App\Http\Controllers\ProfileController::class, 'activity'])->name('profile.activity');
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
 
@@ -282,6 +284,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/admin-area', [App\Http\Controllers\Admin\AdminAreaController::class, 'index'])->name('admin-area');
     
     // إدارة الورشات
+    Route::get('workshops/{workshop}/meeting', [App\Http\Controllers\Admin\WorkshopController::class, 'meeting'])->name('workshops.meeting');
     Route::resource('workshops', App\Http\Controllers\Admin\WorkshopController::class);
     Route::post('workshops/{workshop}/toggle-status', [App\Http\Controllers\Admin\WorkshopController::class, 'toggleStatus'])->name('workshops.toggle-status');
     Route::post('workshops/{workshop}/toggle-featured', [App\Http\Controllers\Admin\WorkshopController::class, 'toggleFeatured'])->name('workshops.toggle-featured');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Recipe;
 use App\Models\User;
+use App\Models\Workshop;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -44,6 +45,30 @@ class ChefPublicProfileController extends Controller
             ->withAvg('interactions', 'rating')
             ->orderByDesc('created_at')
             ->get();
+
+        $currentTime = now();
+
+        $workshops = $chef->workshops()
+            ->active()
+            ->withCount('bookings')
+            ->orderBy('start_date')
+            ->get();
+
+        [$upcomingWorkshops, $pastWorkshops] = $workshops->partition(function (Workshop $workshop) use ($currentTime): bool {
+            if (!$workshop->start_date) {
+                return true;
+            }
+
+            return $workshop->start_date->greaterThan($currentTime);
+        });
+
+        $upcomingWorkshops = $upcomingWorkshops->values();
+
+        $pastWorkshops = $pastWorkshops
+            ->sortByDesc(function (Workshop $workshop): int {
+                return (int) ($workshop->start_date?->getTimestamp() ?? 0);
+            })
+            ->values();
 
         if (!$visibilityColumnExists) {
             $recipes->each(function (Recipe $recipe) {
@@ -96,6 +121,8 @@ class ChefPublicProfileController extends Controller
             'socialLinks' => $this->buildSocialLinks($chef),
             'isOwner' => $isOwner,
             'canViewExclusive' => $canViewExclusive,
+            'upcomingWorkshops' => $upcomingWorkshops,
+            'pastWorkshops' => $pastWorkshops,
         ]);
     }
 

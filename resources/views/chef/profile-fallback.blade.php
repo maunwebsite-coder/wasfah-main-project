@@ -58,6 +58,161 @@
                 </div>
             </div>
 
+            @if ($upcomingWorkshops->isNotEmpty() || $pastWorkshops->isNotEmpty())
+                <div class="bg-white rounded-3xl shadow-lg border border-orange-100 p-8 space-y-8">
+                    <div class="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-900">ورشات الشيف</h2>
+                            <p class="text-sm text-gray-600 mt-2">
+                                برامج تدريبية يقدمها {{ $chef->name }} يمكنك حجزها أو استكشاف تفاصيل الورشات السابقة.
+                            </p>
+                        </div>
+                        <a href="{{ route('workshops') }}" class="inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 transition">
+                            استعراض كل الورشات
+                            <i class="fas fa-arrow-left text-sm"></i>
+                        </a>
+                    </div>
+
+                    <div class="space-y-6">
+                        @if ($upcomingWorkshops->isNotEmpty())
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                    <i class="fas fa-calendar-check text-emerald-500"></i>
+                                    ورشات قادمة
+                                </h3>
+                                <div class="grid gap-5 md:grid-cols-2">
+                                    @foreach ($upcomingWorkshops as $workshop)
+                                        @php
+                                            $coverImage = $workshop->image
+                                                ? asset('storage/' . ltrim($workshop->image, '/'))
+                                                : 'https://placehold.co/600x400/f97316/FFFFFF?text=ورشة';
+                                            $startDateLabel = $workshop->start_date
+                                                ? $workshop->start_date->copy()->locale('ar')->translatedFormat('j F Y • h:i a')
+                                                : 'سيتم التحديد لاحقاً';
+                                            $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
+                                            $priceLabel = $workshop->formatted_price
+                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                            $deadlineLabel = $workshop->registration_deadline
+                                                ? $workshop->registration_deadline->copy()->locale('ar')->translatedFormat('j F Y')
+                                                : null;
+                                            $isRegistrationOpen = (bool) $workshop->is_registration_open;
+                                        @endphp
+                                        <div class="rounded-2xl border border-orange-100 bg-white shadow-sm overflow-hidden flex flex-col">
+                                            <div class="h-44 bg-orange-100">
+                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover">
+                                            </div>
+                                            <div class="p-5 space-y-3 flex-1 flex flex-col">
+                                                <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-orange-600">
+                                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-orange-50 rounded-full">
+                                                        <i class="fas {{ $workshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
+                                                        {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                                    </span>
+                                                    @if ($deadlineLabel)
+                                                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-600 rounded-full">
+                                                            <i class="fas fa-hourglass-half"></i>
+                                                            حتى {{ $deadlineLabel }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <h4 class="text-lg font-semibold text-gray-900">{{ $workshop->title }}</h4>
+                                                @if (! empty($workshop->instructor))
+                                                    <p class="text-sm text-gray-500">مع {{ $workshop->instructor }}</p>
+                                                @endif
+                                                <ul class="space-y-2 text-sm text-gray-600">
+                                                    <li>
+                                                        <i class="fas fa-calendar text-orange-500 ms-2"></i>
+                                                        {{ $startDateLabel }}
+                                                    </li>
+                                                    <li>
+                                                        <i class="fas fa-location-dot text-emerald-500 ms-2"></i>
+                                                        {{ $locationLabel }}
+                                                    </li>
+                                                    <li>
+                                                        <i class="fas fa-money-bill-wave text-orange-500 ms-2"></i>
+                                                        {{ $priceLabel }}
+                                                    </li>
+                                                </ul>
+                                                <div class="mt-auto pt-3">
+                                                    @if ($isRegistrationOpen)
+                                                        <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 transition">
+                                                            احجز مقعدك الآن
+                                                            <i class="fas fa-arrow-left text-sm"></i>
+                                                        </a>
+                                                    @else
+                                                        <span class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-full bg-gray-100 text-gray-500 font-semibold">
+                                                            انتهى التسجيل
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($pastWorkshops->isNotEmpty())
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                                    <i class="fas fa-clock-rotate-left text-gray-500"></i>
+                                    ورشات سابقة
+                                </h3>
+                                <div class="grid gap-5 md:grid-cols-2">
+                                    @foreach ($pastWorkshops as $workshop)
+                                        @php
+                                            $coverImage = $workshop->image
+                                                ? asset('storage/' . ltrim($workshop->image, '/'))
+                                                : 'https://placehold.co/600x400/f97316/FFFFFF?text=ورشة';
+                                            $startDateLabel = $workshop->start_date
+                                                ? $workshop->start_date->copy()->locale('ar')->translatedFormat('j F Y • h:i a')
+                                                : 'موعد غير محدد';
+                                            $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
+                                            $priceLabel = $workshop->formatted_price
+                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                        @endphp
+                                        <div class="rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden flex flex-col">
+                                            <div class="h-44 bg-gray-200">
+                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover opacity-90">
+                                            </div>
+                                            <div class="p-5 space-y-3 flex-1 flex flex-col">
+                                                <div class="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-white px-3 py-1 rounded-full w-max">
+                                                    <i class="fas {{ $workshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
+                                                    {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                                </div>
+                                                <h4 class="text-lg font-semibold text-gray-900">{{ $workshop->title }}</h4>
+                                                @if (! empty($workshop->instructor))
+                                                    <p class="text-sm text-gray-500">قدّمها {{ $workshop->instructor }}</p>
+                                                @endif
+                                                <ul class="space-y-2 text-sm text-gray-600">
+                                                    <li>
+                                                        <i class="fas fa-calendar text-gray-500 ms-2"></i>
+                                                        {{ $startDateLabel }}
+                                                    </li>
+                                                    <li>
+                                                        <i class="fas fa-location-dot text-gray-500 ms-2"></i>
+                                                        {{ $locationLabel }}
+                                                    </li>
+                                                    <li>
+                                                        <i class="fas fa-money-bill-wave text-gray-500 ms-2"></i>
+                                                        {{ $priceLabel }}
+                                                    </li>
+                                                </ul>
+                                                <div class="mt-auto pt-3">
+                                                    <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-full border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition">
+                                                        عرض التفاصيل
+                                                        <i class="fas fa-arrow-left text-sm"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <div class="space-y-6">
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-semibold text-gray-900">وصفات عامة</h2>

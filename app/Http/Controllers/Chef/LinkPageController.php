@@ -21,6 +21,8 @@ class LinkPageController extends Controller
             $query->orderBy('position');
         }]);
 
+        $upcomingWorkshop = $user->nextUpcomingWorkshop();
+
         $heroImageUrl = $page->hero_image_path
             ? Storage::disk('public')->url($page->hero_image_path)
             : ($page->avatar_url ?? asset('image/logo.png'));
@@ -70,6 +72,7 @@ class LinkPageController extends Controller
             'publicUrl' => route('links.chef', $page),
             'accentColor' => $page->accent_color ?? '#f97316',
             'linkPresets' => $linkPresets,
+            'upcomingWorkshop' => $upcomingWorkshop,
         ]);
     }
 
@@ -80,6 +83,7 @@ class LinkPageController extends Controller
     {
         $user = $request->user();
         $page = $user->ensureLinkPage();
+        $hasUpcomingWorkshop = (bool) $user->nextUpcomingWorkshop();
 
         $data = $request->validated();
 
@@ -105,6 +109,7 @@ class LinkPageController extends Controller
         $page->cta_url = $data['cta_url'] ?? null;
         $page->accent_color = $this->normalizeColor($data['accent_color'] ?? null);
         $page->is_published = $request->boolean('is_published');
+        $page->show_upcoming_workshop = $hasUpcomingWorkshop && $request->boolean('show_upcoming_workshop');
 
         $page->save();
 

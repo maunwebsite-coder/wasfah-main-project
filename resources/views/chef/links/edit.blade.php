@@ -22,6 +22,8 @@
     $createUrl = $createContextActive ? old('url') : '';
     $createIcon = $createContextActive ? old('icon') : '';
     $createIsActive = $createContextActive ? (bool) old('is_active', true) : true;
+    $showUpcomingWorkshop = (bool) old('show_upcoming_workshop', $page->show_upcoming_workshop);
+    $hasUpcomingWorkshop = (bool) $upcomingWorkshop;
     $countChars = static function ($value) {
         $string = (string) ($value ?? '');
         return function_exists('mb_strlen') ? mb_strlen($string) : strlen($string);
@@ -138,6 +140,81 @@
                                 </label>
                                 <p class="text-xs text-gray-500">يمكنك إخفاء الصفحة أثناء عملك على تصميمها، وستبقى معاينتها متاحة لك فقط.</p>
                             </div>
+                        </div>
+
+                        <div class="space-y-4 rounded-2xl border border-orange-100 bg-orange-50/40 px-5 py-5">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">إبراز الورشة القادمة</p>
+                                    <p class="text-xs text-gray-500 mt-1">فعّل الخيار لإظهار بطاقة الورشة القادمة تلقائياً في صفحة Wasfah Links الخاصة بك.</p>
+                                </div>
+                                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold {{ $hasUpcomingWorkshop ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
+                                    <span class="h-2 w-2 rounded-full {{ $hasUpcomingWorkshop ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+                                    {{ $hasUpcomingWorkshop ? 'ورشة متاحة' : 'لا توجد ورش نشطة' }}
+                                </span>
+                            </div>
+                            <label class="flex items-start gap-3 rounded-2xl border border-dashed {{ $showUpcomingWorkshop && $hasUpcomingWorkshop ? 'border-orange-300 bg-white' : 'border-orange-200 bg-white/70' }} px-4 py-3 text-sm text-gray-700">
+                                <input type="checkbox" name="show_upcoming_workshop" value="1" class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400" {{ $showUpcomingWorkshop && $hasUpcomingWorkshop ? 'checked' : '' }} {{ $hasUpcomingWorkshop ? '' : 'disabled' }}>
+                                <span>
+                                    عرض بطاقة الورشة القادمة في الصفحة العامة
+                                    @unless ($hasUpcomingWorkshop)
+                                        <span class="mt-1 block text-xs text-gray-500">لا توجد ورشة نشطة بتاريخ مستقبلي. أضف ورشة جديدة أو حدّث موعد ورشتك القادمة لتفعيل هذا الخيار.</span>
+                                    @endunless
+                                </span>
+                            </label>
+                            @if ($hasUpcomingWorkshop && $upcomingWorkshop)
+                                @php
+                                    $workshopDate = optional($upcomingWorkshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a');
+                                    $workshopLocation = $upcomingWorkshop->is_online ? 'أونلاين عبر المنصة' : ($upcomingWorkshop->location ?: 'سيتم تحديد الموقع');
+                                    $workshopPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'SAR'));
+                                @endphp
+                                <div class="rounded-2xl border border-dashed border-orange-200 bg-white/90 px-4 py-4 shadow-sm">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <h3 class="text-base font-semibold text-gray-900">{{ $upcomingWorkshop->title }}</h3>
+                                            <p class="text-xs text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($upcomingWorkshop->description ?? 'ورشة مميزة يقدمها الشيف.', 120) }}</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-600">
+                                            <i class="fas fa-bolt"></i>
+                        قريباً
+                                        </span>
+                                    </div>
+                                    <div class="mt-4 grid gap-3 text-xs text-gray-600 md:grid-cols-3">
+                                        @if ($workshopDate)
+                                            <div class="flex items-center gap-2">
+                                                <i class="fas fa-calendar text-orange-500"></i>
+                                                <span>{{ $workshopDate }}</span>
+                                            </div>
+                                        @endif
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas {{ $upcomingWorkshop->is_online ? 'fa-globe' : 'fa-location-dot' }} text-emerald-500"></i>
+                                            <span>{{ $workshopLocation }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-money-bill text-amber-500"></i>
+                                            <span>{{ $workshopPrice }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-700">
+                                            <i class="fas fa-users"></i>
+                                            {{ number_format($upcomingWorkshop->bookings_count ?? 0) }} حجز
+                                        </span>
+                                        @if ($upcomingWorkshop->registration_deadline)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-700">
+                                                <i class="fas fa-hourglass-half"></i>
+                                                التسجيل حتى {{ $upcomingWorkshop->registration_deadline->locale('ar')->translatedFormat('d F Y') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="mt-4">
+                                        <a href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop->slug]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700">
+                                            <i class="fas fa-arrow-up-right-from-square"></i>
+                                            عرض صفحة الورشة
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="space-y-3">

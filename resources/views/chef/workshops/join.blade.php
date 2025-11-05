@@ -56,6 +56,7 @@
         .jitsi-controls {
             justify-content: center;
         }
+
     }
 </style>
 @endpush
@@ -113,6 +114,16 @@
                     <i class="fas fa-info-circle text-indigo-200"></i>
                     بعد بدء الاجتماع سيتم إخطار المشاركين تلقائياً ويصبح بإمكانهم الدخول من صفحة الحجز الخاصة بهم.
                 </p>
+            </div>
+        </div>
+
+        <div class="jitsi-shell mb-10" id="jitsi-shell">
+            <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
+            <div class="jitsi-controls">
+                <button type="button" class="fullscreen-btn" id="fullscreenToggle">
+                    <i class="fas fa-expand"></i>
+                    ملء الشاشة
+                </button>
             </div>
         </div>
 
@@ -221,16 +232,6 @@
                 </ul>
             </div>
         @endif
-
-        <div class="jitsi-shell" id="jitsi-shell">
-            <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
-            <div class="jitsi-controls">
-                <button type="button" class="fullscreen-btn" id="fullscreenToggle">
-                    <i class="fas fa-expand"></i>
-                    ملء الشاشة
-                </button>
-            </div>
-        </div>
 
         <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
             <div class="flex items-center gap-3">
@@ -370,6 +371,18 @@
         const domain = @json($embedConfig['domain']);
         const initialHeight = container.offsetHeight || 640;
 
+        const essentialToolbar = [
+            'microphone',
+            'camera',
+            'desktop',
+            'chat',
+            'raisehand',
+            'tileview',
+            'fullscreen',
+            'settings',
+            'hangup',
+        ];
+
         const options = {
             roomName: @json($embedConfig['room']),
             parentNode: container,
@@ -381,6 +394,10 @@
                 disableDeepLinking: true,
                 startWithAudioMuted: false,
                 startWithVideoMuted: false,
+                disableInviteFunctions: true,
+                disableSelfViewSettings: true,
+                disableReactions: true,
+                toolbarButtons: essentialToolbar,
             },
             interfaceConfigOverwrite: {
                 SHOW_PROMOTIONAL_CLOSE_PAGE: false,
@@ -388,6 +405,8 @@
                 DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
                 DEFAULT_LOCAL_DISPLAY_NAME: 'أنا',
                 FILM_STRIP_MAX_HEIGHT: 120,
+                SETTINGS_SECTIONS: ['devices'],
+                TOOLBAR_BUTTONS: essentialToolbar,
             },
             userInfo: {
                 displayName: @json($user->name),
@@ -463,6 +482,7 @@
         document.addEventListener('mozfullscreenchange', updateFullscreenState);
         document.addEventListener('MSFullscreenChange', updateFullscreenState);
         updateFullscreenState();
+
     });
 </script>
 @endpush

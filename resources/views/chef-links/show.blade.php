@@ -153,6 +153,61 @@
             box-shadow: 0 18px 28px rgba(249, 115, 22, 0.12);
         }
 
+        .link-card--upcoming {
+            position: relative;
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(255, 255, 255, 0.96));
+            overflow: hidden;
+        }
+
+        .link-card--upcoming::before {
+            content: '';
+            position: absolute;
+            inset-inline-end: -80px;
+            inset-block-start: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(249, 115, 22, 0.08);
+            z-index: 0;
+        }
+
+        .link-card--upcoming .link-icon {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--accent);
+        }
+
+        .link-card--upcoming .upcoming-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(249, 115, 22, 0.12);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .link-card--upcoming .workshop-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.75);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .link-card--upcoming .workshop-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .link-icon {
             width: 44px;
             height: 44px;
@@ -239,6 +294,43 @@
         </header>
 
         <section class="links-stack">
+            @if ($page->show_upcoming_workshop && $upcomingWorkshop)
+                @php
+                    $upcomingDate = optional($upcomingWorkshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a');
+                    $upcomingLocation = $upcomingWorkshop->is_online ? 'أونلاين عبر المنصة' : ($upcomingWorkshop->location ?: 'سيتم تحديد الموقع');
+                    $upcomingPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'SAR'));
+                @endphp
+                <a href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop->slug]) }}" target="_blank" rel="noopener" class="link-card link-card--upcoming">
+                    <span class="link-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </span>
+                    <span class="link-text">
+                        <span class="upcoming-badge">
+                            <i class="fas fa-bolt"></i>
+                            الورشة القادمة
+                        </span>
+                        <span class="link-title">{{ $upcomingWorkshop->title }}</span>
+                        <span class="link-subtitle">{{ \Illuminate\Support\Str::limit($upcomingWorkshop->description ?? 'ورشة مميزة يقدمها الشيف لأفراد المجتمع.', 110) }}</span>
+                        <span class="workshop-meta">
+                            @if ($upcomingDate)
+                                <span>
+                                    <i class="fas fa-clock"></i>
+                                    {{ $upcomingDate }}
+                                </span>
+                            @endif
+                            <span>
+                                <i class="fas {{ $upcomingWorkshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
+                                {{ $upcomingLocation }}
+                            </span>
+                            <span>
+                                <i class="fas fa-money-bill-wave"></i>
+                                {{ $upcomingPrice }}
+                            </span>
+                        </span>
+                    </span>
+                    <i class="fas fa-arrow-left" style="color: var(--accent); z-index: 1;"></i>
+                </a>
+            @endif
             @forelse ($page->items as $item)
                 <a href="{{ $item->url }}" target="_blank" rel="noopener" class="link-card">
                     @if ($item->icon)

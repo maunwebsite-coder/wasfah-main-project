@@ -20,7 +20,35 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
+        return view('profile.index', $this->buildProfileContext($user));
+    }
+
+    /**
+     * صفحة الإحصائيات التفصيلية للملف الشخصي
+     */
+    public function statistics()
+    {
+        $user = Auth::user();
+
+        return view('profile.statistics', $this->buildProfileContext($user));
+    }
+
+    /**
+     * صفحة النشاطات والتفاعلات للملف الشخصي
+     */
+    public function activity()
+    {
+        $user = Auth::user();
+
+        return view('profile.activity', $this->buildProfileContext($user));
+    }
+
+    /**
+     * تجهيز البيانات المشتركة بين صفحات الملف الشخصي
+     */
+    protected function buildProfileContext(User $user): array
+    {
         // الحصول على الوصفات المحفوظة
         $savedInteractions = UserInteraction::where('user_id', $user->id)
             ->where('is_saved', true)
@@ -337,8 +365,8 @@ class ProfileController extends Controller
                 ],
             ];
         }
-        
-        return view('profile', compact(
+
+        return compact(
             'user',
             'savedRecipes',
             'madeRecipes', 
@@ -350,7 +378,7 @@ class ProfileController extends Controller
             'nextWorkshop',
             'upcomingWorkshops',
             'chefOverview'
-        ));
+        );
     }
     
     /**

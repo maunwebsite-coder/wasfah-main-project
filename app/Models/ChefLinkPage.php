@@ -29,6 +29,7 @@ class ChefLinkPage extends Model
         'accent_color',
         'hero_image_path',
         'is_published',
+        'show_upcoming_workshop',
     ];
 
     /**
@@ -38,6 +39,7 @@ class ChefLinkPage extends Model
      */
     protected $casts = [
         'is_published' => 'boolean',
+        'show_upcoming_workshop' => 'boolean',
     ];
 
     /**

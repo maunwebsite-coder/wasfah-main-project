@@ -30,10 +30,16 @@ class ChefLinkPublicController extends Controller
         ]);
 
         $accentColor = $chefLinkPage->accent_color ?: '#f97316';
+        $upcomingWorkshop = null;
+
+        if ($chefLinkPage->show_upcoming_workshop) {
+            $upcomingWorkshop = $chefLinkPage->user?->nextUpcomingWorkshop();
+        }
 
         return view('chef-links.show', [
             'page' => $chefLinkPage,
             'accentColor' => $accentColor,
+            'upcomingWorkshop' => $upcomingWorkshop,
         ]);
     }
 }

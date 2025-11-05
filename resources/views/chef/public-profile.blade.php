@@ -456,6 +456,232 @@
             font-weight: 600;
         }
 
+        .chef-workshops-section {
+            margin-block: clamp(3rem, 7vw, 4.5rem);
+            padding: clamp(2rem, 5vw, 3.5rem);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 245, 235, 0.92));
+            border: 1px solid rgba(249, 115, 22, 0.14);
+            border-radius: 2.75rem;
+            box-shadow: 0 32px 46px -34px rgba(15, 23, 42, 0.25);
+        }
+
+        .chef-workshops-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+        }
+
+        .chef-workshops-header__meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .chef-workshops-header__meta h2 {
+            font-size: clamp(1.75rem, 4vw, 2.4rem);
+            color: var(--chef-neutral-900);
+            margin-bottom: 0.35rem;
+        }
+
+        .chef-workshops-header__meta p {
+            max-width: 540px;
+            color: var(--chef-neutral-700);
+            line-height: 1.7;
+        }
+
+        .chef-workshops-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--chef-primary-strong);
+            border-radius: 999px;
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .chef-workshops-link:hover {
+            background: rgba(249, 115, 22, 0.18);
+            transform: translateY(-2px);
+        }
+
+        .chef-workshops-group + .chef-workshops-group {
+            margin-top: clamp(2rem, 4vw, 3rem);
+            padding-top: clamp(1.5rem, 3vw, 2.5rem);
+            border-top: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        .chef-workshops-group > h3 {
+            font-size: clamp(1.4rem, 3vw, 1.75rem);
+            color: var(--chef-neutral-900);
+            margin-bottom: clamp(1.2rem, 3vw, 1.75rem);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .chef-workshops-grid {
+            display: grid;
+            gap: clamp(1.5rem, 3vw, 2.25rem);
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+
+        .chef-workshop-card {
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 1.75rem;
+            border: 1px solid rgba(249, 115, 22, 0.12);
+            box-shadow: 0 22px 38px -26px rgba(15, 23, 42, 0.16);
+            overflow: hidden;
+            position: relative;
+            min-height: 100%;
+        }
+
+        .chef-workshop-card__media {
+            position: relative;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+        }
+
+        .chef-workshop-card__media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s ease;
+        }
+
+        .chef-workshop-card:hover .chef-workshop-card__media img {
+            transform: scale(1.05);
+        }
+
+        .chef-workshop-card__badge {
+            position: absolute;
+            inset-inline-start: 1.25rem;
+            inset-block-start: 1.25rem;
+            background: var(--chef-primary);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.82rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            box-shadow: 0 12px 24px -16px rgba(249, 115, 22, 0.45);
+        }
+
+        .chef-workshop-card__badge.is-closed {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .chef-workshop-card__body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1.75rem;
+        }
+
+        .chef-workshop-card__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        .chef-workshop-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            background: rgba(15, 23, 42, 0.05);
+            color: var(--chef-neutral-700);
+            font-weight: 600;
+        }
+
+        .chef-workshop-chip.is-online {
+            background: rgba(59, 130, 246, 0.12);
+            color: #1d4ed8;
+        }
+
+        .chef-workshop-chip.is-offline {
+            background: rgba(16, 185, 129, 0.12);
+            color: #047857;
+        }
+
+        .chef-workshop-card__title {
+            font-size: clamp(1.15rem, 2.8vw, 1.35rem);
+            color: var(--chef-neutral-900);
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .chef-workshop-card__lead {
+            color: var(--chef-neutral-500);
+            line-height: 1.65;
+        }
+
+        .chef-workshop-card__details {
+            display: grid;
+            gap: 0.75rem;
+            color: var(--chef-neutral-700);
+            font-size: 0.95rem;
+        }
+
+        .chef-workshop-card__details li {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .chef-workshop-card__footer {
+            margin-top: auto;
+        }
+
+        .chef-workshop-card__cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding: 0.75rem 1.25rem;
+            background: var(--chef-primary);
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 999px;
+            transition: background 0.2s ease, transform 0.2s ease;
+            width: 100%;
+        }
+
+        .chef-workshop-card__cta:hover {
+            background: var(--chef-primary-strong);
+            transform: translateY(-2px);
+        }
+
+        .chef-workshop-card__cta.is-closed {
+            background: rgba(15, 23, 42, 0.08);
+            color: var(--chef-neutral-700);
+            cursor: default;
+        }
+
+        .chef-workshop-card__cta.is-closed:hover {
+            background: rgba(15, 23, 42, 0.08);
+            transform: none;
+        }
+
+        .chef-workshop-card__cta.is-muted {
+            background: rgba(15, 23, 42, 0.08);
+            color: var(--chef-neutral-700);
+        }
+
+        .chef-workshop-card__cta.is-muted:hover {
+            background: rgba(15, 23, 42, 0.12);
+            transform: none;
+        }
+
         .chef-carousel-section {
             margin-top: clamp(3.5rem, 7vw, 5.2rem);
             padding: clamp(2.6rem, 5vw, 3.6rem);
@@ -730,6 +956,30 @@
                 color: var(--chef-primary-strong);
             }
 
+            .chef-workshops-section {
+                border-radius: 1.75rem;
+                padding: 1.75rem;
+            }
+
+            .chef-workshops-header__meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.25rem;
+            }
+
+            .chef-workshops-link {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .chef-workshops-group > h3 {
+                font-size: 1.35rem;
+            }
+
+            .chef-workshop-card__body {
+                padding: 1.5rem;
+            }
+
             .chef-tab-btn {
                 padding-inline: 1.2rem;
                 font-size: 0.92rem;
@@ -820,6 +1070,201 @@
                     </div>
                 </div>
             </section>
+
+            @if ($upcomingWorkshops->isNotEmpty() || $pastWorkshops->isNotEmpty())
+                <section class="chef-workshops-section">
+                    <div class="chef-workshops-header">
+                        <div class="chef-workshops-header__meta">
+                            <div>
+                                <h2>ورشات الشيف</h2>
+                                <p>
+                                    اكتشف التجارب التعليمية التي يقدمها {{ $chef->name }} وتعرّف على الورشات القادمة والماضية التي
+                                    شارك فيها عشاق الطهي.
+                                </p>
+                            </div>
+                            <a href="{{ route('workshops') }}" class="chef-workshops-link">
+                                استعراض كل الورشات
+                                <i class="fa-solid fa-arrow-left-long"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    @if ($upcomingWorkshops->isNotEmpty())
+                        <div class="chef-workshops-group">
+                            <h3>
+                                <i class="fa-solid fa-calendar-check text-emerald-500"></i>
+                                ورشات قادمة
+                            </h3>
+                            <div class="chef-workshops-grid">
+                                @foreach ($upcomingWorkshops as $workshop)
+                                    @php
+                                        $coverImage = $workshop->image
+                                            ? asset('storage/' . ltrim($workshop->image, '/'))
+                                            : 'https://placehold.co/600x400/f97316/FFFFFF?text=ورشة';
+                                        $startDateLabel = $workshop->start_date
+                                            ? $workshop->start_date->copy()->locale('ar')->translatedFormat('j F Y • h:i a')
+                                            : 'سيتم التحديد لاحقاً';
+                                        $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
+                                        $priceLabel = $workshop->formatted_price
+                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                        $levelLabels = [
+                                            'beginner' => 'مبتدئ',
+                                            'intermediate' => 'متوسط',
+                                            'advanced' => 'متقدم',
+                                        ];
+                                        $levelLabel = $levelLabels[$workshop->level] ?? null;
+                                        $capacityLabel = $workshop->max_participants
+                                            ? sprintf('%d / %d مشارك', $workshop->bookings_count ?? 0, $workshop->max_participants)
+                                            : (($workshop->bookings_count ?? 0) . ' مشاركين');
+                                        $deadlineLabel = $workshop->registration_deadline
+                                            ? $workshop->registration_deadline->copy()->locale('ar')->translatedFormat('j F Y')
+                                            : null;
+                                        $isRegistrationOpen = (bool) $workshop->is_registration_open;
+                                        $badgeClass = $isRegistrationOpen ? 'chef-workshop-card__badge' : 'chef-workshop-card__badge is-closed';
+                                        $badgeLabel = $isRegistrationOpen ? 'متاحة للحجز' : 'انتهى التسجيل';
+                                    @endphp
+                                    <article class="chef-workshop-card">
+                                        <div class="chef-workshop-card__media">
+                                            <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}">
+                                            <span class="{{ $badgeClass }}">{{ $badgeLabel }}</span>
+                                        </div>
+                                        <div class="chef-workshop-card__body">
+                                            <div class="chef-workshop-card__meta">
+                                                <span class="chef-workshop-chip {{ $workshop->is_online ? 'is-online' : 'is-offline' }}">
+                                                    <i class="fa-solid {{ $workshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
+                                                    {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                                </span>
+                                                @if ($workshop->max_participants || $workshop->bookings_count)
+                                                    <span class="chef-workshop-chip">
+                                                        <i class="fa-solid fa-users"></i>
+                                                        {{ $capacityLabel }}
+                                                    </span>
+                                                @endif
+                                                @if ($levelLabel)
+                                                    <span class="chef-workshop-chip">
+                                                        <i class="fa-solid fa-signal"></i>
+                                                        مستوى {{ $levelLabel }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <h3 class="chef-workshop-card__title">{{ $workshop->title }}</h3>
+                                            @if (! empty($workshop->instructor))
+                                                <p class="chef-workshop-card__lead">مع {{ $workshop->instructor }}</p>
+                                            @endif
+                                            <ul class="chef-workshop-card__details">
+                                                <li>
+                                                    <i class="fa-solid fa-calendar-day text-amber-500"></i>
+                                                    {{ $startDateLabel }}
+                                                </li>
+                                                <li>
+                                                    <i class="fa-solid fa-location-dot text-emerald-500"></i>
+                                                    {{ $locationLabel }}
+                                                </li>
+                                                <li>
+                                                    <i class="fa-solid fa-money-bill-wave text-orange-500"></i>
+                                                    {{ $priceLabel }}
+                                                </li>
+                                                @if ($deadlineLabel)
+                                                    <li>
+                                                        <i class="fa-solid fa-hourglass-half text-slate-500"></i>
+                                                        التسجيل متاح حتى {{ $deadlineLabel }}
+                                                    </li>
+                                                @endif
+                                            </ul>
+                                            <div class="chef-workshop-card__footer">
+                                                @if ($isRegistrationOpen)
+                                                    <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="chef-workshop-card__cta">
+                                                        احجز مقعدك الآن
+                                                        <i class="fa-solid fa-arrow-left"></i>
+                                                    </a>
+                                                @else
+                                                    <span class="chef-workshop-card__cta is-closed">
+                                                        انتهى التسجيل
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($pastWorkshops->isNotEmpty())
+                        <div class="chef-workshops-group">
+                            <h3>
+                                <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+                                ورشات سابقة
+                            </h3>
+                            <div class="chef-workshops-grid">
+                                @foreach ($pastWorkshops as $workshop)
+                                    @php
+                                        $coverImage = $workshop->image
+                                            ? asset('storage/' . ltrim($workshop->image, '/'))
+                                            : 'https://placehold.co/600x400/f97316/FFFFFF?text=ورشة';
+                                        $startDateLabel = $workshop->start_date
+                                            ? $workshop->start_date->copy()->locale('ar')->translatedFormat('j F Y • h:i a')
+                                            : 'موعد غير محدد';
+                                        $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
+                                        $priceLabel = $workshop->formatted_price
+                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                        $levelLabels = [
+                                            'beginner' => 'مبتدئ',
+                                            'intermediate' => 'متوسط',
+                                            'advanced' => 'متقدم',
+                                        ];
+                                        $levelLabel = $levelLabels[$workshop->level] ?? null;
+                                    @endphp
+                                    <article class="chef-workshop-card">
+                                        <div class="chef-workshop-card__media">
+                                            <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}">
+                                            <span class="chef-workshop-card__badge is-closed">انتهت</span>
+                                        </div>
+                                        <div class="chef-workshop-card__body">
+                                            <div class="chef-workshop-card__meta">
+                                                <span class="chef-workshop-chip {{ $workshop->is_online ? 'is-online' : 'is-offline' }}">
+                                                    <i class="fa-solid {{ $workshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
+                                                    {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                                </span>
+                                                @if ($levelLabel)
+                                                    <span class="chef-workshop-chip">
+                                                        <i class="fa-solid fa-signal"></i>
+                                                        مستوى {{ $levelLabel }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <h3 class="chef-workshop-card__title">{{ $workshop->title }}</h3>
+                                            @if (! empty($workshop->instructor))
+                                                <p class="chef-workshop-card__lead">قدّمها {{ $workshop->instructor }}</p>
+                                            @endif
+                                            <ul class="chef-workshop-card__details">
+                                                <li>
+                                                    <i class="fa-solid fa-calendar-day text-slate-500"></i>
+                                                    {{ $startDateLabel }}
+                                                </li>
+                                                <li>
+                                                    <i class="fa-solid fa-location-dot text-slate-500"></i>
+                                                    {{ $locationLabel }}
+                                                </li>
+                                                <li>
+                                                    <i class="fa-solid fa-money-bill-wave text-slate-500"></i>
+                                                    {{ $priceLabel }}
+                                                </li>
+                                            </ul>
+                                            <div class="chef-workshop-card__footer">
+                                                <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="chef-workshop-card__cta is-muted">
+                                                    عرض التفاصيل
+                                                    <i class="fa-solid fa-arrow-left"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </section>
+            @endif
 
             <section class="chef-profile-tabs">
                 <div class="chef-tab-nav" role="tablist">
@@ -1032,3 +1477,4 @@
         });
     </script>
 @endpush
+

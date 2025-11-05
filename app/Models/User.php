@@ -226,6 +226,31 @@ class User extends Authenticatable
         return $this->hasMany(Workshop::class);
     }
 
+    /**
+     * Retrieve the next upcoming (or most recent active) workshop for this chef.
+     */
+    public function nextUpcomingWorkshop(): ?Workshop
+    {
+        $baseQuery = $this->workshops()
+            ->active()
+            ->withCount('bookings');
+
+        $upcoming = (clone $baseQuery)
+            ->whereNotNull('start_date')
+            ->where('start_date', '>=', now())
+            ->orderBy('start_date')
+            ->first();
+
+        if ($upcoming) {
+            return $upcoming;
+        }
+
+        return (clone $baseQuery)
+            ->orderBy('start_date')
+            ->orderByDesc('created_at')
+            ->first();
+    }
+
     // الورشات المحجوزة والمؤكدة
     public function confirmedWorkshops()
     {

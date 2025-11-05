@@ -44,7 +44,8 @@ class HomeController extends Controller
             ->withCount(['bookings' => function ($query) {
                 $query->where('status', 'confirmed');
             }])
-            ->orderBy('start_date', 'asc');
+            ->orderByDesc('start_date')
+            ->orderByDesc('created_at');
 
         // استبعاد الورشة المميزة من قائمة الورشات العادية
         if ($featuredWorkshop) {
