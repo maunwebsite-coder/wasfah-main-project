@@ -110,6 +110,19 @@
             <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
         </div>
 
+        <div class="mt-6 rounded-3xl border border-amber-300/50 bg-amber-500/10 px-6 py-4 text-sm text-amber-100 shadow-lg">
+            <p class="mb-3">
+                إذا لم يكتمل تسجيل الدخول باستخدام Google داخل الإطار هنا، يمكنك فتح غرفة Jitsi في تبويب منفصل ثم العودة لمراقبة الجلسة من هذه الصفحة.
+            </p>
+            <a href="{{ $workshop->meeting_link }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="inline-flex items-center gap-2 rounded-full bg-amber-400/20 px-4 py-2 font-semibold text-amber-100 transition hover:bg-amber-400/30">
+                <i class="fas fa-external-link-alt"></i>
+                فتح رابط المضيف في تبويب جديد
+            </a>
+        </div>
+
         <div class="mt-6 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
             <div class="flex items-center gap-3">
                 <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">

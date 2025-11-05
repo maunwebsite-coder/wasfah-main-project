@@ -76,7 +76,7 @@
                 </button>
                 <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
                     <div class="absolute inset-x-0 top-5 mx-auto max-w-md rounded-2xl bg-slate-900/70 px-4 py-3 text-center text-sm text-slate-100 backdrop-blur transition-opacity duration-300 ease-out" id="lobbyHint">
-                        سيتم فتح الغرفة بعد موافقة الشيف. يرجى البقاء في الصفحة.
+                        جاري تهيئة الاتصال بالغرفة، وسيظهر البث تلقائياً خلال لحظات.
                     </div>
                 </div>
             </div>
@@ -141,8 +141,6 @@
                 disableDeepLinking: true,
                 startWithAudioMuted: false,
                 startWithVideoMuted: false,
-                lobbyEnabled: true,
-                disableLobbyP2P: true,
                 disableReactions: true,
                 disableInviteFunctions: true,
                 toolbarButtons: [
