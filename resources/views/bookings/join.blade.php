@@ -151,23 +151,13 @@
 
             <div class="jitsi-shell" id="jitsi-shell">
                 <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
-                    <div
-                        id="meetingLockOverlay"
-                        class="session-lock-overlay {{ $isMeetingLocked ? '' : 'hidden' }}"
-                        aria-hidden="{{ $isMeetingLocked ? 'false' : 'true' }}"
-                        style="{{ $isMeetingLocked ? '' : 'display:none;' }}"
-                    >
-                        <span class="lock-icon">
-                            <i class="fas fa-user-clock"></i>
-                        </span>
-                        <h2 class="text-white">بانتظار عودة المضيف</h2>
-                        <p>غادر المضيف الاجتماع للحظات. سيتم فتح الغرفة تلقائياً فور عودته.</p>
-                        <p id="lockSinceLabel" class="lock-since {{ $isMeetingLocked ? '' : 'hidden' }}">
-                            @if ($isMeetingLocked && $workshop->meeting_locked_at)
-                                آخر حضور للمضيف {{ $workshop->meeting_locked_at->locale('ar')->diffForHumans() }}.
-                            @endif
-                        </p>
-                    </div>
+                    <livewire:bookings.meeting-lock-overlay
+                        :booking-code="$booking->public_code"
+                        :workshop-id="$workshop->id"
+                        :initial-started-at="$meetingStartedAtIso"
+                        :initial-locked-at="$meetingLockedAtIso"
+                        :initial-locked="$isMeetingLocked"
+                    />
                 </div>
             </div>
 
@@ -358,15 +348,10 @@
         let apiInstance = null;
         const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
         const meetingStartedAtIso = @json($meetingStartedAtIso);
-        const meetingLockedAtIso = @json($meetingLockedAtIso);
-        const meetingLockOverlay = document.getElementById('meetingLockOverlay');
-        const lockSinceLabel = document.getElementById('lockSinceLabel');
         const hint = document.getElementById('pollStatusHint');
         const refreshButton = document.getElementById('manualRefreshButton');
         let nextPollTimeout = null;
-        let meetingStarted = Boolean(meetingStartedAtIso);
-        let meetingLocked = Boolean(@json($isMeetingLocked));
-        let lockTimeFormatter = null;
+        const meetingStarted = Boolean(meetingStartedAtIso);
 
         const updateParticipantNameLabel = (name) => {
             if (participantNameLabel) {
@@ -553,55 +538,6 @@
             }
         };
 
-        const updateLockSince = (lockedAtIso) => {
-            if (!lockSinceLabel) {
-                return;
-            }
-
-            if (!lockedAtIso) {
-                lockSinceLabel.textContent = '';
-                lockSinceLabel.classList.add('hidden');
-                return;
-            }
-
-            const lockedAt = new Date(lockedAtIso);
-            if (Number.isNaN(lockedAt.getTime())) {
-                lockSinceLabel.textContent = '';
-                lockSinceLabel.classList.add('hidden');
-                return;
-            }
-
-            if (!lockTimeFormatter) {
-                lockTimeFormatter = new Intl.DateTimeFormat('ar', {
-                    hour: 'numeric',
-                    minute: 'numeric',
-                });
-            }
-
-            lockSinceLabel.textContent = `آخر حضور للمضيف: ${lockTimeFormatter.format(lockedAt)} بتوقيتك.`;
-            lockSinceLabel.classList.remove('hidden');
-        };
-
-        const applyLockState = (locked, lockedAtIso = null) => {
-            if (!meetingLockOverlay) {
-                return;
-            }
-
-            meetingLocked = locked;
-
-            if (locked) {
-                meetingLockOverlay.classList.remove('hidden');
-                meetingLockOverlay.setAttribute('aria-hidden', 'false');
-                meetingLockOverlay.style.display = 'flex';
-                updateLockSince(lockedAtIso);
-            } else {
-                meetingLockOverlay.classList.add('hidden');
-                meetingLockOverlay.setAttribute('aria-hidden', 'true');
-                meetingLockOverlay.style.display = 'none';
-                updateLockSince(null);
-            }
-        };
-
         const pollStatus = (manual = false) => {
             if (!statusUrl) {
                 return;
@@ -620,8 +556,6 @@
                 })
                 .then(data => {
                     const remoteStarted = Boolean(data.meeting_started);
-                    const remoteLocked = Boolean(data.meeting_locked);
-                    const remoteLockedAt = data.locked_at ?? null;
 
                     if (!remoteStarted) {
                         if (meetingStarted) {
@@ -634,24 +568,7 @@
                         return;
                     }
 
-                    if (!meetingStarted) {
-                        window.location.reload();
-                        return;
-                    }
-
-                    applyLockState(remoteLocked, remoteLockedAt);
-
-                    if (remoteLocked) {
-                        setHint('المضيف خارج الغرفة مؤقتاً. سنخبرك بمجرد عودته.');
-                        schedulePoll(5000);
-                        return;
-                    }
-
-                    if (hint) {
-                        setHint('الغرفة قيد التشغيل. استمتع بالورشة!');
-                    }
-
-                    schedulePoll(12000);
+                    window.location.reload();
                 })
                 .catch(() => {
                     if (hint) {
@@ -760,21 +677,13 @@
             initializeMeeting();
         @endif
 
-        if (meetingStarted && meetingLocked) {
-            applyLockState(true, meetingLockedAtIso);
-        }
-
         refreshButton?.addEventListener('click', () => {
             clearScheduledPoll();
             pollStatus(true);
         });
 
-        if (statusUrl) {
-            if (meetingStarted) {
-                schedulePoll(meetingLocked ? 5000 : 9000);
-            } else {
-                schedulePoll(5000);
-            }
+        if (!meetingStarted && statusUrl) {
+            schedulePoll(5000);
         }
     });
 </script>
