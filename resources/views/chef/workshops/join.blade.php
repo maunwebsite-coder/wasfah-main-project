@@ -95,81 +95,6 @@
             <div class="jitsi-wrapper bg-slate-950" id="jitsi-container"></div>
         </div>
 
-        <div class="mb-8">
-            <div class="rounded-3xl border border-orange-200 bg-white p-6 shadow-xl ring-1 ring-orange-100/60">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.4em] text-orange-500">حالة الغرفة</p>
-                        @if ($workshop->meeting_started_at)
-                            <h2 class="mt-2 text-xl font-semibold text-slate-900">الغرفة مفتوحة للمشاركين</h2>
-                            <p class="mt-1 text-sm text-slate-600">
-                                تم تفعيل الاجتماع {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}. يمكنك مراقبة المشتركين من داخل الغرفة أو إيقافها من لوحة التحكم إن لزم.
-                            </p>
-                        @else
-                            <h2 class="mt-2 text-xl font-semibold text-slate-900">المشاركون بانتظارك للانضمام</h2>
-                            <p class="mt-1 text-sm text-slate-600">
-                                بمجرد تأكيدك أنك المضيف والضغط على زر <strong>بدء الاجتماع الآن</strong> سيُفتح الرابط في صفحات المشاركين فوراً.
-                            </p>
-                        @endif
-                    </div>
-                    <div class="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm text-orange-700">
-                        <div class="flex items-center gap-2 text-xs text-orange-500">
-                            <i class="fas fa-user-clock text-orange-500"></i>
-                            آخر تحديث
-                        </div>
-                        <p class="mt-1 font-semibold text-slate-900">
-                            {{ now()->locale('ar')->translatedFormat('d F Y • h:i a') }}
-                        </p>
-                    </div>
-                </div>
-
-                <form
-                    id="startMeetingForm"
-                    method="POST"
-                    action="{{ route('chef.workshops.start', $workshop) }}"
-                    class="mt-6 space-y-4"
-                >
-                    @csrf
-                    @if (!$workshop->meeting_started_at)
-                        <label for="confirmHostCheckbox" class="flex items-start gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-800 shadow-sm">
-                            <input
-                                type="checkbox"
-                                name="confirm_host"
-                                id="confirmHostCheckbox"
-                                value="1"
-                                required
-                                class="mt-0.5 h-4 w-4 rounded border-orange-300 accent-orange-500 focus:ring-orange-400"
-                            >
-                            <span>
-                                أؤكد أنني المضيف الرسمي لهذه الورشة وسأتأكد من جاهزية الغرفة والدعم للمشاركين أثناء البث المباشر.
-                            </span>
-                        </label>
-                        @error('confirm_host')
-                            <p class="text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    @endif
-
-                    <button
-                        type="submit"
-                        class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-orange-300 hover:from-amber-600 hover:to-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-                        id="startMeetingButton"
-                        data-requires-confirmation="{{ $workshop->meeting_started_at ? 'false' : 'true' }}"
-                        @if ($workshop->meeting_started_at)
-                            disabled
-                            data-meeting-started="true"
-                        @else
-                            disabled
-                        @endif
-                    >
-                        <i class="fas {{ $workshop->meeting_started_at ? 'fa-check' : 'fa-play' }}"></i>
-                        <span class="start-button-label">
-                            {{ $workshop->meeting_started_at ? 'الاجتماع قيد التشغيل' : 'بدء الاجتماع الآن' }}
-                        </span>
-                    </button>
-                </form>
-            </div>
-        </div>
-
         @if ($recentParticipants->isNotEmpty())
             <div class="mb-10 rounded-3xl border border-orange-200 bg-white p-6 shadow-xl ring-1 ring-orange-100/60">
                 <div class="flex flex-wrap items-center justify-between gap-3">
@@ -227,9 +152,6 @@
 <script src="{{ $embedConfig['external_api_url'] }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const confirmHostCheckbox = document.getElementById('confirmHostCheckbox');
-        const startMeetingButton = document.getElementById('startMeetingButton');
-        const startMeetingForm = document.getElementById('startMeetingForm');
         const countdownCard = document.getElementById('countdownCard');
         const countdownLabel = document.getElementById('countdownLabel');
         const countdownBadge = document.getElementById('countdownBadge');
@@ -293,26 +215,6 @@
                 // Best-effort fallback during page unload.
             });
         };
-
-        if (startMeetingButton?.dataset.requiresConfirmation === 'true') {
-            const toggleStartButton = () => {
-                const confirmed = Boolean(confirmHostCheckbox?.checked);
-                startMeetingButton.disabled = !confirmed;
-            };
-
-            toggleStartButton();
-            confirmHostCheckbox?.addEventListener('change', toggleStartButton);
-        }
-
-        startMeetingForm?.addEventListener('submit', () => {
-            if (!startMeetingButton) {
-                return;
-            }
-
-            startMeetingButton.disabled = true;
-            startMeetingButton.dataset.loading = 'true';
-            startMeetingButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري تفعيل الغرفة...</span>';
-        });
 
         if (startsAtIso && countdownLabel && countdownBadge) {
             const startDate = new Date(startsAtIso);
