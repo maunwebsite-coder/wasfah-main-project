@@ -901,7 +901,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initWorkshopDetailsBooking() {
     // الزر الموحد للحجز
     const unifiedBookingBtn = document.getElementById('unifiedBookingBtn');
     if (unifiedBookingBtn) {
@@ -1446,7 +1446,13 @@ window.closeLoginRequiredModal = closeLoginRequiredModal;
 window.showLoginRequiredModal = showLoginRequiredModal;
 window.redirectToLoginWithWorkshop = redirectToLoginWithWorkshop;
 window.redirectToRegisterWithWorkshop = redirectToRegisterWithWorkshop;
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWorkshopDetailsBooking);
+} else {
+    initWorkshopDetailsBooking();
+}
 </script>
 @endpush
 

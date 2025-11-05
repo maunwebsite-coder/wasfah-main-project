@@ -8,6 +8,19 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-6">
+    @php
+        $weeklyDays = 7;
+        $userDailyAverage = $lastWeekUsers > 0 ? $lastWeekUsers / $weeklyDays : 0;
+        $recipeDailyAverage = $lastWeekRecipes > 0 ? $lastWeekRecipes / $weeklyDays : 0;
+        $bookingDailyAverage = $lastWeekBookings > 0 ? $lastWeekBookings / $weeklyDays : 0;
+        $currentDayOfMonth = max(now()->day, 1);
+        $revenueDailyAverage = $monthlyRevenue > 0 ? $monthlyRevenue / $currentDayOfMonth : 0;
+
+        $userTrend = $userDailyAverage > 0 ? (($todayUsers - $userDailyAverage) / $userDailyAverage) * 100 : 0;
+        $recipeTrend = $recipeDailyAverage > 0 ? (($todayRecipes - $recipeDailyAverage) / $recipeDailyAverage) * 100 : 0;
+        $bookingTrend = $bookingDailyAverage > 0 ? (($todayBookings - $bookingDailyAverage) / $bookingDailyAverage) * 100 : 0;
+        $revenueTrend = $revenueDailyAverage > 0 ? (($todayRevenue - $revenueDailyAverage) / $revenueDailyAverage) * 100 : 0;
+    @endphp
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-8">
@@ -31,8 +44,45 @@
             </div>
         </div>
 
+        <div class="dashboard-quick-nav bg-white shadow-sm rounded-lg p-4 mb-8">
+            <div class="flex flex-wrap gap-2 justify-start" role="navigation" aria-label="أقسام لوحة التحكم">
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#overview-section">
+                    <i class="fas fa-chart-line ml-2"></i>
+                    نظرة عامة
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#core-metrics-section">
+                    <i class="fas fa-layer-group ml-2"></i>
+                    الإحصائيات الرئيسية
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#popular-recipes-section">
+                    <i class="fas fa-book ml-2"></i>
+                    الوصفات الشائعة
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#popular-workshops-section">
+                    <i class="fas fa-graduation-cap ml-2"></i>
+                    الورشات
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#recent-users-section">
+                    <i class="fas fa-user-friends ml-2"></i>
+                    المستخدمون
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#recent-bookings-section">
+                    <i class="fas fa-calendar-check ml-2"></i>
+                    الحجوزات
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#insights-section">
+                    <i class="fas fa-chart-pie ml-2"></i>
+                    تحليلات متقدمة
+                </button>
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#quick-actions-section">
+                    <i class="fas fa-bolt ml-2"></i>
+                    إجراءات سريعة
+                </button>
+            </div>
+        </div>
+
         <!-- إحصائيات اليوم -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div id="overview-section" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 dashboard-anchor">
             <div class="dashboard-card bg-gradient-to-r from-blue-500 to-blue-600 overflow-hidden shadow-lg rounded-lg text-white">
                 <div class="p-6">
                     <div class="flex items-center">
@@ -46,10 +96,20 @@
                             </dl>
                         </div>
                     </div>
+                    <div class="mt-6 flex items-center justify-between text-sm">
+                        <span class="trend-indicator {{ $userTrend >= 0 ? 'trend-positive' : 'trend-negative' }}">
+                            <i class="fas {{ $userTrend >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} ml-1"></i>
+                            {{ number_format(abs($userTrend), 1) }}%
+                        </span>
+                        <span class="trend-average">
+                            متوسط 7 أيام: {{ number_format($userDailyAverage, 1) }}
+                        </span>
+                    </div>
+                    <p class="trend-context">مقارنة بمتوسط الأسبوع الماضي</p>
                 </div>
             </div>
 
-            <div class="bg-gradient-to-r from-green-500 to-green-600 overflow-hidden shadow-lg rounded-lg text-white">
+            <div class="dashboard-card bg-gradient-to-r from-green-500 to-green-600 overflow-hidden shadow-lg rounded-lg text-white">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -58,14 +118,24 @@
                         <div class="ml-4 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium opacity-90 truncate">وصفات اليوم</dt>
-                                <dd class="text-2xl font-bold">{{ number_format($todayRecipes) }}</dd>
+                                <dd class="stat-number">{{ number_format($todayRecipes) }}</dd>
                             </dl>
                         </div>
                     </div>
+                    <div class="mt-6 flex items-center justify-between text-sm">
+                        <span class="trend-indicator {{ $recipeTrend >= 0 ? 'trend-positive' : 'trend-negative' }}">
+                            <i class="fas {{ $recipeTrend >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} ml-1"></i>
+                            {{ number_format(abs($recipeTrend), 1) }}%
+                        </span>
+                        <span class="trend-average">
+                            متوسط 7 أيام: {{ number_format($recipeDailyAverage, 1) }}
+                        </span>
+                    </div>
+                    <p class="trend-context">مقارنة بمتوسط الأسبوع الماضي</p>
                 </div>
             </div>
 
-            <div class="bg-gradient-to-r from-purple-500 to-purple-600 overflow-hidden shadow-lg rounded-lg text-white">
+            <div class="dashboard-card bg-gradient-to-r from-purple-500 to-purple-600 overflow-hidden shadow-lg rounded-lg text-white">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -74,14 +144,24 @@
                         <div class="ml-4 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium opacity-90 truncate">حجوزات اليوم</dt>
-                                <dd class="text-2xl font-bold">{{ number_format($todayBookings) }}</dd>
+                                <dd class="stat-number">{{ number_format($todayBookings) }}</dd>
                             </dl>
                         </div>
                     </div>
+                    <div class="mt-6 flex items-center justify-between text-sm">
+                        <span class="trend-indicator {{ $bookingTrend >= 0 ? 'trend-positive' : 'trend-negative' }}">
+                            <i class="fas {{ $bookingTrend >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} ml-1"></i>
+                            {{ number_format(abs($bookingTrend), 1) }}%
+                        </span>
+                        <span class="trend-average">
+                            متوسط 7 أيام: {{ number_format($bookingDailyAverage, 1) }}
+                        </span>
+                    </div>
+                    <p class="trend-context">مقارنة بمتوسط الأسبوع الماضي</p>
                 </div>
             </div>
 
-            <div class="bg-gradient-to-r from-orange-500 to-orange-600 overflow-hidden shadow-lg rounded-lg text-white">
+            <div class="dashboard-card bg-gradient-to-r from-orange-500 to-orange-600 overflow-hidden shadow-lg rounded-lg text-white">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -90,16 +170,26 @@
                         <div class="ml-4 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium opacity-90 truncate">إيرادات اليوم</dt>
-                                <dd class="text-2xl font-bold">{{ number_format($todayRevenue, 2) }} ر.س</dd>
+                                <dd class="stat-number">{{ number_format($todayRevenue, 2) }} ر.س</dd>
                             </dl>
                         </div>
                     </div>
+                    <div class="mt-6 flex items-center justify-between text-sm">
+                        <span class="trend-indicator {{ $revenueTrend >= 0 ? 'trend-positive' : 'trend-negative' }}">
+                            <i class="fas {{ $revenueTrend >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} ml-1"></i>
+                            {{ number_format(abs($revenueTrend), 1) }}%
+                        </span>
+                        <span class="trend-average">
+                            متوسط يومي: {{ number_format($revenueDailyAverage, 2) }} ر.س
+                        </span>
+                    </div>
+                    <p class="trend-context">مقارنة بمتوسط الشهر الحالي</p>
                 </div>
             </div>
         </div>
 
         <!-- الإحصائيات الرئيسية -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div id="core-metrics-section" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 dashboard-anchor">
             <!-- المستخدمون -->
             <div class="bg-white overflow-hidden shadow-lg rounded-lg border-r-4 border-blue-500">
                 <div class="p-6">
@@ -202,7 +292,7 @@
         </div>
 
         <!-- الرسوم البيانية التفاعلية -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div id="insights-section" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 dashboard-anchor">
             <!-- رسم بياني للإحصائيات الأسبوعية -->
             <div class="bg-white overflow-hidden shadow-lg rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -443,7 +533,7 @@
         <!-- المحتوى الشائع -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- الوصفات الأكثر شعبية -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg">
+            <div id="popular-recipes-section" class="bg-white overflow-hidden shadow-lg rounded-lg dashboard-anchor">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <i class="fas fa-fire text-orange-500 ml-2"></i>
@@ -475,7 +565,7 @@
             </div>
 
             <!-- الورشات الأكثر حجزاً -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg">
+            <div id="popular-workshops-section" class="bg-white overflow-hidden shadow-lg rounded-lg dashboard-anchor">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <i class="fas fa-star text-yellow-500 ml-2"></i>
@@ -510,7 +600,7 @@
         <!-- الأنشطة الأخيرة -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- المستخدمون الجدد -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg">
+            <div id="recent-users-section" class="bg-white overflow-hidden shadow-lg rounded-lg dashboard-anchor">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <i class="fas fa-user-plus text-blue-500 ml-2"></i>
@@ -519,9 +609,22 @@
                 </div>
                 <div class="p-6">
                     @if($recentUsers->count() > 0)
-                        <div class="space-y-4">
+                        <div class="dashboard-filter-control mb-4">
+                            <label for="recent-users-filter" class="sr-only">ابحث عن مستخدم</label>
+                            <div class="relative">
+                                <input id="recent-users-filter" type="search" class="dashboard-search-input" placeholder="ابحث عن مستخدم أو بريد إلكتروني..." data-filter-input data-filter-target="recent-users">
+                                <i class="fas fa-search dashboard-search-icon"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-filter-empty-message hidden" data-filter-empty="recent-users">
+                            لا توجد نتائج مطابقة للبحث.
+                        </p>
+                        <div class="space-y-4 dashboard-filter-list" data-filter-list="recent-users">
                             @foreach($recentUsers as $user)
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                @php
+                                    $userFilterValue = \Illuminate\Support\Str::lower(trim($user->name . ' ' . $user->email));
+                                @endphp
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-filter-item data-filter-value="{{ $userFilterValue }}">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
                                             <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -547,18 +650,46 @@
             </div>
 
             <!-- الحجوزات الأخيرة -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-lg">
+            <div id="recent-bookings-section" class="bg-white overflow-hidden shadow-lg rounded-lg dashboard-anchor">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <i class="fas fa-calendar-check text-green-500 ml-2"></i>
                         الحجوزات الأخيرة
                     </h3>
+                    <div class="status-legend mt-3 flex flex-wrap gap-2">
+                        <span class="status-legend-badge status-confirmed">مؤكد</span>
+                        <span class="status-legend-badge status-pending">معلق</span>
+                        <span class="status-legend-badge status-cancelled">ملغى</span>
+                        <span class="status-legend-badge status-completed">مكتمل</span>
+                    </div>
                 </div>
                 <div class="p-6">
                     @if($recentBookings->count() > 0)
-                        <div class="space-y-4">
+                        <div class="dashboard-filter-control mb-4">
+                            <label for="recent-bookings-filter" class="sr-only">ابحث عن حجز</label>
+                            <div class="relative">
+                                <input id="recent-bookings-filter" type="search" class="dashboard-search-input" placeholder="ابحث عن ورشة، مستخدم أو حالة..." data-filter-input data-filter-target="recent-bookings">
+                                <i class="fas fa-search dashboard-search-icon"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-filter-empty-message hidden" data-filter-empty="recent-bookings">
+                            لا توجد حجوزات مطابقة للبحث الحالي.
+                        </p>
+                        <div class="space-y-4 dashboard-filter-list" data-filter-list="recent-bookings">
+                            @php
+                                $bookingStatusLabels = [
+                                    'confirmed' => 'مؤكد',
+                                    'pending' => 'معلق',
+                                    'cancelled' => 'ملغى',
+                                    'completed' => 'مكتمل',
+                                ];
+                            @endphp
                             @foreach($recentBookings as $booking)
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                @php
+                                    $statusLabel = $bookingStatusLabels[$booking->status] ?? $booking->status;
+                                    $bookingFilterValue = \Illuminate\Support\Str::lower(trim($booking->workshop->title . ' ' . $booking->user->name . ' ' . $statusLabel));
+                                @endphp
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-filter-item data-filter-value="{{ $bookingFilterValue }}">
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-gray-900">{{ $booking->workshop->title }}</p>
                                         <p class="text-xs text-gray-500">{{ $booking->user->name }}</p>
@@ -569,7 +700,7 @@
                                             @elseif($booking->status == 'pending') bg-yellow-100 text-yellow-800
                                             @elseif($booking->status == 'cancelled') bg-red-100 text-red-800
                                             @else bg-gray-100 text-gray-800 @endif">
-                                            {{ $booking->status }}
+                                            {{ $statusLabel }}
                                         </span>
                                         <span class="text-xs text-gray-500">{{ $booking->created_at->diffForHumans() }}</span>
                                     </div>
@@ -722,7 +853,7 @@
         </div>
 
         <!-- الإجراءات السريعة -->
-        <div class="bg-white overflow-hidden shadow-lg rounded-lg">
+        <div id="quick-actions-section" class="bg-white overflow-hidden shadow-lg rounded-lg dashboard-anchor">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                     <i class="fas fa-bolt text-yellow-500 ml-2"></i>
@@ -765,6 +896,85 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const navPills = document.querySelectorAll('.dashboard-nav-pill');
+    const observedSections = [];
+
+    navPills.forEach((pill) => {
+        const targetSelector = pill.dataset.scrollTarget;
+        if (!targetSelector) {
+            return;
+        }
+
+        const target = document.querySelector(targetSelector);
+        if (target) {
+            observedSections.push(target);
+            pill.addEventListener('click', () => {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                navPills.forEach((btn) => btn.classList.remove('is-active'));
+                pill.classList.add('is-active');
+            });
+        } else {
+            pill.setAttribute('disabled', 'disabled');
+            pill.classList.add('is-disabled');
+        }
+    });
+
+    if ('IntersectionObserver' in window && observedSections.length > 0) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const activePill = document.querySelector(`.dashboard-nav-pill[data-scroll-target="#${entry.target.id}"]`);
+                    if (activePill) {
+                        navPills.forEach((btn) => btn.classList.remove('is-active'));
+                        activePill.classList.add('is-active');
+                    }
+                }
+            });
+        }, { rootMargin: '-45% 0px -45% 0px', threshold: 0.2 });
+
+        observedSections.forEach((section) => observer.observe(section));
+    }
+
+    if (navPills.length > 0) {
+        navPills[0].classList.add('is-active');
+    }
+
+    document.querySelectorAll('[data-filter-input]').forEach((input) => {
+        const targetKey = input.dataset.filterTarget;
+        if (!targetKey) {
+            return;
+        }
+
+        const list = document.querySelector(`[data-filter-list="${targetKey}"]`);
+        if (!list) {
+            return;
+        }
+
+        const emptyMessage = document.querySelector(`[data-filter-empty="${targetKey}"]`);
+
+        const applyFilter = () => {
+            const query = input.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            list.querySelectorAll('[data-filter-item]').forEach((item) => {
+                const value = (item.dataset.filterValue || item.textContent || '').toLowerCase();
+                const matches = query.length === 0 || value.includes(query);
+                item.classList.toggle('hidden', !matches);
+                if (matches) {
+                    visibleCount += 1;
+                }
+            });
+
+            if (emptyMessage) {
+                emptyMessage.classList.toggle('hidden', visibleCount !== 0);
+            }
+        };
+
+        input.addEventListener('input', applyFilter);
+    });
+});
+
 // رسم بياني للإحصائيات الأسبوعية
 const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
 const weeklyChart = new Chart(weeklyCtx, {

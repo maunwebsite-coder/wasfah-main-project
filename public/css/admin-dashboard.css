@@ -243,3 +243,187 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* شريط التنقل السريع */
+.dashboard-quick-nav {
+    position: sticky;
+    top: 1rem;
+    z-index: 15;
+    backdrop-filter: blur(6px);
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.dashboard-nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 9999px;
+    background-color: #f3f4f6;
+    color: #1f2937;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dashboard-nav-pill:hover {
+    background-color: #e5e7eb;
+    color: #2563eb;
+}
+
+.dashboard-nav-pill.is-active {
+    background-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+}
+
+.dashboard-nav-pill.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* مؤشرات الاتجاه */
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.trend-positive {
+    background-color: rgba(16, 185, 129, 0.3);
+    color: #ecfdf5;
+}
+
+.trend-negative {
+    background-color: rgba(239, 68, 68, 0.3);
+    color: #fee2e2;
+}
+
+.dashboard-card:not(.text-white) .trend-indicator {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #1f2937;
+}
+
+.dashboard-card:not(.text-white) .trend-positive {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #166534;
+}
+
+.dashboard-card:not(.text-white) .trend-negative {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #991b1b;
+}
+
+.trend-average {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.dashboard-card:not(.text-white) .trend-average {
+    color: #4b5563;
+}
+
+.trend-context {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.dashboard-card:not(.text-white) .trend-context {
+    color: #6b7280;
+}
+
+/* أدوات البحث السريع */
+.dashboard-filter-control {
+    position: relative;
+}
+
+.dashboard-search-input {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    padding-right: 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-align: right;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.dashboard-search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.dashboard-search-icon {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.dashboard-filter-empty-message {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 0.75rem;
+}
+
+/* أسطورة الحالات */
+.status-legend {
+    font-size: 0.75rem;
+}
+
+.status-legend-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.dashboard-anchor {
+    scroll-margin-top: 6rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-quick-nav {
+        position: static;
+        backdrop-filter: none;
+    }
+
+    .dashboard-nav-pill {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}

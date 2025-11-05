@@ -44,50 +44,6 @@
         ],
     ];
 
-    $statusDistribution = [
-        [
-            'label' => 'مؤكدة',
-            'icon' => 'fa-check-circle',
-            'raw' => $stats['confirmed'],
-            'formatted' => number_format($stats['confirmed']),
-            'percentage' => round(($stats['confirmed'] / $totalBookings) * 100, 1),
-            'color' => 'bg-emerald-500',
-        ],
-        [
-            'label' => 'قيد المراجعة',
-            'icon' => 'fa-stopwatch',
-            'raw' => $stats['pending'],
-            'formatted' => number_format($stats['pending']),
-            'percentage' => round(($stats['pending'] / $totalBookings) * 100, 1),
-            'color' => 'bg-amber-500',
-        ],
-        [
-            'label' => 'ملغية',
-            'icon' => 'fa-times-circle',
-            'raw' => $stats['cancelled'],
-            'formatted' => number_format($stats['cancelled']),
-            'percentage' => round(($stats['cancelled'] / $totalBookings) * 100, 1),
-            'color' => 'bg-rose-500',
-        ],
-    ];
-
-    $paymentBreakdown = [
-        [
-            'label' => 'مدفوعة',
-            'raw' => $stats['paid'],
-            'formatted' => number_format($stats['paid']),
-            'percentage' => round(($stats['paid'] / $totalBookings) * 100, 1),
-            'color' => 'bg-teal-500',
-        ],
-        [
-            'label' => 'غير مدفوعة',
-            'raw' => $stats['unpaid'],
-            'formatted' => number_format($stats['unpaid']),
-            'percentage' => round(($stats['unpaid'] / $totalBookings) * 100, 1),
-            'color' => 'bg-rose-500',
-        ],
-    ];
-
     $quickStatusFilters = [
         [
             'label' => 'الكل',
@@ -162,23 +118,32 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
 <style>
-/* Custom Modal Styles */
-#confirmationModal, #alertModal {
-    transition: opacity 0.3s ease-in-out;
+#confirmationModal,
+#alertModal,
+#adminNoteModal {
+    transition: opacity 0.2s ease-in-out;
 }
 
-#confirmationModal.show, #alertModal.show {
+#confirmationModal.show,
+#alertModal.show,
+#adminNoteModal.show {
     opacity: 1;
 }
 
+.modal-backdrop {
+    backdrop-filter: blur(2px);
+}
+
 .modal-content {
-    animation: modalSlideIn 0.3s ease-out;
+    direction: rtl;
+    text-align: right;
+    animation: modalSlideIn 0.25s ease-out;
 }
 
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-50px) scale(0.95);
+        transform: translateY(-20px) scale(0.98);
     }
     to {
         opacity: 1;
@@ -186,51 +151,17 @@
     }
 }
 
-.modal-backdrop {
-    backdrop-filter: blur(2px);
-}
-
-/* Enhanced button hover effects */
 .modal-button {
-    transition: all 0.2s ease-in-out;
-    position: relative;
-    overflow: hidden;
+    transition: all 0.2s ease;
 }
 
 .modal-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.modal-button:active {
-    transform: translateY(0);
-}
-
-/* RTL Support for modals */
-.modal-content {
-    direction: rtl;
-    text-align: right;
-}
-
-.modal-content .text-center {
-    text-align: center;
-}
-
-/* Focus styles for accessibility */
 .modal-button:focus {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-/* Loading spinner animation */
-.fa-spinner {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
 }
 
 .quick-filter-scroll {
@@ -240,7 +171,7 @@
     padding-bottom: 0.5rem;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+    scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
 }
 
 .quick-filter-scroll::-webkit-scrollbar {
@@ -248,21 +179,17 @@
 }
 
 .quick-filter-scroll::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.25);
     border-radius: 9999px;
-}
-
-.quick-filter-scroll::-webkit-scrollbar-track {
-    background: transparent;
 }
 
 .quick-filter-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.65rem;
     padding: 0.5rem 1rem;
     border-radius: 9999px;
-    border: 1px solid rgba(59, 130, 246, 0.25);
+    border: 1px solid rgba(59, 130, 246, 0.18);
     background: rgba(59, 130, 246, 0.08);
     color: #1e3a8a;
     font-size: 0.85rem;
@@ -272,86 +199,103 @@
 }
 
 .quick-filter-chip:hover {
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: rgba(59, 130, 246, 0.35);
     background: rgba(59, 130, 246, 0.12);
 }
 
-.quick-filter-chip .chip-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.2);
-}
-
+.quick-filter-chip .chip-icon,
 .quick-filter-chip .chip-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.85);
+    font-size: 0.7rem;
+}
+
+.quick-filter-chip .chip-icon {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.quick-filter-chip .chip-count {
+    background: rgba(255, 255, 255, 0.9);
     color: #1e40af;
-    font-size: 0.75rem;
     font-weight: 700;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
 }
 
 .quick-filter-chip.is-active {
     color: #fff;
     border-color: transparent;
     background: linear-gradient(135deg, #2563eb, #7c3aed);
-    box-shadow: 0 18px 35px -20px rgba(79, 70, 229, 0.9);
+    box-shadow: 0 16px 32px -24px rgba(79, 70, 229, 0.65);
 }
 
 .quick-filter-chip.is-active .chip-count {
     background: rgba(255, 255, 255, 0.22);
-    color: #fff;
-    box-shadow: none;
+    color: inherit;
 }
 
-.insight-progress {
-    height: 0.5rem;
-    border-radius: 9999px;
-    background: #f1f5f9;
-    overflow: hidden;
+.status-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 10px 30px -25px rgba(15, 23, 42, 0.45);
 }
 
-.insight-progress span {
-    display: block;
-    height: 100%;
-    border-radius: 9999px;
+.status-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.stat-card-icon {
+.status-summary-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--stat-icon-size, 3rem);
-    height: var(--stat-icon-size, 3rem);
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    background: rgba(59, 130, 246, 0.12);
+    color: #1d4ed8;
+    font-size: 1.25rem;
 }
 
-.stat-card-highlight {
-    position: absolute;
-    inset-inline-end: -3rem;
-    inset-block-start: -3rem;
-    width: 8rem;
-    height: 8rem;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    filter: blur(0.5rem);
+.status-summary-trend {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #22c55e;
+}
+
+.note-indicator {
+    border-radius: 0.75rem;
+    background: rgba(79, 70, 229, 0.12);
+    color: #4338ca;
+    padding: 0.25rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.activity-item {
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activity-item:hover {
+    background: rgba(59, 130, 246, 0.06);
+    box-shadow: 0 12px 20px -18px rgba(37, 99, 235, 0.5);
 }
 
 @media (max-width: 640px) {
     .quick-filter-chip {
         padding-inline: 0.75rem;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
     }
 }
 </style>
@@ -378,6 +322,10 @@
                         <i class="fas fa-sync-alt ml-2"></i>
                         تحديث
                     </button>
+                    <a href="{{ route('admin.bookings.export', request()->query()) }}" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-file-download ml-2"></i>
+                        تصدير CSV
+                    </a>
                     <a href="{{ route('admin.bookings.manual') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 dashboard-btn">
                         <i class="fas fa-plus ml-2"></i>
                         إضافة حجز يدوي
@@ -390,99 +338,238 @@
             </div>
         </div>
 
-        <!-- نظرة عامة سريعة -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-            @foreach($statusCards as $card)
-                <div class="relative overflow-hidden rounded-2xl shadow-lg bg-gradient-to-br {{ $card['gradient'] }} text-white">
-                    <span class="stat-card-highlight"></span>
-                    <div class="relative p-6 flex flex-col gap-5">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-sm text-white/70">{{ $card['label'] }}</p>
-                                <p class="mt-2 text-3xl font-bold tracking-tight">{{ $card['formatted'] }}</p>
-                            </div>
-                            <span class="stat-card-icon">
-                                <i class="fas {{ $card['icon'] }} text-xl"></i>
-                            </span>
+        @isset($pendingApprovalBookings)
+            <div class="mb-8">
+                <div class="bg-white shadow-xl rounded-2xl border border-gray-100">
+                    <div class="px-6 py-5 border-b border-gray-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                                    <i class="fas fa-inbox"></i>
+                                </span>
+                                حجوزات جديدة بانتظار الإجراء
+                            </h2>
+                            <p class="text-sm text-gray-500">
+                                راجع أحدث الحجوزات وقرر تأكيدها أو رفضها مباشرة بدون الحاجة للتمرير إلى الأسفل.
+                            </p>
                         </div>
-                        @if(!is_null($card['percentage']))
-                            <div>
-                                <div class="flex items-center justify-between text-xs text-white/70 mb-1">
-                                    <span>{{ $card['description'] }}</span>
-                                    <span>{{ number_format($card['percentage'], 1) }}%</span>
-                                </div>
-                                <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-                                    <div class="h-full bg-white/80 rounded-full" style="width: {{ min($card['percentage'], 100) }}%"></div>
-                                </div>
-                            </div>
-                        @else
-                            <p class="text-xs text-white/75">{{ $card['description'] }}</p>
-                        @endif
+                        <div class="flex items-center gap-3">
+                            <a
+                                href="{{ route('admin.bookings.index', array_merge(request()->except('page'), ['status' => 'pending'])) }}"
+                                class="inline-flex items-center px-4 py-2 rounded-md border border-blue-200 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
+                            >
+                                <i class="fas fa-filter ml-2"></i>
+                                عرض كل الحجوزات المعلقة
+                            </a>
+                        </div>
                     </div>
+                    @if($pendingApprovalBookings->isNotEmpty())
+                        <div class="overflow-x-auto">
+                            <table class="dashboard-table min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <i class="fas fa-user ml-2"></i>
+                                            المستخدم
+                                        </th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <i class="fas fa-graduation-cap ml-2"></i>
+                                            الورشة
+                                        </th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <i class="fas fa-credit-card ml-2"></i>
+                                            الدفع
+                                        </th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <i class="fas fa-calendar ml-2"></i>
+                                            تاريخ الحجز
+                                        </th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <i class="fas fa-cogs ml-2"></i>
+                                            الإجراءات السريعة
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($pendingApprovalBookings as $pendingBooking)
+                                        @php
+                                            $pendingUser = $pendingBooking->user;
+                                            $pendingWorkshop = $pendingBooking->workshop;
+                                            $pendingPaymentMeta = $paymentMeta[$pendingBooking->payment_status] ?? null;
+                                        @endphp
+                                        <tr class="hover:bg-blue-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex flex-col">
+                                                    <span class="text-sm font-semibold text-gray-900">
+                                                        {{ $pendingUser?->name ?? 'مستخدم بدون اسم' }}
+                                                    </span>
+                                                    @if($pendingUser?->email)
+                                                        <span class="text-xs text-gray-500">
+                                                            <i class="fas fa-envelope ml-1"></i>
+                                                            {{ $pendingUser->email }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-semibold text-gray-900">
+                                                    {{ $pendingWorkshop?->title ?? 'ورشة غير محددة' }}
+                                                </div>
+                                                <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                    <i class="fas fa-clock"></i>
+                                                    {{ optional($pendingWorkshop?->start_date)->format('Y-m-d H:i') ?? 'غير مجدول' }}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-semibold text-gray-900">
+                                                    {{ number_format($pendingBooking->payment_amount, 2) }} {{ $pendingWorkshop?->currency }}
+                                                </div>
+                                                <div class="mt-1 flex items-center gap-2">
+                                                    @if($pendingPaymentMeta)
+                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $pendingPaymentMeta['class'] }}">
+                                                            {{ $pendingPaymentMeta['label'] }}
+                                                        </span>
+                                                    @endif
+                                                    @if($pendingBooking->payment_method)
+                                                        <span class="text-xs text-gray-500">
+                                                            <i class="fas fa-receipt ml-1"></i>
+                                                            {{ $pendingBooking->payment_method }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                <div class="font-medium text-gray-900">
+                                                    {{ $pendingBooking->created_at->format('Y-m-d') }}
+                                                </div>
+                                                <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                    <i class="fas fa-clock"></i>
+                                                    {{ $pendingBooking->created_at->format('H:i') }}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex items-center gap-2">
+                                                    <a
+                                                        href="{{ route('admin.bookings.show', $pendingBooking) }}"
+                                                        class="inline-flex items-center px-3 py-1 rounded-md border border-transparent text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
+                                                    >
+                                                        <i class="fas fa-eye ml-1"></i>
+                                                        عرض
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onclick="confirmBooking({{ $pendingBooking->id }})"
+                                                        class="inline-flex items-center px-3 py-1 rounded-md border border-transparent text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                                                    >
+                                                        <i class="fas fa-check ml-1"></i>
+                                                        تأكيد
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onclick="cancelBooking({{ $pendingBooking->id }})"
+                                                        class="inline-flex items-center px-3 py-1 rounded-md border border-transparent text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 transition-colors duration-200"
+                                                    >
+                                                        <i class="fas fa-times ml-1"></i>
+                                                        إلغاء
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="px-6 py-8 text-center text-sm text-gray-500">
+                            لا توجد حجوزات جديدة بانتظار الموافقة حالياً.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endisset
+
+        <!-- نظرة عامة سريعة -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+            @foreach($statusCards as $card)
+                <div class="status-summary-card">
+                    <div class="status-summary-header">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500">{{ $card['label'] }}</p>
+                            <p class="mt-2 text-2xl font-bold text-slate-900">{{ $card['formatted'] }}</p>
+                        </div>
+                        <span class="status-summary-icon">
+                            <i class="fas {{ $card['icon'] }}"></i>
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        {{ $card['description'] }}
+                        @if(!is_null($card['percentage']))
+                            <span class="status-summary-trend ml-2">{{ number_format($card['percentage'], 1) }}%</span>
+                        @endif
+                    </p>
                 </div>
             @endforeach
         </div>
 
-        <!-- تحليلات الحالة -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
-            <div class="xl:col-span-2 bg-white shadow-lg rounded-2xl border border-gray-100 p-6">
-                <div class="flex items-center justify-between mb-6">
+        @if(isset($followUpBookings) && $followUpBookings->isNotEmpty())
+            <div class="bg-white border border-amber-100 rounded-xl p-6 mb-8 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                            <i class="fas fa-chart-pie text-blue-500 ml-2"></i>
-                            توزيع حالات الحجوزات
+                            <i class="fas fa-exclamation-circle text-amber-500 ml-2"></i>
+                            حجوزات تحتاج متابعة
                         </h3>
-                        <p class="text-sm text-gray-500 mt-1">تابع حالة كل حجز وتعرف على نسب التقدم</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            الطلبات التي تجاوزت 48 ساعة بدون إجراء. تعامل معها أولاً لضمان تجربة أفضل للمستخدمين.
+                        </p>
                     </div>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                        {{ now()->format('Y-m-d H:i') }}
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold">
+                        <i class="fas fa-clock"></i>
+                        {{ $pendingFollowUpCount ?? $followUpBookings->count() }} حجوزات متأخرة
                     </span>
                 </div>
-                <div class="space-y-4">
-                    @foreach($statusDistribution as $item)
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <span class="stat-card-icon" style="--stat-icon-size: 2.5rem;">
-                                        <i class="fas {{ $item['icon'] }} text-base"></i>
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">{{ $item['label'] }}</p>
-                                        <p class="text-xs text-gray-500">{{ number_format($item['percentage'], 1) }}% من الإجمالي</p>
-                                    </div>
-                                </div>
-                                <span class="text-sm font-semibold text-gray-700">{{ $item['formatted'] }}</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    @foreach($followUpBookings->take(6) as $pending)
+                        @php
+                            $userName = optional($pending->user)->name ?? 'مستخدم';
+                            $workshopTitle = optional($pending->workshop)->title ?? 'ورشة غير محددة';
+                        @endphp
+                        <div class="border border-amber-100 rounded-lg p-4 flex flex-col gap-3 bg-amber-50">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">{{ $userName }}</p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-calendar text-[11px] ml-1"></i>
+                                    {{ optional($pending->created_at)->format('Y-m-d H:i') ?? 'غير معروف' }}
+                                </p>
                             </div>
-                            <div class="insight-progress mt-3">
-                                <span class="{{ $item['color'] }}" style="width: {{ min($item['percentage'], 100) }}%"></span>
+                            <div class="text-xs text-gray-600">
+                                <i class="fas fa-graduation-cap text-[11px] ml-1 text-amber-500"></i>
+                                {{ $workshopTitle }}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <i class="fas fa-phone ml-1"></i>
+                                {{ optional($pending->user)->phone ?? 'لا يوجد رقم' }}
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{{ route('admin.bookings.show', $pending) }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-white text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-eye ml-1"></i>
+                                    مراجعة
+                                </a>
+                                <button type="button" onclick="confirmBooking({{ $pending->id }})" class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors">
+                                    <i class="fas fa-check ml-1"></i>
+                                    تأكيد
+                                </button>
                             </div>
                         </div>
                     @endforeach
                 </div>
+                @if($followUpBookings->count() > 6)
+                    <div class="mt-4 text-sm text-gray-500">
+                        عرضنا أهم {{ min(6, $followUpBookings->count()) }} حجوزات تحتاج متابعة. يمكنك الوصول للباقي من خلال الفلاتر أو الجدول أدناه.
+                    </div>
+                @endif
             </div>
-            <div class="bg-white shadow-lg rounded-2xl border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <i class="fas fa-wallet text-emerald-500 ml-2"></i>
-                    أداء المدفوعات
-                </h3>
-                <p class="text-sm text-gray-500 mt-2">راقب تحصيل المدفوعات وتابع الحجوزات المؤجلة</p>
-                <div class="mt-6 space-y-6">
-                    @foreach($paymentBreakdown as $item)
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-700">{{ $item['label'] }}</span>
-                                <span class="text-sm font-semibold text-gray-900">{{ $item['formatted'] }}</span>
-                            </div>
-                            <div class="insight-progress mt-3">
-                                <span class="{{ $item['color'] }}" style="width: {{ min($item['percentage'], 100) }}%"></span>
-                            </div>
-                            <div class="text-xs text-gray-400 mt-1">{{ number_format($item['percentage'], 1) }}% من إجمالي الحجوزات</div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
+        @endif
         <!-- الفلاتر -->
         <div class="bg-white shadow-xl rounded-2xl mb-8 border border-gray-100">
             <div class="px-6 py-5 border-b border-gray-200 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -796,7 +883,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($bookings as $booking)
-                                    <tr class="activity-item hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
+                                    <tr id="booking-row-{{ $booking->id }}" class="activity-item hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200" data-admin-note="{{ base64_encode($booking->admin_notes ?? '') }}" data-user-name="{{ e(optional($booking->user)->name ?? 'مستخدم') }}" data-workshop-title="{{ e(optional($booking->workshop)->title ?? 'غير محددة') }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-12 w-12">
@@ -809,6 +896,10 @@
                                                     <div class="text-sm text-gray-500 flex items-center">
                                                         <i class="fas fa-envelope text-xs ml-1"></i>
                                                         {{ $booking->user->email }}
+                                                    </div>
+                                                    <div id="booking-note-indicator-{{ $booking->id }}" class="note-indicator mt-2 {{ $booking->admin_notes ? '' : 'hidden' }}">
+                                                        <i class="fas fa-sticky-note text-xs"></i>
+                                                        توجد ملاحظة داخلية
                                                     </div>
                                                 </div>
                                             </div>
@@ -891,6 +982,10 @@
                                                     <i class="fas fa-eye ml-1"></i>
                                                     عرض
                                                 </a>
+                                                <button onclick="openAdminNoteModal({{ $booking->id }})" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 transition-colors duration-200">
+                                                    <i class="fas fa-sticky-note ml-1"></i>
+                                                    ملاحظة
+                                                </button>
                                                 @if($booking->status === 'pending')
                                                     <button onclick="confirmBooking({{ $booking->id }})" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 transition-colors duration-200">
                                                         <i class="fas fa-check ml-1"></i>
@@ -954,6 +1049,53 @@
     </div>
 </div>
 
+<!-- Admin Note Modal -->
+<div id="adminNoteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden modal-backdrop">
+    <div class="relative top-20 mx-auto p-6 border w-full max-w-lg shadow-lg rounded-2xl bg-white modal-content">
+        <div class="flex items-start justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-sticky-note text-purple-500 ml-2"></i>
+                    ملاحظة الإدارة
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">تُحفظ هذه الملاحظة للاستخدام الداخلي ولا تظهر للمستخدم.</p>
+            </div>
+            <button id="adminNoteClose" type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-150">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mt-5 space-y-5">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700">
+                <div class="flex flex-col gap-1">
+                    <span><i class="fas fa-user text-blue-500 ml-1"></i>المستخدم: <span id="adminNoteUser" class="font-semibold text-gray-900"></span></span>
+                    <span><i class="fas fa-graduation-cap text-emerald-500 ml-1"></i>الورشة: <span id="adminNoteWorkshop" class="font-semibold text-gray-900"></span></span>
+                </div>
+            </div>
+            <div>
+                <label for="adminNoteTextarea" class="block text-sm font-medium text-gray-700 mb-2">اكتب الملاحظات الداخلية</label>
+                <textarea id="adminNoteTextarea" rows="5" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-purple-500 focus:border-purple-500" maxlength="2000" placeholder="مثال: تم التواصل مع العميل بخصوص الدفع..."></textarea>
+                <div class="mt-2 flex items-center justify-between">
+                    <span id="adminNoteCharCounter" class="text-xs text-gray-400">0/2000</span>
+                    <div id="adminNoteError" data-default-text="تعذر حفظ الملاحظة، حاول مرة أخرى." class="hidden text-xs text-red-600 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>تعذر حفظ الملاحظة، حاول مرة أخرى.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="adminNoteBookingId">
+        <div class="mt-6 flex items-center justify-end gap-3">
+            <button type="button" id="adminNoteCancel" class="inline-flex items-center px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-times ml-1"></i>
+                إغلاق
+            </button>
+            <button type="button" id="adminNoteSaveButton" class="inline-flex items-center px-5 py-2 rounded-md border border-transparent text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <i class="fas fa-save ml-1"></i>
+                حفظ الملاحظة
+            </button>
+        </div>
+    </div>
+</div>
 <!-- Custom Confirmation Modal -->
 <div id="confirmationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden modal-backdrop">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white modal-content">
@@ -1044,6 +1186,169 @@ function printBookings() {
 }
 
 // تحسين وظائف الحجز
+function encodeBase64Unicode(str) {
+    try {
+        return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(_, p1) {
+            return String.fromCharCode(parseInt(p1, 16));
+        }));
+    } catch (error) {
+        return '';
+    }
+}
+
+function decodeBase64Unicode(str) {
+    if (!str) {
+        return '';
+    }
+
+    try {
+        return decodeURIComponent(Array.prototype.map.call(window.atob(str), function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    } catch (error) {
+        return '';
+    }
+}
+
+function updateAdminNoteCounter() {
+    const textarea = document.getElementById('adminNoteTextarea');
+    const counter = document.getElementById('adminNoteCharCounter');
+    if (!textarea || !counter) {
+        return;
+    }
+    counter.textContent = `${textarea.value.length}/2000`;
+}
+
+function openAdminNoteModal(bookingId) {
+    const modal = document.getElementById('adminNoteModal');
+    const textarea = document.getElementById('adminNoteTextarea');
+    const bookingIdInput = document.getElementById('adminNoteBookingId');
+    const userSpan = document.getElementById('adminNoteUser');
+    const workshopSpan = document.getElementById('adminNoteWorkshop');
+    const errorEl = document.getElementById('adminNoteError');
+
+    if (!modal || !textarea || !bookingIdInput) {
+        return;
+    }
+
+    const row = document.getElementById(`booking-row-${bookingId}`);
+    if (!row) {
+        return;
+    }
+
+    const noteValue = decodeBase64Unicode(row.dataset.adminNote || '');
+    textarea.value = noteValue;
+    bookingIdInput.value = bookingId;
+
+    if (userSpan) {
+        userSpan.textContent = row.dataset.userName || 'مستخدم';
+    }
+
+    if (workshopSpan) {
+        workshopSpan.textContent = row.dataset.workshopTitle || 'ورشة';
+    }
+
+    if (errorEl) {
+        errorEl.classList.add('hidden');
+        const defaultMessage = errorEl.getAttribute('data-default-text');
+        if (defaultMessage) {
+            errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>${defaultMessage}</span>`;
+        }
+    }
+
+    updateAdminNoteCounter();
+
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        modal.classList.add('show');
+    });
+
+    textarea.focus({ preventScroll: true });
+}
+
+function closeAdminNoteModal() {
+    const modal = document.getElementById('adminNoteModal');
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
+
+function saveAdminNote() {
+    const bookingIdInput = document.getElementById('adminNoteBookingId');
+    const textarea = document.getElementById('adminNoteTextarea');
+    const errorEl = document.getElementById('adminNoteError');
+    const saveButton = document.getElementById('adminNoteSaveButton');
+
+    if (!bookingIdInput || !textarea || !saveButton) {
+        return;
+    }
+
+    const bookingId = bookingIdInput.value;
+    const noteValue = textarea.value;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    saveButton.disabled = true;
+    const originalContent = saveButton.innerHTML;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ml-1"></i>جاري الحفظ...';
+
+    fetch(`/admin/bookings/${bookingId}/admin-note`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ admin_note: noteValue }),
+    })
+        .then(async (response) => {
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw payload;
+            }
+            return payload;
+        })
+        .then((data) => {
+            if (errorEl) {
+                errorEl.classList.add('hidden');
+            }
+
+            const row = document.getElementById(`booking-row-${bookingId}`);
+            if (row) {
+                row.dataset.adminNote = noteValue ? encodeBase64Unicode(noteValue) : '';
+                const indicator = document.getElementById(`booking-note-indicator-${bookingId}`);
+                if (indicator) {
+                    if (noteValue.trim().length > 0) {
+                        indicator.classList.remove('hidden');
+                    } else {
+                        indicator.classList.add('hidden');
+                    }
+                }
+            }
+
+            const message = data?.message || 'تم حفظ ملاحظة الإدارة بنجاح';
+            showAlertModal(message);
+            closeAdminNoteModal();
+        })
+        .catch((error) => {
+            if (errorEl) {
+                const defaultMessage = errorEl.getAttribute('data-default-text') || 'تعذر حفظ الملاحظة، حاول مرة أخرى.';
+                const finalMessage = typeof error?.message === 'string' ? error.message : defaultMessage;
+                errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>${finalMessage}</span>`;
+                errorEl.classList.remove('hidden');
+            } else {
+                console.error('Failed to save admin note', error);
+            }
+        })
+        .finally(() => {
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalContent;
+        });
+}
 function confirmBooking(bookingId) {
     showConfirmationModal(
         'تأكيد الحجز',
@@ -1281,7 +1586,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearFiltersButton = document.getElementById('clearFiltersButton');
     const toggleAdvancedFiltersButton = document.getElementById('toggleAdvancedFilters');
     const advancedFiltersSection = document.getElementById('advancedFilters');
-    const advancedFiltersLabel = document.getElementById('advancedFiltersToggleLabel');
+    const advancedFiltersLabel = document.getElementById('advancedFiltersToggleLabel');    const adminNoteModal = document.getElementById('adminNoteModal');
+    const adminNoteTextarea = document.getElementById('adminNoteTextarea');
+    const adminNoteSaveButton = document.getElementById('adminNoteSaveButton');
+    const adminNoteCancelButton = document.getElementById('adminNoteCancel');
+    const adminNoteCloseButton = document.getElementById('adminNoteClose');
+
+    if (adminNoteTextarea) {
+        adminNoteTextarea.addEventListener('input', updateAdminNoteCounter);
+        updateAdminNoteCounter();
+    }
+
+    if (adminNoteSaveButton) {
+        adminNoteSaveButton.addEventListener('click', saveAdminNote);
+    }
+
+    if (adminNoteCancelButton) {
+        adminNoteCancelButton.addEventListener('click', closeAdminNoteModal);
+    }
+
+    if (adminNoteCloseButton) {
+        adminNoteCloseButton.addEventListener('click', closeAdminNoteModal);
+    }
+
+    if (adminNoteModal) {
+        adminNoteModal.addEventListener('click', function(event) {
+            if (event.target === adminNoteModal) {
+                closeAdminNoteModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('adminNoteModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeAdminNoteModal();
+            }
+        }
+    });
+
 
     // التحقق من صحة التواريخ الأساسية
     function validateDates() {
@@ -1461,3 +1805,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+
+
+
+
+
+
+

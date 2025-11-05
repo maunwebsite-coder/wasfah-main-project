@@ -32,6 +32,49 @@
         }
 
     }
+
+    .mobile-meeting-toolbar {
+        display: none;
+        margin-top: 0.75rem;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    .mobile-meeting-toolbar button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(15, 23, 42, 0.92);
+        color: #f1f5f9;
+        border-radius: 9999px;
+        padding: 0.6rem 1.25rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid rgba(15, 23, 42, 0.2);
+        box-shadow: 0 8px 20px -10px rgba(30, 41, 59, 0.6);
+    }
+
+    .mobile-meeting-toolbar button.is-active {
+        background: rgba(234, 88, 12, 0.95);
+        border-color: rgba(234, 88, 12, 0.65);
+    }
+
+    .mobile-meeting-toolbar button:focus-visible {
+        outline: 2px solid rgba(234, 88, 12, 0.7);
+        outline-offset: 3px;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-meeting-toolbar[aria-hidden="false"] {
+            display: flex;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .mobile-meeting-toolbar {
+            display: none !important;
+        }
+    }
 </style>
 @endpush
 
@@ -93,6 +136,17 @@
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-slate-950" id="jitsi-container"></div>
+            <div class="mobile-meeting-toolbar" id="mobileMeetingToolbar" hidden aria-hidden="true">
+                <button
+                    type="button"
+                    id="mobileTileToggle"
+                    class="mobile-meeting-toolbar__btn"
+                    aria-pressed="false"
+                >
+                    <i class="fas fa-th-large" aria-hidden="true"></i>
+                    <span id="mobileTileToggleLabel">عرض المربعات</span>
+                </button>
+            </div>
         </div>
 
         @if ($recentParticipants->isNotEmpty())
@@ -289,6 +343,9 @@
         }
 
         const container = document.getElementById('jitsi-container');
+        const mobileToolbar = document.getElementById('mobileMeetingToolbar');
+        const mobileTileToggle = document.getElementById('mobileTileToggle');
+        const mobileTileLabel = document.getElementById('mobileTileToggleLabel');
 
         if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -356,6 +413,7 @@
         }
 
         const api = new JitsiMeetExternalAPI(domain, options);
+        setupMobileTileControls(api, mobileToolbar, mobileTileToggle, mobileTileLabel);
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
@@ -389,6 +447,65 @@
             api.executeCommand('password', @json($embedConfig['passcode']));
         });
         @endif
+
+        function setupMobileTileControls(api, toolbar, toggleButton, toggleLabel) {
+            if (!toolbar || !toggleButton) {
+                return;
+            }
+
+            const mobileQuery = window.matchMedia('(max-width: 768px)');
+            let currentTileState = false;
+
+            const updateVisibility = () => {
+                const isMobile = mobileQuery.matches;
+                if (isMobile) {
+                    toolbar.removeAttribute('hidden');
+                    toolbar.setAttribute('aria-hidden', 'false');
+                } else {
+                    toolbar.setAttribute('hidden', '');
+                    toolbar.setAttribute('aria-hidden', 'true');
+                }
+            };
+
+            const updateTileState = (enabled) => {
+                currentTileState = Boolean(enabled);
+                toggleButton.classList.toggle('is-active', currentTileState);
+                toggleButton.setAttribute('aria-pressed', currentTileState ? 'true' : 'false');
+                if (toggleLabel) {
+                    toggleLabel.textContent = currentTileState ? 'عرض المتحدث' : 'عرض المربعات';
+                }
+            };
+
+            toggleButton.addEventListener('click', () => {
+                api.executeCommand('toggleTileView');
+            });
+
+            if (typeof api.addListener === 'function') {
+                api.addListener('tileViewChanged', ({ enabled }) => {
+                    updateTileState(enabled);
+                });
+
+                api.addListener('videoConferenceJoined', () => {
+                    try {
+                        const value = api.isTileViewEnabled?.();
+                        if (value && typeof value.then === 'function') {
+                            value.then(updateTileState).catch(() => updateTileState(currentTileState));
+                        } else if (typeof value === 'boolean') {
+                            updateTileState(value);
+                        }
+                    } catch (error) {
+                        console.warn('تعذر قراءة حالة عرض المربعات:', error);
+                    }
+                });
+            }
+
+            updateVisibility();
+            if (typeof mobileQuery.addEventListener === 'function') {
+                mobileQuery.addEventListener('change', updateVisibility);
+            } else if (typeof mobileQuery.addListener === 'function') {
+                mobileQuery.addListener(updateVisibility);
+            }
+        }
 
     });
 </script>

@@ -133,6 +133,15 @@ class BookingController extends Controller
             ->limit(5)
             ->get();
 
+        $pendingApprovalBookings = WorkshopBooking::with([
+                'user:id,name,email',
+                'workshop:id,title,start_date,currency',
+            ])
+            ->where('status', 'pending')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get();
+
         $upcomingWorkshops = Workshop::withCount([
                 'bookings as confirmed_bookings_count' => function ($query) {
                     $query->where('status', 'confirmed');
@@ -147,7 +156,8 @@ class BookingController extends Controller
             ->limit(3)
             ->get();
 
-        $topWorkshops = Workshop::withCount([
+        $topWorkshops = Workshop::select('id', 'title', 'start_date', 'max_participants')
+            ->withCount([
                 'bookings as confirmed_bookings_count' => function ($query) {
                     $query->where('status', 'confirmed');
                 },
@@ -155,7 +165,6 @@ class BookingController extends Controller
                     $query->where('status', 'pending');
                 },
             ])
-            ->select('id', 'title', 'start_date', 'max_participants', 'bookings_count')
             ->orderByDesc('confirmed_bookings_count')
             ->limit(5)
             ->get();
@@ -168,6 +177,7 @@ class BookingController extends Controller
             'insightMetrics',
             'recentBookings',
             'followUpBookings',
+            'pendingApprovalBookings',
             'upcomingWorkshops',
             'topWorkshops'
         ));
