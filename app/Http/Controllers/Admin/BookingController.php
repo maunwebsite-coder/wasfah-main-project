@@ -5,33 +5,190 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WorkshopBooking;
 use App\Models\Workshop;
-use App\Models\User;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+
     public function index(Request $request)
+    {
+        $query = $this->filteredBookingsQuery($request);
+        $query = $this->applySorting($query, $request);
+
+        $bookings = $query->paginate(20);
+
+        $stats = cache()->remember('booking_stats', 300, function () {
+            return [
+                'total' => WorkshopBooking::count(),
+                'pending' => WorkshopBooking::where('status', 'pending')->count(),
+                'confirmed' => WorkshopBooking::where('status', 'confirmed')->count(),
+                'cancelled' => WorkshopBooking::where('status', 'cancelled')->count(),
+                'paid' => WorkshopBooking::where('payment_status', 'paid')->count(),
+                'unpaid' => WorkshopBooking::where('payment_status', 'pending')->count(),
+            ];
+        });
+
+        $workshops = Workshop::select('id', 'title')
+            ->orderBy('title')
+            ->get();
+
+        $paymentMethods = WorkshopBooking::select('payment_method')
+            ->whereNotNull('payment_method')
+            ->distinct()
+            ->pluck('payment_method')
+            ->filter()
+            ->values();
+
+        $now = Carbon::now();
+        $startOfWeek = $now->copy()->startOfWeek();
+        $endOfWeek = $now->copy()->endOfWeek();
+        $previousWeekStart = $startOfWeek->copy()->subWeek();
+        $previousWeekEnd = $endOfWeek->copy()->subWeek();
+
+        $todayBookings = WorkshopBooking::whereDate('created_at', $now->toDateString())->count();
+
+        $thisWeekBookings = WorkshopBooking::whereBetween('created_at', [
+            $startOfWeek,
+            $endOfWeek,
+        ])->count();
+
+        $previousWeekBookings = WorkshopBooking::whereBetween('created_at', [
+            $previousWeekStart,
+            $previousWeekEnd,
+        ])->count();
+
+        $weekDelta = $previousWeekBookings > 0
+            ? round((($thisWeekBookings - $previousWeekBookings) / max($previousWeekBookings, 1)) * 100, 1)
+            : null;
+
+        $pendingFollowUpCount = WorkshopBooking::where('status', 'pending')
+            ->where('created_at', '<=', $now->copy()->subHours(48))
+            ->count();
+
+        $unpaidConfirmedCount = WorkshopBooking::where('status', 'confirmed')
+            ->where('payment_status', '!=', 'paid')
+            ->count();
+
+        $insightMetrics = [
+            [
+                'label' => 'حجوزات اليوم',
+                'icon' => 'fa-sun',
+                'value' => $todayBookings,
+                'description' => 'طلبات جديدة خلال آخر 24 ساعة',
+                'badge' => $now->format('d M'),
+                'badge_class' => 'bg-blue-100 text-blue-700',
+            ],
+            [
+                'label' => 'حجوزات هذا الأسبوع',
+                'icon' => 'fa-calendar-week',
+                'value' => $thisWeekBookings,
+                'description' => 'مقارنة بالأسبوع الماضي',
+                'badge' => $weekDelta === null
+                    ? 'جديد'
+                    : ($weekDelta >= 0 ? '+' . $weekDelta . '%' : $weekDelta . '%'),
+                'badge_class' => $weekDelta === null
+                    ? 'bg-blue-100 text-blue-700'
+                    : ($weekDelta >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'),
+            ],
+            [
+                'label' => 'حجوزات تنتظر المتابعة',
+                'icon' => 'fa-bell',
+                'value' => $pendingFollowUpCount,
+                'description' => 'طلبات أقدم من 48 ساعة ما زالت قيد المراجعة',
+                'badge' => $pendingFollowUpCount > 0 ? 'بحاجة لإجراء' : 'مكتمل',
+                'badge_class' => $pendingFollowUpCount > 0
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-emerald-100 text-emerald-700',
+            ],
+            [
+                'label' => 'مدفوعات تحتاج تحصيل',
+                'icon' => 'fa-credit-card',
+                'value' => $unpaidConfirmedCount,
+                'description' => 'حجوزات مؤكدة ما زالت غير مدفوعة بالكامل',
+                'badge' => $unpaidConfirmedCount > 0 ? 'متابعة مالية' : 'لا يوجد متأخرات',
+                'badge_class' => $unpaidConfirmedCount > 0
+                    ? 'bg-rose-100 text-rose-700'
+                    : 'bg-emerald-100 text-emerald-700',
+            ],
+        ];
+
+        $recentBookings = WorkshopBooking::with([
+                'user:id,name,email',
+                'workshop:id,title,start_date',
+            ])
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get();
+
+        $followUpBookings = WorkshopBooking::with([
+                'user:id,name,email',
+                'workshop:id,title,start_date',
+            ])
+            ->where('status', 'pending')
+            ->where('created_at', '<=', $now->copy()->subHours(48))
+            ->orderBy('created_at')
+            ->limit(5)
+            ->get();
+
+        $upcomingWorkshops = Workshop::withCount([
+                'bookings as confirmed_bookings_count' => function ($query) {
+                    $query->where('status', 'confirmed');
+                },
+                'bookings as pending_bookings_count' => function ($query) {
+                    $query->where('status', 'pending');
+                },
+            ])
+            ->whereNotNull('start_date')
+            ->where('start_date', '>=', $now->copy()->subDay())
+            ->orderBy('start_date')
+            ->limit(3)
+            ->get();
+
+        $topWorkshops = Workshop::withCount([
+                'bookings as confirmed_bookings_count' => function ($query) {
+                    $query->where('status', 'confirmed');
+                },
+                'bookings as pending_bookings_count' => function ($query) {
+                    $query->where('status', 'pending');
+                },
+            ])
+            ->select('id', 'title', 'start_date', 'max_participants', 'bookings_count')
+            ->orderByDesc('confirmed_bookings_count')
+            ->limit(5)
+            ->get();
+
+        return view('admin.bookings.index', compact(
+            'bookings',
+            'stats',
+            'workshops',
+            'paymentMethods',
+            'insightMetrics',
+            'recentBookings',
+            'followUpBookings',
+            'upcomingWorkshops',
+            'topWorkshops'
+        ));
+    }
+
+    protected function filteredBookingsQuery(Request $request): Builder
     {
         $query = WorkshopBooking::with(['workshop', 'user']);
 
-        // فلترة حسب الحالة
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // فلترة حسب حالة الدفع
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
         }
 
-        // فلترة حسب الورشة
         if ($request->filled('workshop_id')) {
             $query->where('workshop_id', $request->workshop_id);
         }
 
-        // فلترة حسب التاريخ - تحسين معالجة التواريخ
         if ($request->filled('date_from')) {
             try {
                 $dateFrom = Carbon::parse($request->date_from)->startOfDay();
@@ -50,9 +207,8 @@ class BookingController extends Controller
             }
         }
 
-        // فلترة حسب نوع الورشة (أونلاين/أوفلاين)
         if ($request->filled('workshop_type')) {
-            $query->whereHas('workshop', function($q) use ($request) {
+            $query->whereHas('workshop', function ($q) use ($request) {
                 if ($request->workshop_type === 'online') {
                     $q->where('is_online', true);
                 } elseif ($request->workshop_type === 'offline') {
@@ -61,9 +217,8 @@ class BookingController extends Controller
             });
         }
 
-        // فلترة حسب نطاق السعر
         if ($request->filled('price_range')) {
-            $query->whereHas('workshop', function($q) use ($request) {
+            $query->whereHas('workshop', function ($q) use ($request) {
                 switch ($request->price_range) {
                     case '0-50':
                         $q->where('price', '<=', 50);
@@ -84,11 +239,10 @@ class BookingController extends Controller
             });
         }
 
-        // فلترة حسب تاريخ الورشة
         if ($request->filled('workshop_date_from')) {
             try {
                 $workshopDateFrom = Carbon::parse($request->workshop_date_from)->startOfDay();
-                $query->whereHas('workshop', function($q) use ($workshopDateFrom) {
+                $query->whereHas('workshop', function ($q) use ($workshopDateFrom) {
                     $q->where('start_date', '>=', $workshopDateFrom);
                 });
             } catch (\Exception $e) {
@@ -99,7 +253,7 @@ class BookingController extends Controller
         if ($request->filled('workshop_date_to')) {
             try {
                 $workshopDateTo = Carbon::parse($request->workshop_date_to)->endOfDay();
-                $query->whereHas('workshop', function($q) use ($workshopDateTo) {
+                $query->whereHas('workshop', function ($q) use ($workshopDateTo) {
                     $q->where('start_date', '<=', $workshopDateTo);
                 });
             } catch (\Exception $e) {
@@ -107,90 +261,161 @@ class BookingController extends Controller
             }
         }
 
-        // فلترة حسب طريقة الدفع
         if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);
         }
 
-        // فلترة حسب عدد الحجوزات
         if ($request->filled('booking_count')) {
             if ($request->booking_count === 'single') {
-                $query->whereHas('user', function($q) {
+                $query->whereHas('user', function ($q) {
                     $q->has('workshopBookings', '=', 1);
                 });
             } elseif ($request->booking_count === 'multiple') {
-                $query->whereHas('user', function($q) {
+                $query->whereHas('user', function ($q) {
                     $q->has('workshopBookings', '>', 1);
                 });
             }
         }
 
-        // البحث المحسن
         if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function($q) use ($search) {
-                $q->whereHas('user', function($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', "%{$search}%")
-                              ->orWhere('email', 'like', "%{$search}%");
-                })->orWhereHas('workshop', function($workshopQuery) use ($search) {
-                    $workshopQuery->where('title', 'like', "%{$search}%")
-                                 ->orWhere('instructor', 'like', "%{$search}%");
-                });
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('user', function ($userQuery) use ($searchTerm) {
+                    $userQuery->where('name', 'like', "%{$searchTerm}%")
+                        ->orWhere('email', 'like', "%{$searchTerm}%");
+                })->orWhereHas('workshop', function ($workshopQuery) use ($searchTerm) {
+                    $workshopQuery->where('title', 'like', "%{$searchTerm}%")
+                        ->orWhere('instructor', 'like', "%{$searchTerm}%");
+                })->orWhere('payment_method', 'like', "%{$searchTerm}%");
             });
         }
 
-        // الترتيب
+        return $query;
+    }
+
+    protected function applySorting(Builder $query, Request $request): Builder
+    {
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
-        
+
         switch ($sortBy) {
             case 'payment_amount':
                 $query->orderBy('payment_amount', $sortDirection);
                 break;
             case 'workshop_start_date':
                 $query->join('workshops', 'workshop_bookings.workshop_id', '=', 'workshops.id')
-                      ->orderBy('workshops.start_date', $sortDirection)
-                      ->select('workshop_bookings.*');
+                    ->orderBy('workshops.start_date', $sortDirection)
+                    ->select('workshop_bookings.*');
                 break;
             default:
                 $query->orderBy('created_at', $sortDirection);
                 break;
         }
 
-        $bookings = $query->paginate(20);
+        return $query;
+    }
 
-        // إحصائيات سريعة - تحسين الأداء مع cache
-        $stats = cache()->remember('booking_stats', 300, function () {
-            return [
-                'total' => WorkshopBooking::count(),
-                'pending' => WorkshopBooking::where('status', 'pending')->count(),
-                'confirmed' => WorkshopBooking::where('status', 'confirmed')->count(),
-                'cancelled' => WorkshopBooking::where('status', 'cancelled')->count(),
-                'paid' => WorkshopBooking::where('payment_status', 'paid')->count(),
-                'unpaid' => WorkshopBooking::where('payment_status', 'pending')->count(),
-            ];
-        });
 
-        // قائمة الورشات للفلترة - ترتيب أبجدي
-        $workshops = Workshop::select('id', 'title')
-                            ->orderBy('title')
-                            ->get();
 
-        // طرق الدفع المتاحة
-        $paymentMethods = WorkshopBooking::select('payment_method')
-                                        ->whereNotNull('payment_method')
-                                        ->distinct()
-                                        ->pluck('payment_method')
-                                        ->filter()
-                                        ->values();
 
-        return view('admin.bookings.index', compact('bookings', 'stats', 'workshops', 'paymentMethods'));
+
+
+    public function export(Request $request)
+    {
+        $query = $this->filteredBookingsQuery($request);
+        $query = $this->applySorting($query, $request);
+
+        $bookings = $query->get();
+
+        $statusLabels = [
+            'pending' => 'قيد المراجعة',
+            'confirmed' => 'مؤكدة',
+            'cancelled' => 'ملغية',
+        ];
+
+        $paymentStatusLabels = [
+            'pending' => 'بانتظار الدفع',
+            'paid' => 'مدفوعة',
+            'refunded' => 'مستردة',
+        ];
+
+        $filename = 'bookings-' . Carbon::now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($bookings, $statusLabels, $paymentStatusLabels) {
+            $handle = fopen('php://output', 'w');
+            if ($handle === false) {
+                return;
+            }
+
+            fwrite($handle, "ï»¿");
+
+            fputcsv($handle, [
+                'معرّف الحجز',
+                'المستخدم',
+                'البريد الإلكتروني',
+                'الورشة',
+                'تاريخ الورشة',
+                'الحالة',
+                'حالة الدفع',
+                'المبلغ',
+                'طريقة الدفع',
+                'تاريخ الإنشاء',
+                'ملاحظات الإدارة',
+            ]);
+
+            foreach ($bookings as $booking) {
+                $workshop = $booking->workshop;
+                $workshopDate = $workshop && $workshop->start_date
+                    ? $workshop->start_date->format('Y-m-d H:i')
+                    : '-';
+
+                $cleanNotes = $booking->admin_notes
+                    ? preg_replace('/\s+/', ' ', strip_tags($booking->admin_notes))
+                    : '';
+
+                fputcsv($handle, [
+                    $booking->id,
+                    optional($booking->user)->name ?? '-',
+                    optional($booking->user)->email ?? '-',
+                    $workshop->title ?? '-',
+                    $workshopDate,
+                    $statusLabels[$booking->status] ?? $booking->status,
+                    $paymentStatusLabels[$booking->payment_status] ?? $booking->payment_status,
+                    number_format((float) $booking->payment_amount, 2),
+                    $booking->payment_method ?? '-',
+                    $booking->created_at?->format('Y-m-d H:i'),
+                    $cleanNotes,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function show(WorkshopBooking $booking)
     {
         $booking->load(['workshop', 'user']);
         return view('admin.bookings.show', compact('booking'));
+    }
+
+
+    public function updateAdminNote(WorkshopBooking $booking, Request $request)
+    {
+        $validated = $request->validate([
+            'admin_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $booking->update([
+            'admin_notes' => $validated['admin_note'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حفظ ملاحظة الإدارة بنجاح',
+            'admin_notes' => $booking->admin_notes,
+        ]);
     }
 
     public function confirm(WorkshopBooking $booking)

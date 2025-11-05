@@ -13,7 +13,7 @@
         height: clamp(620px, 78vh, 980px);
         border-radius: 1.5rem;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
+        box-shadow: 0 25px 50px -12px rgba(249, 115, 22, 0.25);
     }
 
     @media (max-width: 640px) {
@@ -32,10 +32,11 @@
         justify-content: center;
         gap: 1rem;
         padding: 2.5rem 1.5rem;
-        background: #0f172a;
+        background: linear-gradient(135deg, rgba(255, 247, 237, 0.94), rgba(254, 215, 170, 0.94));
         z-index: 40;
         text-align: center;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(14px);
+        color: #7c2d12;
     }
 
     .session-lock-overlay .lock-icon {
@@ -45,10 +46,10 @@
         width: 4.5rem;
         height: 4.5rem;
         border-radius: 9999px;
-        background: rgba(16, 185, 129, 0.1);
-        color: #34d399;
+        background: rgba(234, 88, 12, 0.12);
+        color: #ea580c;
         font-size: 1.75rem;
-        box-shadow: 0 20px 45px -15px rgba(16, 185, 129, 0.45);
+        box-shadow: 0 20px 45px -15px rgba(234, 88, 12, 0.45);
     }
 
     .session-lock-overlay h2 {
@@ -59,22 +60,22 @@
     .session-lock-overlay p {
         font-size: 0.95rem;
         line-height: 1.6;
-        color: rgba(226, 232, 240, 0.9);
+        color: rgba(120, 53, 15, 0.85);
         max-width: 28rem;
     }
 
     .session-lock-overlay .lock-since {
         font-size: 0.75rem;
-        color: rgba(148, 163, 184, 0.8);
+        color: rgba(124, 45, 18, 0.7);
     }
 </style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-10 text-white">
+<div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 py-10 text-slate-800">
     <div class="mx-auto max-w-7xl px-4">
         @if (session('success') || session('error'))
-            <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-emerald-300 bg-emerald-500/10 text-emerald-100' : 'border-rose-300 bg-rose-500/10 text-rose-100' }} px-6 py-4 text-sm shadow-lg">
+            <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-orange-200 bg-orange-500/10 text-orange-700' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-6 py-4 text-sm shadow-lg">
                 {{ session('success') ?? session('error') }}
             </div>
         @endif
@@ -82,68 +83,68 @@
         <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.9fr)]">
             <div class="space-y-4">
                 <div>
-                    <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">جلسة مباشرة</p>
+                    <p class="text-sm uppercase tracking-[0.3em] text-orange-500">جلسة مباشرة</p>
                     <h1 class="mt-2 text-3xl font-bold sm:text-4xl">{{ $workshop->title }}</h1>
                 </div>
-                <p class="text-sm leading-relaxed text-slate-300">
+                <p class="text-sm leading-relaxed text-slate-600">
                     تأكد من اتصالك بالإنترنت، ثم اسمح للمتصفح بالوصول إلى الميكروفون والكاميرا عند فتح الغرفة. ستظهر لك عناصر التحكم داخل البث عند الضغط على زر الانضمام.
                 </p>
-                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-300">
+                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600">
                     @if ($hostName)
-                        <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                            <i class="fas fa-chalkboard-teacher text-emerald-300"></i>
+                        <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <i class="fas fa-chalkboard-teacher text-orange-500"></i>
                             مع المضيف: {{ $hostName }}
                         </span>
                     @endif
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                        <i class="fas fa-clock text-emerald-300"></i>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
+                        <i class="fas fa-clock text-orange-500"></i>
                         المدة: {{ $workshop->duration }} دقيقة تقريباً
                     </span>
                     @if ($workshop->confirmed_bookings_count)
-                        <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                            <i class="fas fa-users text-emerald-300"></i>
+                        <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
+                            <i class="fas fa-users text-orange-500"></i>
                             {{ number_format($workshop->confirmed_bookings_count) }} مشارك مؤكد
                         </span>
                     @endif
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                        <i class="fas fa-shield-alt text-emerald-300"></i>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
+                        <i class="fas fa-shield-alt text-orange-500"></i>
                         دخول آمن عبر وصفة
                     </span>
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-indigo-400/40 bg-indigo-900/40 p-5 shadow-xl" id="countdownCard" @if ($startsAtIso) data-starts-at="{{ $startsAtIso }}" @endif>
+            <div class="rounded-3xl border border-orange-200 bg-white p-5 shadow-xl" id="countdownCard" @if ($startsAtIso) data-starts-at="{{ $startsAtIso }}" @endif>
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.4em] text-indigo-200">موعد الورشة</p>
-                        <p class="mt-2 text-lg font-semibold text-white">
+                        <p class="text-xs uppercase tracking-[0.4em] text-orange-500">موعد الورشة</p>
+                        <p class="mt-2 text-lg font-semibold text-slate-900">
                             {{ optional($workshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a') ?: 'سيتم تحديده من قبل الشيف' }}
                         </p>
                     </div>
-                    <span id="countdownBadge" class="inline-flex items-center rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors">
+                    <span id="countdownBadge" class="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 transition-colors">
                         {{ $startsAtIso ? 'جاهزون تقريباً' : 'موعد مرن' }}
                     </span>
                 </div>
-                <p id="countdownLabel" class="mt-4 text-sm leading-relaxed text-slate-200">
+                <p id="countdownLabel" class="mt-4 text-sm leading-relaxed text-slate-600">
                     {{ $startsAtIso ? 'يتم تحديث الوقت المتبقي تلقائياً.' : 'سيقوم الشيف بفتح الغرفة عندما يحين الوقت، ترقّب إشعار الانضمام.' }}
                 </p>
                 @if ($workshop->meeting_started_at)
-                    <p class="mt-4 flex items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-100">
-                        <i class="fas fa-broadcast-tower"></i>
+                    <p class="mt-4 flex items-center gap-2 rounded-2xl border border-orange-200/70 bg-orange-50 px-4 py-3 text-xs text-orange-700">
+                        <i class="fas fa-broadcast-tower text-orange-500"></i>
                         تم فتح الغرفة قبل {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}. انقر زر الانضمام داخل البث للمشاركة مباشرة.
                     </p>
-        @endif
+                @endif
             </div>
         </div>
 
         @if ($workshop->meeting_started_at)
-            <div class="mb-6 rounded-3xl border border-emerald-300/40 bg-emerald-500/10 px-6 py-4 text-sm text-emerald-100 shadow-xl">
+            <div class="mb-6 rounded-3xl border border-orange-200 bg-orange-500/10 px-6 py-4 text-sm text-orange-700 shadow-xl">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <span class="flex items-center gap-2 text-emerald-200">
-                        <i class="fas fa-check-circle"></i>
+                    <span class="flex items-center gap-2 text-orange-600">
+                        <i class="fas fa-check-circle text-orange-500"></i>
                         الغرفة مفتوحة الآن – يمكنك الانضمام متى ما شئت.
                     </span>
-                    <span class="text-xs text-emerald-200/80">
+                    <span class="text-xs text-orange-600/80">
                         إذا انقطع الاتصال، فقط أعد تحديث الصفحة وسيستمر البث تلقائياً.
                     </span>
                 </div>
@@ -161,9 +162,9 @@
                 </div>
             </div>
 
-            <div class="mt-6 rounded-3xl border border-slate-700/60 bg-slate-900/40 px-5 py-4 text-xs text-slate-200 shadow">
-                <h3 class="flex items-center gap-2 text-sm font-semibold text-white">
-                    <i class="fas fa-info-circle text-emerald-300"></i>
+            <div class="mt-6 rounded-3xl border border-orange-100 bg-orange-50 px-5 py-4 text-xs text-orange-700 shadow">
+                <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-700">
+                    <i class="fas fa-info-circle text-orange-500"></i>
                     تذكير سريع بالضبط الصوتي
                 </h3>
                 <ul class="mt-3 space-y-2 leading-relaxed">
@@ -174,8 +175,8 @@
             </div>
         @else
             <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-                <div id="waitingCard" class="rounded-3xl border border-indigo-200 bg-white/95 px-6 py-10 text-center text-slate-700 shadow-xl">
-                    <div class="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                <div id="waitingCard" class="rounded-3xl border border-orange-200 bg-white px-6 py-10 text-center text-slate-700 shadow-xl">
+                    <div class="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-500">
                         <i class="fas fa-door-closed text-2xl"></i>
                     </div>
                     <h2 class="mb-2 text-2xl font-bold text-slate-900">ننتظر دخول الشيف</h2>
@@ -184,7 +185,7 @@
                     </p>
                     <div class="mt-6 flex flex-col items-center gap-4">
                         <div class="flex flex-col items-center gap-2 text-sm">
-                            <span id="waitingCountdownBadge" class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 transition-colors">
+                            <span id="waitingCountdownBadge" class="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 transition-colors">
                                 {{ $startsAtIso ? 'سيبدأ قريباً' : 'بانتظار إشارة الشيف' }}
                             </span>
                             <span id="waitingCountdownLabel" class="text-xs text-slate-500">
@@ -194,21 +195,21 @@
                         <button
                             type="button"
                             id="manualRefreshButton"
-                            class="inline-flex items-center gap-2 rounded-full border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                            class="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
                         >
                             <i class="fas fa-sync"></i>
                             تحديث الحالة الآن
                         </button>
-                        <div class="text-xs text-slate-400" id="pollStatusHint">
+                        <div class="text-xs text-slate-500" id="pollStatusHint">
                             يتم التحقق من حالة الغرفة كل بضع ثوانٍ...
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-4 text-xs text-slate-200">
-                    <div class="rounded-3xl border border-slate-700/60 bg-slate-900/40 p-5 shadow">
-                        <h3 class="flex items-center gap-2 text-sm font-semibold text-white">
-                            <i class="fas fa-check-square text-emerald-300"></i>
+                <div class="space-y-4 text-xs text-slate-600">
+                    <div class="rounded-3xl border border-orange-100 bg-white p-5 shadow">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-600">
+                            <i class="fas fa-check-square text-orange-500"></i>
                             تأكد من جهوزيتك الآن
                         </h3>
                         <ul class="mt-3 space-y-2 leading-relaxed">
@@ -217,9 +218,9 @@
                             <li>• افتح الإضاءة أمامك إذا كنت ستشارك الكاميرا لتظهر بوضوح.</li>
                         </ul>
                     </div>
-                    <div class="rounded-3xl border border-slate-700/60 bg-slate-900/40 p-5 shadow">
-                        <h3 class="flex items-center gap-2 text-sm font-semibold text-white">
-                            <i class="fas fa-life-ring text-emerald-300"></i>
+                    <div class="rounded-3xl border border-orange-100 bg-white p-5 shadow">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-600">
+                            <i class="fas fa-life-ring text-orange-500"></i>
                             في حال تأخر فتح الغرفة
                         </h3>
                         <ul class="mt-3 space-y-2 leading-relaxed">
@@ -232,20 +233,20 @@
             </div>
         @endif
 
-        <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
+        <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-600">
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-600">
                         <i class="fas fa-user"></i>
                     </span>
                     <div>
-                        <p class="text-xs uppercase tracking-wider text-slate-400">اسمك في الغرفة</p>
-                        <p class="font-semibold text-white" id="participantNameLabel">{{ $participantName }}</p>
+                        <p class="text-xs uppercase tracking-wider text-slate-500">اسمك في الغرفة</p>
+                        <p class="font-semibold text-slate-900" id="participantNameLabel">{{ $participantName }}</p>
                         @if ($shouldPromptForDisplayName)
                             <button
                                 type="button"
                                 id="editDisplayNameBtn"
-                                class="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200 transition hover:border-emerald-300 hover:text-white"
+                                class="mt-1 inline-flex items-center gap-1 rounded-full border border-orange-200 px-3 py-1 text-xs text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
                             >
                                 <i class="fas fa-pen"></i>
                                 تعديل الاسم
@@ -254,15 +255,15 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-700/60 text-slate-200">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-500">
                         <i class="fas fa-bell"></i>
                     </span>
                     <div>
-                        <p class="text-xs uppercase tracking-wider text-slate-400">هل تحتاج تذكيراً؟</p>
+                        <p class="text-xs uppercase tracking-wider text-slate-500">هل تحتاج تذكيراً؟</p>
                         @auth
-                            <p class="text-xs text-slate-400">ستجد رابط الورشة دائماً داخل صفحة حجوزاتك في وصفة.</p>
+                            <p class="text-xs text-slate-500">ستجد رابط الورشة دائماً داخل صفحة حجوزاتك في وصفة.</p>
                         @else
-                            <p class="text-xs text-slate-400">
+                            <p class="text-xs text-slate-500">
                                 احفظ هذا الرابط في ملاحظاتك للانضمام بسرعة عند بدء الورشة.
                             </p>
                         @endauth
@@ -272,13 +273,13 @@
             @auth
                 <a
                     href="{{ route('bookings.show', $booking) }}"
-                    class="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-slate-200 transition hover:border-slate-500 hover:text-white"
+                    class="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
                 >
                     <i class="fas fa-arrow-right"></i>
                     العودة إلى تفاصيل الحجز
                 </a>
             @else
-                <span class="text-xs text-slate-400">
+                <span class="text-xs text-slate-500">
                     احتفظ بهذا الرابط لديك للعودة إلى الغرفة متى ما احتجت.
                 </span>
             @endauth
@@ -310,14 +311,14 @@
                         name="display_name"
                         required
                         maxlength="60"
-                        class="mt-3 w-full rounded-2xl border border-slate-300 bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        class="mt-3 w-full rounded-2xl border border-slate-300 bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200"
                         placeholder="مثال: ضيف وصفة"
                         autocomplete="off"
                     >
                 </div>
                 <button
                     type="submit"
-                    class="w-full rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    class="w-full rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
                 >
                     ابدأ الانضمام
                 </button>
@@ -451,17 +452,17 @@
 
             const setBadgeState = (state) => {
                 badgeElement.classList.remove(
-                    'bg-emerald-500/20', 'text-emerald-200',
-                    'bg-amber-500/20', 'text-amber-200',
-                    'bg-rose-500/20', 'text-rose-100'
+                    'bg-orange-100', 'text-orange-700',
+                    'bg-amber-100', 'text-amber-700',
+                    'bg-rose-100', 'text-rose-600'
                 );
 
                 if (state === 'upcoming') {
-                    badgeElement.classList.add('bg-emerald-500/20', 'text-emerald-200');
+                    badgeElement.classList.add('bg-orange-100', 'text-orange-700');
                 } else if (state === 'soon') {
-                    badgeElement.classList.add('bg-amber-500/20', 'text-amber-200');
+                    badgeElement.classList.add('bg-amber-100', 'text-amber-700');
                 } else {
-                    badgeElement.classList.add('bg-rose-500/20', 'text-rose-100');
+                    badgeElement.classList.add('bg-rose-100', 'text-rose-600');
                 }
             };
 

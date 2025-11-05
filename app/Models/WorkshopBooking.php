@@ -62,6 +62,7 @@ class WorkshopBooking extends Model
         'confirmed_at',
         'cancelled_at',
         'cancellation_reason',
+        'admin_notes',
         'public_code',
     ];
 

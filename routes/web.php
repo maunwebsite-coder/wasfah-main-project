@@ -292,10 +292,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // إدارة الحجوزات
     Route::get('bookings', [App\Http\Controllers\Admin\BookingController::class, 'index'])->name('bookings.index');
+    Route::get('bookings/export', [App\Http\Controllers\Admin\BookingController::class, 'export'])->name('bookings.export');
     Route::get('bookings/{booking}', [App\Http\Controllers\Admin\BookingController::class, 'show'])->name('bookings.show');
     Route::post('bookings/{booking}/confirm', [App\Http\Controllers\Admin\BookingController::class, 'confirm'])->name('bookings.confirm');
     Route::post('bookings/{booking}/cancel', [App\Http\Controllers\Admin\BookingController::class, 'cancel'])->name('bookings.cancel');
     Route::post('bookings/{booking}/update-payment', [App\Http\Controllers\Admin\BookingController::class, 'updatePayment'])->name('bookings.update-payment');
+    Route::post('bookings/{booking}/admin-note', [App\Http\Controllers\Admin\BookingController::class, 'updateAdminNote'])->name('bookings.admin-note');
     
     // إضافة الحجوزات يدوياً
     Route::get('bookings/manual/add', [App\Http\Controllers\Admin\ManualBookingController::class, 'index'])->name('bookings.manual');
