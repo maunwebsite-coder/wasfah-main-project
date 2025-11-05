@@ -127,6 +127,36 @@
         'workshop_date_from',
         'workshop_date_to',
     ]);
+
+    $statusMeta = [
+        'pending' => [
+            'label' => 'قيد المراجعة',
+            'class' => 'bg-amber-100 text-amber-700',
+        ],
+        'confirmed' => [
+            'label' => 'مؤكدة',
+            'class' => 'bg-emerald-100 text-emerald-700',
+        ],
+        'cancelled' => [
+            'label' => 'ملغية',
+            'class' => 'bg-rose-100 text-rose-700',
+        ],
+    ];
+
+    $paymentMeta = [
+        'pending' => [
+            'label' => 'بانتظار الدفع',
+            'class' => 'bg-amber-100 text-amber-700',
+        ],
+        'paid' => [
+            'label' => 'مدفوعة',
+            'class' => 'bg-emerald-100 text-emerald-700',
+        ],
+        'refunded' => [
+            'label' => 'مستردة',
+            'class' => 'bg-purple-100 text-purple-700',
+        ],
+    ];
 @endphp
 
 @push('styles')
