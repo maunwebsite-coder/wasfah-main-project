@@ -1,28 +1,21 @@
-<div wire:poll.7s="refreshLock" class="absolute inset-0 pointer-events-none">
+<div wire:poll.5s="refreshLock" class="absolute inset-0 pointer-events-none">
     @if ($meetingLocked)
         <style>
             #jitsi-container iframe {
                 visibility: hidden !important;
             }
         </style>
+        <div class="session-lock-overlay pointer-events-auto" aria-hidden="false">
+            <span class="lock-icon" aria-hidden="true">
+                <i class="fas fa-spinner fa-spin"></i>
+            </span>
+            <span class="sr-only">بانتظار عودة المضيف</span>
+        </div>
     @else
         <style>
             #jitsi-container iframe {
                 visibility: visible !important;
             }
         </style>
-    @endif
-
-    @if ($meetingLocked)
-        <div class="session-lock-overlay pointer-events-auto" aria-hidden="false">
-            <span class="lock-icon">
-                <i class="fas fa-user-clock"></i>
-            </span>
-            <h2 class="text-white">بانتظار عودة المضيف</h2>
-            <p>غادر المضيف الاجتماع للحظات. سيتم فتح الغرفة تلقائياً فور عودته.</p>
-            @if ($lockedAtHuman)
-                <p class="lock-since">آخر حضور للمضيف {{ $lockedAtHuman }}.</p>
-            @endif
-        </div>
     @endif
 </div>

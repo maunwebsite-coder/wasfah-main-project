@@ -4,7 +4,6 @@ namespace App\Livewire\Bookings;
 
 use App\Models\Workshop;
 use App\Models\WorkshopBooking;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -25,8 +24,6 @@ class MeetingLockOverlay extends Component
 
     public ?string $lockedAtIso = null;
 
-    public ?string $lockedAtHuman = null;
-
     public function mount(string $bookingCode, int $workshopId, ?string $initialStartedAt = null, ?string $initialLockedAt = null, bool $initialLocked = false): void
     {
         $booking = WorkshopBooking::query()
@@ -45,7 +42,6 @@ class MeetingLockOverlay extends Component
         $this->lockedAtIso = $initialLockedAt;
         $this->meetingStarted = $initialStartedAt !== null;
         $this->meetingLocked = $initialLocked;
-        $this->lockedAtHuman = $this->formatLockedAtHuman($this->lockedAtIso);
     }
 
     public function refreshLock(): void
@@ -62,21 +58,10 @@ class MeetingLockOverlay extends Component
         $this->lockedAtIso = optional($workshop->meeting_locked_at)->toIso8601String();
         $this->meetingStarted = $this->startedAtIso !== null;
         $this->meetingLocked = $this->lockedAtIso !== null;
-        $this->lockedAtHuman = $this->formatLockedAtHuman($this->lockedAtIso);
     }
 
     public function render()
     {
         return view('livewire.bookings.meeting-lock-overlay');
     }
-
-    protected function formatLockedAtHuman(?string $isoTimestamp): ?string
-    {
-        if (!$isoTimestamp) {
-            return null;
-        }
-
-        return Carbon::parse($isoTimestamp)->locale('ar')->diffForHumans();
-    }
 }
-
