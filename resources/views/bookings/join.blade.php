@@ -32,10 +32,10 @@
         justify-content: center;
         gap: 1rem;
         padding: 2.5rem 1.5rem;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(12, 17, 28, 0.96));
+        background: #0f172a;
         z-index: 40;
         text-align: center;
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(10px);
     }
 
     .session-lock-overlay .lock-icon {

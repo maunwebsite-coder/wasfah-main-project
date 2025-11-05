@@ -1,5 +1,19 @@
 <div wire:poll.7s="refreshLock" class="absolute inset-0 pointer-events-none">
     @if ($meetingLocked)
+        <style>
+            #jitsi-container iframe {
+                visibility: hidden !important;
+            }
+        </style>
+    @else
+        <style>
+            #jitsi-container iframe {
+                visibility: visible !important;
+            }
+        </style>
+    @endif
+
+    @if ($meetingLocked)
         <div class="session-lock-overlay pointer-events-auto" aria-hidden="false">
             <span class="lock-icon">
                 <i class="fas fa-user-clock"></i>
