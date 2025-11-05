@@ -38,10 +38,6 @@
         backdrop-filter: blur(8px);
     }
 
-    .session-lock-overlay.hidden {
-        display: none;
-    }
-
     .session-lock-overlay .lock-icon {
         display: inline-flex;
         align-items: center;
@@ -159,6 +155,7 @@
                         id="meetingLockOverlay"
                         class="session-lock-overlay {{ $isMeetingLocked ? '' : 'hidden' }}"
                         aria-hidden="{{ $isMeetingLocked ? 'false' : 'true' }}"
+                        style="{{ $isMeetingLocked ? '' : 'display:none;' }}"
                     >
                         <span class="lock-icon">
                             <i class="fas fa-user-clock"></i>
@@ -595,10 +592,12 @@
             if (locked) {
                 meetingLockOverlay.classList.remove('hidden');
                 meetingLockOverlay.setAttribute('aria-hidden', 'false');
+                meetingLockOverlay.style.display = 'flex';
                 updateLockSince(lockedAtIso);
             } else {
                 meetingLockOverlay.classList.add('hidden');
                 meetingLockOverlay.setAttribute('aria-hidden', 'true');
+                meetingLockOverlay.style.display = 'none';
                 updateLockSince(null);
             }
         };
