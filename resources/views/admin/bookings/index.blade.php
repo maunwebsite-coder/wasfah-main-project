@@ -84,21 +84,6 @@
         'workshop_date_to',
     ]);
 
-    $statusMeta = [
-        'pending' => [
-            'label' => 'قيد المراجعة',
-            'class' => 'bg-amber-100 text-amber-700',
-        ],
-        'confirmed' => [
-            'label' => 'مؤكدة',
-            'class' => 'bg-emerald-100 text-emerald-700',
-        ],
-        'cancelled' => [
-            'label' => 'ملغية',
-            'class' => 'bg-rose-100 text-rose-700',
-        ],
-    ];
-
     $paymentMeta = [
         'pending' => [
             'label' => 'بانتظار الدفع',
@@ -305,36 +290,41 @@
 <div class="min-h-screen bg-gray-50 py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
-        <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div class="mb-8 space-y-4">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">
-                        <i class="fas fa-calendar-check text-blue-600 ml-2"></i>
+                    <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                        <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                            <i class="fas fa-calendar-check"></i>
+                        </span>
                         إدارة الحجوزات
                     </h1>
-                    <p class="mt-2 text-sm text-gray-600">عرض وإدارة جميع حجوزات الورشات</p>
+                    <p class="mt-2 text-sm text-gray-600">
+                        متابعة سريعة للحجوزات، المدفوعات، والإجراءات اليومية.
+                    </p>
                 </div>
-                <div class="mt-4 sm:mt-0 flex items-center space-x-4 space-x-reverse">
-                    <div class="text-sm text-gray-500">
-                        آخر تحديث: {{ now()->format('Y-m-d H:i') }}
-                    </div>
-                    <button onclick="refreshBookings()" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <i class="fas fa-sync-alt ml-2"></i>
-                        تحديث
-                    </button>
-                    <a href="{{ route('admin.bookings.export', request()->query()) }}" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <i class="fas fa-file-download ml-2"></i>
-                        تصدير CSV
-                    </a>
-                    <a href="{{ route('admin.bookings.manual') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 dashboard-btn">
-                        <i class="fas fa-plus ml-2"></i>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 justify-end">
+                    <a href="{{ route('admin.bookings.manual') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white text-sm font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500">
+                        <i class="fas fa-plus"></i>
                         إضافة حجز يدوي
                     </a>
-                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dashboard-btn">
-                        <i class="fas fa-arrow-right ml-2"></i>
+                    <a href="{{ route('admin.bookings.export', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-blue-200 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
+                        <i class="fas fa-file-export"></i>
+                        تصدير النتائج
+                    </a>
+                    <button type="button" onclick="refreshBookings()" class="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300">
+                        <i class="fas fa-sync-alt"></i>
+                        تحديث
+                    </button>
+                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-arrow-right"></i>
                         العودة للوحة التحكم
                     </a>
                 </div>
+            </div>
+            <div class="flex items-center text-sm text-gray-500 gap-2">
+                <i class="fas fa-clock text-gray-400"></i>
+                <span>آخر تحديث: {{ now()->format('Y-m-d H:i') }}</span>
             </div>
         </div>
 
@@ -550,7 +540,7 @@
                                 <i class="fas fa-phone ml-1"></i>
                                 {{ optional($pending->user)->phone ?? 'لا يوجد رقم' }}
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <a href="{{ route('admin.bookings.show', $pending) }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-white text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors">
                                     <i class="fas fa-eye ml-1"></i>
                                     مراجعة
@@ -558,6 +548,10 @@
                                 <button type="button" onclick="confirmBooking({{ $pending->id }})" class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors">
                                     <i class="fas fa-check ml-1"></i>
                                     تأكيد
+                                </button>
+                                <button type="button" onclick="cancelBooking({{ $pending->id }})" class="inline-flex items-center justify-center px-3 py-2 rounded-md border border-red-200 bg-white text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-times ml-1"></i>
+                                    إلغاء
                                 </button>
                             </div>
                         </div>
@@ -714,31 +708,57 @@
                     </div>
                 </div>
 
-                <div class="border-t border-gray-200 pt-4">
-                    <div class="flex flex-col lg:flex-row gap-4">
-                        <div class="flex-1">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث بالاسم أو البريد الإلكتروني أو عنوان الورشة..." class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <div class="border-t border-gray-200 pt-6">
+                    <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
+                        <div class="w-full xl:max-w-md">
+                            <label for="bookingSearchInput" class="block text-sm font-medium text-gray-700 mb-2">
+                                البحث السريع
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input
+                                    id="bookingSearchInput"
+                                    type="text"
+                                    name="search"
+                                    value="{{ request('search') }}"
+                                    placeholder="اسم المستخدم، البريد الإلكتروني، أو عنوان الورشة"
+                                    class="w-full pr-4 pl-10 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                >
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">
+                                تظهر النتائج بمجرد الكتابة، أو اضغط إدخال للتأكيد.
+                            </p>
                         </div>
-                        <div class="flex gap-2">
-                            <select name="sort_by" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>تاريخ الحجز</option>
-                                <option value="payment_amount" {{ request('sort_by') == 'payment_amount' ? 'selected' : '' }}>المبلغ</option>
-                                <option value="workshop_start_date" {{ request('sort_by') == 'workshop_start_date' ? 'selected' : '' }}>تاريخ الورشة</option>
-                            </select>
-                            <select name="sort_direction" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                <option value="desc" {{ request('sort_direction') == 'desc' ? 'selected' : '' }}>تنازلي</option>
-                                <option value="asc" {{ request('sort_direction') == 'asc' ? 'selected' : '' }}>تصاعدي</option>
-                            </select>
-                        </div>
-                        <div class="flex gap-2">
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <i class="fas fa-search ml-2"></i>
-                                بحث
-                            </button>
-                            <button type="button" id="clearFiltersButton" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                                <i class="fas fa-broom ml-2"></i>
-                                مسح الحقول
-                            </button>
+                        <div class="flex flex-col sm:flex-row gap-4 xl:gap-6">
+                            <div class="flex gap-2">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-2">ترتيب حسب</label>
+                                    <select name="sort_by" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>تاريخ الحجز</option>
+                                        <option value="payment_amount" {{ request('sort_by') == 'payment_amount' ? 'selected' : '' }}>المبلغ</option>
+                                        <option value="workshop_start_date" {{ request('sort_by') == 'workshop_start_date' ? 'selected' : '' }}>تاريخ الورشة</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-2">اتجاه الترتيب</label>
+                                    <select name="sort_direction" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="desc" {{ request('sort_direction') == 'desc' ? 'selected' : '' }}>تنازلي</option>
+                                        <option value="asc" {{ request('sort_direction') == 'asc' ? 'selected' : '' }}>تصاعدي</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 sm:self-end">
+                                <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <i class="fas fa-filter ml-2"></i>
+                                    تطبيق البحث
+                                </button>
+                                <button type="button" id="clearFiltersButton" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    <i class="fas fa-undo ml-2"></i>
+                                    إعادة الضبط
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1022,11 +1042,11 @@
                             <h3 class="text-xl font-semibold text-gray-900 mb-3">لا توجد نتائج</h3>
                             <p class="text-gray-500 mb-6 max-w-md mx-auto">لم يتم العثور على حجوزات تطابق المعايير المحددة. جرب تعديل الفلاتر أو البحث بكلمات مختلفة.</p>
                             <div class="flex justify-center space-x-4 space-x-reverse">
-                                <a href="{{ route('admin.bookings.index') }}" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dashboard-btn">
+                                <a href="{{ route('admin.bookings.index') }}" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                                     <i class="fas fa-times ml-2"></i>
                                     مسح الفلاتر
                                 </a>
-                                <button onclick="document.getElementById('bookingFiltersForm').reset(); document.getElementById('bookingFiltersForm').submit();" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dashboard-btn">
+                                <button onclick="document.getElementById('bookingFiltersForm').reset(); document.getElementById('bookingFiltersForm').submit();" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                     <i class="fas fa-redo ml-2"></i>
                                     إعادة تعيين
                                 </button>
@@ -1037,7 +1057,7 @@
                             </div>
                             <h3 class="text-xl font-semibold text-gray-900 mb-3">لا توجد حجوزات</h3>
                             <p class="text-gray-500 mb-6">لم يتم إنشاء أي حجوزات بعد. ابدأ بإضافة حجز جديد أو انتظر حتى يقوم المستخدمون بالحجز.</p>
-                            <a href="{{ route('admin.bookings.manual') }}" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 dashboard-btn">
+                            <a href="{{ route('admin.bookings.manual') }}" class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
                                 <i class="fas fa-plus ml-2"></i>
                                 إضافة حجز جديد
                             </a>
@@ -1586,7 +1606,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearFiltersButton = document.getElementById('clearFiltersButton');
     const toggleAdvancedFiltersButton = document.getElementById('toggleAdvancedFilters');
     const advancedFiltersSection = document.getElementById('advancedFilters');
-    const advancedFiltersLabel = document.getElementById('advancedFiltersToggleLabel');    const adminNoteModal = document.getElementById('adminNoteModal');
+    const advancedFiltersLabel = document.getElementById('advancedFiltersToggleLabel');
+    const adminNoteModal = document.getElementById('adminNoteModal');
     const adminNoteTextarea = document.getElementById('adminNoteTextarea');
     const adminNoteSaveButton = document.getElementById('adminNoteSaveButton');
     const adminNoteCancelButton = document.getElementById('adminNoteCancel');
@@ -1755,53 +1776,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // إضافة تأثيرات بصرية للتحميل
-    form.addEventListener('submit', function() {
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (!submitButton) {
-            return;
-        }
-
-        const originalContent = submitButton.innerHTML;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري البحث...';
-        submitButton.disabled = true;
-
-        document.body.style.opacity = '0.8';
-        document.body.style.transition = 'opacity 0.3s ease';
-
-        setTimeout(() => {
-            submitButton.innerHTML = originalContent;
-            submitButton.disabled = false;
-            document.body.style.opacity = '1';
-        }, 3000);
-    });
-
-    // إضافة تأثيرات hover للبطاقات
-    const cards = document.querySelectorAll('.dashboard-card, .bg-white');
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.transition = 'transform 0.3s ease';
-        });
-
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-
-    // إضافة تأثيرات للجداول
-    const tableRows = document.querySelectorAll('.activity-item');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-            this.style.transition = 'box-shadow 0.3s ease';
-        });
-
-        row.addEventListener('mouseleave', function() {
-            this.style.boxShadow = 'none';
-        });
-    });
 });
 </script>
 @endsection

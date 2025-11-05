@@ -206,6 +206,7 @@
 <script src="{{ $embedConfig['external_api_url'] }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const confirmationMessage = 'هل تريد الدخول إلى الاجتماع؟ ستكون في الجلسة مباشرة عند الضغط على نعم.';
         const countdownCard = document.getElementById('countdownCard');
         const countdownLabel = document.getElementById('countdownLabel');
         const countdownBadge = document.getElementById('countdownBadge');
@@ -213,6 +214,11 @@
         const presenceUrl = @json(route('chef.workshops.presence', $workshop));
         const csrfToken = @json(csrf_token());
         let lastPresenceState = null;
+
+        if (!window.confirm(confirmationMessage)) {
+            alert('تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.');
+            return;
+        }
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
@@ -386,8 +392,8 @@
                 enableClosePage: false,
                 enableUserRolesBasedOnToken: false,
                 disableDeepLinking: true,
-                startWithAudioMuted: false,
-                startWithVideoMuted: false,
+                startWithAudioMuted: true,
+                startWithVideoMuted: true,
                 disableInviteFunctions: true,
                 disableSelfViewSettings: true,
                 disableReactions: true,
