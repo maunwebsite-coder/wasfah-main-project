@@ -350,8 +350,8 @@
 
         const container = document.getElementById('jitsi-container');
         const mobileToolbar = document.getElementById('mobileMeetingToolbar');
-        const mobileTileToggle = document.getElementById('mobileTileToggle');
-        const mobileTileLabel = document.getElementById('mobileTileToggleLabel');
+        const mobileFullscreenToggle = document.getElementById('mobileFullscreenToggle');
+        const mobileFullscreenLabel = document.getElementById('mobileFullscreenToggleLabel');
 
         if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -419,7 +419,7 @@
         }
 
         const api = new JitsiMeetExternalAPI(domain, options);
-        setupMobileTileControls(api, mobileToolbar, mobileTileToggle, mobileTileLabel);
+        setupMobileFullscreenControl(api, mobileToolbar, mobileFullscreenToggle, mobileFullscreenLabel);
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
@@ -454,13 +454,12 @@
         });
         @endif
 
-        function setupMobileTileControls(api, toolbar, toggleButton, toggleLabel) {
+        function setupMobileFullscreenControl(api, toolbar, toggleButton, toggleLabel) {
             if (!toolbar || !toggleButton) {
                 return;
             }
 
             const mobileQuery = window.matchMedia('(max-width: 768px)');
-            let currentTileState = false;
 
             const updateVisibility = () => {
                 const isMobile = mobileQuery.matches;
@@ -473,37 +472,34 @@
                 }
             };
 
-            const updateTileState = (enabled) => {
-                currentTileState = Boolean(enabled);
-                toggleButton.classList.toggle('is-active', currentTileState);
-                toggleButton.setAttribute('aria-pressed', currentTileState ? 'true' : 'false');
+            const getFullscreenElement = () => (
+                document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement
+            );
+
+            const updateFullscreenState = () => {
+                const isFullscreen = Boolean(getFullscreenElement());
+                toggleButton.classList.toggle('is-active', isFullscreen);
+                toggleButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
                 if (toggleLabel) {
-                    toggleLabel.textContent = currentTileState ? 'عرض المتحدث' : 'عرض المربعات';
+                    toggleLabel.textContent = isFullscreen ? 'إغلاق الشاشة الكاملة' : 'شاشة كاملة';
                 }
             };
 
             toggleButton.addEventListener('click', () => {
-                api.executeCommand('toggleTileView');
+                api.executeCommand('toggleFullScreen');
             });
 
             if (typeof api.addListener === 'function') {
-                api.addListener('tileViewChanged', ({ enabled }) => {
-                    updateTileState(enabled);
-                });
-
-                api.addListener('videoConferenceJoined', () => {
-                    try {
-                        const value = api.isTileViewEnabled?.();
-                        if (value && typeof value.then === 'function') {
-                            value.then(updateTileState).catch(() => updateTileState(currentTileState));
-                        } else if (typeof value === 'boolean') {
-                            updateTileState(value);
-                        }
-                    } catch (error) {
-                        console.warn('تعذر قراءة حالة عرض المربعات:', error);
-                    }
-                });
+                api.addListener('videoConferenceJoined', updateFullscreenState);
+                api.addListener('videoConferenceLeft', updateFullscreenState);
             }
+
+            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(eventName => {
+                document.addEventListener(eventName, updateFullscreenState);
+            });
 
             updateVisibility();
             if (typeof mobileQuery.addEventListener === 'function') {
@@ -511,6 +507,8 @@
             } else if (typeof mobileQuery.addListener === 'function') {
                 mobileQuery.addListener(updateVisibility);
             }
+
+            updateFullscreenState();
         }
 
     });
