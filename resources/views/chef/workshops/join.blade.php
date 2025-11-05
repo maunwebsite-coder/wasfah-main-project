@@ -139,12 +139,12 @@
             <div class="mobile-meeting-toolbar" id="mobileMeetingToolbar" hidden aria-hidden="true">
                 <button
                     type="button"
-                    id="mobileTileToggle"
+                    id="mobileFullscreenToggle"
                     class="mobile-meeting-toolbar__btn"
                     aria-pressed="false"
                 >
-                    <i class="fas fa-th-large" aria-hidden="true"></i>
-                    <span id="mobileTileToggleLabel">عرض المربعات</span>
+                    <i class="fas fa-expand" aria-hidden="true"></i>
+                    <span id="mobileFullscreenToggleLabel">شاشة كاملة</span>
                 </button>
             </div>
         </div>
