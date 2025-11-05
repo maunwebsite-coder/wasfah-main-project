@@ -16,7 +16,8 @@
         height: clamp(640px, 85vh, 1100px);
         border-radius: 1.5rem;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
+        box-shadow: 0 30px 60px -20px rgba(249, 115, 22, 0.28);
+        border: 1px solid rgba(249, 115, 22, 0.18);
         width: 100%;
     }
 
@@ -35,10 +36,10 @@
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-10 text-white">
+<div class="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-white py-10 text-slate-900">
     <div class="mx-auto max-w-7xl px-4 lg:px-6">
         @if (session('success') || session('error'))
-            <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-emerald-300 bg-emerald-500/10 text-emerald-100' : 'border-rose-300 bg-rose-500/10 text-rose-100' }} px-6 py-4 text-sm shadow-lg">
+            <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-green-200 bg-green-50 text-green-800' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-6 py-4 text-sm shadow-lg">
                 {{ session('success') ?? session('error') }}
             </div>
         @endif
@@ -46,77 +47,77 @@
         <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(0,0.95fr)]">
             <div class="space-y-4">
                 <div>
-                    <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">غرفة الشيف</p>
+                    <p class="text-sm uppercase tracking-[0.3em] text-orange-500">غرفة الشيف</p>
                     <h1 class="mt-2 text-3xl font-bold sm:text-4xl">{{ $workshop->title }}</h1>
                 </div>
-                <p class="text-sm leading-relaxed text-slate-300">
+                <p class="text-sm leading-relaxed text-slate-600">
                     هذه الغرفة خاصة بك كمضيف. استخدم لوحة التحكم أدناه لبدء الجلسة ومشاركة رابط الدخول مع المشاركين ومتابعة حالة الانضمام في الوقت الحقيقي.
                 </p>
-                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-300">
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                        <i class="fas fa-video text-emerald-300"></i>
+                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 shadow-sm">
+                        <i class="fas fa-video text-orange-500"></i>
                         {{ $workshop->is_online ? 'جلسة مباشرة عبر الإنترنت' : 'جلسة حضورية' }}
                     </span>
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                        <i class="fas fa-chalkboard-teacher text-emerald-300"></i>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 shadow-sm">
+                        <i class="fas fa-chalkboard-teacher text-orange-500"></i>
                         المضيف: {{ $user->name }}
                     </span>
-                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/60 px-3 py-1">
-                        <i class="fas fa-signal text-emerald-300"></i>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 shadow-sm">
+                        <i class="fas fa-signal text-orange-500"></i>
                         البث عبر {{ $workshop->meeting_provider === 'jitsi' ? 'Jitsi' : 'مزود خارجي' }}
                     </span>
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-indigo-400/40 bg-indigo-900/40 p-5 shadow-xl" id="countdownCard" @if ($startsAtIso) data-starts-at="{{ $startsAtIso }}" @endif>
+            <div class="rounded-3xl border border-orange-200 bg-white p-5 shadow-xl ring-1 ring-orange-100/60" id="countdownCard" @if ($startsAtIso) data-starts-at="{{ $startsAtIso }}" @endif>
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.4em] text-indigo-200">موعد البدء</p>
-                        <p class="mt-2 text-lg font-semibold text-white">
+                        <p class="text-xs uppercase tracking-[0.4em] text-orange-500">موعد البدء</p>
+                        <p class="mt-2 text-lg font-semibold text-slate-900">
                             {{ optional($workshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a') ?: 'لم يتم تحديد موعد ثابت' }}
                         </p>
                     </div>
-                    <span id="countdownBadge" class="inline-flex items-center rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors">
+                    <span id="countdownBadge" class="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-600 transition-colors">
                         {{ $startsAtIso ? 'جاهزون للبدء' : 'موعد مرن' }}
                     </span>
                 </div>
-                <p id="countdownLabel" class="mt-4 text-sm leading-relaxed text-slate-200">
+                <p id="countdownLabel" class="mt-4 text-sm leading-relaxed text-slate-600">
                     {{ $startsAtIso ? 'يتم حساب الوقت المتبقي تلقائياً.' : 'يمكنك فتح الغرفة حالما تكون جاهزاً لبدء الورشة.' }}
                 </p>
-                <p class="mt-6 flex items-center gap-2 rounded-2xl border border-slate-700/60 bg-slate-900/50 px-4 py-3 text-xs text-slate-300">
-                    <i class="fas fa-info-circle text-indigo-200"></i>
+                <p class="mt-6 flex items-center gap-2 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-700">
+                    <i class="fas fa-info-circle text-orange-400"></i>
                     بعد بدء الاجتماع سيتم إخطار المشاركين تلقائياً ويصبح بإمكانهم الدخول من صفحة الحجز الخاصة بهم.
                 </p>
             </div>
         </div>
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
-            <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
+            <div class="jitsi-wrapper bg-slate-950" id="jitsi-container"></div>
         </div>
 
         <div class="mb-8">
-            <div class="rounded-3xl border border-slate-700/60 bg-slate-900/50 p-6 shadow-xl">
+            <div class="rounded-3xl border border-orange-200 bg-white p-6 shadow-xl ring-1 ring-orange-100/60">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.4em] text-slate-400">حالة الغرفة</p>
+                        <p class="text-xs uppercase tracking-[0.4em] text-orange-500">حالة الغرفة</p>
                         @if ($workshop->meeting_started_at)
-                            <h2 class="mt-2 text-xl font-semibold text-white">الغرفة مفتوحة للمشاركين</h2>
-                            <p class="mt-1 text-sm text-slate-300">
+                            <h2 class="mt-2 text-xl font-semibold text-slate-900">الغرفة مفتوحة للمشاركين</h2>
+                            <p class="mt-1 text-sm text-slate-600">
                                 تم تفعيل الاجتماع {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}. يمكنك مراقبة المشتركين من داخل الغرفة أو إيقافها من لوحة التحكم إن لزم.
                             </p>
                         @else
-                            <h2 class="mt-2 text-xl font-semibold text-white">المشاركون بانتظارك للانضمام</h2>
-                            <p class="mt-1 text-sm text-slate-300">
+                            <h2 class="mt-2 text-xl font-semibold text-slate-900">المشاركون بانتظارك للانضمام</h2>
+                            <p class="mt-1 text-sm text-slate-600">
                                 بمجرد تأكيدك أنك المضيف والضغط على زر <strong>بدء الاجتماع الآن</strong> سيُفتح الرابط في صفحات المشاركين فوراً.
                             </p>
                         @endif
                     </div>
-                    <div class="rounded-2xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-slate-200">
-                        <div class="flex items-center gap-2 text-xs text-slate-400">
-                            <i class="fas fa-user-clock text-emerald-300"></i>
+                    <div class="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+                        <div class="flex items-center gap-2 text-xs text-orange-500">
+                            <i class="fas fa-user-clock text-orange-500"></i>
                             آخر تحديث
                         </div>
-                        <p class="mt-1 font-semibold text-white">
+                        <p class="mt-1 font-semibold text-slate-900">
                             {{ now()->locale('ar')->translatedFormat('d F Y • h:i a') }}
                         </p>
                     </div>
@@ -130,27 +131,27 @@
                 >
                     @csrf
                     @if (!$workshop->meeting_started_at)
-                        <label for="confirmHostCheckbox" class="flex items-start gap-3 rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-3 text-xs text-slate-100 shadow">
+                        <label for="confirmHostCheckbox" class="flex items-start gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-800 shadow-sm">
                             <input
                                 type="checkbox"
                                 name="confirm_host"
                                 id="confirmHostCheckbox"
                                 value="1"
                                 required
-                                class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-400 focus:ring-emerald-400"
+                                class="mt-0.5 h-4 w-4 rounded border-orange-300 accent-orange-500 focus:ring-orange-400"
                             >
                             <span>
                                 أؤكد أنني المضيف الرسمي لهذه الورشة وسأتأكد من جاهزية الغرفة والدعم للمشاركين أثناء البث المباشر.
                             </span>
                         </label>
                         @error('confirm_host')
-                            <p class="text-xs text-rose-300">{{ $message }}</p>
+                            <p class="text-xs text-rose-500">{{ $message }}</p>
                         @enderror
                     @endif
 
                     <button
                         type="submit"
-                        class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-6 py-2.5 font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-orange-300 hover:from-amber-600 hover:to-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
                         id="startMeetingButton"
                         data-requires-confirmation="{{ $workshop->meeting_started_at ? 'false' : 'true' }}"
                         @if ($workshop->meeting_started_at)
@@ -170,10 +171,10 @@
         </div>
 
         @if ($recentParticipants->isNotEmpty())
-            <div class="mb-10 rounded-3xl border border-slate-700/60 bg-slate-900/40 p-6 shadow-xl">
+            <div class="mb-10 rounded-3xl border border-orange-200 bg-white p-6 shadow-xl ring-1 ring-orange-100/60">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="text-lg font-semibold text-white">آخر المشاركين الذين أكدوا حضورهم</h3>
-                    <span class="text-xs text-slate-400">يمكنك رؤية القائمة الكاملة من صفحة الحجوزات.</span>
+                    <h3 class="text-lg font-semibold text-slate-900">آخر المشاركين الذين أكدوا حضورهم</h3>
+                    <span class="text-xs text-slate-500">يمكنك رؤية القائمة الكاملة من صفحة الحجوزات.</span>
                 </div>
                 <ul class="mt-4 space-y-3">
                     @foreach ($recentParticipants as $participantBooking)
@@ -183,36 +184,36 @@
                             $timestamp = $participantBooking->confirmed_at ?? $participantBooking->updated_at ?? $participantBooking->created_at;
                             $humanTime = $timestamp ? $timestamp->locale('ar')->diffForHumans() : 'حديثاً';
                         @endphp
-                        <li class="flex items-center justify-between gap-3 rounded-2xl border border-slate-700/60 bg-slate-900/50 px-4 py-3">
+                        <li class="flex items-center justify-between gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-200">
+                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
                                     {{ $initial }}
                                 </span>
                                 <div>
-                                    <p class="text-sm font-semibold text-white">{{ $participantName }}</p>
-                                    <p class="text-xs text-slate-400">{{ $participantBooking->user?->email }}</p>
+                                    <p class="text-sm font-semibold text-slate-900">{{ $participantName }}</p>
+                                    <p class="text-xs text-slate-500">{{ $participantBooking->user?->email }}</p>
                                 </div>
                             </div>
-                            <span class="text-xs text-slate-400">{{ $humanTime }}</span>
+                            <span class="text-xs text-slate-500">{{ $humanTime }}</span>
                         </li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-        <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
+        <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-600">
             <div class="flex items-center gap-3">
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-500">
                     <i class="fas fa-user-tie"></i>
                 </span>
                 <div>
-                    <p class="text-xs uppercase tracking-wider text-slate-400">سيظهر اسمك للمشاركين كالتالي</p>
-                    <p class="font-semibold text-white">{{ $user->name }}</p>
+                    <p class="text-xs uppercase tracking-wider text-orange-500">سيظهر اسمك للمشاركين كالتالي</p>
+                    <p class="font-semibold text-slate-900">{{ $user->name }}</p>
                 </div>
             </div>
             <a
                 href="{{ route('chef.workshops.index') }}"
-                class="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-slate-200 transition hover:border-slate-500 hover:text-white"
+                class="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition hover:bg-orange-50 hover:border-orange-300"
             >
                 <i class="fas fa-arrow-right"></i>
                 العودة لقائمة الورشات
@@ -233,6 +234,65 @@
         const countdownLabel = document.getElementById('countdownLabel');
         const countdownBadge = document.getElementById('countdownBadge');
         const startsAtIso = countdownCard?.dataset.startsAt || null;
+        const presenceUrl = @json(route('chef.workshops.presence', $workshop));
+        const csrfToken = @json(csrf_token());
+        let lastPresenceState = null;
+
+        const sendPresence = (state, { keepalive = false, force = false } = {}) => {
+            if (!presenceUrl) {
+                return;
+            }
+
+            if (!force && lastPresenceState === state) {
+                return;
+            }
+
+            lastPresenceState = state;
+
+            const payload = new FormData();
+            payload.append('_token', csrfToken);
+            payload.append('state', state);
+
+            const requestInit = {
+                method: 'POST',
+                body: payload,
+                credentials: 'same-origin',
+            };
+
+            if (keepalive) {
+                requestInit.keepalive = true;
+            }
+
+            fetch(presenceUrl, requestInit).catch(() => {
+                // Network hiccups are non-blocking; we'll retry on the next event.
+            });
+        };
+
+        const sendPresenceBeacon = (state) => {
+            if (!presenceUrl) {
+                return;
+            }
+
+            lastPresenceState = state;
+
+            const payload = new FormData();
+            payload.append('_token', csrfToken);
+            payload.append('state', state);
+
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(presenceUrl, payload);
+                return;
+            }
+
+            fetch(presenceUrl, {
+                method: 'POST',
+                body: payload,
+                credentials: 'same-origin',
+                keepalive: true,
+            }).catch(() => {
+                // Best-effort fallback during page unload.
+            });
+        };
 
         if (startMeetingButton?.dataset.requiresConfirmation === 'true') {
             const toggleStartButton = () => {
@@ -261,17 +321,17 @@
 
                 const setBadgeState = (state) => {
                     countdownBadge.classList.remove(
-                        'bg-emerald-500/20', 'text-emerald-200',
-                        'bg-amber-500/20', 'text-amber-200',
-                        'bg-rose-500/20', 'text-rose-100'
+                        'bg-orange-100', 'text-orange-600',
+                        'bg-amber-100', 'text-amber-600',
+                        'bg-rose-100', 'text-rose-600'
                     );
 
                     if (state === 'upcoming') {
-                        countdownBadge.classList.add('bg-emerald-500/20', 'text-emerald-200');
+                        countdownBadge.classList.add('bg-orange-100', 'text-orange-600');
                     } else if (state === 'soon') {
-                        countdownBadge.classList.add('bg-amber-500/20', 'text-amber-200');
+                        countdownBadge.classList.add('bg-amber-100', 'text-amber-600');
                     } else {
-                        countdownBadge.classList.add('bg-rose-500/20', 'text-rose-100');
+                        countdownBadge.classList.add('bg-rose-100', 'text-rose-600');
                     }
                 };
 
@@ -390,6 +450,18 @@
 
         const api = new JitsiMeetExternalAPI(domain, options);
 
+        api.addListener('videoConferenceJoined', () => {
+            sendPresence('online');
+        });
+
+        api.addListener('videoConferenceLeft', () => {
+            sendPresence('offline', { force: true });
+        });
+
+        api.addListener('readyToClose', () => {
+            sendPresence('offline', { force: true });
+        });
+
         function resizeJitsi() {
             const width = container.offsetWidth;
             const height = container.offsetHeight || initialHeight;
@@ -398,6 +470,12 @@
 
         window.addEventListener('resize', resizeJitsi);
         resizeJitsi();
+        window.addEventListener('beforeunload', () => {
+            sendPresenceBeacon('offline');
+        });
+        window.addEventListener('pagehide', () => {
+            sendPresenceBeacon('offline');
+        });
 
         @if ($embedConfig['passcode'])
         api.addListener('passwordRequired', () => {

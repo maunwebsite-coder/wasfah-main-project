@@ -22,6 +22,55 @@
             border-radius: 1rem;
         }
     }
+
+    .session-lock-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 2.5rem 1.5rem;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(12, 17, 28, 0.96));
+        z-index: 40;
+        text-align: center;
+        backdrop-filter: blur(8px);
+    }
+
+    .session-lock-overlay.hidden {
+        display: none;
+    }
+
+    .session-lock-overlay .lock-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 9999px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #34d399;
+        font-size: 1.75rem;
+        box-shadow: 0 20px 45px -15px rgba(16, 185, 129, 0.45);
+    }
+
+    .session-lock-overlay h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+    }
+
+    .session-lock-overlay p {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: rgba(226, 232, 240, 0.9);
+        max-width: 28rem;
+    }
+
+    .session-lock-overlay .lock-since {
+        font-size: 0.75rem;
+        color: rgba(148, 163, 184, 0.8);
+    }
 </style>
 @endpush
 
@@ -87,7 +136,7 @@
                         <i class="fas fa-broadcast-tower"></i>
                         تم فتح الغرفة قبل {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}. انقر زر الانضمام داخل البث للمشاركة مباشرة.
                     </p>
-                @endif
+        @endif
             </div>
         </div>
 
@@ -106,6 +155,22 @@
 
             <div class="jitsi-shell" id="jitsi-shell">
                 <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
+                    <div
+                        id="meetingLockOverlay"
+                        class="session-lock-overlay {{ $isMeetingLocked ? '' : 'hidden' }}"
+                        aria-hidden="{{ $isMeetingLocked ? 'false' : 'true' }}"
+                    >
+                        <span class="lock-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </span>
+                        <h2 class="text-white">بانتظار عودة المضيف</h2>
+                        <p>غادر المضيف الاجتماع للحظات. سيتم فتح الغرفة تلقائياً فور عودته.</p>
+                        <p id="lockSinceLabel" class="lock-since {{ $isMeetingLocked ? '' : 'hidden' }}">
+                            @if ($isMeetingLocked && $workshop->meeting_locked_at)
+                                آخر حضور للمضيف {{ $workshop->meeting_locked_at->locale('ar')->diffForHumans() }}.
+                            @endif
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -294,6 +359,17 @@
         let participantName = @json($participantName);
         let pendingDisplayNameResolve = null;
         let apiInstance = null;
+        const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
+        const meetingStartedAtIso = @json($meetingStartedAtIso);
+        const meetingLockedAtIso = @json($meetingLockedAtIso);
+        const meetingLockOverlay = document.getElementById('meetingLockOverlay');
+        const lockSinceLabel = document.getElementById('lockSinceLabel');
+        const hint = document.getElementById('pollStatusHint');
+        const refreshButton = document.getElementById('manualRefreshButton');
+        let nextPollTimeout = null;
+        let meetingStarted = Boolean(meetingStartedAtIso);
+        let meetingLocked = Boolean(@json($isMeetingLocked));
+        let lockTimeFormatter = null;
 
         const updateParticipantNameLabel = (name) => {
             if (participantNameLabel) {
@@ -423,11 +499,11 @@
                     }
                 }
                 return { value: 0, unit: 'minute' };
-            };
+        };
 
-            const updateCountdown = () => {
-                const now = new Date();
-                const diffMs = targetDate.getTime() - now.getTime();
+        const updateCountdown = () => {
+            const now = new Date();
+            const diffMs = targetDate.getTime() - now.getTime();
                 const diffSeconds = diffMs / 1000;
 
                 if (Math.abs(diffSeconds) < 45) {
@@ -455,6 +531,135 @@
 
             updateCountdown();
             setInterval(updateCountdown, 60000);
+        };
+
+        const clearScheduledPoll = () => {
+            if (nextPollTimeout) {
+                clearTimeout(nextPollTimeout);
+                nextPollTimeout = null;
+            }
+        };
+
+        const schedulePoll = (delay = 8000) => {
+            clearScheduledPoll();
+
+            if (!statusUrl) {
+                return;
+            }
+
+            nextPollTimeout = setTimeout(() => pollStatus(), delay);
+        };
+
+        const setHint = (message) => {
+            if (hint) {
+                hint.textContent = message;
+            }
+        };
+
+        const updateLockSince = (lockedAtIso) => {
+            if (!lockSinceLabel) {
+                return;
+            }
+
+            if (!lockedAtIso) {
+                lockSinceLabel.textContent = '';
+                lockSinceLabel.classList.add('hidden');
+                return;
+            }
+
+            const lockedAt = new Date(lockedAtIso);
+            if (Number.isNaN(lockedAt.getTime())) {
+                lockSinceLabel.textContent = '';
+                lockSinceLabel.classList.add('hidden');
+                return;
+            }
+
+            if (!lockTimeFormatter) {
+                lockTimeFormatter = new Intl.DateTimeFormat('ar', {
+                    hour: 'numeric',
+                    minute: 'numeric',
+                });
+            }
+
+            lockSinceLabel.textContent = `آخر حضور للمضيف: ${lockTimeFormatter.format(lockedAt)} بتوقيتك.`;
+            lockSinceLabel.classList.remove('hidden');
+        };
+
+        const applyLockState = (locked, lockedAtIso = null) => {
+            if (!meetingLockOverlay) {
+                return;
+            }
+
+            meetingLocked = locked;
+
+            if (locked) {
+                meetingLockOverlay.classList.remove('hidden');
+                meetingLockOverlay.setAttribute('aria-hidden', 'false');
+                updateLockSince(lockedAtIso);
+            } else {
+                meetingLockOverlay.classList.add('hidden');
+                meetingLockOverlay.setAttribute('aria-hidden', 'true');
+                updateLockSince(null);
+            }
+        };
+
+        const pollStatus = (manual = false) => {
+            if (!statusUrl) {
+                return;
+            }
+
+            if (manual) {
+                setHint('جارٍ التحقق من حالة الغرفة...');
+            }
+
+            fetch(statusUrl, { headers: { 'Accept': 'application/json' } })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('status-check-failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const remoteStarted = Boolean(data.meeting_started);
+                    const remoteLocked = Boolean(data.meeting_locked);
+                    const remoteLockedAt = data.locked_at ?? null;
+
+                    if (!remoteStarted) {
+                        if (meetingStarted) {
+                            window.location.reload();
+                            return;
+                        }
+
+                        setHint('لم يبدأ البث بعد. سنحاول مجدداً خلال لحظات.');
+                        schedulePoll(8000);
+                        return;
+                    }
+
+                    if (!meetingStarted) {
+                        window.location.reload();
+                        return;
+                    }
+
+                    applyLockState(remoteLocked, remoteLockedAt);
+
+                    if (remoteLocked) {
+                        setHint('المضيف خارج الغرفة مؤقتاً. سنخبرك بمجرد عودته.');
+                        schedulePoll(5000);
+                        return;
+                    }
+
+                    if (hint) {
+                        setHint('الغرفة قيد التشغيل. استمتع بالورشة!');
+                    }
+
+                    schedulePoll(12000);
+                })
+                .catch(() => {
+                    if (hint) {
+                        setHint('تعذر التحقق مؤقتاً، ستتم إعادة المحاولة تلقائياً.');
+                    }
+                    schedulePoll(12000);
+                });
         };
 
         setupCountdown(startsAtIso, countdownLabel, countdownBadge);
@@ -554,58 +759,24 @@
             };
 
             initializeMeeting();
-        @else
-            const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
-            const hint = document.getElementById('pollStatusHint');
-            const refreshButton = document.getElementById('manualRefreshButton');
-            let nextPollTimeout = null;
-
-            const schedulePoll = (delay = 8000) => {
-                nextPollTimeout = setTimeout(() => pollStatus(), delay);
-            };
-
-            const setHint = (message) => {
-                if (hint) {
-                    hint.textContent = message;
-                }
-            };
-
-            const pollStatus = (manual = false) => {
-                if (manual) {
-                    setHint('جارٍ التحقق من حالة الغرفة...');
-                }
-
-                fetch(statusUrl, { headers: { 'Accept': 'application/json' } })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('status-check-failed');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.meeting_started) {
-                            setHint('يتم فتح الغرفة الآن...');
-                            window.location.reload();
-                        } else {
-                            setHint('لم يبدأ البث بعد. سنحاول مجدداً خلال لحظات.');
-                            schedulePoll(8000);
-                        }
-                    })
-                    .catch(() => {
-                        setHint('تعذر التحقق مؤقتاً، ستتم إعادة المحاولة تلقائياً.');
-                        schedulePoll(10000);
-                    });
-            };
-
-            refreshButton?.addEventListener('click', () => {
-                if (nextPollTimeout) {
-                    clearTimeout(nextPollTimeout);
-                }
-                pollStatus(true);
-            });
-
-            schedulePoll(5000);
         @endif
+
+        if (meetingStarted && meetingLocked) {
+            applyLockState(true, meetingLockedAtIso);
+        }
+
+        refreshButton?.addEventListener('click', () => {
+            clearScheduledPoll();
+            pollStatus(true);
+        });
+
+        if (statusUrl) {
+            if (meetingStarted) {
+                schedulePoll(meetingLocked ? 5000 : 9000);
+            } else {
+                schedulePoll(5000);
+            }
+        }
     });
 </script>
 @endpush

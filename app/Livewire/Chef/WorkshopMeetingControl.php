@@ -44,9 +44,25 @@ class WorkshopMeetingControl extends Component
             return;
         }
 
+        $dirty = false;
+
         if (!$this->workshop->meeting_started_at) {
             $this->workshop->meeting_started_at = now();
             $this->workshop->meeting_started_by = Auth::id();
+            $dirty = true;
+        }
+
+        if (!$this->workshop->meeting_started_by) {
+            $this->workshop->meeting_started_by = Auth::id();
+            $dirty = true;
+        }
+
+        if ($this->workshop->meeting_locked_at !== null) {
+            $this->workshop->meeting_locked_at = null;
+            $dirty = true;
+        }
+
+        if ($dirty) {
             $this->workshop->save();
         }
 

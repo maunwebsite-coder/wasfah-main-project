@@ -166,6 +166,17 @@ class WorkshopController extends Controller
         if (!$alreadyStarted) {
             $workshop->meeting_started_at = now();
             $workshop->meeting_started_by = Auth::id();
+        }
+
+        if (!$workshop->meeting_started_by) {
+            $workshop->meeting_started_by = Auth::id();
+        }
+
+        if ($workshop->meeting_locked_at !== null) {
+            $workshop->meeting_locked_at = null;
+        }
+
+        if ($workshop->isDirty(['meeting_started_at', 'meeting_started_by', 'meeting_locked_at'])) {
             $workshop->save();
         }
 
@@ -180,6 +191,64 @@ class WorkshopController extends Controller
         }
 
         return back()->with('success', $alreadyStarted ? 'تم بدء الاجتماع مسبقاً.' : 'تم فتح الغرفة ويمكن للمشاركين الدخول الآن.');
+    }
+
+    public function updatePresence(Request $request, Workshop $workshop)
+    {
+        $this->authorizeWorkshop($workshop);
+
+        $validated = $request->validate([
+            'state' => ['required', Rule::in(['online', 'offline'])],
+        ]);
+
+        $state = $validated['state'];
+        $meetingStarted = (bool) $workshop->meeting_started_at;
+
+        if (!$meetingStarted) {
+            if ($state === 'offline' && $workshop->meeting_locked_at !== null) {
+                $workshop->meeting_locked_at = null;
+                $workshop->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'meeting_started' => false,
+                'meeting_locked' => (bool) $workshop->meeting_locked_at,
+                'locked_at' => optional($workshop->meeting_locked_at)->toIso8601String(),
+            ]);
+        }
+
+        $lockChanged = false;
+
+        if ($state === 'online') {
+            if ($workshop->meeting_locked_at !== null) {
+                $workshop->meeting_locked_at = null;
+                $lockChanged = true;
+            }
+        } else {
+            if ($workshop->meeting_locked_at === null) {
+                $workshop->meeting_locked_at = now();
+                $lockChanged = true;
+            }
+        }
+
+        $starterChanged = false;
+
+        if (!$workshop->meeting_started_by && $state === 'online') {
+            $workshop->meeting_started_by = Auth::id();
+            $starterChanged = true;
+        }
+
+        if ($lockChanged || $starterChanged) {
+            $workshop->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'meeting_started' => true,
+            'meeting_locked' => (bool) $workshop->meeting_locked_at,
+            'locked_at' => optional($workshop->meeting_locked_at)->toIso8601String(),
+        ]);
     }
 
     public function generateMeetingLink(Request $request)
@@ -326,6 +395,7 @@ class WorkshopController extends Controller
             $workshop->jitsi_passcode = null;
             $workshop->meeting_started_at = null;
             $workshop->meeting_started_by = null;
+            $workshop->meeting_locked_at = null;
             return;
         }
 
@@ -333,6 +403,7 @@ class WorkshopController extends Controller
 
         $workshop->meeting_started_at = null;
         $workshop->meeting_started_by = null;
+        $workshop->meeting_locked_at = null;
 
         if ($autoGenerate || empty($inputLink)) {
             $meeting = $this->jitsiMeetingService->createMeeting(

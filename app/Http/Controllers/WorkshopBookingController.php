@@ -208,6 +208,8 @@ class WorkshopBookingController extends Controller
             'hostName' => $hostName,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
             'meetingStartedAtIso' => optional($workshop->meeting_started_at)->toIso8601String(),
+            'meetingLockedAtIso' => optional($workshop->meeting_locked_at)->toIso8601String(),
+            'isMeetingLocked' => (bool) $workshop->meeting_locked_at,
             'participantName' => $effectiveName,
             'participantEmail' => $user?->email,
             'shouldPromptForDisplayName' => $shouldPromptForDisplayName,
@@ -244,6 +246,8 @@ class WorkshopBookingController extends Controller
         return response()->json([
             'meeting_started' => (bool) ($workshop?->meeting_started_at),
             'started_at' => $workshop?->meeting_started_at?->toIso8601String(),
+            'meeting_locked' => (bool) ($workshop?->meeting_locked_at),
+            'locked_at' => $workshop?->meeting_locked_at?->toIso8601String(),
         ]);
     }
 
