@@ -68,17 +68,8 @@
             </div>
         </div>
 
-        <div class="mb-6 rounded-3xl border border-indigo-400/40 bg-indigo-900/40 px-6 py-5 text-sm text-slate-100 shadow-lg">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.4em] text-indigo-200">وضع الدخول</p>
-                    <h2 class="mt-1 text-lg font-semibold text-white">المشاركون بانتظار تأكيدك كمضيف</h2>
-                    <p class="text-slate-300 text-sm mt-1">
-                        لن يتمكن المشتركون من دخول الغرفة حتى تضغط زر <strong>بدء الاجتماع</strong> أدناه. يمكنك الضغط عليه بمجرد أن تصبح جاهزاً.
-                    </p>
-                </div>
-                @livewire('chef.workshop-meeting-control', ['workshop' => $workshop])
-            </div>
+        <div class="mb-6 flex justify-end">
+            @livewire('chef.workshop-meeting-control', ['workshop' => $workshop])
         </div>
 
         <div class="jitsi-shell" id="jitsi-shell">
