@@ -17,30 +17,7 @@
         border-radius: 1.5rem;
         overflow: hidden;
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
-    }
-
-    .jitsi-controls {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .fullscreen-btn {
-        position: static;
-        background: rgba(15, 23, 42, 0.75);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(6px);
-        border-radius: 999px;
-        padding: 0.35rem 1rem;
-        font-size: 0.85rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        transition: background 0.2s ease;
-    }
-
-    .fullscreen-btn:hover {
-        background: rgba(15, 23, 42, 0.92);
+        width: 100%;
     }
 
     @media (max-width: 640px) {
@@ -53,24 +30,20 @@
             border-radius: 1rem;
         }
 
-        .jitsi-controls {
-            justify-content: center;
-        }
-
     }
 </style>
 @endpush
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-10 text-white">
-    <div class="mx-auto max-w-5xl px-4">
+    <div class="mx-auto max-w-7xl px-4 lg:px-6">
         @if (session('success') || session('error'))
             <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-emerald-300 bg-emerald-500/10 text-emerald-100' : 'border-rose-300 bg-rose-500/10 text-rose-100' }} px-6 py-4 text-sm shadow-lg">
                 {{ session('success') ?? session('error') }}
             </div>
         @endif
 
-        <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(0,0.95fr)]">
             <div class="space-y-4">
                 <div>
                     <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">غرفة الشيف</p>
@@ -119,12 +92,6 @@
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
-            <div class="jitsi-controls">
-                <button type="button" class="fullscreen-btn" id="fullscreenToggle">
-                    <i class="fas fa-expand"></i>
-                    ملء الشاشة
-                </button>
-            </div>
         </div>
 
         <div class="mb-8">
@@ -360,8 +327,6 @@
         }
 
         const container = document.getElementById('jitsi-container');
-        const shell = document.getElementById('jitsi-shell');
-        const fullscreenBtn = document.getElementById('fullscreenToggle');
 
         if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -391,6 +356,15 @@
             lang: 'ar',
             configOverwrite: {
                 prejoinPageEnabled: false,
+                prejoinConfig: {
+                    enabled: false,
+                    hideDisplayName: true,
+                    hideExtraJoinButtons: ['microsoft', 'google', 'email', 'call-in'],
+                },
+                requireDisplayName: false,
+                enableWelcomePage: false,
+                enableClosePage: false,
+                enableUserRolesBasedOnToken: false,
                 disableDeepLinking: true,
                 startWithAudioMuted: false,
                 startWithVideoMuted: false,
@@ -430,58 +404,6 @@
             api.executeCommand('password', @json($embedConfig['passcode']));
         });
         @endif
-
-        const requestFullscreen = (element) => {
-            if (element.requestFullscreen) return element.requestFullscreen();
-            if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
-            if (element.mozRequestFullScreen) return element.mozRequestFullScreen();
-            if (element.msRequestFullscreen) return element.msRequestFullscreen();
-            return Promise.reject();
-        };
-
-        const exitFullscreen = () => {
-            if (document.exitFullscreen) return document.exitFullscreen();
-            if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
-            if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
-            if (document.msExitFullscreen) return document.msExitFullscreen();
-            return Promise.reject();
-        };
-
-        const getFullscreenElement = () =>
-            document.fullscreenElement
-            || document.webkitFullscreenElement
-            || document.mozFullScreenElement
-            || document.msFullscreenElement;
-
-        function updateFullscreenState() {
-            const isFull = getFullscreenElement() === shell;
-            fullscreenBtn.innerHTML = isFull
-                ? '<i class="fas fa-compress"></i> إنهاء الملء'
-                : '<i class="fas fa-expand"></i> ملء الشاشة';
-        }
-
-        const tryEnterFullscreen = () => {
-            return requestFullscreen(shell)
-                .catch(() => requestFullscreen(container))
-                .catch(() => requestFullscreen(document.documentElement));
-        };
-
-        fullscreenBtn?.addEventListener('click', () => {
-            const current = getFullscreenElement();
-            if (current === shell || current === container || current === document.documentElement) {
-                exitFullscreen().catch(() => {});
-            } else {
-                tryEnterFullscreen().catch(() => {
-                    alert('لا يمكن تفعيل ملء الشاشة. تأكد من السماح للمتصفح أو جرّب مستعرضاً آخر.');
-                });
-            }
-        });
-
-        document.addEventListener('fullscreenchange', updateFullscreenState);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenState);
-        document.addEventListener('mozfullscreenchange', updateFullscreenState);
-        document.addEventListener('MSFullscreenChange', updateFullscreenState);
-        updateFullscreenState();
 
     });
 </script>

@@ -35,7 +35,7 @@ class WorkshopMeetingControl extends Component
         $this->authorizeWorkshop($this->workshop);
 
         if (!$this->confirmHost) {
-            $this->errorMessage = 'يرجى تأكيد أنك المضيف ومسجل الدخول بحساب Google قبل بدء الاجتماع.';
+            $this->errorMessage = 'يرجى تأكيد أنك المضيف وأن اسمك جاهز للظهور للمشاركين قبل بدء الاجتماع.';
             return;
         }
 

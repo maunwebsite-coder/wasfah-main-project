@@ -117,6 +117,7 @@ class HomeController extends Controller
             'workshop' => $this->resolveWorkshopHeroMedia($featuredWorkshop, $workshops),
             'recipe' => $this->resolveRecipeHeroMedia($featuredRecipes, $latestRecipes),
             'tool' => $this->resolveToolHeroMedia(),
+            'links' => $this->resolveLinksHeroMedia(),
         ];
 
         $bookedWorkshopIds = [];
@@ -236,6 +237,19 @@ class HomeController extends Controller
         return [
             'desktop' => $desktop,
             'mobile' => $mobile,
+        ];
+    }
+
+    /**
+     * حدد صور شريحة Wasfah Links
+     */
+    protected function resolveLinksHeroMedia(): array
+    {
+        $fallback = asset('image/wasfah-links.png');
+
+        return [
+            'desktop' => $fallback,
+            'mobile' => $fallback,
         ];
     }
 

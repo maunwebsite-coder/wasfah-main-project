@@ -380,6 +380,7 @@
         .hero-media picture {
             width: 100%;
             height: 100%;
+            flex: 1;
             display: block;
         }
         .hero-media::after {
@@ -394,8 +395,11 @@
             height: 100%;
             max-height: 360px;
             object-fit: cover;
+            object-position: center;
             display: block;
             border-radius: inherit;
+            transform: scale(1.06);
+            transform-origin: center;
         }
         .hero-content {
             grid-area: content;
@@ -1418,6 +1422,12 @@
                         'icon' => $isChefUser ? 'fas fa-plus-circle' : 'fas fa-user-plus',
                         'type' => 'accent',
                     ];
+                    $createWasfahLinkAction = [
+                        'label' => $isChefUser ? 'أنشئ Wasfah Link الآن' : ($isAuthenticated ? 'أكمل ملفك لتفعيل Wasfah Links' : 'سجل وابدأ Wasfah Links'),
+                        'url' => $isChefUser ? route('chef.links.edit') : ($isAuthenticated ? route('onboarding.show') : route('register')),
+                        'icon' => 'fas fa-link',
+                        'type' => 'primary',
+                    ];
                     $heroSlides = [
                         [
                             'badge' => 'ورشات العمل',
@@ -1459,6 +1469,28 @@
                             'image_alt' => 'شيف يطلق ورشته الخاصة',
                             'actions' => [
                                 $createWorkshopAction,
+                            ],
+                        ],
+                        [
+                            'badge' => 'Wasfah Links',
+                            'title' => 'Wasfah Links للشيفات',
+                            'description' => 'اجمع ورشاتك وروابطك المهمة في صفحة واحدة قابلة للمشاركة مع متابعيك.',
+                            'features' => [
+                                'صفحة مخصصة باسمك مع رابط قصير',
+                                'تحكم كامل من لوحة الشيف لتحديث المحتوى فوراً',
+                                'مثالية لمشاركتها على إنستغرام وواتساب',
+                            ],
+                            'image' => data_get($heroMedia ?? [], 'links.desktop', asset('image/wasfah-links.png')),
+                            'mobile_image' => data_get($heroMedia ?? [], 'links.mobile', data_get($heroMedia ?? [], 'links.desktop', asset('image/wasfah-links.png'))),
+                            'image_alt' => 'صفحة Wasfah Links للشيف',
+                            'actions' => [
+                                $createWasfahLinkAction,
+                                [
+                                    'label' => 'استعرض Wasfah Links',
+                                    'url' => route('links'),
+                                    'icon' => 'fas fa-eye',
+                                    'type' => 'secondary',
+                                ],
                             ],
                         ],
                         [

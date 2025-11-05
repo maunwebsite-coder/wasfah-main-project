@@ -6,7 +6,7 @@
         </span>
     @else
         <p class="text-sm text-slate-300">
-            تأكد أنك سجلت دخولك بحساب Google الصحيح وأنك المضيف الحقيقي قبل فتح الغرفة للمشاركين.
+            تأكد من إعداد اسمك كما سيظهر للمشاركين وأنك المضيف الحقيقي قبل فتح الغرفة.
         </p>
         <label class="mt-2 inline-flex items-start gap-2 text-sm text-slate-200">
             <input
@@ -15,7 +15,7 @@
                 class="mt-1 h-4 w-4 rounded border-slate-500 bg-transparent text-emerald-400 focus:ring-emerald-300"
             >
             <span>
-                أؤكد أنني المضيف وأنني أكملت تسجيل الدخول بحساب Google الخاص بي.
+                أؤكد أنني المضيف وأن الاسم الذي سيظهر للمشاركين هو الاسم الصحيح الخاص بي.
             </span>
         </label>
         <button

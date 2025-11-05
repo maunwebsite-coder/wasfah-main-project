@@ -490,6 +490,15 @@
                     lang: 'ar',
                     configOverwrite: {
                         prejoinPageEnabled: false,
+                        prejoinConfig: {
+                            enabled: false,
+                            hideDisplayName: true,
+                            hideExtraJoinButtons: ['microsoft', 'google', 'email', 'call-in'],
+                        },
+                        requireDisplayName: false,
+                        enableWelcomePage: false,
+                        enableClosePage: false,
+                        enableUserRolesBasedOnToken: false,
                         disableDeepLinking: true,
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,

@@ -427,6 +427,13 @@
                                             <i class="fas fa-copy"></i>
                                             نسخ الرابط للمشاركين
                                         </button>
+                                        @if($workshop->meeting_provider === 'jitsi')
+                                            <a href="{{ route('admin.workshops.meeting', $workshop) }}"
+                                               class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-md transition hover:-translate-y-0.5">
+                                                <i class="fas fa-user-shield"></i>
+                                                فتح غرفة التحكم الإداري
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             @endif
