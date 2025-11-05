@@ -46,7 +46,7 @@ class JitsiJaasTokenService
         }
 
         if (!$this->appId || !$this->apiKey || !$this->privateKeyPath) {
-            throw new RuntimeException('Jitsi JaaS credentials are not configured. Please set JITSI_JAAS_APP_ID, JITSI_JAAS_API_KEY, and JITSI_JAAS_PRIVATE_KEY_PATH.');
+            throw new RuntimeException('Jitsi JaaS credentials (AppID, Key, PrivateKeyPath) are not configured.');
         }
 
         $now = CarbonImmutable::now();
@@ -93,31 +93,22 @@ class JitsiJaasTokenService
         }
 
         if (!is_readable($this->privateKeyPath)) {
-            throw new RuntimeException("Jitsi JaaS private key file is not readable. Check permissions. Path: {$this->privateKeyPath}");
+            throw new RuntimeException("Jitsi JaaS private key file is not readable. Check permissions. Run: sudo chmod 400 {$this->privateKeyPath}");
         }
 
-        $privateKeyContents = file_get_contents($this->privateKeyPath);
-        if ($privateKeyContents === false) {
-            throw new RuntimeException("Unable to read Jitsi JaaS private key file at: {$this->privateKeyPath}");
-        }
-
-        $privateKey = openssl_pkey_get_private($privateKeyContents);
+        $privateKey = openssl_pkey_get_private(file_get_contents($this->privateKeyPath));
         if ($privateKey === false) {
-            throw new RuntimeException('Failed to parse Jitsi JaaS private key. Ensure the file is a valid PEM key.');
+            throw new RuntimeException('Failed to read Jitsi JaaS private key. Is it a valid PEM file?');
         }
 
         $signature = '';
-        $signed = openssl_sign(
+        openssl_sign(
             "{$headerEncoded}.{$payloadEncoded}",
             $signature,
             $privateKey,
             OPENSSL_ALGO_SHA256
         );
         openssl_free_key($privateKey);
-
-        if ($signed === false) {
-            throw new RuntimeException('Failed to sign Jitsi JaaS JWT with the provided private key.');
-        }
 
         $signatureEncoded = $this->base64UrlEncode($signature);
 
