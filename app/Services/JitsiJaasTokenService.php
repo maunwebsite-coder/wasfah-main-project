@@ -11,7 +11,7 @@ class JitsiJaasTokenService
 {
     protected ?string $appId;
     protected ?string $apiKey;
-    protected ?string $apiSecret;
+    protected ?string $privateKeyPath;
     protected string $provider;
     protected int $ttlMinutes;
 
@@ -21,7 +21,7 @@ class JitsiJaasTokenService
 
         $this->appId = $config['app_id'] ?? null;
         $this->apiKey = $config['api_key'] ?? null;
-        $this->apiSecret = $config['api_secret'] ?? null;
+        $this->privateKeyPath = $config['private_key_path'] ?? null;
         $this->ttlMinutes = (int) ($config['token_ttl_minutes'] ?? $meetingService->getTokenTtlMinutes());
         $this->provider = $meetingService->getProvider();
     }
@@ -45,8 +45,8 @@ class JitsiJaasTokenService
             throw new RuntimeException('Jitsi JaaS token generation is disabled for the current provider.');
         }
 
-        if (!$this->appId || !$this->apiKey || !$this->apiSecret) {
-            throw new RuntimeException('Jitsi JaaS credentials are not configured. Please set JITSI_JAAS_APP_ID, JITSI_JAAS_API_KEY, and JITSI_JAAS_API_SECRET.');
+        if (!$this->appId || !$this->apiKey || !$this->privateKeyPath) {
+            throw new RuntimeException('Jitsi JaaS credentials are not configured. Please set JITSI_JAAS_APP_ID, JITSI_JAAS_API_KEY, and JITSI_JAAS_PRIVATE_KEY_PATH.');
         }
 
         $now = CarbonImmutable::now();
@@ -56,7 +56,7 @@ class JitsiJaasTokenService
             : $now->addMinutes($this->ttlMinutes);
 
         $header = [
-            'alg' => 'HS256',
+            'alg' => 'RS256',
             'kid' => $this->apiKey,
             'typ' => 'JWT',
         ];
@@ -88,7 +88,37 @@ class JitsiJaasTokenService
         $headerEncoded = $this->base64UrlEncode(json_encode($header, JSON_THROW_ON_ERROR));
         $payloadEncoded = $this->base64UrlEncode(json_encode($payload, JSON_THROW_ON_ERROR));
 
-        $signature = hash_hmac('sha256', "{$headerEncoded}.{$payloadEncoded}", $this->apiSecret, true);
+        if (!file_exists($this->privateKeyPath)) {
+            throw new RuntimeException("Jitsi JaaS private key file not found at: {$this->privateKeyPath}");
+        }
+
+        if (!is_readable($this->privateKeyPath)) {
+            throw new RuntimeException("Jitsi JaaS private key file is not readable. Check permissions. Path: {$this->privateKeyPath}");
+        }
+
+        $privateKeyContents = file_get_contents($this->privateKeyPath);
+        if ($privateKeyContents === false) {
+            throw new RuntimeException("Unable to read Jitsi JaaS private key file at: {$this->privateKeyPath}");
+        }
+
+        $privateKey = openssl_pkey_get_private($privateKeyContents);
+        if ($privateKey === false) {
+            throw new RuntimeException('Failed to parse Jitsi JaaS private key. Ensure the file is a valid PEM key.');
+        }
+
+        $signature = '';
+        $signed = openssl_sign(
+            "{$headerEncoded}.{$payloadEncoded}",
+            $signature,
+            $privateKey,
+            OPENSSL_ALGO_SHA256
+        );
+        openssl_free_key($privateKey);
+
+        if ($signed === false) {
+            throw new RuntimeException('Failed to sign Jitsi JaaS JWT with the provided private key.');
+        }
+
         $signatureEncoded = $this->base64UrlEncode($signature);
 
         return "{$headerEncoded}.{$payloadEncoded}.{$signatureEncoded}";
@@ -99,4 +129,3 @@ class JitsiJaasTokenService
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 }
-
