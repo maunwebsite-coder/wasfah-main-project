@@ -510,6 +510,17 @@
         .secondary-action:hover {
             background: rgba(255, 237, 213, 0.6);
         }
+        .accent-action {
+            border: 2px dashed rgba(249, 115, 22, 0.55);
+            background: rgba(255, 247, 237, 0.85);
+            color: #9a3412;
+            box-shadow: 0 10px 18px rgba(249, 115, 22, 0.18);
+        }
+        .accent-action:hover {
+            background: rgba(255, 237, 213, 0.92);
+            border-color: rgba(234, 88, 12, 0.6);
+            color: #7c2d12;
+        }
         .hero-slider-pagination {
             position: static;
             margin-top: clamp(1.15rem, 2.5vw, 1.75rem);
@@ -1424,6 +1435,14 @@
         <div class="home-hero-shell">
             <div class="home-hero-grid">
                 @php
+                    $isAuthenticated = auth()->check();
+                    $isChefUser = $isAuthenticated && auth()->user()->isChef();
+                    $createWorkshopAction = [
+                        'label' => $isChefUser ? 'أنشئ ورشتك الآن' : ($isAuthenticated ? 'أكمل ملفك كشيف وأنشئ ورشتك' : 'انضم كشيف وأنشئ ورشتك'),
+                        'url' => $isChefUser ? route('chef.workshops.create') : ($isAuthenticated ? route('onboarding.show') : route('login')),
+                        'icon' => $isChefUser ? 'fas fa-plus-circle' : 'fas fa-user-plus',
+                        'type' => 'accent',
+                    ];
                     $heroSlides = [
                         [
                             'badge' => 'ورشات العمل',
@@ -1449,6 +1468,22 @@
                                     'icon' => 'fas fa-calendar-alt',
                                     'type' => 'secondary',
                                 ],
+                            ],
+                        ],
+                        [
+                            'badge' => 'للشيفات',
+                            'title' => 'أنشئ ورشتك على وصفة',
+                            'description' => 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق مصممة للشيفات.',
+                            'features' => [
+                                'لوحة تحكم لإدارة الجلسات والمدفوعات',
+                                'رابط تسجيل مباشر للمتدربين',
+                                'دعم فني وخبراء يساعدونك في كل خطوة',
+                            ],
+                            'image' => data_get($heroMedia ?? [], 'chef.desktop', data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png'))),
+                            'mobile_image' => data_get($heroMedia ?? [], 'chef.mobile', data_get($heroMedia ?? [], 'chef.desktop', data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png')))),
+                            'image_alt' => 'شيف يطلق ورشته الخاصة',
+                            'actions' => [
+                                $createWorkshopAction,
                             ],
                         ],
                         [
@@ -1537,8 +1572,14 @@
                                             @if(!empty($slide['actions']))
                                                 <div class="hero-actions">
                                                     @foreach($slide['actions'] as $action)
+                                                        @php
+                                                            $actionType = $action['type'] ?? 'primary';
+                                                            $actionClass = $actionType === 'secondary'
+                                                                ? 'secondary-action'
+                                                                : ($actionType === 'accent' ? 'accent-action' : 'primary-action');
+                                                        @endphp
                                                         <a href="{{ $action['url'] }}"
-                                                           class="hero-action {{ ($action['type'] ?? 'primary') === 'secondary' ? 'secondary-action' : 'primary-action' }}">
+                                                           class="hero-action {{ $actionClass }}">
                                                             <span>{{ $action['label'] }}</span>
                                                             @if(!empty($action['icon']))
                                                                 <i class="{{ $action['icon'] }}"></i>

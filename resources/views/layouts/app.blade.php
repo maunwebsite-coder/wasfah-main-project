@@ -938,6 +938,7 @@
         window.toggleUserMenu = toggleUserMenu;
     </script>
     
+    @livewireStyles
     @stack('styles')
     <link rel="stylesheet" href="{{ asset('css/search-enhancements.css') }}">
 </head>
@@ -1672,6 +1673,7 @@
             }, 100);
         });
     </script>
+    @livewireScripts
     @stack('scripts')
     
     <!-- CSS للعداد -->

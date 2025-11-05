@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Chef;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Recipe;
+use App\Models\Workshop;
 use App\Models\Tool;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,19 +21,54 @@ class RecipeController extends Controller
      */
     public function index()
     {
+        $chefId = Auth::id();
+
         $recipes = Recipe::with('category')
-            ->where('user_id', Auth::id())
+            ->where('user_id', $chefId)
             ->orderByDesc('updated_at')
             ->paginate(10);
 
         $statusCounts = Recipe::select('status', DB::raw('count(*) as total'))
-            ->where('user_id', Auth::id())
+            ->where('user_id', $chefId)
             ->groupBy('status')
             ->pluck('total', 'status');
+
+        $workshopBaseQuery = Workshop::query()->where('user_id', $chefId);
+
+        $workshopAggregate = (clone $workshopBaseQuery)
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
+            ->selectRaw('SUM(CASE WHEN is_online = 1 THEN 1 ELSE 0 END) as online')
+            ->selectRaw('SUM(CASE WHEN start_date >= ? THEN 1 ELSE 0 END) as upcoming', [now()])
+            ->first();
+
+        $workshopStats = [
+            'total' => (int) ($workshopAggregate->total ?? 0),
+            'active' => (int) ($workshopAggregate->active ?? 0),
+            'online' => (int) ($workshopAggregate->online ?? 0),
+            'upcoming' => (int) ($workshopAggregate->upcoming ?? 0),
+        ];
+
+        $upcomingWorkshops = (clone $workshopBaseQuery)
+            ->withCount([
+                'bookings as confirmed_bookings' => fn ($query) => $query->where('status', 'confirmed'),
+            ])
+            ->whereNotNull('start_date')
+            ->where('start_date', '>=', now()->subDay())
+            ->orderBy('start_date')
+            ->take(3)
+            ->get();
+
+        $latestWorkshop = (clone $workshopBaseQuery)
+            ->orderByDesc('created_at')
+            ->first();
 
         return view('chef.recipes.index', [
             'recipes' => $recipes,
             'statusCounts' => $statusCounts,
+            'workshopStats' => $workshopStats,
+            'upcomingWorkshops' => $upcomingWorkshops,
+            'latestWorkshop' => $latestWorkshop,
         ]);
     }
 

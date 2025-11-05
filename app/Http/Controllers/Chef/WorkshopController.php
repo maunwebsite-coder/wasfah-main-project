@@ -133,7 +133,7 @@ class WorkshopController extends Controller
         ]);
     }
 
-    public function startMeeting(Workshop $workshop)
+    public function startMeeting(Request $request, Workshop $workshop)
     {
         $this->authorizeWorkshop($workshop);
 

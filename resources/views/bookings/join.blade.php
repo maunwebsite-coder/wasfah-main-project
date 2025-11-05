@@ -75,7 +75,7 @@
                     ملء الشاشة
                 </button>
                 <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
-                    <div class="absolute inset-x-0 top-5 mx-auto max-w-md rounded-2xl bg-slate-900/70 px-4 py-3 text-center text-sm text-slate-100 backdrop-blur" id="lobbyHint">
+                    <div class="absolute inset-x-0 top-5 mx-auto max-w-md rounded-2xl bg-slate-900/70 px-4 py-3 text-center text-sm text-slate-100 backdrop-blur transition-opacity duration-300 ease-out" id="lobbyHint">
                         سيتم فتح الغرفة بعد موافقة الشيف. يرجى البقاء في الصفحة.
                     </div>
                 </div>
@@ -140,26 +140,32 @@
                 prejoinPageEnabled: false,
                 disableDeepLinking: true,
                 startWithAudioMuted: false,
-                startWithVideoMuted: true,
-                startAudioOnly: true,
+                startWithVideoMuted: false,
                 lobbyEnabled: true,
                 disableLobbyP2P: true,
                 disableReactions: true,
-                disableTileView: true,
                 disableInviteFunctions: true,
+                toolbarButtons: [
+                    'microphone',
+                    'camera',
+                    'tileview',
+                    'hangup',
+                ],
             },
             interfaceConfigOverwrite: {
                 SHOW_PROMOTIONAL_CLOSE_PAGE: false,
                 LANG_DETECTION: false,
                 DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
                 DEFAULT_LOCAL_DISPLAY_NAME: 'أنا',
-                FILM_STRIP_MAX_HEIGHT: 90,
+                FILM_STRIP_MAX_HEIGHT: 120,
                 SETTINGS_SECTIONS: [],
+                TOOLBAR_BUTTONS: [
+                    'microphone',
+                    'camera',
+                    'tileview',
+                    'hangup',
+                ],
             },
-            toolbarButtons: [
-                'microphone',
-                'hangup'
-            ],
             userInfo: {
                 displayName: @json($user->name),
                 email: @json($user->email),
@@ -168,6 +174,20 @@
 
         const api = new JitsiMeetExternalAPI(domain, options);
         const lobbyHint = document.getElementById('lobbyHint');
+        let localParticipantId = null;
+
+        const hideLobbyHint = () => {
+            if (!lobbyHint || lobbyHint.dataset.dismissed === 'true') {
+                return;
+            }
+
+            lobbyHint.dataset.dismissed = 'true';
+            lobbyHint.classList.add('opacity-0', 'pointer-events-none', 'translate-y-1');
+
+            const removeHint = () => lobbyHint.remove();
+            lobbyHint.addEventListener('transitionend', removeHint, { once: true });
+            setTimeout(removeHint, 600);
+        };
 
         function resizeJitsi() {
             const width = container.offsetWidth;
@@ -207,8 +227,52 @@
                 : '<i class="fas fa-expand"></i> ملء الشاشة';
         }
 
-        api.addListener('videoConferenceJoined', () => {
-            lobbyHint?.classList.add('hidden');
+        api.addListener('videoConferenceJoined', (event = {}) => {
+            if (event.id) {
+                localParticipantId = event.id;
+            }
+            hideLobbyHint();
+        });
+
+        api.addListener('participantJoined', (participant = {}) => {
+            if (participant.local === true || participant.id === 'local') {
+                localParticipantId = participant.id;
+                hideLobbyHint();
+            }
+        });
+
+        api.addListener('participantRoleChanged', (event = {}) => {
+            const isLocal =
+                event.id === localParticipantId ||
+                event.id === 'local' ||
+                (localParticipantId === null && event.participant?.isLocal);
+
+            if (isLocal && event.role && event.role !== 'none') {
+                hideLobbyHint();
+            }
+        });
+
+        const joinedCheck = setInterval(() => {
+            if (typeof api.isJoined === 'function' && api.isJoined()) {
+                hideLobbyHint();
+                clearInterval(joinedCheck);
+            }
+        }, 2500);
+
+        const clearJoinedCheck = () => {
+            clearInterval(joinedCheck);
+        };
+
+        api.addListener('videoConferenceLeft', clearJoinedCheck);
+        api.addListener('readyToClose', clearJoinedCheck);
+        window.addEventListener('beforeunload', clearJoinedCheck);
+
+        if (lobbyHint?.dataset.dismissed !== 'true') {
+            setTimeout(() => {
+                if (typeof api.isJoined === 'function' && api.isJoined()) {
+                    hideLobbyHint();
+                }
+            }, 5000);
         });
 
         const tryEnterFullscreen = () => {

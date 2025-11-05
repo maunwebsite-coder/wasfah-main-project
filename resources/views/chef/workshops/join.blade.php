@@ -9,8 +9,8 @@
     }
 
     .jitsi-wrapper {
-        min-height: 65vh;
-        height: clamp(560px, 75vh, 900px);
+        min-height: 75vh;
+        height: clamp(640px, 85vh, 1100px);
         border-radius: 1.5rem;
         overflow: hidden;
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
@@ -77,24 +77,7 @@
                         لن يتمكن المشتركون من دخول الغرفة حتى تضغط زر <strong>بدء الاجتماع</strong> أدناه. يمكنك الضغط عليه بمجرد أن تصبح جاهزاً.
                     </p>
                 </div>
-                <div class="flex flex-col items-start gap-2 text-xs text-slate-200" id="meetingStateLabel">
-                    @if ($workshop->meeting_started_at)
-                        <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold text-emerald-200">
-                            <i class="fas fa-check-circle"></i>
-                            تم بدء الاجتماع {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}
-                        </span>
-                    @else
-                        <form id="startMeetingForm" method="POST" action="{{ route('chef.workshops.start', $workshop) }}">
-                            @csrf
-                            <button type="submit" id="startMeetingBtn"
-                                    class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600">
-                                <i class="fas fa-play"></i>
-                                بدء الاجتماع الآن
-                            </button>
-                        </form>
-                        <span class="mt-1 text-slate-400">سيظهر الزر كمؤشر للمشاركين بأن الغرفة مفتوحة.</span>
-                    @endif
-                </div>
+                @livewire('chef.workshop-meeting-control', ['workshop' => $workshop])
             </div>
         </div>
 
@@ -133,9 +116,6 @@
         const container = document.getElementById('jitsi-container');
         const shell = document.getElementById('jitsi-shell');
         const fullscreenBtn = document.getElementById('fullscreenToggle');
-        const startBtn = document.getElementById('startMeetingBtn');
-        const startForm = document.getElementById('startMeetingForm');
-        const stateLabel = document.getElementById('meetingStateLabel');
 
         if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -239,11 +219,6 @@
         document.addEventListener('MSFullscreenChange', updateFullscreenState);
         updateFullscreenState();
 
-        startForm?.addEventListener('submit', () => {
-            if (!startBtn) return;
-            startBtn.disabled = true;
-            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> يتم البدء...';
-        });
     });
 </script>
 @endpush
