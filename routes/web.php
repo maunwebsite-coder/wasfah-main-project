@@ -237,15 +237,18 @@ Route::get('/recipes', [App\Http\Controllers\RecipeController::class, 'index'])-
 Route::get('/tools', [App\Http\Controllers\ToolsController::class, 'index'])->name('tools');
 Route::get('/tools/{tool}', [App\Http\Controllers\ToolsController::class, 'show'])->name('tools.show');
 
-// مسارات الحجوزات - محمية بـ middleware المصادقة
+// مسارات الحجوزات - محمية بـ middleware المصادقة (باستثناء الانضمام الذي يسمح للضيوف)
 Route::middleware('auth')->group(function () {
     Route::post('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [App\Http\Controllers\WorkshopBookingController::class, 'show'])->name('bookings.show');
-    Route::get('/bookings/{booking:public_code}/status', [App\Http\Controllers\WorkshopBookingController::class, 'status'])->name('bookings.status');
-    Route::get('/bookings/{booking:public_code}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])->name('bookings.join');
     Route::post('/bookings/{booking}/cancel', [App\Http\Controllers\WorkshopBookingController::class, 'cancel'])->name('bookings.cancel');
 });
+
+Route::get('/bookings/{booking:public_code}/status', [App\Http\Controllers\WorkshopBookingController::class, 'status'])
+    ->name('bookings.status');
+Route::get('/bookings/{booking:public_code}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])
+    ->name('bookings.join');
 
 // مسارات الإشعارات - محمية بـ middleware المصادقة
 Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {

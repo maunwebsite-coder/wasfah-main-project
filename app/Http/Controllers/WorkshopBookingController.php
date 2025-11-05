@@ -145,22 +145,41 @@ class WorkshopBookingController extends Controller
     /**
      * عرض غرفة الاجتماع داخل موقع وصفة دون مشاركة الرابط الخارجي.
      */
-    public function join(WorkshopBooking $booking)
+    public function join(Request $request, WorkshopBooking $booking)
     {
-        $this->ensureBookingOwner($booking);
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'يجب تسجيل الدخول للوصول إلى غرفة الورشة.');
+        }
+
+        if ($booking->user_id !== $user->id) {
+            abort(403);
+        }
+
         $booking->load('workshop');
         $workshop = $booking->workshop;
 
         if ($booking->status !== 'confirmed') {
-            return redirect()
-                ->route('bookings.show', $booking)
-                ->with('error', 'لا يمكنك الدخول للورشة قبل تأكيد الحجز.');
+            if ($user && $booking->user_id === $user->id) {
+                return redirect()
+                    ->route('bookings.show', $booking)
+                    ->with('error', 'لا يمكنك الدخول للورشة قبل تأكيد الحجز.');
+            }
+
+            abort(403, 'لا يمكنك الدخول للورشة قبل تأكيد الحجز.');
         }
 
         if (!$workshop || !$workshop->is_online || !$workshop->meeting_link) {
-            return redirect()
-                ->route('bookings.show', $booking)
-                ->with('error', 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
+            if ($user && $booking->user_id === $user->id) {
+                return redirect()
+                    ->route('bookings.show', $booking)
+                    ->with('error', 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
+            }
+
+            abort(404, 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
         }
 
         if ($workshop->meeting_provider !== 'jitsi') {
@@ -176,21 +195,49 @@ class WorkshopBookingController extends Controller
         ]);
 
         $hostName = $workshop->instructor ?: optional($workshop->chef)->name;
+        $requestedName = trim((string) $request->query('name', ''));
+        $guestDisplayName = $requestedName !== '' ? $requestedName : 'ضيف وصفة';
+        $shouldPromptForDisplayName = !$user;
+        $effectiveName = $user?->name ?? $guestDisplayName;
 
         return view('bookings.join', [
             'booking' => $booking,
             'workshop' => $workshop,
             'embedConfig' => $embedConfig,
-            'user' => Auth::user(),
+            'user' => $user,
             'hostName' => $hostName,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
             'meetingStartedAtIso' => optional($workshop->meeting_started_at)->toIso8601String(),
+            'participantName' => $effectiveName,
+            'participantEmail' => $user?->email,
+            'shouldPromptForDisplayName' => $shouldPromptForDisplayName,
+            'guestDisplayName' => $guestDisplayName,
         ]);
     }
 
     public function status(WorkshopBooking $booking)
     {
-        $this->ensureBookingOwner($booking);
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'meeting_started' => false,
+                'started_at' => null,
+                'message' => 'يجب تسجيل الدخول للوصول إلى حالة الورشة.',
+            ], 401);
+        }
+
+        if ($booking->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($booking->status !== 'confirmed') {
+            return response()->json([
+                'meeting_started' => false,
+                'started_at' => null,
+            ], 403);
+        }
+
         $booking->load('workshop');
         $workshop = $booking->workshop;
 

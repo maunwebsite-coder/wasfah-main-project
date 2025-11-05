@@ -1222,10 +1222,16 @@ use Carbon\Carbon;
                                                         <div class="flex items-center text-purple-600">
                                                             <i class="fas fa-video ml-2"></i>
                                                             <span class="font-medium">رابط الاجتماع:</span>
-                                                            <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
-                                                               class="mr-2 text-purple-600 hover:text-purple-800 underline font-medium">
-                                                                دخول الغرفة من داخل الموقع
-                                                            </a>
+                                                            @if(!empty($booking->public_code))
+                                                                <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
+                                                                   class="mr-2 text-purple-600 hover:text-purple-800 underline font-medium">
+                                                                    دخول الغرفة من داخل الموقع
+                                                                </a>
+                                                            @else
+                                                                <span class="mr-2 text-purple-600 font-medium">
+                                                                    رمز الانضمام غير متاح حالياً
+                                                                </span>
+                                                            @endif
                                                         </div>
                                                     @elseif($booking->workshop->is_online && $booking->status !== 'confirmed')
                                                         <div class="flex items-center text-amber-600">
@@ -1282,11 +1288,17 @@ use Carbon\Carbon;
                                                                 <p class="text-sm text-purple-600">ادخل إلى غرفة الورشة داخل موقع وصفة</p>
                                                             </div>
                                                         </div>
-                                                        <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
-                                                           class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse">
-                                                            <i class="fas fa-external-link-alt"></i>
-                                                            <span>دخول الغرفة</span>
-                                                        </a>
+                                                        @if(!empty($booking->public_code))
+                                                            <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
+                                                               class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse">
+                                                                <i class="fas fa-external-link-alt"></i>
+                                                                <span>دخول الغرفة</span>
+                                                            </a>
+                                                        @else
+                                                            <span class="text-purple-600 font-medium">
+                                                                رمز الانضمام غير متاح حالياً
+                                                            </span>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @elseif($booking->workshop->is_online && $booking->status !== 'confirmed')

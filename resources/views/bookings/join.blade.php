@@ -16,28 +16,6 @@
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
     }
 
-    .fullscreen-btn {
-        position: absolute;
-        top: 1rem;
-        inset-inline-end: 1rem;
-        z-index: 20;
-        background: rgba(15, 23, 42, 0.75);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(6px);
-        border-radius: 999px;
-        padding: 0.35rem 1rem;
-        font-size: 0.85rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        transition: background 0.2s ease;
-    }
-
-    .fullscreen-btn:hover {
-        background: rgba(15, 23, 42, 0.92);
-    }
-
     @media (max-width: 640px) {
         .jitsi-wrapper {
             min-height: 65vh;
@@ -127,14 +105,7 @@
             </div>
 
             <div class="jitsi-shell" id="jitsi-shell">
-                <button type="button" class="fullscreen-btn" id="fullscreenToggle">
-                    <i class="fas fa-expand"></i>
-                    ملء الشاشة
-                </button>
                 <div class="jitsi-wrapper bg-black relative" id="jitsi-container">
-                    <div class="absolute inset-x-0 top-5 mx-auto max-w-md rounded-2xl bg-slate-900/70 px-4 py-3 text-center text-sm text-slate-100 backdrop-blur transition-opacity duration-300 ease-out" id="lobbyHint">
-                        جاري تهيئة الاتصال بالغرفة، وسيظهر البث تلقائياً خلال لحظات.
-                    </div>
                 </div>
             </div>
 
@@ -217,7 +188,17 @@
                     </span>
                     <div>
                         <p class="text-xs uppercase tracking-wider text-slate-400">اسمك في الغرفة</p>
-                        <p class="font-semibold text-white">{{ $user->name }}</p>
+                        <p class="font-semibold text-white" id="participantNameLabel">{{ $participantName }}</p>
+                        @if ($shouldPromptForDisplayName)
+                            <button
+                                type="button"
+                                id="editDisplayNameBtn"
+                                class="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200 transition hover:border-emerald-300 hover:text-white"
+                            >
+                                <i class="fas fa-pen"></i>
+                                تعديل الاسم
+                            </button>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -226,20 +207,72 @@
                     </span>
                     <div>
                         <p class="text-xs uppercase tracking-wider text-slate-400">هل تحتاج تذكيراً؟</p>
-                        <p class="text-xs text-slate-400">ستجد رابط الورشة دائماً داخل صفحة حجوزاتك في وصفة.</p>
+                        @auth
+                            <p class="text-xs text-slate-400">ستجد رابط الورشة دائماً داخل صفحة حجوزاتك في وصفة.</p>
+                        @else
+                            <p class="text-xs text-slate-400">
+                                احفظ هذا الرابط في ملاحظاتك للانضمام بسرعة عند بدء الورشة.
+                            </p>
+                        @endauth
                     </div>
                 </div>
             </div>
-            <a
-                href="{{ route('bookings.show', $booking) }}"
-                class="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-slate-200 transition hover:border-slate-500 hover:text-white"
-            >
-                <i class="fas fa-arrow-right"></i>
-                العودة إلى تفاصيل الحجز
-            </a>
+            @auth
+                <a
+                    href="{{ route('bookings.show', $booking) }}"
+                    class="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-slate-200 transition hover:border-slate-500 hover:text-white"
+                >
+                    <i class="fas fa-arrow-right"></i>
+                    العودة إلى تفاصيل الحجز
+                </a>
+            @else
+                <span class="text-xs text-slate-400">
+                    احتفظ بهذا الرابط لديك للعودة إلى الغرفة متى ما احتجت.
+                </span>
+            @endauth
         </div>
     </div>
 </div>
+
+@if ($shouldPromptForDisplayName)
+    <div
+        id="displayNameModal"
+        class="fixed inset-0 z-40 hidden flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur"
+    >
+        <div class="w-full max-w-md rounded-3xl bg-white/95 p-6 text-slate-800 shadow-2xl">
+            <h3 class="text-lg font-semibold text-slate-900">اختر اسمك للغرفة</h3>
+            <p class="mt-2 text-sm text-slate-600">
+                سيظهر هذا الاسم للمشاركين الآخرين داخل الورشة. يمكنك تغييره لاحقاً في أي وقت.
+            </p>
+            <form id="displayNameForm" class="mt-5 space-y-4">
+                <div>
+                    <label
+                        for="displayNameInput"
+                        class="block text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
+                    >
+                        اسم العرض
+                    </label>
+                    <input
+                        id="displayNameInput"
+                        type="text"
+                        name="display_name"
+                        required
+                        maxlength="60"
+                        class="mt-3 w-full rounded-2xl border border-slate-300 bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        placeholder="مثال: ضيف وصفة"
+                        autocomplete="off"
+                    >
+                </div>
+                <button
+                    type="submit"
+                    class="w-full rounded-full bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                >
+                    ابدأ الانضمام
+                </button>
+            </form>
+        </div>
+    </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -250,6 +283,100 @@
         const countdownCard = document.getElementById('countdownCard');
         const countdownLabel = document.getElementById('countdownLabel');
         const countdownBadge = document.getElementById('countdownBadge');
+        const shouldPromptForDisplayName = @json($shouldPromptForDisplayName);
+        const fallbackGuestName = @json($guestDisplayName);
+        const participantEmail = @json($participantEmail);
+        const participantNameLabel = document.getElementById('participantNameLabel');
+        const editDisplayNameBtn = document.getElementById('editDisplayNameBtn');
+        const displayNameModal = document.getElementById('displayNameModal');
+        const displayNameForm = document.getElementById('displayNameForm');
+        const displayNameInput = document.getElementById('displayNameInput');
+        let participantName = @json($participantName);
+        let pendingDisplayNameResolve = null;
+        let apiInstance = null;
+
+        const updateParticipantNameLabel = (name) => {
+            if (participantNameLabel) {
+                participantNameLabel.textContent = name;
+            }
+        };
+
+        const closeDisplayNameModal = () => {
+            displayNameModal?.classList.add('hidden');
+        };
+
+        const openDisplayNameModal = () => {
+            if (!displayNameModal) {
+                return;
+            }
+
+            displayNameModal.classList.remove('hidden');
+
+            if (displayNameInput) {
+                const initialValue = participantName && participantName !== fallbackGuestName ? participantName : '';
+                displayNameInput.value = initialValue;
+                setTimeout(() => displayNameInput.focus(), 50);
+            }
+        };
+
+        const resolveDisplayName = (name) => {
+            participantName = name;
+            updateParticipantNameLabel(participantName);
+
+            if (apiInstance) {
+                apiInstance.executeCommand('displayName', participantName);
+            }
+
+            if (pendingDisplayNameResolve) {
+                pendingDisplayNameResolve(participantName);
+                pendingDisplayNameResolve = null;
+            }
+        };
+
+        displayNameForm?.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const value = displayNameInput?.value?.trim() ?? '';
+            if (!value) {
+                displayNameInput?.focus();
+                return;
+            }
+
+            closeDisplayNameModal();
+            resolveDisplayName(value);
+        });
+
+        editDisplayNameBtn?.addEventListener('click', (event) => {
+            event.preventDefault();
+            pendingDisplayNameResolve = null;
+            openDisplayNameModal();
+        });
+
+        const promptForDisplayName = () => {
+            if (!shouldPromptForDisplayName) {
+                return Promise.resolve(participantName);
+            }
+
+            if (participantName && participantName !== fallbackGuestName) {
+                return Promise.resolve(participantName);
+            }
+
+            return new Promise((resolve) => {
+                pendingDisplayNameResolve = resolve;
+
+                if (displayNameModal?.classList.contains('hidden')) {
+                    openDisplayNameModal();
+                } else if (displayNameInput) {
+                    setTimeout(() => displayNameInput.focus(), 50);
+                }
+            });
+        };
+
+        updateParticipantNameLabel(participantName || fallbackGuestName);
+
+        if (shouldPromptForDisplayName && (!participantName || participantName === fallbackGuestName)) {
+            openDisplayNameModal();
+        }
 
         const setupCountdown = (targetIso, labelElement, badgeElement, options = {}) => {
             if (!targetIso || !labelElement || !badgeElement) {
@@ -341,185 +468,83 @@
         });
 
         @if ($workshop->meeting_started_at)
-            const container = document.getElementById('jitsi-container');
-            const shell = document.getElementById('jitsi-shell');
-            const fullscreenBtn = document.getElementById('fullscreenToggle');
+            const initializeMeeting = async () => {
+                const container = document.getElementById('jitsi-container');
 
-            if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
-                alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
-                return;
-            }
-
-            const domain = @json($embedConfig['domain']);
-            const initialHeight = container.offsetHeight || 640;
-
-            const options = {
-                roomName: @json($embedConfig['room']),
-                parentNode: container,
-                width: '100%',
-                height: initialHeight,
-                lang: 'ar',
-                configOverwrite: {
-                    prejoinPageEnabled: false,
-                    disableDeepLinking: true,
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    disableReactions: true,
-                    disableInviteFunctions: true,
-                    disableSelfViewSettings: true,
-                    toolbarButtons: [
-                        'microphone',
-                        'camera',
-                        'tileview',
-                        'fullscreen',
-                        'hangup',
-                    ],
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-                    LANG_DETECTION: false,
-                    DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
-                    DEFAULT_LOCAL_DISPLAY_NAME: 'أنا',
-                    FILM_STRIP_MAX_HEIGHT: 120,
-                    SETTINGS_SECTIONS: [],
-                    TOOLBAR_BUTTONS: [
-                        'microphone',
-                        'camera',
-                        'tileview',
-                        'fullscreen',
-                        'hangup',
-                    ],
-                },
-                userInfo: {
-                    displayName: @json($user->name),
-                    email: @json($user->email),
-                },
-            };
-
-            const api = new JitsiMeetExternalAPI(domain, options);
-            const lobbyHint = document.getElementById('lobbyHint');
-            let localParticipantId = null;
-
-            const hideLobbyHint = () => {
-                if (!lobbyHint || lobbyHint.dataset.dismissed === 'true') {
+                if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
+                    alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
                     return;
                 }
 
-                lobbyHint.dataset.dismissed = 'true';
-                lobbyHint.classList.add('opacity-0', 'pointer-events-none', 'translate-y-1');
+                participantName = (await promptForDisplayName()) || fallbackGuestName;
+                updateParticipantNameLabel(participantName);
 
-                const removeHint = () => lobbyHint.remove();
-                lobbyHint.addEventListener('transitionend', removeHint, { once: true });
-                setTimeout(removeHint, 600);
+                const domain = @json($embedConfig['domain']);
+                const initialHeight = container.offsetHeight || 640;
+
+                const options = {
+                    roomName: @json($embedConfig['room']),
+                    parentNode: container,
+                    width: '100%',
+                    height: initialHeight,
+                    lang: 'ar',
+                    configOverwrite: {
+                        prejoinPageEnabled: false,
+                        disableDeepLinking: true,
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                        disableReactions: true,
+                        disableInviteFunctions: true,
+                        disableSelfViewSettings: true,
+                        toolbarButtons: [
+                            'microphone',
+                            'camera',
+                            'tileview',
+                            'fullscreen',
+                            'hangup',
+                        ],
+                    },
+                    interfaceConfigOverwrite: {
+                        SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+                        LANG_DETECTION: false,
+                        DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
+                        DEFAULT_LOCAL_DISPLAY_NAME: participantName || 'أنا',
+                        FILM_STRIP_MAX_HEIGHT: 120,
+                        SETTINGS_SECTIONS: [],
+                        TOOLBAR_BUTTONS: [
+                            'microphone',
+                            'camera',
+                            'tileview',
+                            'fullscreen',
+                            'hangup',
+                        ],
+                    },
+                };
+
+                const userInfo = {};
+                if (participantName) {
+                    userInfo.displayName = participantName;
+                }
+                if (participantEmail) {
+                    userInfo.email = participantEmail;
+                }
+                if (Object.keys(userInfo).length > 0) {
+                    options.userInfo = userInfo;
+                }
+
+                apiInstance = new JitsiMeetExternalAPI(domain, options);
+
+                const resizeJitsi = () => {
+                    const width = container.offsetWidth;
+                    const height = container.offsetHeight || initialHeight;
+                    apiInstance?.resize(width, height);
+                };
+
+                window.addEventListener('resize', resizeJitsi);
+                resizeJitsi();
             };
 
-            function resizeJitsi() {
-                const width = container.offsetWidth;
-                const height = container.offsetHeight || initialHeight;
-                api?.resize(width, height);
-            }
-
-            window.addEventListener('resize', resizeJitsi);
-            resizeJitsi();
-
-            const requestFullscreen = (element) => {
-                if (element.requestFullscreen) return element.requestFullscreen();
-                if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
-                if (element.mozRequestFullScreen) return element.mozRequestFullScreen();
-                if (element.msRequestFullscreen) return element.msRequestFullscreen();
-                return Promise.reject();
-            };
-
-            const exitFullscreen = () => {
-                if (document.exitFullscreen) return document.exitFullscreen();
-                if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
-                if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
-                if (document.msExitFullscreen) return document.msExitFullscreen();
-                return Promise.reject();
-            };
-
-            const getFullscreenElement = () =>
-                document.fullscreenElement
-                || document.webkitFullscreenElement
-                || document.mozFullScreenElement
-                || document.msFullscreenElement;
-
-            function updateFullscreenState() {
-                const isFull = getFullscreenElement() === shell;
-                fullscreenBtn.innerHTML = isFull
-                    ? '<i class="fas fa-compress"></i> إنهاء الملء'
-                    : '<i class="fas fa-expand"></i> ملء الشاشة';
-            }
-
-            const tryEnterFullscreen = () => {
-                return requestFullscreen(shell)
-                    .catch(() => requestFullscreen(container))
-                    .catch(() => requestFullscreen(document.documentElement));
-            };
-
-            fullscreenBtn?.addEventListener('click', () => {
-                if (getFullscreenElement() === shell || getFullscreenElement() === container || getFullscreenElement() === document.documentElement) {
-                    exitFullscreen().catch(() => {});
-                } else {
-                    tryEnterFullscreen().catch(() => {
-                        alert('المتصفح منع وضع ملء الشاشة. يرجى السماح بالطلب أو استخدام متصفح آخر.');
-                    });
-                }
-            });
-
-            document.addEventListener('fullscreenchange', updateFullscreenState);
-            document.addEventListener('webkitfullscreenchange', updateFullscreenState);
-            document.addEventListener('mozfullscreenchange', updateFullscreenState);
-            document.addEventListener('MSFullscreenChange', updateFullscreenState);
-            updateFullscreenState();
-
-            api.addListener('videoConferenceJoined', (event = {}) => {
-                if (event.id) {
-                    localParticipantId = event.id;
-                }
-                hideLobbyHint();
-            });
-
-            api.addListener('participantJoined', (participant = {}) => {
-                if (participant.local === true || participant.id === 'local') {
-                    localParticipantId = participant.id;
-                    hideLobbyHint();
-                }
-            });
-
-            api.addListener('participantRoleChanged', (event = {}) => {
-                const isLocal =
-                    event.id === localParticipantId ||
-                    event.id === 'local' ||
-                    (localParticipantId === null && event.participant?.isLocal);
-
-                if (isLocal && event.role && event.role !== 'none') {
-                    hideLobbyHint();
-                }
-            });
-
-            const joinedCheck = setInterval(() => {
-                if (typeof api.isJoined === 'function' && api.isJoined()) {
-                    hideLobbyHint();
-                    clearInterval(joinedCheck);
-                }
-            }, 2500);
-
-            const clearJoinedCheck = () => {
-                clearInterval(joinedCheck);
-            };
-
-            api.addListener('videoConferenceLeft', clearJoinedCheck);
-            api.addListener('readyToClose', clearJoinedCheck);
-            window.addEventListener('beforeunload', clearJoinedCheck);
-
-            if (lobbyHint?.dataset.dismissed !== 'true') {
-                setTimeout(() => {
-                    if (typeof api.isJoined === 'function' && api.isJoined()) {
-                        hideLobbyHint();
-                    }
-                }, 5000);
-            }
+            initializeMeeting();
         @else
             const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
             const hint = document.getElementById('pollStatusHint');
@@ -542,7 +567,12 @@
                 }
 
                 fetch(statusUrl, { headers: { 'Accept': 'application/json' } })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('status-check-failed');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.meeting_started) {
                             setHint('يتم فتح الغرفة الآن...');

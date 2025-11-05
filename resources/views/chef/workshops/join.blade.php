@@ -6,6 +6,9 @@
 <style>
     .jitsi-shell {
         position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .jitsi-wrapper {
@@ -16,11 +19,13 @@
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
     }
 
+    .jitsi-controls {
+        display: flex;
+        justify-content: flex-end;
+    }
+
     .fullscreen-btn {
-        position: absolute;
-        top: 1rem;
-        inset-inline-end: 1rem;
-        z-index: 20;
+        position: static;
         background: rgba(15, 23, 42, 0.75);
         color: #fff;
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -39,9 +44,17 @@
     }
 
     @media (max-width: 640px) {
+        .jitsi-shell {
+            gap: 0.75rem;
+        }
+
         .jitsi-wrapper {
             min-height: 60vh;
             border-radius: 1rem;
+        }
+
+        .jitsi-controls {
+            justify-content: center;
         }
     }
 </style>
@@ -210,11 +223,13 @@
         @endif
 
         <div class="jitsi-shell" id="jitsi-shell">
-            <button type="button" class="fullscreen-btn" id="fullscreenToggle">
-                <i class="fas fa-expand"></i>
-                ملء الشاشة
-            </button>
             <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
+            <div class="jitsi-controls">
+                <button type="button" class="fullscreen-btn" id="fullscreenToggle">
+                    <i class="fas fa-expand"></i>
+                    ملء الشاشة
+                </button>
+            </div>
         </div>
 
         <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
