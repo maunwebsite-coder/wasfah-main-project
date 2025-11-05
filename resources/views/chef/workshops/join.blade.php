@@ -68,9 +68,39 @@
             </div>
         </div>
 
-        <div class="mb-6 flex justify-end">
-            @livewire('chef.workshop-meeting-control', ['workshop' => $workshop])
+        <div class="mb-6 flex flex-col gap-4 rounded-3xl border border-indigo-400/40 bg-indigo-900/40 px-6 py-5 text-sm text-slate-100 shadow-lg md:flex-row md:items-center md:justify-between">
+            <div>
+                <p class="text-xs uppercase tracking-[0.4em] text-indigo-200">حالة الجلسة</p>
+                @if ($workshop->meeting_started_at)
+                    <h2 class="mt-1 text-lg font-semibold text-white">الغرفة مفتوحة للمشاركين</h2>
+                    <p class="mt-1 text-sm text-slate-300">
+                        تم تفعيل الاجتماع {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}. يمكنك إعادة تحميل الصفحة للتأكد من بقاء الغرفة نشطة.
+                    </p>
+                @else
+                    <h2 class="mt-1 text-lg font-semibold text-white">المشاركون بانتظارك لبدء الاجتماع</h2>
+                    <p class="mt-1 text-sm text-slate-300">
+                        اضغط زر <strong>بدء الاجتماع الآن</strong> بمجرد أن تصبح جاهزاً لفتح الغرفة لهم.
+                    </p>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('chef.workshops.start', $workshop) }}" class="flex items-center gap-3">
+                @csrf
+                <button
+                    type="submit"
+                    class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    @if ($workshop->meeting_started_at) disabled @endif
+                >
+                    <i class="fas {{ $workshop->meeting_started_at ? 'fa-check' : 'fa-play' }}"></i>
+                    {{ $workshop->meeting_started_at ? 'الاجتماع قيد التشغيل' : 'بدء الاجتماع الآن' }}
+                </button>
+            </form>
         </div>
+
+        @if (session('success') || session('error'))
+            <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-emerald-300 bg-emerald-500/10 text-emerald-100' : 'border-rose-300 bg-rose-500/10 text-rose-100' }} px-6 py-4 text-sm shadow-lg">
+                {{ session('success') ?? session('error') }}
+            </div>
+        @endif
 
         <div class="jitsi-shell" id="jitsi-shell">
             <button type="button" class="fullscreen-btn" id="fullscreenToggle">
