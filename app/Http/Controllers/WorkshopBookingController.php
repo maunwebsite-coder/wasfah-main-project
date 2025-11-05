@@ -182,12 +182,9 @@ class WorkshopBookingController extends Controller
             abort(404, 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
         }
 
-        if ($workshop->meeting_provider !== 'jitsi') {
+        if (!in_array($workshop->meeting_provider, ['jitsi', 'jaas'], true)) {
             return redirect()->away($workshop->meeting_link);
         }
-
-        $embedConfig = $this->buildJitsiEmbedConfig($workshop);
-        unset($embedConfig['passcode']);
 
         $workshop->loadMissing('chef');
         $workshop->loadCount([
@@ -199,6 +196,14 @@ class WorkshopBookingController extends Controller
         $guestDisplayName = $requestedName !== '' ? $requestedName : 'ضيف وصفة';
         $shouldPromptForDisplayName = !$user;
         $effectiveName = $user?->name ?? $guestDisplayName;
+
+        $embedConfig = $this->buildJitsiEmbedConfig(
+            $workshop,
+            $effectiveName,
+            $user?->email,
+            false
+        );
+        unset($embedConfig['passcode']);
 
         return view('bookings.join', [
             'booking' => $booking,
@@ -258,8 +263,50 @@ class WorkshopBookingController extends Controller
         }
     }
 
-    protected function buildJitsiEmbedConfig(Workshop $workshop): array
+    protected function buildJitsiEmbedConfig(Workshop $workshop, ?string $displayName = null, ?string $email = null, bool $isModerator = false): array
     {
+        $provider = $workshop->meeting_provider ?: config('services.jitsi.provider', 'meet');
+
+        if ($provider === 'jaas') {
+            $jaasConfig = config('services.jitsi.jaas', []);
+            $baseUrl = $jaasConfig['base_url'] ?? 'https://8x8.vc';
+            $parsedBase = parse_url($baseUrl);
+            $domain = $parsedBase['host'] ?? '8x8.vc';
+            $scheme = $parsedBase['scheme'] ?? 'https';
+            $appId = $jaasConfig['app_id'] ?? null;
+
+            if (!$appId) {
+                throw new \RuntimeException('JaaS app ID is not configured. Please set JITSI_JAAS_APP_ID.');
+            }
+
+            $roomSlug = trim($workshop->jitsi_room ?? '');
+            if ($roomSlug === '') {
+                $roomSlug = Str::slug($workshop->title . '-' . $workshop->id, '-');
+            }
+            $roomSlug = trim(str_replace(' ', '-', $roomSlug), '/');
+
+            $roomPath = "{$appId}/{$roomSlug}";
+            $tokenService = app(\App\Services\JitsiJaasTokenService::class);
+            $jwt = $isModerator
+                ? $tokenService->createModeratorToken($roomSlug, [
+                    'name' => $displayName,
+                    'email' => $email,
+                ], $workshop->start_date)
+                : $tokenService->createParticipantToken($roomSlug, [
+                    'name' => $displayName,
+                    'email' => $email,
+                ], $workshop->start_date);
+
+            return [
+                'provider' => 'jaas',
+                'domain' => $domain,
+                'room' => $roomPath,
+                'jwt' => $jwt,
+                'passcode' => null,
+                'external_api_url' => "{$scheme}://{$domain}/external_api.js",
+            ];
+        }
+
         $meetingUrl = $workshop->meeting_link;
         $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
         $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));

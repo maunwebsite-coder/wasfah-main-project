@@ -48,9 +48,17 @@ return [
 ],
 
 'jitsi' => [
+    'provider' => env('JITSI_PROVIDER', 'meet'),
     'base_url' => env('JITSI_BASE_URL', 'https://meet.jit.si'),
     'room_prefix' => env('JITSI_ROOM_PREFIX', 'wasfah'),
     'default_duration' => (int) env('JITSI_DEFAULT_DURATION', 90),
+    'jaas' => [
+        'app_id' => env('JITSI_JAAS_APP_ID'),
+        'api_key' => env('JITSI_JAAS_API_KEY'),
+        'api_secret' => env('JITSI_JAAS_API_SECRET'),
+        'base_url' => env('JITSI_JAAS_BASE_URL', 'https://8x8.vc'),
+        'token_ttl_minutes' => (int) env('JITSI_JAAS_TOKEN_TTL', 240),
+    ],
 ],
 
 'registration' => [

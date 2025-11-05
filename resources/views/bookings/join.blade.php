@@ -601,6 +601,7 @@
                 updateParticipantNameLabel(participantName);
 
                 const domain = @json($embedConfig['domain']);
+                const jaasJwt = @json($embedConfig['jwt'] ?? null);
                 const initialHeight = container.offsetHeight || 640;
 
                 const options = {
@@ -660,6 +661,10 @@
                 }
                 if (Object.keys(userInfo).length > 0) {
                     options.userInfo = userInfo;
+                }
+
+                if (jaasJwt) {
+                    options.jwt = jaasJwt;
                 }
 
                 apiInstance = new JitsiMeetExternalAPI(domain, options);

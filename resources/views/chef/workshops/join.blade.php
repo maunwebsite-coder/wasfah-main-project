@@ -394,6 +394,7 @@
         }
 
         const domain = @json($embedConfig['domain']);
+        const jaasJwt = @json($embedConfig['jwt'] ?? null);
         const initialHeight = container.offsetHeight || 640;
 
         const essentialToolbar = [
@@ -447,6 +448,10 @@
                 email: @json($user->email),
             },
         };
+
+        if (jaasJwt) {
+            options.jwt = jaasJwt;
+        }
 
         const api = new JitsiMeetExternalAPI(domain, options);
 

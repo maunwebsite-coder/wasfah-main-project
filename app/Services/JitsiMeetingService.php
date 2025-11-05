@@ -10,12 +10,26 @@ class JitsiMeetingService
     protected string $baseUrl;
     protected string $roomPrefix;
     protected int $defaultDuration;
+    protected string $provider;
+    protected ?string $jaasAppId = null;
+    protected int $jaasTokenTtl;
 
     public function __construct(?string $baseUrl = null, ?string $roomPrefix = null, ?int $defaultDuration = null)
     {
-        $this->baseUrl = rtrim($baseUrl ?? config('services.jitsi.base_url', 'https://meet.jit.si'), '/');
-        $this->roomPrefix = Str::slug($roomPrefix ?? config('services.jitsi.room_prefix', 'wasfah'));
-        $this->defaultDuration = $defaultDuration ?? (int) config('services.jitsi.default_duration', 90);
+        $config = config('services.jitsi');
+
+        $this->provider = $config['provider'] ?? 'meet';
+        $this->roomPrefix = Str::slug($roomPrefix ?? $config['room_prefix'] ?? 'wasfah');
+        $this->defaultDuration = $defaultDuration ?? (int) ($config['default_duration'] ?? 90);
+        $this->jaasTokenTtl = (int) ($config['jaas']['token_ttl_minutes'] ?? 240);
+
+        if ($this->provider === 'jaas') {
+            $jaasConfig = $config['jaas'] ?? [];
+            $this->jaasAppId = $jaasConfig['app_id'] ?? null;
+            $this->baseUrl = rtrim($jaasConfig['base_url'] ?? 'https://8x8.vc', '/');
+        } else {
+            $this->baseUrl = rtrim($baseUrl ?? $config['base_url'] ?? 'https://meet.jit.si', '/');
+        }
     }
 
     /**
@@ -24,12 +38,21 @@ class JitsiMeetingService
     public function createMeeting(string $title, int $userId, ?CarbonInterface $startsAt = null): array
     {
         $room = $this->generateRoomName($title, $userId, $startsAt);
-        $passcode = $this->generatePasscode();
+        $roomPath = $room;
+        $passcode = $this->provider === 'jaas' ? null : $this->generatePasscode();
+        $url = "{$this->baseUrl}/{$roomPath}";
+
+        if ($this->provider === 'jaas' && $this->jaasAppId) {
+            $roomPath = "{$this->jaasAppId}/{$room}";
+            $url = "{$this->baseUrl}/{$roomPath}";
+        }
 
         return [
             'room' => $room,
-            'url' => "{$this->baseUrl}/{$room}",
+            'room_path' => $roomPath,
+            'url' => $url,
             'passcode' => $passcode,
+            'provider' => $this->provider,
             'starts_at' => $startsAt,
             'ends_at' => $startsAt ? $startsAt->copy()->addMinutes($this->defaultDuration) : null,
         ];
@@ -60,5 +83,25 @@ class JitsiMeetingService
         }
 
         return $digits;
+    }
+
+    public function getProvider(): string
+    {
+        return $this->provider;
+    }
+
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
+    }
+
+    public function getJaasAppId(): ?string
+    {
+        return $this->jaasAppId;
+    }
+
+    public function getTokenTtlMinutes(): int
+    {
+        return $this->jaasTokenTtl;
     }
 }
