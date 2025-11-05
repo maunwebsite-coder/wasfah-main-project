@@ -137,6 +137,14 @@ class WorkshopController extends Controller
     {
         $this->authorizeWorkshop($workshop);
 
+        if (!$request->expectsJson() && !$workshop->meeting_started_at) {
+            $request->validate([
+                'confirm_host' => ['accepted'],
+            ], [
+                'confirm_host.accepted' => 'يرجى تأكيد أنك المضيف قبل بدء الاجتماع.',
+            ]);
+        }
+
         if (!$workshop->is_online || !$workshop->meeting_link) {
             return response()->json([
                 'success' => false,

@@ -83,12 +83,37 @@
                     </p>
                 @endif
             </div>
-            <form method="POST" action="{{ route('chef.workshops.start', $workshop) }}" class="flex items-center gap-3">
+            <form method="POST" action="{{ route('chef.workshops.start', $workshop) }}" class="flex flex-col items-end gap-3 text-start md:text-end">
                 @csrf
+                @if (!$workshop->meeting_started_at)
+                    <label for="confirmHostCheckbox" class="flex items-start gap-3 rounded-2xl border border-slate-700/60 bg-slate-900/40 px-4 py-3 text-xs text-slate-100 shadow">
+                        <input
+                            type="checkbox"
+                            name="confirm_host"
+                            id="confirmHostCheckbox"
+                            value="1"
+                            required
+                            class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-400 focus:ring-emerald-400"
+                        >
+                        <span>
+                            أؤكد أنني المضيف الرسمي للورشة وأتحمل مسؤولية بدء الاجتماع ومتابعة المشاركين.
+                        </span>
+                    </label>
+                    @error('confirm_host')
+                        <p class="text-xs text-rose-300">{{ $message }}</p>
+                    @enderror
+                @endif
                 <button
                     type="submit"
                     class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 font-semibold text-slate-900 shadow hover:from-emerald-500 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
-                    @if ($workshop->meeting_started_at) disabled @endif
+                    id="startMeetingButton"
+                    data-requires-confirmation="{{ $workshop->meeting_started_at ? 'false' : 'true' }}"
+                    @if ($workshop->meeting_started_at)
+                        disabled
+                        data-meeting-started="true"
+                    @else
+                        disabled
+                    @endif
                 >
                     <i class="fas {{ $workshop->meeting_started_at ? 'fa-check' : 'fa-play' }}"></i>
                     {{ $workshop->meeting_started_at ? 'الاجتماع قيد التشغيل' : 'بدء الاجتماع الآن' }}
@@ -108,19 +133,6 @@
                 ملء الشاشة
             </button>
             <div class="jitsi-wrapper bg-black" id="jitsi-container"></div>
-        </div>
-
-        <div class="mt-6 rounded-3xl border border-amber-300/50 bg-amber-500/10 px-6 py-4 text-sm text-amber-100 shadow-lg">
-            <p class="mb-3">
-                إذا لم يكتمل تسجيل الدخول باستخدام Google داخل الإطار هنا، يمكنك فتح غرفة Jitsi في تبويب منفصل ثم العودة لمراقبة الجلسة من هذه الصفحة.
-            </p>
-            <a href="{{ $workshop->meeting_link }}"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="inline-flex items-center gap-2 rounded-full bg-amber-400/20 px-4 py-2 font-semibold text-amber-100 transition hover:bg-amber-400/30">
-                <i class="fas fa-external-link-alt"></i>
-                فتح رابط المضيف في تبويب جديد
-            </a>
         </div>
 
         <div class="mt-6 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-300">
@@ -147,6 +159,19 @@
 <script src="{{ $embedConfig['external_api_url'] }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const confirmHostCheckbox = document.getElementById('confirmHostCheckbox');
+        const startMeetingButton = document.getElementById('startMeetingButton');
+
+        if (startMeetingButton?.dataset.requiresConfirmation === 'true') {
+            const toggleStartButton = () => {
+                const confirmed = Boolean(confirmHostCheckbox?.checked);
+                startMeetingButton.disabled = !confirmed;
+            };
+
+            toggleStartButton();
+            confirmHostCheckbox?.addEventListener('change', toggleStartButton);
+        }
+
         const container = document.getElementById('jitsi-container');
         const shell = document.getElementById('jitsi-shell');
         const fullscreenBtn = document.getElementById('fullscreenToggle');
