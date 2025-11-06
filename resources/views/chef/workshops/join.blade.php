@@ -246,170 +246,43 @@
         const presenceUrl = @json(route('chef.workshops.presence', $workshop));
         const startUrl = @json(route('chef.workshops.start', $workshop));
         const csrfToken = @json(csrf_token());
-        const meetingsPageUrl = @json(route('meetings.index'));
+        const joinPageUrl = @json(route('chef.workshops.join', $workshop));
         let lastPresenceState = null;
         let meetingStartTriggered = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
-        const mobileFullscreenClass = 'mobile-fullscreen-active';
-        const fullscreenTarget = document.querySelector('.mobile-fullscreen-target');
-        let hasRedirectedToMeetingsPage = false;
-        const fullscreenState = {
-            mode: 'none',
-            meetingActive: false,
-        };
-
-        const applyFallbackMobileFullscreen = () => {
-            if (!fullscreenTarget) {
-                return;
-            }
-
-            document.body.classList.add(mobileFullscreenClass);
-            fullscreenTarget.classList.add(mobileFullscreenClass);
-            fullscreenState.mode = 'fallback';
-        };
-
-        const clearFallbackMobileFullscreen = () => {
-            document.body.classList.remove(mobileFullscreenClass);
-            fullscreenTarget?.classList.remove(mobileFullscreenClass);
-            if (fullscreenState.mode === 'fallback') {
-                fullscreenState.mode = 'none';
-            }
-        };
-
-        const exitNativeFullscreen = () => {
-            const exit =
-                document.exitFullscreen ||
-                document.webkitExitFullscreen ||
-                document.mozCancelFullScreen ||
-                document.msExitFullscreen;
-
-            if (!exit) {
-                return;
-            }
-
-            try {
-                exit.call(document);
-            } catch (error) {
-                console.debug('Failed to exit native fullscreen', error);
-            }
-        };
-
-        const exitMobileFullscreen = () => {
-            if (fullscreenState.mode === 'native') {
-                exitNativeFullscreen();
-            }
-
-            clearFallbackMobileFullscreen();
-            fullscreenState.mode = 'none';
-        };
-
-        const requestNativeFullscreen = () => {
-            if (!fullscreenTarget || !mobileViewportQuery.matches) {
-                return Promise.resolve(false);
-            }
-
-            const request =
-                fullscreenTarget.requestFullscreen ||
-                fullscreenTarget.webkitRequestFullscreen ||
-                fullscreenTarget.mozRequestFullScreen ||
-                fullscreenTarget.msRequestFullscreen;
-
-            if (!request) {
-                return Promise.resolve(false);
-            }
-
-            try {
-                const result = request.call(fullscreenTarget);
-
-                fullscreenState.mode = 'native';
-                document.body.classList.add(mobileFullscreenClass);
-                fullscreenTarget.classList.add(mobileFullscreenClass);
-
-                if (result && typeof result.then === 'function') {
-                    return result.then(
-                        () => true,
-                        () => false,
-                    );
-                }
-
-                return Promise.resolve(true);
-            } catch (error) {
-                console.debug('Native fullscreen request failed', error);
-                return Promise.resolve(false);
-            }
-        };
-
-        const enterMobileFullscreen = () => {
-            if (!fullscreenState.meetingActive || !mobileViewportQuery.matches || !fullscreenTarget) {
-                return;
-            }
-
-            if (fullscreenState.mode === 'native') {
-                return;
-            }
-
-            requestNativeFullscreen().then((success) => {
-                if (!success) {
-                    applyFallbackMobileFullscreen();
-                }
-            });
-        };
-
-        const ensureMobileFullscreen = () => {
-            if (!fullscreenState.meetingActive || !mobileViewportQuery.matches) {
-                exitMobileFullscreen();
-                return;
-            }
-
-            if (!fullscreenTarget) {
-                return;
-            }
-
-            if (fullscreenState.mode === 'native') {
-                return;
-            }
-
-            if (fullscreenState.mode === 'fallback') {
-                applyFallbackMobileFullscreen();
-                return;
-            }
-
-            enterMobileFullscreen();
-        };
-
-        const handleViewportChange = () => ensureMobileFullscreen();
+        let shouldAutoToggleFullscreen = mobileViewportQuery.matches;
+        let jitsiFullscreenToggled = false;
+        let hasRedirectedToJoinPage = false;
 
         if (typeof mobileViewportQuery.addEventListener === 'function') {
-            mobileViewportQuery.addEventListener('change', handleViewportChange);
+            mobileViewportQuery.addEventListener('change', event => {
+                shouldAutoToggleFullscreen = event.matches;
+            });
         } else if (typeof mobileViewportQuery.addListener === 'function') {
-            mobileViewportQuery.addListener(handleViewportChange);
+            mobileViewportQuery.addListener(event => {
+                shouldAutoToggleFullscreen = event.matches;
+            });
         }
-
-        window.addEventListener('orientationchange', () => {
-            setTimeout(ensureMobileFullscreen, 180);
-        });
-
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && fullscreenState.mode === 'native') {
-                fullscreenState.mode = 'none';
-
-                if (fullscreenState.meetingActive) {
-                    ensureMobileFullscreen();
-                } else {
-                    clearFallbackMobileFullscreen();
-                }
-            }
-        });
-
-        const redirectToMeetingsPage = () => {
-            if (hasRedirectedToMeetingsPage || !meetingsPageUrl) {
+        const requestJitsiFullscreenToggle = (apiRef) => {
+            if (!apiRef || jitsiFullscreenToggled || !shouldAutoToggleFullscreen) {
                 return;
             }
 
-            hasRedirectedToMeetingsPage = true;
-            fullscreenState.meetingActive = false;
-            exitMobileFullscreen();
-            window.location.assign(meetingsPageUrl);
+            try {
+                apiRef.executeCommand('toggleFullscreen');
+                jitsiFullscreenToggled = true;
+            } catch (error) {
+                console.debug('Unable to toggle fullscreen through Jitsi API', error);
+            }
+        };
+
+        const redirectToJoinPage = () => {
+            if (hasRedirectedToJoinPage || !joinPageUrl) {
+                return;
+            }
+
+            hasRedirectedToJoinPage = true;
+            window.location.assign(joinPageUrl);
         };
 
         const startMeetingForParticipants = () => {
@@ -493,8 +366,6 @@
                 };
 
                 const handleConfirm = () => {
-                    fullscreenState.meetingActive = true;
-                    enterMobileFullscreen();
                     startMeetingForParticipants();
                     finish(true);
                 };
@@ -537,13 +408,8 @@
             } else {
                 alert(cancellationMessage);
             }
-            fullscreenState.meetingActive = false;
-            exitMobileFullscreen();
             return;
         }
-
-        fullscreenState.meetingActive = true;
-        ensureMobileFullscreen();
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
@@ -758,17 +624,19 @@
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
-            ensureMobileFullscreen();
+            requestJitsiFullscreenToggle(api);
         });
+
+        requestJitsiFullscreenToggle(api);
 
         api.addListener('videoConferenceLeft', () => {
             sendPresence('offline', { force: true });
-            redirectToMeetingsPage();
+            redirectToJoinPage();
         });
 
         api.addListener('readyToClose', () => {
             sendPresence('offline', { force: true });
-            redirectToMeetingsPage();
+            redirectToJoinPage();
         });
 
         function resizeJitsi() {
@@ -780,13 +648,9 @@
         window.addEventListener('resize', resizeJitsi);
         resizeJitsi();
         window.addEventListener('beforeunload', () => {
-            fullscreenState.meetingActive = false;
-            exitMobileFullscreen();
             sendPresenceBeacon('offline');
         });
         window.addEventListener('pagehide', () => {
-            fullscreenState.meetingActive = false;
-            exitMobileFullscreen();
             sendPresenceBeacon('offline');
         });
 

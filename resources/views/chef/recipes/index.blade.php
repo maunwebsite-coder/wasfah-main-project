@@ -152,11 +152,48 @@
                             </div>
                             <span class="text-xs text-white/70 sm:text-right">حتى ٣ ورش</span>
                         </div>
+                        @php
+                            $nextHostWorkshop = $upcomingWorkshops->first();
+                        @endphp
+                        @if ($nextHostWorkshop)
+                            @php
+                                $nextStart = optional($nextHostWorkshop->start_date)?->locale('ar')->translatedFormat('d F Y • h:i a');
+                            @endphp
+                            <div class="rounded-2xl border border-white/25 bg-white/95 p-4 text-slate-900 shadow-sm ring-1 ring-white/20">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-500">دخول سريع</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-900">
+                                            {{ \Illuminate\Support\Str::limit($nextHostWorkshop->title, 50) }}
+                                        </p>
+                                        <p class="text-xs text-slate-500">
+                                            <i class="fas fa-clock ml-1"></i>
+                                            {{ $nextStart ?? 'موعد لاحق' }}
+                                        </p>
+                                    </div>
+                                    <a href="{{ route('chef.workshops.join', $nextHostWorkshop) }}"
+                                       class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
+                                        <i class="fas fa-video"></i>
+                                        فتح غرفة البث
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                         @forelse ($upcomingWorkshops as $workshop)
                             @php
                                 $confirmed = (int) ($workshop->confirmed_bookings ?? 0);
                                 $capacity = (int) ($workshop->max_participants ?? 0);
                                 $fillPercent = $capacity > 0 ? (int) min(100, round(($confirmed / $capacity) * 100)) : 0;
+                                $isLive = !is_null($workshop->meeting_started_at);
+                                $hostStatusLabel = $isLive
+                                    ? 'البث مباشر الآن'
+                                    : ($workshop->is_online ? 'استعد لبدء الجلسة' : 'جلسة حضورية');
+                                $participantStatusLabel = $workshop->is_online
+                                    ? ($isLive ? 'يمكن للمشتركين الانضمام الآن' : 'ينتظر المشتركون بدء الجلسة')
+                                    : 'سينضم المشتركون في الموقع المحدد';
+                                $participantHint = $workshop->is_online
+                                    ? ($isLive ? 'تم تفعيل رابط البث للمشاركين تلقائياً.' : 'سيتم تفعيل رابط الدخول عندما تبدأ البث.')
+                                    : 'ذكّر المشاركين بتفاصيل الموقع قبل موعد الورشة.';
                             @endphp
                             <div class="rounded-2xl bg-white/90 p-4 text-slate-800 shadow-sm transition hover:shadow-md">
                                 <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
@@ -169,17 +206,69 @@
                                         {{ optional($workshop->start_date)?->locale('ar')->translatedFormat('d F Y • h:i a') ?? 'موعد لاحق' }}
                                     </span>
                                 </div>
-                                <h3 class="mt-3 text-lg font-semibold text-slate-900">{{ $workshop->title }}</h3>
-                                <p class="mt-2 text-sm text-slate-500 line-clamp-2">
-                                    {{ \Illuminate\Support\Str::limit($workshop->description, 110) }}
-                                </p>
-                                <div class="mt-4 space-y-2">
-                                    <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
-                                        <span><i class="fas fa-users text-slate-400"></i> {{ $confirmed }} مشارك</span>
-                                        <span>{{ $capacity > 0 ? $capacity : 'بدون حد' }} مقعد</span>
+                                <div class="mt-3 flex flex-col gap-4">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-slate-900">{{ $workshop->title }}</h3>
+                                        <p class="mt-2 text-sm text-slate-500 line-clamp-2">
+                                            {{ \Illuminate\Support\Str::limit($workshop->description, 110) }}
+                                        </p>
                                     </div>
-                                    <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                                        <div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300" style="width: {{ $fillPercent }}%;"></div>
+                                    <div class="flex flex-col gap-3">
+                                        <div class="rounded-2xl border border-indigo-100 bg-white px-4 py-3 shadow-sm">
+                                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-500">المضيف</p>
+                                                    <p class="mt-1 text-sm font-medium text-slate-700">{{ $hostStatusLabel }}</p>
+                                                    @if ($isLive && $workshop->meeting_started_at)
+                                                        <p class="text-xs text-indigo-500">
+                                                            بدأ البث قبل {{ $workshop->meeting_started_at?->locale('ar')->diffForHumans(null, true) }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                                <a href="{{ route('chef.workshops.join', $workshop) }}"
+                                                   class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
+                                                    <i class="fas fa-door-open"></i>
+                                                    دخول المضيف
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">المشتركون</p>
+                                                    <p class="mt-1 text-sm font-medium text-slate-700">{{ $participantStatusLabel }}</p>
+                                                    <p class="text-xs text-slate-500">{{ $participantHint }}</p>
+                                                </div>
+                                                @if ($workshop->is_online && $workshop->meeting_link)
+                                                    <a href="{{ $workshop->meeting_link }}"
+                                                       target="_blank"
+                                                       rel="noopener"
+                                                       class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-slate-700">
+                                                        <i class="fas fa-link"></i>
+                                                        رابط المشاركين
+                                                    </a>
+                                                @endif
+                                            </div>
+                                            @if ($workshop->is_online && $workshop->meeting_link)
+                                                <p class="mt-2 break-all text-xs text-slate-400 ltr:text-left rtl:text-right">
+                                                    {{ $workshop->meeting_link }}
+                                                </p>
+                                            @endif
+                                            @unless ($workshop->is_online)
+                                                <p class="mt-2 text-xs text-slate-500">
+                                                    {{ $workshop->location ? 'العنوان: ' . $workshop->location : 'أضف عنوان الورشة لتسهيل وصول المشاركين.' }}
+                                                </p>
+                                            @endunless
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
+                                            <span><i class="fas fa-users text-slate-400"></i> {{ $confirmed }} مشارك</span>
+                                            <span>{{ $capacity > 0 ? $capacity : 'بدون حد' }} مقعد</span>
+                                        </div>
+                                        <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                            <div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300" style="width: {{ $fillPercent }}%;"></div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mt-4 flex flex-wrap items-center gap-2">
@@ -188,13 +277,6 @@
                                         <i class="fas fa-pen"></i>
                                         تعديل التفاصيل
                                     </a>
-                                    @if ($workshop->is_online && $workshop->meeting_link)
-                                        <a href="{{ route('chef.workshops.join', $workshop) }}"
-                                           class="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700 sm:w-auto sm:justify-start">
-                                            <i class="fas fa-play"></i>
-                                            فتح غرفة البث
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
                         @empty
