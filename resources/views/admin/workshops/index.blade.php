@@ -3,6 +3,44 @@
 @section('title', 'إدارة الورشات - لوحة الإدارة')
 
 @section('content')
+@php
+    $filters = $filters ?? [
+        'search' => request('search', ''),
+        'status' => request('status', 'all'),
+        'mode' => request('mode', 'all'),
+        'featured' => request('featured', 'all'),
+        'time' => request('time', 'all'),
+    ];
+
+    $hasActiveFilters = $hasActiveFilters ?? (
+        ($filters['search'] ?? '') !== ''
+        || collect($filters)->except('search')->contains(fn ($value) => $value !== 'all')
+    );
+
+    $statusOptions = [
+        'all' => 'كل الحالات',
+        'active' => 'نشطة',
+        'inactive' => 'غير نشطة',
+    ];
+
+    $modeOptions = [
+        'all' => 'كل الأنماط',
+        'online' => 'أونلاين',
+        'offline' => 'حضوري',
+    ];
+
+    $featuredOptions = [
+        'all' => 'الكل',
+        'featured' => 'مميزة فقط',
+        'regular' => 'غير مميزة',
+    ];
+
+    $timeOptions = [
+        'all' => 'كل الأوقات',
+        'upcoming' => 'قادمة',
+        'past' => 'منتهية',
+    ];
+@endphp
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
         <!-- Header -->
@@ -84,6 +122,126 @@
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="mb-8">
+            <form method="GET" action="{{ route('admin.workshops.index') }}"
+                  class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <div class="flex flex-col gap-4 p-4 md:p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1" for="search">
+                                بحث عن ورشة أو مدرب
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-orange-500">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input
+                                    id="search"
+                                    name="search"
+                                    type="text"
+                                    value="{{ $filters['search'] ?? '' }}"
+                                    placeholder="مثال: ورشة المخبوزات أو اسم المدرب"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-10 pl-4 text-sm text-gray-700 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-100 transition"
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1" for="status">
+                                حالة الورشة
+                            </label>
+                            <select id="status" name="status" class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3 text-sm text-gray-700 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-100 transition">
+                                @foreach($statusOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(($filters['status'] ?? 'all') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1" for="mode">
+                                نوع الحضور
+                            </label>
+                            <select id="mode" name="mode" class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3 text-sm text-gray-700 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-100 transition">
+                                @foreach($modeOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(($filters['mode'] ?? 'all') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1" for="featured">
+                                حالة التمييز
+                            </label>
+                            <select id="featured" name="featured" class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3 text-sm text-gray-700 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-100 transition">
+                                @foreach($featuredOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(($filters['featured'] ?? 'all') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1" for="time">
+                                الإطار الزمني
+                            </label>
+                            <select id="time" name="time" class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3 text-sm text-gray-700 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-100 transition">
+                                @foreach($timeOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(($filters['time'] ?? 'all') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        @if($hasActiveFilters)
+                            <div class="flex flex-wrap items-center gap-2 text-xs">
+                                <span class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-orange-600 font-semibold">
+                                    <i class="fas fa-filter"></i>
+                                    عوامل تصفية مفعّلة
+                                </span>
+                                @if(($filters['search'] ?? '') !== '')
+                                    <span class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-gray-600">
+                                        <i class="fas fa-search"></i>
+                                        بحث: "{{ $filters['search'] }}"
+                                    </span>
+                                @endif
+                                @foreach(['status' => $statusOptions, 'mode' => $modeOptions, 'featured' => $featuredOptions, 'time' => $timeOptions] as $key => $options)
+                                    @php
+                                        $value = $filters[$key] ?? 'all';
+                                    @endphp
+                                    @if($value !== 'all')
+                                        <span class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-gray-600">
+                                            <i class="fas fa-check-circle text-gray-400"></i>
+                                            {{ $options[$value] ?? $value }}
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-sm text-gray-500">
+                                استخدم البحث والمرشحات للحصول على الورشة المطلوبة بسرعة.
+                            </p>
+                        @endif
+
+                        <div class="flex items-center gap-3">
+                            @if($hasActiveFilters)
+                                <a href="{{ route('admin.workshops.index') }}"
+                                   class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100">
+                                    <i class="fas fa-undo-alt"></i>
+                                    إعادة الضبط
+                                </a>
+                            @endif
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-5 py-2 text-sm font-semibold text-white shadow-md transition transform hover:-translate-y-0.5 hover:shadow-lg">
+                                <i class="fas fa-check"></i>
+                                تطبيق المرشحات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
             <div class="group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-6 shadow-sm transition transform hover:-translate-y-1 hover:shadow-xl">
@@ -146,6 +304,7 @@
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900">قائمة الورشات</h2>
                     <p class="text-sm text-gray-500 mt-1">استعرض تفاصيل الورشات وحالة الحجز والتمييز لكل ورشة.</p>
+                    <p class="text-xs text-gray-400 mt-2">{{ number_format($workshops->total()) }} نتيجة</p>
                 </div>
                 <div class="hidden md:flex items-center gap-3 text-sm text-gray-500">
                     <span class="flex items-center gap-1">
@@ -177,6 +336,7 @@
                         @php
                             $rowClasses = $workshop->is_featured ? 'featured-row bg-orange-50' : '';
                             $isOnline = $workshop->is_online;
+                            $isUpcoming = $workshop->start_date?->isFuture();
                         @endphp
                         <tr class="group transition duration-200 hover:bg-gray-50 {{ $rowClasses }}">
                             <td class="px-6 py-4">
@@ -213,6 +373,9 @@
                                 <div class="text-sm space-y-1">
                                     <p class="font-semibold text-gray-800">{{ $workshop->start_date->format('d/m/Y') }}</p>
                                     <p class="text-xs text-gray-500">{{ $workshop->start_date->format('H:i') }}</p>
+                                    <p class="text-xs {{ $isUpcoming ? 'text-emerald-600' : 'text-gray-400' }}">
+                                        {{ $workshop->start_date->diffForHumans() }}
+                                    </p>
                                     @if($workshop->end_date)
                                         <p class="text-xs text-gray-400">حتى {{ $workshop->end_date->format('d/m/Y') }}</p>
                                     @endif

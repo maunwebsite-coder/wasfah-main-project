@@ -23,14 +23,60 @@ class WorkshopController extends Controller
     /**
      * عرض قائمة الورشات
      */
-    public function index()
+    public function index(Request $request)
     {
-        $workshops = Workshop::withCount(['bookings' => function ($query) {
-            $query->where('status', 'confirmed');
-        }])
-        ->withCount('bookings as total_bookings')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+        $filters = [
+            'search' => trim((string) $request->get('search', '')),
+            'status' => $request->get('status', 'all'),
+            'mode' => $request->get('mode', 'all'),
+            'featured' => $request->get('featured', 'all'),
+            'time' => $request->get('time', 'all'),
+        ];
+
+        $workshopsQuery = Workshop::query()
+            ->withCount(['bookings' => function ($query) {
+                $query->where('status', 'confirmed');
+            }])
+            ->withCount('bookings as total_bookings');
+
+        if ($filters['search'] !== '') {
+            $workshopsQuery->where(function ($query) use ($filters) {
+                $query->where('title', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('instructor', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('location', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+
+        if ($filters['status'] === 'active') {
+            $workshopsQuery->where('is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $workshopsQuery->where('is_active', false);
+        }
+
+        if ($filters['mode'] === 'online') {
+            $workshopsQuery->where('is_online', true);
+        } elseif ($filters['mode'] === 'offline') {
+            $workshopsQuery->where('is_online', false);
+        }
+
+        if ($filters['featured'] === 'featured') {
+            $workshopsQuery->where('is_featured', true);
+        } elseif ($filters['featured'] === 'regular') {
+            $workshopsQuery->where('is_featured', false);
+        }
+
+        if ($filters['time'] === 'upcoming') {
+            $workshopsQuery->where('start_date', '>=', now());
+        } elseif ($filters['time'] === 'past') {
+            $workshopsQuery->where('start_date', '<', now());
+        }
+
+        $sortDirection = $filters['time'] === 'past' ? 'desc' : 'asc';
+
+        $workshops = $workshopsQuery
+            ->orderBy('start_date', $sortDirection)
+            ->paginate(10)
+            ->appends($request->query());
 
         $featuredWorkshop = Workshop::where('is_featured', true)->first();
 
@@ -49,7 +95,18 @@ class WorkshopController extends Controller
             'confirmed_bookings' => (int) ($aggregates?->confirmed_bookings ?? 0),
         ];
 
-        return view('admin.workshops.index', compact('workshops', 'featuredWorkshop', 'stats'));
+        $hasActiveFilters = ($filters['search'] !== '')
+            || collect($filters)->except('search')->contains(function ($value) {
+                return $value !== 'all';
+            });
+
+        return view('admin.workshops.index', compact(
+            'workshops',
+            'featuredWorkshop',
+            'stats',
+            'filters',
+            'hasActiveFilters'
+        ));
     }
 
     /**

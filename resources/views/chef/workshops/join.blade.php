@@ -33,10 +33,25 @@
 
     }
 
+    body.mobile-fullscreen-active {
+        overflow: hidden;
+    }
+
+    .mobile-fullscreen-target.mobile-fullscreen-active {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        z-index: 999 !important;
+        background-color: #000 !important;
+    }
+
     .mobile-meeting-toolbar {
         display: none;
         margin-top: 0.75rem;
         justify-content: center;
+        flex-wrap: wrap;
         gap: 0.75rem;
     }
 
@@ -87,6 +102,16 @@
             </div>
         @endif
 
+        <div
+            id="joinCancellationNotice"
+            class="mb-6 hidden rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-700 shadow-lg"
+            role="alert"
+            aria-live="polite"
+            tabindex="-1"
+        >
+            تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.
+        </div>
+
         <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(0,0.95fr)]">
             <div class="space-y-4">
                 <div>
@@ -135,8 +160,44 @@
         </div>
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
-            <div class="jitsi-wrapper bg-slate-950" id="jitsi-container"></div>
+            <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
             <div class="mobile-meeting-toolbar" id="mobileMeetingToolbar" hidden aria-hidden="true">
+                <button
+                    type="button"
+                    id="mobileMicToggle"
+                    class="mobile-meeting-toolbar__btn"
+                    aria-pressed="false"
+                >
+                    <i class="fas fa-microphone-slash" aria-hidden="true"></i>
+                    <span id="mobileMicToggleLabel">تشغيل الصوت</span>
+                </button>
+                <button
+                    type="button"
+                    id="mobileCameraToggle"
+                    class="mobile-meeting-toolbar__btn"
+                    aria-pressed="false"
+                >
+                    <i class="fas fa-video-slash" aria-hidden="true"></i>
+                    <span id="mobileCameraToggleLabel">تشغيل الكاميرا</span>
+                </button>
+                <button
+                    type="button"
+                    id="mobileRaiseHandToggle"
+                    class="mobile-meeting-toolbar__btn"
+                    aria-pressed="false"
+                >
+                    <i class="fas fa-hand" aria-hidden="true"></i>
+                    <span id="mobileRaiseHandToggleLabel">رفع اليد</span>
+                </button>
+                <button
+                    type="button"
+                    id="mobileE2eeToggle"
+                    class="mobile-meeting-toolbar__btn"
+                    aria-pressed="false"
+                >
+                    <i class="fas fa-lock-open" aria-hidden="true"></i>
+                    <span id="mobileE2eeToggleLabel">تشغيل التعمية</span>
+                </button>
                 <button
                     type="button"
                     id="mobileFullscreenToggle"
@@ -199,14 +260,154 @@
             </a>
         </div>
     </div>
+
+    <div
+        id="joinConfirmationModal"
+        class="fixed inset-0 z-[1200] hidden items-center justify-center bg-slate-900/60 p-4 opacity-0 transition-opacity duration-200"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="joinConfirmationTitle"
+        aria-hidden="true"
+    >
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl">
+            <button
+                type="button"
+                class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
+                data-action="close"
+            >
+                <span class="sr-only">إغلاق</span>
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="flex flex-col items-center gap-4 px-8 pt-10 pb-8 text-center">
+                <span class="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-3xl text-orange-500">
+                    <i class="fas fa-video"></i>
+                </span>
+                <div class="space-y-3">
+                    <h2 id="joinConfirmationTitle" class="text-2xl font-semibold text-slate-900">جاهز للدخول إلى الجلسة؟</h2>
+                    <p class="text-sm leading-relaxed text-slate-600">
+                        سيتم تشغيل غرفة الاجتماع فوراً بعد المتابعة. تأكد من أن الصوت والكاميرا جاهزان قبل الاستمرار.
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 rounded-b-3xl border-t border-slate-100 bg-slate-50 px-8 py-6 sm:flex-row sm:justify-end">
+                <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 sm:w-auto"
+                    data-action="cancel"
+                >
+                    <i class="fas fa-clock"></i>
+                    ليس الآن
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition hover:from-orange-600 hover:to-amber-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 sm:w-auto"
+                    data-action="confirm"
+                >
+                    <i class="fas fa-play"></i>
+                    ابدأ الجلسة الآن
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script src="{{ $embedConfig['external_api_url'] }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const confirmationMessage = 'هل تريد الدخول إلى الاجتماع؟ ستكون في الجلسة مباشرة عند الضغط على نعم.';
+    document.addEventListener('DOMContentLoaded', async () => {
+        const joinModal = document.getElementById('joinConfirmationModal');
+        const joinCancellationNotice = document.getElementById('joinCancellationNotice');
+        const cancellationMessage = 'تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.';
+
+        const requestJoinConfirmation = () => {
+            if (joinCancellationNotice) {
+                joinCancellationNotice.classList.add('hidden');
+            }
+
+            const fallbackConfirmation = 'هل تريد الدخول إلى الاجتماع الآن؟';
+
+            if (!joinModal) {
+                return Promise.resolve(window.confirm(fallbackConfirmation));
+            }
+
+            return new Promise((resolve) => {
+                const previouslyFocused = (document.activeElement && typeof document.activeElement.focus === 'function')
+                    ? document.activeElement
+                    : null;
+                const confirmButton = joinModal.querySelector('[data-action="confirm"]');
+                const cancelButton = joinModal.querySelector('[data-action="cancel"]');
+                const closeButton = joinModal.querySelector('[data-action="close"]');
+                let resolved = false;
+
+                const finish = (result) => {
+                    if (resolved) {
+                        return;
+                    }
+                    resolved = true;
+
+                    joinModal.classList.remove('opacity-100');
+                    joinModal.classList.add('opacity-0');
+                    joinModal.setAttribute('aria-hidden', 'true');
+
+                    joinModal.removeEventListener('click', handleBackdropClick);
+                    window.removeEventListener('keydown', handleKeydown);
+                    confirmButton?.removeEventListener('click', handleConfirm);
+                    cancelButton?.removeEventListener('click', handleCancel);
+                    closeButton?.removeEventListener('click', handleCancel);
+
+                    setTimeout(() => {
+                        joinModal.classList.add('hidden');
+                        joinModal.classList.remove('flex');
+                        previouslyFocused?.focus?.();
+                    }, 220);
+
+                    resolve(result);
+                };
+
+                const handleConfirm = () => finish(true);
+                const handleCancel = () => finish(false);
+                const handleBackdropClick = (event) => {
+                    if (event.target === joinModal) {
+                        finish(false);
+                    }
+                };
+                const handleKeydown = (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        finish(false);
+                    }
+                };
+
+                joinModal.classList.remove('hidden');
+                joinModal.classList.add('flex');
+                joinModal.setAttribute('aria-hidden', 'false');
+
+                requestAnimationFrame(() => {
+                    joinModal.classList.remove('opacity-0');
+                    joinModal.classList.add('opacity-100');
+                    (confirmButton || cancelButton || closeButton)?.focus();
+                });
+
+                confirmButton?.addEventListener('click', handleConfirm);
+                cancelButton?.addEventListener('click', handleCancel);
+                closeButton?.addEventListener('click', handleCancel);
+                joinModal.addEventListener('click', handleBackdropClick);
+                window.addEventListener('keydown', handleKeydown);
+            });
+        };
+
+        const confirmed = await requestJoinConfirmation();
+        if (!confirmed) {
+            if (joinCancellationNotice) {
+                joinCancellationNotice.classList.remove('hidden');
+                joinCancellationNotice.focus?.();
+            } else {
+                alert(cancellationMessage);
+            }
+            return;
+        }
+
         const countdownCard = document.getElementById('countdownCard');
         const countdownLabel = document.getElementById('countdownLabel');
         const countdownBadge = document.getElementById('countdownBadge');
@@ -214,11 +415,6 @@
         const presenceUrl = @json(route('chef.workshops.presence', $workshop));
         const csrfToken = @json(csrf_token());
         let lastPresenceState = null;
-
-        if (!window.confirm(confirmationMessage)) {
-            alert('تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.');
-            return;
-        }
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
@@ -350,6 +546,10 @@
 
         const container = document.getElementById('jitsi-container');
         const mobileToolbar = document.getElementById('mobileMeetingToolbar');
+        const mobileMicToggle = document.getElementById('mobileMicToggle');
+        const mobileCameraToggle = document.getElementById('mobileCameraToggle');
+        const mobileRaiseHandToggle = document.getElementById('mobileRaiseHandToggle');
+        const mobileE2eeToggle = document.getElementById('mobileE2eeToggle');
         const mobileFullscreenToggle = document.getElementById('mobileFullscreenToggle');
         const mobileFullscreenLabel = document.getElementById('mobileFullscreenToggleLabel');
 
@@ -368,6 +568,7 @@
             'desktop',
             'chat',
             'raisehand',
+            'e2ee',
             'tileview',
             'fullscreen',
             'settings',
@@ -419,7 +620,18 @@
         }
 
         const api = new JitsiMeetExternalAPI(domain, options);
-        setupMobileFullscreenControl(api, mobileToolbar, mobileFullscreenToggle, mobileFullscreenLabel);
+        setupMobileControls(api, {
+            container,
+            toolbar: mobileToolbar,
+            fullscreen: {
+                button: mobileFullscreenToggle,
+                label: mobileFullscreenLabel,
+            },
+            micButton: mobileMicToggle,
+            cameraButton: mobileCameraToggle,
+            raiseHandButton: mobileRaiseHandToggle,
+            e2eeButton: mobileE2eeToggle,
+        });
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
@@ -454,8 +666,16 @@
         });
         @endif
 
-        function setupMobileFullscreenControl(api, toolbar, toggleButton, toggleLabel) {
-            if (!toolbar || !toggleButton) {
+        function setupMobileControls(api, {
+            container,
+            toolbar,
+            fullscreen = {},
+            micButton = null,
+            cameraButton = null,
+            raiseHandButton = null,
+            e2eeButton = null,
+        }) {
+            if (!toolbar || !container) {
                 return;
             }
 
@@ -472,35 +692,6 @@
                 }
             };
 
-            const getFullscreenElement = () => (
-                document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.mozFullScreenElement ||
-                document.msFullscreenElement
-            );
-
-            const updateFullscreenState = () => {
-                const isFullscreen = Boolean(getFullscreenElement());
-                toggleButton.classList.toggle('is-active', isFullscreen);
-                toggleButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
-                if (toggleLabel) {
-                    toggleLabel.textContent = isFullscreen ? 'إغلاق الشاشة الكاملة' : 'شاشة كاملة';
-                }
-            };
-
-            toggleButton.addEventListener('click', () => {
-                api.executeCommand('toggleFullScreen');
-            });
-
-            if (typeof api.addListener === 'function') {
-                api.addListener('videoConferenceJoined', updateFullscreenState);
-                api.addListener('videoConferenceLeft', updateFullscreenState);
-            }
-
-            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(eventName => {
-                document.addEventListener(eventName, updateFullscreenState);
-            });
-
             updateVisibility();
             if (typeof mobileQuery.addEventListener === 'function') {
                 mobileQuery.addEventListener('change', updateVisibility);
@@ -508,7 +699,344 @@
                 mobileQuery.addListener(updateVisibility);
             }
 
-            updateFullscreenState();
+            const getFullscreenElement = () => (
+                document.fullscreenElement
+                || document.webkitFullscreenElement
+                || document.mozFullScreenElement
+                || document.msFullscreenElement
+            );
+
+            const applyFallback = (enabled) => {
+                document.body.classList.toggle('mobile-fullscreen-active', enabled);
+                container.classList.toggle('mobile-fullscreen-active', enabled);
+            };
+
+            const enterFullscreen = () => {
+                const iframe = typeof api.getIFrame === 'function' ? api.getIFrame() : null;
+                const target = iframe || container;
+
+                if (target.requestFullscreen) {
+                    return target.requestFullscreen();
+                }
+                if (target.webkitRequestFullscreen) {
+                    return target.webkitRequestFullscreen();
+                }
+                if (target.mozRequestFullScreen) {
+                    return target.mozRequestFullScreen();
+                }
+                if (target.msRequestFullscreen) {
+                    return target.msRequestFullscreen();
+                }
+
+                applyFallback(true);
+                return Promise.resolve('fallback');
+            };
+
+            const exitFullscreen = () => {
+                if (getFullscreenElement()) {
+                    if (document.exitFullscreen) {
+                        return document.exitFullscreen();
+                    }
+                    if (document.webkitExitFullscreen) {
+                        return document.webkitExitFullscreen();
+                    }
+                    if (document.mozCancelFullScreen) {
+                        return document.mozCancelFullScreen();
+                    }
+                    if (document.msExitFullscreen) {
+                        return document.msExitFullscreen();
+                    }
+                }
+
+                if (document.body.classList.contains('mobile-fullscreen-active')) {
+                    applyFallback(false);
+                    return Promise.resolve('fallback');
+                }
+
+                return Promise.resolve();
+            };
+
+            const setPressedState = (button, pressed) => {
+                if (!button) {
+                    return;
+                }
+                button.classList.toggle('is-active', pressed);
+                button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+            };
+
+            const setStatefulButton = (button, {
+                active,
+                activeLabel,
+                inactiveLabel,
+                activeIcon,
+                inactiveIcon,
+            }) => {
+                if (!button) {
+                    return;
+                }
+
+                setPressedState(button, active);
+
+                const icon = button.querySelector('i');
+                if (icon && (activeIcon || inactiveIcon)) {
+                    const iconsToRemove = [];
+                    if (activeIcon) {
+                        iconsToRemove.push(activeIcon);
+                    }
+                    if (inactiveIcon) {
+                        iconsToRemove.push(inactiveIcon);
+                    }
+                    if (iconsToRemove.length) {
+                        icon.classList.remove(...iconsToRemove);
+                    }
+                    const targetIcon = active ? activeIcon : inactiveIcon;
+                    if (targetIcon) {
+                        icon.classList.add(targetIcon);
+                    }
+                }
+
+                const label = button.querySelector('span');
+                if (label && activeLabel && inactiveLabel) {
+                    label.textContent = active ? activeLabel : inactiveLabel;
+                }
+            };
+
+            const { button: fullscreenButton = null, label: fullscreenLabel = null } = fullscreen || {};
+
+            const updateFullscreenState = () => {
+                if (!fullscreenButton) {
+                    return;
+                }
+                const isFullscreen = Boolean(getFullscreenElement())
+                    || document.body.classList.contains('mobile-fullscreen-active');
+                setPressedState(fullscreenButton, isFullscreen);
+                if (fullscreenLabel) {
+                    fullscreenLabel.textContent = isFullscreen ? 'إغلاق الشاشة الكاملة' : 'شاشة كاملة';
+                }
+            };
+
+            if (fullscreenButton) {
+                fullscreenButton.addEventListener('click', () => {
+                    const isFullscreen = Boolean(getFullscreenElement())
+                        || document.body.classList.contains('mobile-fullscreen-active');
+
+                    const onFailure = () => {
+                        try {
+                            api.executeCommand('toggleFullScreen');
+                        } catch {
+                            // ignore
+                        }
+                    };
+
+                    if (isFullscreen) {
+                        exitFullscreen().catch(onFailure).finally(updateFullscreenState);
+                    } else {
+                        enterFullscreen()
+                            .catch(onFailure)
+                            .finally(() => {
+                                if (!getFullscreenElement()
+                                    && !document.body.classList.contains('mobile-fullscreen-active')) {
+                                    applyFallback(true);
+                                }
+                                updateFullscreenState();
+                            });
+                    }
+                });
+
+                if (typeof api.addListener === 'function') {
+                    api.addListener('videoConferenceJoined', updateFullscreenState);
+                    api.addListener('videoConferenceLeft', updateFullscreenState);
+                }
+
+                ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(eventName => {
+                    document.addEventListener(eventName, updateFullscreenState);
+                    document.addEventListener(eventName, () => {
+                        if (!getFullscreenElement()) {
+                            applyFallback(false);
+                        }
+                    });
+                });
+
+                updateFullscreenState();
+            }
+
+            const updateMicState = (muted) => {
+                setStatefulButton(micButton, {
+                    active: !muted,
+                    activeLabel: 'كتم الصوت',
+                    inactiveLabel: 'تشغيل الصوت',
+                    activeIcon: 'fa-microphone',
+                    inactiveIcon: 'fa-microphone-slash',
+                });
+            };
+
+            if (micButton) {
+                micButton.addEventListener('click', () => {
+                    try {
+                        api.executeCommand('toggleAudio');
+                    } catch {
+                        // ignore
+                    }
+                });
+
+                const syncMicState = () => {
+                    if (typeof api.isAudioMuted !== 'function') {
+                        return;
+                    }
+                    Promise.resolve(api.isAudioMuted()).then(result => {
+                        if (typeof result === 'boolean') {
+                            updateMicState(result);
+                        }
+                    }).catch(() => {});
+                };
+
+                if (typeof api.addListener === 'function') {
+                    api.addListener('audioMuteStatusChanged', event => {
+                        if (event && typeof event.muted === 'boolean') {
+                            updateMicState(event.muted);
+                        }
+                    });
+                    api.addListener('videoConferenceJoined', syncMicState);
+                }
+
+                syncMicState();
+            }
+
+            const updateCameraState = (muted) => {
+                setStatefulButton(cameraButton, {
+                    active: !muted,
+                    activeLabel: 'إيقاف الكاميرا',
+                    inactiveLabel: 'تشغيل الكاميرا',
+                    activeIcon: 'fa-video',
+                    inactiveIcon: 'fa-video-slash',
+                });
+            };
+
+            if (cameraButton) {
+                cameraButton.addEventListener('click', () => {
+                    try {
+                        api.executeCommand('toggleVideo');
+                    } catch {
+                        // ignore
+                    }
+                });
+
+                const syncCameraState = () => {
+                    if (typeof api.isVideoMuted !== 'function') {
+                        return;
+                    }
+                    Promise.resolve(api.isVideoMuted()).then(result => {
+                        if (typeof result === 'boolean') {
+                            updateCameraState(result);
+                        }
+                    }).catch(() => {});
+                };
+
+                if (typeof api.addListener === 'function') {
+                    api.addListener('videoMuteStatusChanged', event => {
+                        if (event && typeof event.muted === 'boolean') {
+                            updateCameraState(event.muted);
+                        }
+                    });
+                    api.addListener('videoConferenceJoined', syncCameraState);
+                }
+
+                syncCameraState();
+            }
+
+            let localParticipantId = null;
+
+            const updateRaiseHandState = (raised) => {
+                setStatefulButton(raiseHandButton, {
+                    active: raised,
+                    activeLabel: 'خفض اليد',
+                    inactiveLabel: 'رفع اليد',
+                    activeIcon: 'fa-hand-paper',
+                    inactiveIcon: 'fa-hand',
+                });
+            };
+
+            if (raiseHandButton) {
+                raiseHandButton.addEventListener('click', () => {
+                    try {
+                        api.executeCommand('toggleRaiseHand');
+                    } catch {
+                        // ignore
+                    }
+                });
+
+                if (typeof api.addListener === 'function') {
+                    api.addListener('videoConferenceJoined', event => {
+                        if (event && event.id) {
+                            localParticipantId = event.id;
+                        }
+                        const initialRaised = typeof event?.handRaised === 'boolean'
+                            ? event.handRaised
+                            : (typeof event?.raisedHand === 'boolean' ? event.raisedHand : false);
+                        updateRaiseHandState(Boolean(initialRaised));
+                    });
+
+                    api.addListener('raiseHandUpdated', event => {
+                        if (!event || !localParticipantId) {
+                            return;
+                        }
+                        if (event.id !== localParticipantId) {
+                            return;
+                        }
+                        const handRaisedValue = typeof event.handRaised === 'boolean'
+                            ? event.handRaised
+                            : (typeof event.raisedHand === 'boolean' ? event.raisedHand : null);
+                        if (handRaisedValue !== null) {
+                            updateRaiseHandState(handRaisedValue);
+                        }
+                    });
+                }
+            }
+
+            let e2eeState = false;
+
+            const updateE2eeState = (enabled) => {
+                e2eeState = Boolean(enabled);
+                setStatefulButton(e2eeButton, {
+                    active: e2eeState,
+                    activeLabel: 'إيقاف التعمية',
+                    inactiveLabel: 'تشغيل التعمية',
+                    activeIcon: 'fa-lock',
+                    inactiveIcon: 'fa-lock-open',
+                });
+            };
+
+            if (e2eeButton) {
+                updateE2eeState(e2eeState);
+
+                e2eeButton.addEventListener('click', () => {
+                    const nextState = !e2eeState;
+                    updateE2eeState(nextState);
+                    try {
+                        api.executeCommand('toggleE2EE');
+                    } catch {
+                        updateE2eeState(!nextState);
+                    }
+                });
+
+                if (typeof api.addListener === 'function') {
+                    api.addListener('toolbarButtonClicked', event => {
+                        if (event && event.key === 'e2ee') {
+                            if (typeof event.enabled === 'boolean') {
+                                updateE2eeState(event.enabled);
+                            } else {
+                                updateE2eeState(!e2eeState);
+                            }
+                        }
+                    });
+
+                    api.addListener('e2eeStatusChanged', event => {
+                        if (event && typeof event.enabled === 'boolean') {
+                            updateE2eeState(event.enabled);
+                        }
+                    });
+                }
+            }
         }
 
     });
