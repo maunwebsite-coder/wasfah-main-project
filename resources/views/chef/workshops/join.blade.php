@@ -590,7 +590,7 @@
         }
 
         const api = new JitsiMeetExternalAPI(domain, options);
-        setupMobileFullscreenControl(
+        const fullscreenController = setupMobileFullscreenControl(
             api,
             container,
             mobileToolbar,
@@ -598,8 +598,39 @@
             mobileFullscreenLabel
         );
 
+        let autoFullscreenAttempts = 0;
+        const requestAutoFullscreen = () => {
+            if (fullscreenController?.isFullscreen?.()) {
+                autoFullscreenAttempts = 2;
+                return;
+            }
+
+            if (autoFullscreenAttempts >= 2) {
+                return;
+            }
+
+            autoFullscreenAttempts += 1;
+
+            const fallback = () => {
+                try {
+                    api.executeCommand('toggleFullScreen');
+                } catch {
+                    // ignore
+                }
+            };
+
+            if (typeof fullscreenController?.enterFullscreen === 'function') {
+                fullscreenController.enterFullscreen().catch(fallback);
+            } else {
+                fallback();
+            }
+        };
+
+        requestAutoFullscreen();
+
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
+            requestAutoFullscreen();
         });
 
         api.addListener('videoConferenceLeft', () => {

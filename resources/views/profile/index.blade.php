@@ -109,7 +109,8 @@
                                                     التفاصيل
                                                 </a>
                                                 @if ($status === 'confirmed' && $workshop?->is_online)
-                                                    <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}" class="font-semibold text-indigo-600 hover:text-indigo-700">
+                                                    <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 focus:ring-offset-white">
+                                                        <i class="fas fa-door-open text-xs"></i>
                                                         دخول الورشة
                                                     </a>
                                                 @endif
