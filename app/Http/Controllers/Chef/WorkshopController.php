@@ -113,7 +113,7 @@ class WorkshopController extends Controller
             ->with('success', 'تم حذف الورشة بنجاح.');
     }
 
-    public function join(Workshop $workshop)
+    public function join(Request $request, Workshop $workshop)
     {
         $this->authorizeWorkshop($workshop);
 
