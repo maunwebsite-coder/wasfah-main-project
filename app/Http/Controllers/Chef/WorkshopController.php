@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -249,6 +250,55 @@ class WorkshopController extends Controller
         return back()->with('success', $alreadyStarted ? 'تم بدء الاجتماع مسبقاً.' : 'تم فتح الغرفة ويمكن للمشاركين الدخول الآن.');
     }
 
+    public function resetHostDeviceLock(Request $request, Workshop $workshop): RedirectResponse
+    {
+        $this->authorizeWorkshop($workshop);
+
+        if (!$this->hostDeviceLockSupported()) {
+            return redirect()
+                ->route('chef.workshops.join', $workshop)
+                ->with('info', 'لا يتطلب هذا الاجتماع إعادة تعيين للجهاز الموثوق.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'password' => ['required', 'current_password'],
+        ], [
+            'password.required' => 'يرجى إدخال كلمة المرور لتأكيد الهوية.',
+            'password.current_password' => 'كلمة المرور المدخلة غير صحيحة.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()
+                ->route('chef.workshops.index')
+                ->withErrors($validator)
+                ->withInput($request->except('password'))
+                ->with([
+                    'error' => 'تعذر تأكيد الهوية. يرجى المحاولة مرة أخرى.',
+                    'host_join_device_reset_workshop_slug' => $workshop->slug,
+                    'host_join_device_reset_workshop_title' => $workshop->title,
+                    'host_join_device_reset_reason' => 'manual_reset_validation_failed',
+                ]);
+        }
+
+        $this->clearHostDeviceLock($workshop);
+
+        $cookieName = $this->getHostJoinDeviceCookieName($workshop);
+        Cookie::queue(Cookie::forget(
+            $cookieName,
+            '/',
+            config('session.domain')
+        ));
+
+        Log::info('Chef reset host workshop device lock.', [
+            'workshop_id' => $workshop->id,
+            'user_id' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('chef.workshops.join', $workshop)
+            ->with('success', 'تمت إعادة تعيين الجهاز الموثوق. يمكنك الآن فتح غرفة الورشة من هذا الجهاز.');
+    }
+
     public function updatePresence(Request $request, Workshop $workshop)
     {
         $this->authorizeWorkshop($workshop);
@@ -457,7 +507,12 @@ class WorkshopController extends Controller
 
         return redirect()
             ->route('chef.workshops.index')
-            ->with('error', 'لا يمكن فتح غرفة الورشة من جهاز مختلف. يرجى التواصل مع فريق الدعم لتحديث الوصول.');
+            ->with([
+                'error' => 'لا يمكن فتح غرفة الورشة من جهاز مختلف. يرجى تأكيد ملكيتك لإعادة تعيين الجهاز الموثوق.',
+                'host_join_device_reset_workshop_slug' => $workshop->slug,
+                'host_join_device_reset_workshop_title' => $workshop->title,
+                'host_join_device_reset_reason' => $reason,
+            ]);
     }
 
     protected function hostDeviceLockSupported(): bool
@@ -474,6 +529,23 @@ class WorkshopController extends Controller
         }
 
         return $supported;
+    }
+
+    protected function clearHostDeviceLock(Workshop $workshop, bool $persist = true): void
+    {
+        if (!$this->hostDeviceLockSupported()) {
+            return;
+        }
+
+        $workshop->host_first_joined_at = null;
+        $workshop->host_join_device_token = null;
+        $workshop->host_join_device_fingerprint = null;
+        $workshop->host_join_device_ip = null;
+        $workshop->host_join_device_user_agent = null;
+
+        if ($persist) {
+            $workshop->save();
+        }
     }
 
     protected function meetingLockSupported(): bool

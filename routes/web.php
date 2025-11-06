@@ -217,6 +217,7 @@ Route::middleware(['auth', 'chef'])->prefix('chef')->name('chef.')->group(functi
     Route::get('workshops/{workshop}/join', [ChefWorkshopController::class, 'join'])->name('workshops.join');
     Route::post('workshops/{workshop}/start', [ChefWorkshopController::class, 'startMeeting'])->name('workshops.start');
     Route::post('workshops/{workshop}/presence', [ChefWorkshopController::class, 'updatePresence'])->name('workshops.presence');
+    Route::post('workshops/{workshop}/reset-device', [ChefWorkshopController::class, 'resetHostDeviceLock'])->name('workshops.reset-device');
     Route::post('workshops/generate-meeting-link', [ChefWorkshopController::class, 'generateMeetingLink'])->name('workshops.generate-link');
     Route::resource('workshops', ChefWorkshopController::class)->except(['show']);
 });

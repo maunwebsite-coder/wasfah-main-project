@@ -34,6 +34,89 @@
                 <p class="font-semibold">{{ session('success') }}</p>
             </div>
         @endif
+        @if (session('error'))
+            <div class="mb-6 rounded-3xl border border-rose-200 bg-rose-50 p-5 text-rose-700 shadow">
+                <p class="font-semibold">{{ session('error') }}</p>
+            </div>
+        @endif
+        @if (session('info'))
+            <div class="mb-6 rounded-3xl border border-sky-200 bg-sky-50 p-5 text-sky-700 shadow">
+                <p class="font-semibold">{{ session('info') }}</p>
+            </div>
+        @endif
+
+        @php
+            $resetWorkshopSlug = session('host_join_device_reset_workshop_slug') ?? old('reset_workshop_slug');
+            $resetWorkshopTitle = session('host_join_device_reset_workshop_title') ?? old('reset_workshop_title');
+            $resetReason = session('host_join_device_reset_reason') ?? old('reset_device_reason');
+            $reasonMessages = [
+                'missing_cookie' => 'لم يتم العثور على ملف تعريف الجهاز في هذا المتصفح. ربما تم مسح ملفات التخزين أو تم استخدام جهاز جديد.',
+                'cookie_mismatch' => 'رمز الجهاز الحالي لا يطابق الجهاز الموثوق سابقاً.',
+                'fingerprint_mismatch' => 'تم اكتشاف جهاز أو متصفح مختلف عن الجهاز الموثوق.',
+                'manual_reset_validation_failed' => 'تعذر التحقق من كلمة المرور. حاول مرة أخرى للتأكد من هويتك.',
+            ];
+            $reasonMessage = $resetReason && isset($reasonMessages[$resetReason]) ? $reasonMessages[$resetReason] : null;
+        @endphp
+
+        @if ($resetWorkshopSlug)
+            <div class="mb-8 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                        <i class="fas fa-shield-alt text-xl"></i>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div>
+                            <p class="text-sm font-semibold uppercase tracking-wider text-amber-600">تأكيد الجهاز الموثوق</p>
+                            <h2 class="mt-1 text-lg font-bold text-amber-900">إعادة فتح غرفة الورشة: {{ $resetWorkshopTitle }}</h2>
+                            <p class="mt-1 text-sm text-amber-700">
+                                لتأمين المشاركين، يتم السماح لجهاز واحد موثوق بفتح غرفة الورشة. يرجى إدخال كلمة المرور لإعادة تعيين الجهاز إلى هذا المتصفح.
+                            </p>
+                            @if ($reasonMessage)
+                                <p class="mt-2 text-xs text-amber-700/80">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    {{ $reasonMessage }}
+                                </p>
+                            @endif
+                        </div>
+
+                        <form action="{{ route('chef.workshops.reset-device', $resetWorkshopSlug) }}" method="POST" class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="reset_workshop_slug" value="{{ $resetWorkshopSlug }}">
+                            <input type="hidden" name="reset_workshop_title" value="{{ $resetWorkshopTitle }}">
+                            <input type="hidden" name="reset_device_reason" value="{{ $resetReason }}">
+
+                            <div class="flex flex-col gap-3 md:flex-row md:items-center">
+                                <label class="flex-1">
+                                    <span class="sr-only">كلمة المرور</span>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        class="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                        placeholder="أدخل كلمة المرور الحالية"
+                                        required
+                                    >
+                                </label>
+                                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow hover:from-amber-600 hover:to-orange-600">
+                                    <i class="fas fa-unlock"></i>
+                                    تأكيد إعادة التعيين
+                                </button>
+                                <a href="{{ route('chef.workshops.join', $resetWorkshopSlug) }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-white px-5 py-3 text-sm font-semibold text-amber-700 shadow-sm hover:border-amber-300 hover:text-amber-900">
+                                    <i class="fas fa-redo"></i>
+                                    إعادة المحاولة بعد التعيين
+                                </a>
+                            </div>
+                            @error('password')
+                                <p class="text-sm text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </form>
+
+                        <p class="text-xs text-amber-700">
+                            سيتم حفظ جهازك الحالي كمضيف موثوق، وسيتم رفض أي أجهزة أخرى حتى تتم إعادة التعيين مرة أخرى.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="mb-8 grid gap-4 md:grid-cols-4">
             <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
