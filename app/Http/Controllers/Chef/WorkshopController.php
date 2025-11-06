@@ -11,6 +11,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -146,6 +147,10 @@ class WorkshopController extends Controller
                     ->route('chef.workshops.index')
                     ->with('error', $message);
             }
+        }
+
+        if ($redirect = $this->enforceHostJoinDeviceLock($request, $workshop)) {
+            return $redirect;
         }
 
         try {
@@ -317,6 +322,105 @@ class WorkshopController extends Controller
         ]);
     }
 
+    protected function enforceHostJoinDeviceLock(Request $request, Workshop $workshop): ?RedirectResponse
+    {
+        $currentUser = Auth::user();
+
+        if ($currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin()) {
+            return null;
+        }
+
+        $cookieName = $this->getHostJoinDeviceCookieName($workshop);
+        $storedTokenHash = $workshop->host_join_device_token;
+        $fingerprint = $this->makeDeviceFingerprint($request);
+
+        if ($storedTokenHash) {
+            $cookieToken = $request->cookie($cookieName);
+
+            if (!is_string($cookieToken) || $cookieToken === '') {
+                return $this->denyHostJoinFromUnrecognizedDevice($workshop, $request, 'missing_cookie');
+            }
+
+            $hashedCookieToken = hash('sha256', $cookieToken);
+
+            if (!hash_equals($storedTokenHash, $hashedCookieToken)) {
+                return $this->denyHostJoinFromUnrecognizedDevice($workshop, $request, 'cookie_mismatch');
+            }
+
+            if (!empty($workshop->host_join_device_fingerprint) && !hash_equals($workshop->host_join_device_fingerprint, $fingerprint)) {
+                return $this->denyHostJoinFromUnrecognizedDevice($workshop, $request, 'fingerprint_mismatch');
+            }
+
+            return null;
+        }
+
+        $plainToken = Str::random(64);
+        $firstJoinedAt = $workshop->host_first_joined_at ?: now();
+
+        $workshop->forceFill([
+            'host_first_joined_at' => $firstJoinedAt,
+            'host_join_device_token' => hash('sha256', $plainToken),
+            'host_join_device_fingerprint' => $fingerprint,
+            'host_join_device_ip' => $request->ip(),
+            'host_join_device_user_agent' => $this->truncateUserAgent($request->userAgent()),
+        ])->save();
+
+        Cookie::queue(
+            cookie(
+                $cookieName,
+                $plainToken,
+                60 * 24 * 365,
+                '/',
+                config('session.domain'),
+                config('session.secure', false),
+                true,
+                false,
+                config('session.same_site', 'lax')
+            )
+        );
+
+        return null;
+    }
+
+    protected function getHostJoinDeviceCookieName(Workshop $workshop): string
+    {
+        return 'wasfah_host_workshop_device_' . strtolower((string) $workshop->id);
+    }
+
+    protected function makeDeviceFingerprint(Request $request): string
+    {
+        $userAgent = (string) $request->userAgent();
+        $acceptLanguage = (string) $request->header('accept-language', '');
+
+        return hash('sha256', $userAgent . '|' . $acceptLanguage);
+    }
+
+    protected function truncateUserAgent(?string $userAgent): string
+    {
+        $agent = (string) $userAgent;
+
+        if (function_exists('mb_substr')) {
+            return mb_substr($agent, 0, 1024);
+        }
+
+        return substr($agent, 0, 1024);
+    }
+
+    protected function denyHostJoinFromUnrecognizedDevice(Workshop $workshop, Request $request, string $reason): RedirectResponse
+    {
+        Log::warning('Blocked chef workshop join from unrecognized device.', [
+            'workshop_id' => $workshop->id,
+            'user_id' => Auth::id(),
+            'reason' => $reason,
+            'request_ip' => $request->ip(),
+            'request_user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()
+            ->route('chef.workshops.index')
+            ->with('error', 'لا يمكن فتح غرفة الورشة من جهاز مختلف. يرجى التواصل مع فريق الدعم لتحديث الوصول.');
+    }
+
     protected function validateWorkshop(Request $request, ?int $workshopId = null): array
     {
         $rules = [
@@ -439,6 +543,11 @@ class WorkshopController extends Controller
             $workshop->meeting_started_at = null;
             $workshop->meeting_started_by = null;
             $workshop->meeting_locked_at = null;
+            $workshop->host_first_joined_at = null;
+            $workshop->host_join_device_token = null;
+            $workshop->host_join_device_fingerprint = null;
+            $workshop->host_join_device_ip = null;
+            $workshop->host_join_device_user_agent = null;
             return;
         }
 
@@ -447,6 +556,11 @@ class WorkshopController extends Controller
         $workshop->meeting_started_at = null;
         $workshop->meeting_started_by = null;
         $workshop->meeting_locked_at = null;
+        $workshop->host_first_joined_at = null;
+        $workshop->host_join_device_token = null;
+        $workshop->host_join_device_fingerprint = null;
+        $workshop->host_join_device_ip = null;
+        $workshop->host_join_device_user_agent = null;
 
         if ($autoGenerate || empty($inputLink)) {
             $meeting = $this->jitsiMeetingService->createMeeting(
