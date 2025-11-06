@@ -459,6 +459,52 @@
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const joinModal = document.getElementById('joinConfirmationModal');
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
+        const joinPageUrl = @json(route('bookings.join', ['booking' => $booking->public_code]));
+        let hasRedirectedToJoinPage = false;
+        const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
+        const mobileFullscreenClass = 'mobile-fullscreen-active';
+
+        const clearMobileFullscreen = () => {
+            document.body.classList.remove(mobileFullscreenClass);
+            document.querySelectorAll('.mobile-fullscreen-target').forEach(node => {
+                node.classList.remove(mobileFullscreenClass);
+            });
+        };
+
+        const applyMobileFullscreenIfNeeded = () => {
+            const target = document.querySelector('.mobile-fullscreen-target');
+
+            if (!meetingStarted || !target || !mobileViewportQuery.matches) {
+                clearMobileFullscreen();
+                return;
+            }
+
+            document.body.classList.add(mobileFullscreenClass);
+            target.classList.add(mobileFullscreenClass);
+        };
+
+        applyMobileFullscreenIfNeeded();
+
+        const handleViewportChange = () => applyMobileFullscreenIfNeeded();
+        if (typeof mobileViewportQuery.addEventListener === 'function') {
+            mobileViewportQuery.addEventListener('change', handleViewportChange);
+        } else if (typeof mobileViewportQuery.addListener === 'function') {
+            mobileViewportQuery.addListener(handleViewportChange);
+        }
+
+        window.addEventListener('orientationchange', applyMobileFullscreenIfNeeded);
+        window.addEventListener('beforeunload', clearMobileFullscreen);
+        window.addEventListener('pagehide', clearMobileFullscreen);
+
+        const redirectToJoinPage = () => {
+            if (hasRedirectedToJoinPage || !joinPageUrl) {
+                return;
+            }
+
+            hasRedirectedToJoinPage = true;
+            clearMobileFullscreen();
+            window.location.assign(joinPageUrl);
+        };
 
         const updateMeetingSubjectLabel = (subject) => {
             const value = (subject || '').trim();
@@ -848,6 +894,8 @@
                 participantName = (await promptForDisplayName()) || fallbackGuestName;
                 updateParticipantNameLabel(participantName);
 
+                applyMobileFullscreenIfNeeded();
+
                 const domain = @json($embedConfig['domain']);
                 const jaasJwt = @json($embedConfig['jwt'] ?? null);
                 const initialHeight = container.offsetHeight || 640;
@@ -945,6 +993,13 @@
                         pendingSubjectUpdate = null;
                     }
                 }
+
+                const handleMeetingClosure = () => {
+                    redirectToJoinPage();
+                };
+
+                apiInstance.addListener('videoConferenceLeft', handleMeetingClosure);
+                apiInstance.addListener('readyToClose', handleMeetingClosure);
 
                 const resizeJitsi = () => {
                     const width = container.offsetWidth;

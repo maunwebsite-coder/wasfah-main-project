@@ -246,8 +246,62 @@
         const presenceUrl = @json(route('chef.workshops.presence', $workshop));
         const startUrl = @json(route('chef.workshops.start', $workshop));
         const csrfToken = @json(csrf_token());
+        const joinPageUrl = @json(route('chef.workshops.join', $workshop));
         let lastPresenceState = null;
         let meetingStartTriggered = false;
+        const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
+        const mobileFullscreenClass = 'mobile-fullscreen-active';
+        let mobileFullscreenEnabled = false;
+        let hasRedirectedToJoinPage = false;
+
+        const clearMobileFullscreen = () => {
+            document.body.classList.remove(mobileFullscreenClass);
+            document.querySelectorAll('.mobile-fullscreen-target').forEach(node => {
+                node.classList.remove(mobileFullscreenClass);
+            });
+        };
+
+        const updateMobileFullscreen = () => {
+            const target = document.querySelector('.mobile-fullscreen-target');
+
+            if (!mobileFullscreenEnabled || !target || !mobileViewportQuery.matches) {
+                clearMobileFullscreen();
+                return;
+            }
+
+            document.body.classList.add(mobileFullscreenClass);
+            target.classList.add(mobileFullscreenClass);
+        };
+
+        const enableMobileFullscreen = () => {
+            mobileFullscreenEnabled = true;
+            updateMobileFullscreen();
+        };
+
+        const disableMobileFullscreen = () => {
+            mobileFullscreenEnabled = false;
+            clearMobileFullscreen();
+        };
+
+        const handleViewportChange = () => updateMobileFullscreen();
+
+        if (typeof mobileViewportQuery.addEventListener === 'function') {
+            mobileViewportQuery.addEventListener('change', handleViewportChange);
+        } else if (typeof mobileViewportQuery.addListener === 'function') {
+            mobileViewportQuery.addListener(handleViewportChange);
+        }
+
+        window.addEventListener('orientationchange', updateMobileFullscreen);
+
+        const redirectToJoinPage = () => {
+            if (hasRedirectedToJoinPage || !joinPageUrl) {
+                return;
+            }
+
+            hasRedirectedToJoinPage = true;
+            disableMobileFullscreen();
+            window.location.assign(joinPageUrl);
+        };
 
         const startMeetingForParticipants = () => {
             if (meetingStartTriggered) {
@@ -372,8 +426,11 @@
             } else {
                 alert(cancellationMessage);
             }
+            disableMobileFullscreen();
             return;
         }
+
+        enableMobileFullscreen();
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
@@ -588,14 +645,17 @@
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
+            updateMobileFullscreen();
         });
 
         api.addListener('videoConferenceLeft', () => {
             sendPresence('offline', { force: true });
+            redirectToJoinPage();
         });
 
         api.addListener('readyToClose', () => {
             sendPresence('offline', { force: true });
+            redirectToJoinPage();
         });
 
         function resizeJitsi() {
@@ -607,9 +667,11 @@
         window.addEventListener('resize', resizeJitsi);
         resizeJitsi();
         window.addEventListener('beforeunload', () => {
+            disableMobileFullscreen();
             sendPresenceBeacon('offline');
         });
         window.addEventListener('pagehide', () => {
+            disableMobileFullscreen();
             sendPresenceBeacon('offline');
         });
 
