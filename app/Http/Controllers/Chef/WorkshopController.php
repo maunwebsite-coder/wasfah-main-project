@@ -427,46 +427,26 @@ class WorkshopController extends Controller
             $cookieToken = $request->cookie($cookieName);
 
             if (!is_string($cookieToken) || $cookieToken === '') {
-                return $this->denyHostJoinFromUnrecognizedDevice($workshop, $request, 'missing_cookie');
+                $this->rememberHostJoinDevice($workshop, $request, $fingerprint);
+                return null;
             }
 
             $hashedCookieToken = hash('sha256', $cookieToken);
 
             if (!hash_equals($storedTokenHash, $hashedCookieToken)) {
-                return $this->denyHostJoinFromUnrecognizedDevice($workshop, $request, 'cookie_mismatch');
+                $this->rememberHostJoinDevice($workshop, $request, $fingerprint);
+                return null;
             }
 
             if (!empty($workshop->host_join_device_fingerprint) && !hash_equals($workshop->host_join_device_fingerprint, $fingerprint)) {
-                return $this->denyHostJoinFromUnrecognizedDevice($workshop, $request, 'fingerprint_mismatch');
+                $this->rememberHostJoinDevice($workshop, $request, $fingerprint);
+                return null;
             }
 
             return null;
         }
 
-        $plainToken = Str::random(64);
-        $firstJoinedAt = $workshop->host_first_joined_at ?: now();
-
-        $workshop->forceFill([
-            'host_first_joined_at' => $firstJoinedAt,
-            'host_join_device_token' => hash('sha256', $plainToken),
-            'host_join_device_fingerprint' => $fingerprint,
-            'host_join_device_ip' => $request->ip(),
-            'host_join_device_user_agent' => $this->truncateUserAgent($request->userAgent()),
-        ])->save();
-
-        Cookie::queue(
-            cookie(
-                $cookieName,
-                $plainToken,
-                60 * 24 * 365,
-                '/',
-                config('session.domain'),
-                config('session.secure', false),
-                true,
-                false,
-                config('session.same_site', 'lax')
-            )
-        );
+        $this->rememberHostJoinDevice($workshop, $request, $fingerprint);
 
         return null;
     }
@@ -495,24 +475,33 @@ class WorkshopController extends Controller
         return substr($agent, 0, 1024);
     }
 
-    protected function denyHostJoinFromUnrecognizedDevice(Workshop $workshop, Request $request, string $reason): RedirectResponse
+    protected function rememberHostJoinDevice(Workshop $workshop, Request $request, string $fingerprint): void
     {
-        Log::warning('Blocked chef workshop join from unrecognized device.', [
-            'workshop_id' => $workshop->id,
-            'user_id' => Auth::id(),
-            'reason' => $reason,
-            'request_ip' => $request->ip(),
-            'request_user_agent' => $request->userAgent(),
-        ]);
+        $plainToken = Str::random(64);
+        $firstJoinedAt = $workshop->host_first_joined_at ?: now();
+        $cookieName = $this->getHostJoinDeviceCookieName($workshop);
 
-        return redirect()
-            ->route('chef.workshops.index')
-            ->with([
-                'error' => 'لا يمكن فتح غرفة الورشة من جهاز مختلف. يرجى تأكيد ملكيتك لإعادة تعيين الجهاز الموثوق.',
-                'host_join_device_reset_workshop_slug' => $workshop->slug,
-                'host_join_device_reset_workshop_title' => $workshop->title,
-                'host_join_device_reset_reason' => $reason,
-            ]);
+        $workshop->forceFill([
+            'host_first_joined_at' => $firstJoinedAt,
+            'host_join_device_token' => hash('sha256', $plainToken),
+            'host_join_device_fingerprint' => $fingerprint,
+            'host_join_device_ip' => $request->ip(),
+            'host_join_device_user_agent' => $this->truncateUserAgent($request->userAgent()),
+        ])->save();
+
+        Cookie::queue(
+            cookie(
+                $cookieName,
+                $plainToken,
+                60 * 24 * 365,
+                '/',
+                config('session.domain'),
+                config('session.secure', false),
+                true,
+                false,
+                config('session.same_site', 'lax')
+            )
+        );
     }
 
     protected function hostDeviceLockSupported(): bool
