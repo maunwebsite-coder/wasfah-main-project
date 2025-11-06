@@ -57,6 +57,8 @@ class WorkshopController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->enforceMeetingLinkPrivacyPolicy($request);
+
         $data = $this->validateWorkshop($request);
 
         $workshop = new Workshop();
@@ -85,6 +87,8 @@ class WorkshopController extends Controller
     public function update(Request $request, Workshop $workshop): RedirectResponse
     {
         $this->authorizeWorkshop($workshop);
+
+        $this->enforceMeetingLinkPrivacyPolicy($request);
 
         $data = $this->validateWorkshop($request, $workshop->id);
         $this->fillWorkshopData($workshop, $data);
@@ -386,6 +390,8 @@ class WorkshopController extends Controller
 
     public function generateMeetingLink(Request $request)
     {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'start_date' => ['nullable', 'date'],
@@ -689,7 +695,14 @@ class WorkshopController extends Controller
             return;
         }
 
+        $currentUser = Auth::user();
+        $shouldForceAutoGeneration = !$currentUser || !$currentUser->isAdmin();
         $autoGenerate = $request->boolean('auto_generate_meeting');
+
+        if ($shouldForceAutoGeneration) {
+            $autoGenerate = true;
+            $inputLink = null;
+        }
 
         $workshop->meeting_started_at = null;
         $workshop->meeting_started_by = null;
@@ -825,5 +838,17 @@ class WorkshopController extends Controller
             'passcode' => $workshop->jitsi_passcode,
             'external_api_url' => "{$scheme}://{$domain}/external_api.js",
         ];
+    }
+
+    protected function enforceMeetingLinkPrivacyPolicy(Request $request): void
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->isAdmin()) {
+            $request->merge([
+                'auto_generate_meeting' => 1,
+                'meeting_link' => null,
+            ]);
+        }
     }
 }

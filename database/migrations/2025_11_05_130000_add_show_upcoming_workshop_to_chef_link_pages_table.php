@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('chef_link_pages')) {
+            return;
+        }
+
         Schema::table('chef_link_pages', function (Blueprint $table): void {
             $table->boolean('show_upcoming_workshop')
                 ->default(false)
@@ -23,6 +27,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('chef_link_pages')) {
+            return;
+        }
+
         Schema::table('chef_link_pages', function (Blueprint $table): void {
             $table->dropColumn('show_upcoming_workshop');
         });

@@ -10,7 +10,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE workshops MODIFY instructor_bio TEXT NULL');
+        if ($this->usingMySql()) {
+            DB::statement('ALTER TABLE workshops MODIFY instructor_bio TEXT NULL');
+        }
     }
 
     /**
@@ -18,7 +20,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE workshops MODIFY instructor_bio VARCHAR(255) NULL');
+        if ($this->usingMySql()) {
+            DB::statement('ALTER TABLE workshops MODIFY instructor_bio VARCHAR(255) NULL');
+        }
+    }
+
+    protected function usingMySql(): bool
+    {
+        return in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true);
     }
 };
-

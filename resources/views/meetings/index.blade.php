@@ -221,7 +221,7 @@
 
                                             @if ($canJoin)
                                                 <a
-                                                    href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
+                                                    href="{{ $booking->secure_join_url }}"
                                                     class="inline-flex items-center gap-2 rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                                                 >
                                                     <i class="fas fa-video"></i>

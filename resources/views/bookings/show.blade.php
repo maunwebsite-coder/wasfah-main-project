@@ -81,7 +81,7 @@
                     @if ($workshop->is_online && $workshop->meeting_link)
                         @if ($booking->status === 'confirmed')
                             @if(!empty($booking->public_code))
-                                <a href="{{ route('bookings.join', ['booking' => $booking->public_code]) }}"
+                                <a href="{{ $booking->secure_join_url }}"
                                     class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
                                      <i class="fas fa-video"></i>
                                      دخول غرفة الورشة

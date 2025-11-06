@@ -11,6 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $supportsFullText = $this->supportsFullText();
+
         // إضافة فهارس للوصفات
         Schema::table('recipes', function (Blueprint $table) {
             // فهارس للبحث في النص
@@ -27,10 +29,12 @@ return new class extends Migration
         });
         
         // إضافة فهارس للورشات
-        Schema::table('workshops', function (Blueprint $table) {
+        Schema::table('workshops', function (Blueprint $table) use ($supportsFullText) {
             // فهارس للبحث في النص
 //            $table->index('title');
-            $table->fulltext('description');
+            if ($supportsFullText) {
+                $table->fullText('description');
+            }
             $table->index('instructor');
             $table->index('category');
             
@@ -68,6 +72,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        $supportsFullText = $this->supportsFullText();
+
         // إزالة فهارس الوصفات
         Schema::table('recipes', function (Blueprint $table) {
             $table->dropIndex(['title']);
@@ -79,9 +85,11 @@ return new class extends Migration
         });
         
         // إزالة فهارس الورشات
-        Schema::table('workshops', function (Blueprint $table) {
+        Schema::table('workshops', function (Blueprint $table) use ($supportsFullText) {
             $table->dropIndex(['title']);
-            $table->dropIndex(['description']);
+            if ($supportsFullText) {
+                $table->dropFullText('workshops_description_fulltext');
+            }
             $table->dropIndex(['instructor']);
             $table->dropIndex(['category']);
             $table->dropIndex(['is_active']);
@@ -106,5 +114,12 @@ return new class extends Migration
         Schema::table('categories', function (Blueprint $table) {
             $table->dropIndex(['name']);
         });
+    }
+
+    protected function supportsFullText(): bool
+    {
+        $driver = Schema::getConnection()->getDriverName();
+
+        return in_array($driver, ['mysql', 'mariadb'], true);
     }
 };

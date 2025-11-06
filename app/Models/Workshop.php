@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 
 class Workshop extends Model
 {
@@ -73,6 +76,74 @@ class Workshop extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
     ];
+
+    protected $hidden = [
+        'meeting_link_cipher',
+    ];
+
+    protected function meetingLink(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value, array $attributes) {
+                $cipher = $attributes['meeting_link_cipher'] ?? null;
+
+                if (is_string($cipher) && $cipher !== '') {
+                    try {
+                        return Crypt::decryptString($cipher);
+                    } catch (\Throwable $exception) {
+                        Log::warning('Failed to decrypt workshop meeting link.', [
+                            'workshop_id' => $attributes['id'] ?? null,
+                            'exception_message' => $exception->getMessage(),
+                        ]);
+                    }
+                }
+
+                if (is_string($value) && filter_var($value, FILTER_VALIDATE_URL)) {
+                    return $value;
+                }
+
+                return null;
+            },
+            set: function ($value) {
+                if (blank($value)) {
+                    return [
+                        'meeting_link' => null,
+                        'meeting_link_cipher' => null,
+                    ];
+                }
+
+                $normalized = trim((string) $value);
+
+                if ($normalized === '') {
+                    return [
+                        'meeting_link' => null,
+                        'meeting_link_cipher' => null,
+                    ];
+                }
+
+                try {
+                    $encrypted = Crypt::encryptString($normalized);
+                } catch (\Throwable $exception) {
+                    Log::error('Failed to encrypt workshop meeting link.', [
+                        'exception_message' => $exception->getMessage(),
+                    ]);
+
+                    return [
+                        'meeting_link' => $normalized,
+                        'meeting_link_cipher' => null,
+                    ];
+                }
+
+                $hashKey = config('app.key', 'wasfah-workshop');
+                $hashedIndicator = hash_hmac('sha256', $normalized, (string) $hashKey);
+
+                return [
+                    'meeting_link' => $hashedIndicator,
+                    'meeting_link_cipher' => $encrypted,
+                ];
+            }
+        );
+    }
 
     // العلاقات
     public function bookings()

@@ -55,6 +55,10 @@
 @endpush
 
 @section('content')
+@php
+    $currentUser = auth()->user();
+    $canViewRawMeetingLink = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
+@endphp
 <div class="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-white py-10 text-slate-900">
     <div class="mx-auto max-w-7xl px-4 lg:px-6">
         @if (session('success') || session('error'))
@@ -62,6 +66,114 @@
                 {{ session('success') ?? session('error') }}
             </div>
         @endif
+
+        @php
+            $isMeetingLive = (bool) $workshop->meeting_started_at;
+            $meetingLocked = (bool) $workshop->meeting_locked_at;
+            $hostStatusTitle = $isMeetingLive
+                ? ($meetingLocked ? 'البث مباشر (الانضمام مقفل)' : 'البث مباشر الآن')
+                : ($workshop->is_online ? 'استعد لبدء الجلسة' : 'ورشة حضورية');
+            $hostStatusDescription = $isMeetingLive
+                ? ($meetingLocked
+                    ? 'يمكنك المتابعة داخل الغرفة بينما يبقى الانضمام مغلقاً للمشاركين الجدد.'
+                    : 'يمكنك إدارة الغرفة والتفاعل مع المشاركين في الوقت الحقيقي.')
+                : ($workshop->is_online
+                    ? 'ابدأ الاجتماع عندما تكون جاهزاً ليتم إخطار المشاركين وتفعيل رابطهم.'
+                    : 'تابع تجهيز الموقع واستقبال المشاركين في الموعد المحدد.');
+            $participantStatusTitle = $workshop->is_online
+                ? ($isMeetingLive
+                    ? ($meetingLocked ? 'البث نشط لكن مغلق' : 'يمكن للمشاركين الانضمام الآن')
+                    : 'ينتظر المشاركون بدء الجلسة')
+                : 'المشاركون سينضمون حضوريًا';
+            $participantStatusDescription = $workshop->is_online
+                ? ($isMeetingLive
+                    ? ($meetingLocked
+                        ? 'الرابط متاح لكن الانضمام الجديد متوقف حتى تعيد فتح الاجتماع من لوحة التحكم.'
+                        : 'شارك الرابط أدناه مع جمهورك أو أعد إرساله لهم عند الحاجة.')
+                    : 'سيتم تفعيل رابط الدخول تلقائياً فور بدء البث.')
+                : ($workshop->location
+                    ? 'ذكر المشاركين بموقع الورشة والوصول في الوقت المحدد.'
+                    : 'أضف تفاصيل الموقع من صفحة تعديل الورشة لتسهيل وصول المشاركين.');
+        @endphp
+
+        <div class="mb-8 flex flex-col gap-4 lg:flex-row">
+            <div class="flex-1 rounded-3xl border border-slate-900/20 bg-slate-900 px-6 py-6 text-white shadow-2xl shadow-slate-900/20">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">المضيف</p>
+                        <p class="mt-2 text-lg font-semibold">{{ $hostStatusTitle }}</p>
+                        <p class="mt-2 text-sm text-white/80">{{ $hostStatusDescription }}</p>
+                        @if ($isMeetingLive && $workshop->meeting_started_at)
+                            <p class="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/80">
+                                <i class="fas fa-bolt"></i>
+                                بدأ قبل {{ $workshop->meeting_started_at->locale('ar')->diffForHumans(null, true) }}
+                            </p>
+                        @elseif (!$workshop->is_online)
+                            <p class="mt-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ورشة حضورية
+                            </p>
+                        @endif
+                    </div>
+                    <a href="#jitsi-shell" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20">
+                        <i class="fas fa-video"></i>
+                        إدارة غرفة البث
+                    </a>
+                </div>
+            </div>
+            <div class="flex-1 rounded-3xl border border-orange-200 bg-white px-6 py-6 shadow-xl shadow-orange-200/40">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-orange-500">المشتركون</p>
+                        <p class="mt-2 text-lg font-semibold text-slate-900">{{ $participantStatusTitle }}</p>
+                        <p class="mt-2 text-sm text-slate-600">{{ $participantStatusDescription }}</p>
+                    </div>
+                    @if ($workshop->is_online && $workshop->meeting_link)
+                        <div class="space-y-2">
+                            @if ($canViewRawMeetingLink)
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <a
+                                        href="{{ $workshop->meeting_link }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-xs font-semibold text-white shadow transition hover:from-orange-600 hover:to-orange-700"
+                                    >
+                                        <i class="fas fa-link"></i>
+                                        فتح رابط المشاركين
+                                    </a>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-4 py-2 text-xs font-semibold text-orange-600 transition hover:bg-orange-50"
+                                        data-copy-link="{{ $workshop->meeting_link }}"
+                                        data-copy-feedback-target="participant-link-feedback"
+                                    >
+                                        <i class="fas fa-copy"></i>
+                                        نسخ الرابط
+                                    </button>
+                                </div>
+                                <p class="break-all rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-700 ltr:text-left rtl:text-right">
+                                    {{ $workshop->meeting_link }}
+                                </p>
+                                <p id="participant-link-feedback" class="hidden text-xs font-semibold text-emerald-600">تم نسخ رابط الدخول للمشاركين.</p>
+                            @else
+                                <div class="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-700">
+                                    روابط المشاركين محفوظة داخل أنظمة وصفة ولن تظهر لأحد حفاظاً على سرية جلساتك.
+                                </div>
+                            @endif
+                        </div>
+                    @elseif(!$workshop->is_online)
+                        <div class="space-y-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                            <p class="font-semibold text-slate-700">تفاصيل الحضور</p>
+                            <p>{{ $workshop->location ?? 'لم يتم إدخال عنوان الورشة بعد.' }}</p>
+                        </div>
+                    @else
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                            لم يتم ضبط رابط البث بعد. أضف الرابط من صفحة تعديل الورشة لتتمكن من مشاركته مع المشاركين.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
@@ -247,34 +359,219 @@
         const startUrl = @json(route('chef.workshops.start', $workshop));
         const csrfToken = @json(csrf_token());
         const joinPageUrl = @json(route('chef.workshops.join', $workshop));
+        const copyButtons = document.querySelectorAll('[data-copy-link]');
+
+        copyButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                const link = button.getAttribute('data-copy-link');
+                const feedbackTarget = button.getAttribute('data-copy-feedback-target');
+                const feedbackElement = feedbackTarget ? document.getElementById(feedbackTarget) : null;
+
+                if (!link) {
+                    return;
+                }
+
+                const showFeedback = (message, variant = 'success') => {
+                    if (!feedbackElement) {
+                        if (variant === 'error') {
+                            alert(message);
+                        }
+                        return;
+                    }
+
+                    feedbackElement.textContent = message;
+                    feedbackElement.classList.remove('hidden', 'text-emerald-600', 'text-amber-600');
+                    feedbackElement.classList.add('inline-flex', variant === 'success' ? 'text-emerald-600' : 'text-amber-600');
+
+                    setTimeout(() => {
+                        feedbackElement.classList.add('hidden');
+                        feedbackElement.classList.remove('inline-flex');
+                    }, 2600);
+                };
+
+                try {
+                    if (!navigator.clipboard?.writeText) {
+                        throw new Error('Clipboard API غير مدعوم');
+                    }
+
+                    await navigator.clipboard.writeText(link);
+                    button.classList.add('ring-2', 'ring-emerald-400', 'ring-offset-2');
+                    showFeedback('تم نسخ رابط الدخول للمشاركين.', 'success');
+
+                    setTimeout(() => {
+                        button.classList.remove('ring-2', 'ring-emerald-400', 'ring-offset-2');
+                    }, 1200);
+                } catch (error) {
+                    showFeedback('تعذّر النسخ تلقائياً، انسخ الرابط يدوياً.', 'error');
+                }
+            });
+        });
+
         let lastPresenceState = null;
         let meetingStartTriggered = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
-        let shouldAutoToggleFullscreen = mobileViewportQuery.matches;
-        let jitsiFullscreenToggled = false;
+        let shouldAutoFullscreen = mobileViewportQuery.matches;
         let hasRedirectedToJoinPage = false;
+        let apiInstance = null;
+
+        const bodyFullscreenClass = 'mobile-fullscreen-active';
+        const targetFullscreenClass = 'mobile-fullscreen-active';
+        const fullscreenController = (() => {
+            let mode = 'none'; // none | css | native | pending-native
+
+            const getContainer = () => document.querySelector('.mobile-fullscreen-target');
+
+            const getIframe = () => {
+                if (apiInstance?.getIFrame) {
+                    try {
+                        return apiInstance.getIFrame();
+                    } catch {
+                        // iframe not ready yet
+                    }
+                }
+                return getContainer()?.querySelector('iframe') ?? null;
+            };
+
+            const addClasses = () => {
+                document.body.classList.add(bodyFullscreenClass);
+                getContainer()?.classList.add(targetFullscreenClass);
+            };
+
+            const removeClasses = () => {
+                document.body.classList.remove(bodyFullscreenClass);
+                getContainer()?.classList.remove(targetFullscreenClass);
+            };
+
+            const requestNative = () => {
+                const element = getIframe() ?? getContainer();
+                if (!element) {
+                    return false;
+                }
+
+                const request =
+                    element.requestFullscreen ||
+                    element.webkitRequestFullscreen ||
+                    element.mozRequestFullScreen ||
+                    element.msRequestFullscreen;
+
+                if (!request) {
+                    return false;
+                }
+
+                try {
+                    const result = request.call(element);
+                    addClasses();
+                    mode = 'pending-native';
+
+                    if (result && typeof result.then === 'function') {
+                        result.then(
+                            () => {
+                                mode = 'native';
+                            },
+                            () => {
+                                mode = 'none';
+                                applyFallback();
+                            },
+                        );
+                    } else {
+                        mode = 'native';
+                    }
+
+                    return true;
+                } catch {
+                    return false;
+                }
+            };
+
+            const applyFallback = () => {
+                addClasses();
+                mode = 'css';
+            };
+
+            const ensure = (fromGesture = false) => {
+                if (!shouldAutoFullscreen) {
+                    exit();
+                    return;
+                }
+
+                if (mode === 'native' || mode === 'pending-native') {
+                    addClasses();
+                    return;
+                }
+
+                if (requestNative()) {
+                    return;
+                }
+
+                if (fromGesture || mode !== 'css') {
+                    applyFallback();
+                }
+            };
+
+            const exitNative = () => {
+                if (document.fullscreenElement) {
+                    const exit =
+                        document.exitFullscreen ||
+                        document.webkitExitFullscreen ||
+                        document.mozCancelFullScreen ||
+                        document.msExitFullscreen;
+                    if (exit) {
+                        try {
+                            exit.call(document);
+                        } catch {
+                            // ignore
+                        }
+                    }
+                }
+            };
+
+            const exit = () => {
+                if (mode === 'native' || mode === 'pending-native') {
+                    exitNative();
+                }
+                removeClasses();
+                mode = 'none';
+            };
+
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement && mode === 'native') {
+                    if (shouldAutoFullscreen) {
+                        applyFallback();
+                    } else {
+                        exit();
+                    }
+                }
+            });
+
+            return {
+                ensureFromGesture: () => ensure(true),
+                ensure: () => ensure(false),
+                exit,
+            };
+        })();
 
         if (typeof mobileViewportQuery.addEventListener === 'function') {
             mobileViewportQuery.addEventListener('change', event => {
-                shouldAutoToggleFullscreen = event.matches;
+                shouldAutoFullscreen = event.matches;
+                if (shouldAutoFullscreen) {
+                    fullscreenController.ensure();
+                } else {
+                    fullscreenController.exit();
+                }
             });
         } else if (typeof mobileViewportQuery.addListener === 'function') {
             mobileViewportQuery.addListener(event => {
-                shouldAutoToggleFullscreen = event.matches;
+                shouldAutoFullscreen = event.matches;
+                if (shouldAutoFullscreen) {
+                    fullscreenController.ensure();
+                } else {
+                    fullscreenController.exit();
+                }
             });
         }
-        const requestJitsiFullscreenToggle = (apiRef) => {
-            if (!apiRef || jitsiFullscreenToggled || !shouldAutoToggleFullscreen) {
-                return;
-            }
 
-            try {
-                apiRef.executeCommand('toggleFullscreen');
-                jitsiFullscreenToggled = true;
-            } catch (error) {
-                console.debug('Unable to toggle fullscreen through Jitsi API', error);
-            }
-        };
+        window.addEventListener('beforeunload', fullscreenController.exit);
+        window.addEventListener('pagehide', fullscreenController.exit);
 
         const redirectToJoinPage = () => {
             if (hasRedirectedToJoinPage || !joinPageUrl) {
@@ -282,6 +579,7 @@
             }
 
             hasRedirectedToJoinPage = true;
+            fullscreenController.exit();
             window.location.assign(joinPageUrl);
         };
 
@@ -362,14 +660,22 @@
                         previouslyFocused?.focus?.();
                     }, 220);
 
+                    if (!result) {
+                        fullscreenController.exit();
+                    }
+
                     resolve(result);
                 };
 
                 const handleConfirm = () => {
+                    fullscreenController.ensureFromGesture();
                     startMeetingForParticipants();
                     finish(true);
                 };
-                const handleCancel = () => finish(false);
+                const handleCancel = () => {
+                    fullscreenController.exit();
+                    finish(false);
+                };
                 const handleBackdropClick = (event) => {
                     if (event.target === joinModal) {
                         finish(false);
@@ -410,6 +716,8 @@
             }
             return;
         }
+
+        fullscreenController.ensure();
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
@@ -620,29 +928,30 @@
             options.jwt = jaasJwt;
         }
 
-        const api = new JitsiMeetExternalAPI(domain, options);
+        apiInstance = new JitsiMeetExternalAPI(domain, options);
+        fullscreenController.ensure();
 
-        api.addListener('videoConferenceJoined', () => {
+        apiInstance.addListener('videoConferenceJoined', () => {
             sendPresence('online');
-            requestJitsiFullscreenToggle(api);
+            fullscreenController.ensure();
         });
 
-        requestJitsiFullscreenToggle(api);
-
-        api.addListener('videoConferenceLeft', () => {
+        apiInstance.addListener('videoConferenceLeft', () => {
             sendPresence('offline', { force: true });
+            fullscreenController.exit();
             redirectToJoinPage();
         });
 
-        api.addListener('readyToClose', () => {
+        apiInstance.addListener('readyToClose', () => {
             sendPresence('offline', { force: true });
+            fullscreenController.exit();
             redirectToJoinPage();
         });
 
         function resizeJitsi() {
             const width = container.offsetWidth;
             const height = container.offsetHeight || initialHeight;
-            api?.resize(width, height);
+            apiInstance?.resize(width, height);
         }
 
         window.addEventListener('resize', resizeJitsi);
@@ -655,8 +964,8 @@
         });
 
         @if ($embedConfig['passcode'])
-        api.addListener('passwordRequired', () => {
-            api.executeCommand('password', @json($embedConfig['passcode']));
+        apiInstance.addListener('passwordRequired', () => {
+            apiInstance.executeCommand('password', @json($embedConfig['passcode']));
         });
         @endif
 

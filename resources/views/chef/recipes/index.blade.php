@@ -34,6 +34,9 @@
     $publicProfileUrl = auth()->check()
         ? route('chefs.show', ['chef' => auth()->id()])
         : null;
+
+    $currentUser = auth()->user();
+    $canViewRawMeetingLink = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
 @endphp
 
 <div class="min-h-screen bg-gray-50 py-10">
@@ -239,7 +242,7 @@
                                                     <p class="mt-1 text-sm font-medium text-slate-700">{{ $participantStatusLabel }}</p>
                                                     <p class="text-xs text-slate-500">{{ $participantHint }}</p>
                                                 </div>
-                                                @if ($workshop->is_online && $workshop->meeting_link)
+                                                @if ($workshop->is_online && $workshop->meeting_link && $canViewRawMeetingLink)
                                                     <a href="{{ $workshop->meeting_link }}"
                                                        target="_blank"
                                                        rel="noopener"
@@ -247,9 +250,14 @@
                                                         <i class="fas fa-link"></i>
                                                         رابط المشاركين
                                                     </a>
+                                                @elseif ($workshop->is_online)
+                                                    <span class="inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2 text-xs font-semibold text-slate-500">
+                                                        <i class="fas fa-lock"></i>
+                                                        الرابط متاح للإدارة فقط
+                                                    </span>
                                                 @endif
                                             </div>
-                                            @if ($workshop->is_online && $workshop->meeting_link)
+                                            @if ($workshop->is_online && $workshop->meeting_link && $canViewRawMeetingLink)
                                                 <p class="mt-2 break-all text-xs text-slate-400 ltr:text-left rtl:text-right">
                                                     {{ $workshop->meeting_link }}
                                                 </p>

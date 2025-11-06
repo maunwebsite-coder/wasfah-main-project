@@ -30,6 +30,13 @@
             ? $workshop->image
             : Storage::disk('public')->url($workshop->image);
     }
+
+    $currentUser = auth()->user();
+    $canManageMeetingLinks = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
+
+    if (!$canManageMeetingLinks) {
+        $autoGenerateMeeting = 1;
+    }
 @endphp
 
 <div class="space-y-10">
@@ -199,43 +206,53 @@
             </div>
 
             <div id="onlineFields" class="{{ $isOnline ? '' : 'hidden' }} space-y-5 rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
-                <div class="flex flex-wrap items-center gap-4">
-                    <input type="hidden" name="auto_generate_meeting" value="0">
-                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                        <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" @checked($autoGenerateMeeting)>
-                        توليد رابط Jitsi تلقائياً عند الحفظ
-                    </label>
-                    <button type="button" id="generateJitsiLinkBtn"
-                            data-url="{{ route('chef.workshops.generate-link') }}"
-                            class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300">
-                        <i class="fas fa-bolt"></i>
-                        توليد رابط الآن
-                    </button>
-                </div>
-                <div class="space-y-2">
-                    <label for="meeting_link" class="text-sm font-semibold text-slate-700">رابط الاجتماع</label>
-                    <input type="url" id="meeting_link" name="meeting_link"
-                           value="{{ old('meeting_link', $workshop->meeting_link ?? '') }}"
-                           class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 @error('meeting_link') border-red-400 focus:ring-red-200 @enderror"
-                           placeholder="https://meet.jit.si/wasfah-room" {{ $autoGenerateMeeting ? 'disabled' : '' }}>
-                    <p id="meetingLinkHint" class="text-xs text-slate-500">
-                        {{ $autoGenerateMeeting ? 'سيتم تعيين الرابط تلقائياً بعد الحفظ.' : 'يمكنك لصق رابط اجتماع جاهز إن رغبت.' }}
-                    </p>
-                    @error('meeting_link')
-                        <p class="text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div id="generatedMeetingInfo" class="space-y-2 text-sm text-emerald-700">
-                    @if (($workshop->meeting_provider ?? null) === 'jitsi' && $workshop->meeting_link)
-                        <div class="rounded-2xl bg-white/70 p-3 text-emerald-700 shadow-inner">
-                            <p class="font-semibold">تم تهيئة رابط Jitsi:</p>
-                            <p class="truncate text-sm">{{ $workshop->meeting_link }}</p>
-                            @if ($workshop->jitsi_passcode)
-                                <p class="mt-1 text-xs text-slate-500">رمز الدخول: {{ $workshop->jitsi_passcode }}</p>
-                            @endif
-                        </div>
-                    @endif
-                </div>
+                @if ($canManageMeetingLinks)
+                    <div class="flex flex-wrap items-center gap-4">
+                        <input type="hidden" name="auto_generate_meeting" value="0">
+                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" @checked($autoGenerateMeeting)>
+                            توليد رابط Jitsi تلقائياً عند الحفظ
+                        </label>
+                        <button type="button" id="generateJitsiLinkBtn"
+                                data-url="{{ route('chef.workshops.generate-link') }}"
+                                class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                            <i class="fas fa-bolt"></i>
+                            توليد رابط الآن
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="meeting_link" class="text-sm font-semibold text-slate-700">رابط الاجتماع</label>
+                        <input type="url" id="meeting_link" name="meeting_link"
+                               value="{{ $canManageMeetingLinks ? old('meeting_link', $workshop->meeting_link ?? '') : '' }}"
+                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 @error('meeting_link') border-red-400 focus:ring-red-200 @enderror"
+                               placeholder="https://meet.jit.si/wasfah-room" {{ $autoGenerateMeeting ? 'disabled' : '' }}>
+                        <p id="meetingLinkHint" class="text-xs text-slate-500">
+                            {{ $autoGenerateMeeting ? 'سيتم تعيين الرابط تلقائياً بعد الحفظ.' : 'يمكنك لصق رابط اجتماع جاهز إن رغبت.' }}
+                        </p>
+                        @error('meeting_link')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div id="generatedMeetingInfo" class="space-y-2 text-sm text-emerald-700">
+                        @if (($workshop->meeting_provider ?? null) === 'jitsi' && $workshop->meeting_link)
+                            <div class="rounded-2xl bg-white/70 p-3 text-emerald-700 shadow-inner">
+                                <p class="font-semibold">تم تهيئة رابط Jitsi:</p>
+                                <p class="truncate text-sm">{{ $workshop->meeting_link }}</p>
+                                @if ($workshop->jitsi_passcode)
+                                    <p class="mt-1 text-xs text-slate-500">رمز الدخول: {{ $workshop->jitsi_passcode }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <input type="hidden" name="auto_generate_meeting" id="auto_generate_meeting" value="1">
+                    <div class="rounded-2xl border border-white/40 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-inner">
+                        <p class="font-semibold text-slate-800">الرابط يُدار من فريق وصفة</p>
+                        <p class="mt-1 text-xs text-slate-500">
+                            سنقوم بتوليد رابط الاجتماع وتأمينه تلقائياً بعد حفظ الورشة، ولن يظهر الرابط الخام في لوحة الشيف حفاظاً على السرية.
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <div id="offlineFields" class="{{ $isOnline ? 'hidden' : '' }} space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">

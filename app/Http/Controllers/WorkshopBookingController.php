@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Workshop;
 use App\Models\WorkshopBooking;
 use App\Models\Notification;
+use App\Services\WorkshopLinkSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,11 @@ use Carbon\Carbon;
 
 class WorkshopBookingController extends Controller
 {
+    public function __construct(
+        protected WorkshopLinkSecurityService $linkSecurity,
+    ) {
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -150,6 +156,16 @@ class WorkshopBookingController extends Controller
      */
     public function join(Request $request, WorkshopBooking $booking)
     {
+        if (!$request->hasValidSignature()) {
+            if (!$request->query->has('signature')) {
+                return redirect()->to(
+                    $this->linkSecurity->makeParticipantJoinUrl($booking)
+                );
+            }
+
+            abort(403, 'رابط الانضمام غير صالح أو منتهي الصلاحية.');
+        }
+
         $user = Auth::user();
 
         if (!$user) {
@@ -263,11 +279,17 @@ class WorkshopBookingController extends Controller
             'shouldPromptForDisplayName' => $shouldPromptForDisplayName,
             'guestDisplayName' => $guestDisplayName,
             'supportsMeetingLock' => $meetingLockSupported,
+            'secureJoinUrl' => $this->linkSecurity->makeParticipantJoinUrl($booking),
+            'secureStatusUrl' => $this->linkSecurity->makeParticipantStatusUrl($booking),
         ]);
     }
 
-    public function status(WorkshopBooking $booking)
+    public function status(Request $request, WorkshopBooking $booking)
     {
+        if (!$request->hasValidSignature()) {
+            abort(403);
+        }
+
         $user = Auth::user();
 
         if (!$user) {

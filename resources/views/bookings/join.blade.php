@@ -450,7 +450,7 @@
         let pendingSubjectUpdate = null;
         let pendingDisplayNameResolve = null;
         let apiInstance = null;
-        const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
+        const statusUrl = @json($secureStatusUrl ?? $booking->secure_status_url);
         const meetingStartedAtIso = @json($meetingStartedAtIso);
         const hint = document.getElementById('pollStatusHint');
         const refreshButton = document.getElementById('manualRefreshButton');
@@ -459,21 +459,173 @@
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const joinModal = document.getElementById('joinConfirmationModal');
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
-        const joinPageUrl = @json(route('bookings.join', ['booking' => $booking->public_code]));
+        const joinPageUrl = @json($secureJoinUrl ?? $booking->secure_join_url);
         let hasRedirectedToJoinPage = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
-        let shouldAutoToggleFullscreen = mobileViewportQuery.matches;
-        let jitsiFullscreenToggled = false;
+        let shouldAutoFullscreen = mobileViewportQuery.matches;
+
+        const bodyFullscreenClass = 'mobile-fullscreen-active';
+        const targetFullscreenClass = 'mobile-fullscreen-active';
+        const fullscreenController = (() => {
+            let mode = 'none'; // none | css | native | pending-native
+
+            const getContainer = () => document.querySelector('.mobile-fullscreen-target');
+
+            const getIframe = () => {
+                if (apiInstance?.getIFrame) {
+                    try {
+                        return apiInstance.getIFrame();
+                    } catch {
+                        // ignore access errors until iframe is ready
+                    }
+                }
+                return getContainer()?.querySelector('iframe') ?? null;
+            };
+
+            const addClasses = () => {
+                document.body.classList.add(bodyFullscreenClass);
+                getContainer()?.classList.add(targetFullscreenClass);
+            };
+
+            const removeClasses = () => {
+                document.body.classList.remove(bodyFullscreenClass);
+                getContainer()?.classList.remove(targetFullscreenClass);
+            };
+
+            const requestNative = () => {
+                const element = getIframe() ?? getContainer();
+                if (!element) {
+                    return false;
+                }
+
+                const request =
+                    element.requestFullscreen ||
+                    element.webkitRequestFullscreen ||
+                    element.mozRequestFullScreen ||
+                    element.msRequestFullscreen;
+
+                if (!request) {
+                    return false;
+                }
+
+                try {
+                    const result = request.call(element);
+                    addClasses();
+                    mode = 'pending-native';
+
+                    if (result && typeof result.then === 'function') {
+                        result.then(
+                            () => {
+                                mode = 'native';
+                            },
+                            () => {
+                                mode = 'none';
+                                applyFallback();
+                            },
+                        );
+                    } else {
+                        mode = 'native';
+                    }
+
+                    return true;
+                } catch {
+                    return false;
+                }
+            };
+
+            const applyFallback = () => {
+                addClasses();
+                mode = 'css';
+            };
+
+            const ensure = (fromGesture = false) => {
+                if (!shouldAutoFullscreen) {
+                    exit();
+                    return;
+                }
+
+                if (mode === 'native' || mode === 'pending-native') {
+                    addClasses();
+                    return;
+                }
+
+                if (requestNative()) {
+                    return;
+                }
+
+                if (fromGesture || mode !== 'css') {
+                    applyFallback();
+                }
+            };
+
+            const exitNative = () => {
+                if (document.fullscreenElement) {
+                    const exit =
+                        document.exitFullscreen ||
+                        document.webkitExitFullscreen ||
+                        document.mozCancelFullScreen ||
+                        document.msExitFullscreen;
+                    if (exit) {
+                        try {
+                            exit.call(document);
+                        } catch {
+                            // ignore
+                        }
+                    }
+                }
+            };
+
+            const exit = () => {
+                if (mode === 'native' || mode === 'pending-native') {
+                    exitNative();
+                }
+                removeClasses();
+                mode = 'none';
+            };
+
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement && mode === 'native') {
+                    if (shouldAutoFullscreen) {
+                        applyFallback();
+                    } else {
+                        exit();
+                    }
+                }
+            });
+
+            return {
+                ensureFromGesture: () => ensure(true),
+                ensure: () => ensure(false),
+                exit,
+            };
+        })();
+
+        if (meetingStarted && shouldAutoFullscreen) {
+            fullscreenController.ensure();
+        }
 
         if (typeof mobileViewportQuery.addEventListener === 'function') {
             mobileViewportQuery.addEventListener('change', event => {
-                shouldAutoToggleFullscreen = event.matches;
+                shouldAutoFullscreen = event.matches;
+                if (shouldAutoFullscreen) {
+                    fullscreenController.ensure();
+                } else {
+                    fullscreenController.exit();
+                }
             });
         } else if (typeof mobileViewportQuery.addListener === 'function') {
             mobileViewportQuery.addListener(event => {
-                shouldAutoToggleFullscreen = event.matches;
+                shouldAutoFullscreen = event.matches;
+                if (shouldAutoFullscreen) {
+                    fullscreenController.ensure();
+                } else {
+                    fullscreenController.exit();
+                }
             });
         }
+
+        window.addEventListener('beforeunload', fullscreenController.exit);
+        window.addEventListener('pagehide', fullscreenController.exit);
 
         const redirectToJoinPage = () => {
             if (hasRedirectedToJoinPage || !joinPageUrl) {
@@ -481,20 +633,8 @@
             }
 
             hasRedirectedToJoinPage = true;
+            fullscreenController.exit();
             window.location.assign(joinPageUrl);
-        };
-
-        const requestJitsiFullscreenToggle = () => {
-            if (!apiInstance || jitsiFullscreenToggled || !shouldAutoToggleFullscreen) {
-                return;
-            }
-
-            try {
-                apiInstance.executeCommand('toggleFullscreen');
-                jitsiFullscreenToggled = true;
-            } catch (error) {
-                console.debug('Unable to toggle fullscreen through Jitsi API', error);
-            }
         };
 
         const updateMeetingSubjectLabel = (subject) => {
@@ -827,11 +967,21 @@
                         previouslyFocused?.focus?.();
                     }, 220);
 
+                    if (!result) {
+                        fullscreenController.exit();
+                    }
+
                     resolve(result);
                 };
 
-                const handleConfirm = () => finish(true);
-                const handleCancel = () => finish(false);
+                const handleConfirm = () => {
+                    fullscreenController.ensureFromGesture();
+                    finish(true);
+                };
+                const handleCancel = () => {
+                    fullscreenController.exit();
+                    finish(false);
+                };
                 const handleBackdropClick = (event) => {
                     if (event.target === joinModal) {
                         finish(false);
@@ -874,6 +1024,8 @@
                     }
                     return;
                 }
+
+                fullscreenController.ensure();
 
                 const container = document.getElementById('jitsi-container');
 
@@ -972,6 +1124,7 @@
                 }
 
                 apiInstance = new JitsiMeetExternalAPI(domain, options);
+                fullscreenController.ensure();
 
                 if (pendingSubjectUpdate !== null) {
                     try {
@@ -984,12 +1137,13 @@
                 }
 
                 apiInstance.addListener('videoConferenceJoined', () => {
-                    requestJitsiFullscreenToggle();
+                    fullscreenController.ensure();
                 });
 
-                requestJitsiFullscreenToggle();
+                fullscreenController.ensure();
 
                 const handleMeetingClosure = () => {
+                    fullscreenController.exit();
                     redirectToJoinPage();
                 };
 

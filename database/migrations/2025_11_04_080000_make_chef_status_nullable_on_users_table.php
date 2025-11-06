@@ -10,7 +10,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE users MODIFY chef_status VARCHAR(32) NULL DEFAULT NULL');
+        if ($this->usingMySql()) {
+            DB::statement('ALTER TABLE users MODIFY chef_status VARCHAR(32) NULL DEFAULT NULL');
+        }
     }
 
     /**
@@ -22,6 +24,13 @@ return new class extends Migration
             ->whereNull('chef_status')
             ->update(['chef_status' => 'needs_profile']);
 
-        DB::statement("ALTER TABLE users MODIFY chef_status VARCHAR(32) NOT NULL DEFAULT 'needs_profile'");
+        if ($this->usingMySql()) {
+            DB::statement("ALTER TABLE users MODIFY chef_status VARCHAR(32) NOT NULL DEFAULT 'needs_profile'");
+        }
+    }
+
+    protected function usingMySql(): bool
+    {
+        return in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true);
     }
 };

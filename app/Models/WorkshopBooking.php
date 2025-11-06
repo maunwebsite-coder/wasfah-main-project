@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Services\WorkshopLinkSecurityService;
 
 class WorkshopBooking extends Model
 {
@@ -145,5 +146,15 @@ class WorkshopBooking extends Model
         } while (static::where('public_code', $code)->exists());
 
         return $code;
+    }
+
+    public function getSecureJoinUrlAttribute(): string
+    {
+        return app(WorkshopLinkSecurityService::class)->makeParticipantJoinUrl($this);
+    }
+
+    public function getSecureStatusUrlAttribute(): string
+    {
+        return app(WorkshopLinkSecurityService::class)->makeParticipantStatusUrl($this);
     }
 }
