@@ -738,7 +738,7 @@
                                     انتهى التسجيل
                                 </button>
                             @else
-                                <button id="unifiedBookingBtn" class="booking-btn w-full text-white font-bold py-4 px-6 rounded-xl text-lg booking-button bg-green-500 hover:bg-green-600 transition-all duration-300 transform hover:scale-105">
+                                <button id="unifiedBookingBtn" class="booking-btn w-full text-white.font-bold py-4 px-6 rounded-xl text-lg booking-button bg-green-500 hover:bg-green-600.transition-all duration-300 transform hover:scale-105">
                                     <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
                                     <span class="booking-button-label">احجز الآن</span>
                                 </button>
