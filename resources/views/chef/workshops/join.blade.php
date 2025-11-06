@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('hide-navbar', true)
+
 @section('title', 'تشغيل ورشة: ' . $workshop->title)
 
 @push('styles')

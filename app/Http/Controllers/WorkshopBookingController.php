@@ -334,9 +334,10 @@ class WorkshopBookingController extends Controller
         $bookingEmail = strtolower((string) optional($booking->user)->email);
         $currentEmail = strtolower((string) ($currentUser?->email ?? ''));
         $deviceLockSupported = $this->bookingDeviceLockSupported();
+        $allowSameEmailBypass = $this->allowsSameEmailMultiDevice();
 
-        // Allow multiple devices as long as the authenticated user owns the same email as the booking.
-        if ($bookingEmail !== '' && $currentEmail !== '' && hash_equals($bookingEmail, $currentEmail)) {
+        // Allow multiple devices when the booking owner authenticates with the same email and the feature is enabled.
+        if ($allowSameEmailBypass && $bookingEmail !== '' && $currentEmail !== '' && hash_equals($bookingEmail, $currentEmail)) {
             if ($deviceLockSupported) {
                 $updates = [];
 
@@ -472,6 +473,11 @@ class WorkshopBookingController extends Controller
         }
 
         return $supported;
+    }
+
+    protected function allowsSameEmailMultiDevice(): bool
+    {
+        return (bool) config('workshop-links.allow_same_email_multi_device', true);
     }
 
     protected function meetingLockSupported(): bool

@@ -87,6 +87,12 @@
         display: none !important;
     }
 
+    @media (max-width: 768px) {
+        header.sticky.top-0 {
+            display: none !important;
+        }
+    }
+
 </style>
 @endpush
 
