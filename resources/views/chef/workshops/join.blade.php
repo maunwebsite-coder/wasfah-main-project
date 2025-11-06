@@ -609,7 +609,7 @@
             mobileFullscreenLabel
         );
 
-        const shouldAutoFullscreen = window.matchMedia('(max-width: 768px)').matches;
+        const shouldAutoFullscreen = false;
 
         let autoFullscreenAttempts = 0;
         const requestAutoFullscreen = () => {

@@ -344,6 +344,29 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                        <i class="fas fa-heading"></i>
+                    </span>
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-500">عنوان العرض</p>
+                        <p
+                            class="font-semibold text-slate-900"
+                            id="meetingSubjectLabel"
+                            data-placeholder="لم يتم تحديد عنوان بعد"
+                        >
+                            {{ $workshop->title }}
+                        </p>
+                        <button
+                            type="button"
+                            id="editMeetingSubjectBtn"
+                            class="mt-1 inline-flex items-center gap-1 rounded-full border border-orange-200 px-3 py-1 text-xs text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
+                        >
+                            <i class="fas fa-pen-to-square"></i>
+                            أدخل عنوان العرض
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
                     <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-500">
                         <i class="fas fa-bell"></i>
                     </span>
@@ -481,7 +504,12 @@
         const displayNameModal = document.getElementById('displayNameModal');
         const displayNameForm = document.getElementById('displayNameForm');
         const displayNameInput = document.getElementById('displayNameInput');
+        const meetingSubjectLabel = document.getElementById('meetingSubjectLabel');
+        const editMeetingSubjectBtn = document.getElementById('editMeetingSubjectBtn');
         let participantName = @json($participantName);
+        const defaultMeetingSubject = @json($workshop->title ?? '');
+        let currentMeetingSubject = defaultMeetingSubject ? String(defaultMeetingSubject) : '';
+        let pendingSubjectUpdate = null;
         let pendingDisplayNameResolve = null;
         let apiInstance = null;
         const statusUrl = @json(route('bookings.status', ['booking' => $booking->public_code]));
@@ -493,6 +521,25 @@
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const joinModal = document.getElementById('joinConfirmationModal');
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
+
+        const updateMeetingSubjectLabel = (subject) => {
+            const value = (subject || '').trim();
+            currentMeetingSubject = value;
+
+            if (!meetingSubjectLabel) {
+                return;
+            }
+
+            if (value) {
+                meetingSubjectLabel.textContent = value;
+                meetingSubjectLabel.classList.remove('opacity-60');
+            } else {
+                const placeholder = meetingSubjectLabel.dataset?.placeholder || '';
+                meetingSubjectLabel.textContent = placeholder;
+                meetingSubjectLabel.classList.add('opacity-60');
+            }
+        };
+        updateMeetingSubjectLabel(currentMeetingSubject);
 
         const updateParticipantNameLabel = (name) => {
             if (participantNameLabel) {
@@ -531,6 +578,41 @@
                 pendingDisplayNameResolve = null;
             }
         };
+
+        if (editMeetingSubjectBtn) {
+            editMeetingSubjectBtn.addEventListener('click', () => {
+                const initialValue = currentMeetingSubject || '';
+                const input = window.prompt('أدخل عنوان العرض', initialValue);
+
+                if (input === null) {
+                    return;
+                }
+
+                const trimmed = input.trim();
+
+                if (!trimmed && currentMeetingSubject && !window.confirm('سيتم مسح عنوان العرض الحالي. هل ترغب بالمتابعة؟')) {
+                    return;
+                }
+
+                if (trimmed === currentMeetingSubject) {
+                    return;
+                }
+
+                if (!apiInstance) {
+                    pendingSubjectUpdate = trimmed;
+                    updateMeetingSubjectLabel(trimmed);
+                    return;
+                }
+
+                try {
+                    apiInstance.executeCommand('subject', trimmed);
+                    updateMeetingSubjectLabel(trimmed);
+                } catch (error) {
+                    console.error('Failed to update meeting subject via API', error);
+                    alert('تعذر تحديث عنوان العرض. يرجى المحاولة لاحقاً.');
+                }
+            });
+        }
 
         displayNameForm?.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -927,7 +1009,17 @@
                     mobileFullscreenLabel
                 );
 
-                const shouldAutoFullscreen = window.matchMedia('(max-width: 768px)').matches;
+                if (pendingSubjectUpdate !== null) {
+                    try {
+                        apiInstance.executeCommand('subject', pendingSubjectUpdate);
+                    } catch (error) {
+                        console.error('Failed to apply pending subject update', error);
+                    } finally {
+                        pendingSubjectUpdate = null;
+                    }
+                }
+
+                const shouldAutoFullscreen = false;
 
                 let autoFullscreenAttempts = 0;
                 const requestAutoFullscreen = () => {
@@ -987,6 +1079,11 @@
                 if (typeof apiInstance.addListener === 'function') {
                     apiInstance.addListener('videoConferenceJoined', () => {
                         requestAutoFullscreen();
+                    });
+                    apiInstance.addListener('subjectChanged', event => {
+                        if (event && typeof event.subject !== 'undefined') {
+                            updateMeetingSubjectLabel(event.subject);
+                        }
                     });
                 }
             };
