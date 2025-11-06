@@ -521,7 +521,7 @@
         const jaasJwt = @json($embedConfig['jwt'] ?? null);
         const initialHeight = container.offsetHeight || 640;
 
-        const essentialToolbar = [
+        const baseToolbarButtons = [
             'microphone',
             'camera',
             'raisehand',
@@ -533,6 +533,17 @@
             'e2ee',
             'hangup',
         ];
+        const mobileToolbarButtons = [
+            'microphone',
+            'camera',
+            'raisehand',
+            'fullscreen',
+            'settings',
+            'chat',
+            'hangup',
+        ];
+        const isMobileToolbar = window.matchMedia('(max-width: 768px)').matches;
+        const toolbarButtons = isMobileToolbar ? mobileToolbarButtons : baseToolbarButtons;
 
         const options = {
             roomName: @json($embedConfig['room']),
@@ -557,7 +568,7 @@
                 disableInviteFunctions: true,
                 disableSelfViewSettings: true,
                 disableReactions: true,
-                toolbarButtons: essentialToolbar,
+                toolbarButtons,
             },
             interfaceConfigOverwrite: {
                 SHOW_PROMOTIONAL_CLOSE_PAGE: false,
@@ -566,7 +577,7 @@
                 DEFAULT_LOCAL_DISPLAY_NAME: 'أنا',
                 FILM_STRIP_MAX_HEIGHT: 120,
                 SETTINGS_SECTIONS: ['devices'],
-                TOOLBAR_BUTTONS: essentialToolbar,
+                TOOLBAR_BUTTONS: toolbarButtons,
             },
             userInfo: {
                 displayName: @json($user->name),

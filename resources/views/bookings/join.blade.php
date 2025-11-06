@@ -827,6 +827,29 @@
                 const jaasJwt = @json($embedConfig['jwt'] ?? null);
                 const initialHeight = container.offsetHeight || 640;
 
+                const baseToolbarButtons = [
+                    'microphone',
+                    'camera',
+                    'chat',
+                    'raisehand',
+                    'fullscreen',
+                    'tileview',
+                    'settings',
+                    'e2ee',
+                    'hangup',
+                ];
+                const mobileToolbarButtons = [
+                    'microphone',
+                    'camera',
+                    'raisehand',
+                    'fullscreen',
+                    'settings',
+                    'chat',
+                    'hangup',
+                ];
+                const isMobileToolbar = window.matchMedia('(max-width: 768px)').matches;
+                const toolbarButtons = isMobileToolbar ? mobileToolbarButtons : baseToolbarButtons;
+
                 const options = {
                     roomName: @json($embedConfig['room']),
                     parentNode: container,
@@ -850,16 +873,7 @@
                         disableReactions: true,
                         disableInviteFunctions: true,
                         disableSelfViewSettings: true,
-                        toolbarButtons: [
-                            'microphone',
-                            'camera',
-                            'raisehand',
-                            'fullscreen',
-                            'tileview',
-                            'settings',
-                            'e2ee',
-                            'hangup',
-                        ],
+                        toolbarButtons,
                     },
                     interfaceConfigOverwrite: {
                         SHOW_PROMOTIONAL_CLOSE_PAGE: false,
@@ -868,16 +882,7 @@
                         DEFAULT_LOCAL_DISPLAY_NAME: participantName || 'أنا',
                         FILM_STRIP_MAX_HEIGHT: 120,
                         SETTINGS_SECTIONS: ['devices'],
-                        TOOLBAR_BUTTONS: [
-                            'microphone',
-                            'camera',
-                            'raisehand',
-                            'fullscreen',
-                            'tileview',
-                            'settings',
-                            'e2ee',
-                            'hangup',
-                        ],
+                        TOOLBAR_BUTTONS: toolbarButtons,
                     },
                 };
 
