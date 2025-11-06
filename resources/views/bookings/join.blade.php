@@ -462,7 +462,17 @@
         const joinPageUrl = @json($secureJoinUrl ?? $booking->secure_join_url);
         let hasRedirectedToJoinPage = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
-        let shouldAutoFullscreen = mobileViewportQuery.matches;
+        const tabletViewportQuery = window.matchMedia('(max-width: 1024px)');
+        const shortHeightViewportQuery = window.matchMedia('(max-height: 540px)');
+        const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
+        const computeAutoFullscreenPreference = () => {
+            const hasCoarsePointer = coarsePointerQuery.matches;
+            const narrowWidth = mobileViewportQuery.matches;
+            const compactTabletWidth = tabletViewportQuery.matches && hasCoarsePointer;
+            const shortLandscapeHeight = shortHeightViewportQuery.matches && hasCoarsePointer;
+            return narrowWidth || compactTabletWidth || shortLandscapeHeight;
+        };
+        let shouldAutoFullscreen = computeAutoFullscreenPreference();
 
         const bodyFullscreenClass = 'mobile-fullscreen-active';
         const targetFullscreenClass = 'mobile-fullscreen-active';
@@ -600,28 +610,44 @@
             };
         })();
 
+        const syncFullscreenPreference = (force = false) => {
+            const nextPreference = computeAutoFullscreenPreference();
+            if (!force && nextPreference === shouldAutoFullscreen) {
+                if (nextPreference) {
+                    fullscreenController.ensure();
+                }
+                return;
+            }
+
+            shouldAutoFullscreen = nextPreference;
+            if (shouldAutoFullscreen) {
+                fullscreenController.ensure();
+            } else {
+                fullscreenController.exit();
+            }
+        };
+
+        const registerViewportPreferenceListener = (query) => {
+            if (!query) {
+                return;
+            }
+
+            const handler = () => syncFullscreenPreference();
+            if (typeof query.addEventListener === 'function') {
+                query.addEventListener('change', handler);
+            } else if (typeof query.addListener === 'function') {
+                query.addListener(handler);
+            }
+        };
+
+        [mobileViewportQuery, tabletViewportQuery, shortHeightViewportQuery, coarsePointerQuery].forEach(registerViewportPreferenceListener);
+
+        window.addEventListener('orientationchange', () => {
+            window.setTimeout(() => syncFullscreenPreference(true), 160);
+        });
+
         if (meetingStarted && shouldAutoFullscreen) {
             fullscreenController.ensure();
-        }
-
-        if (typeof mobileViewportQuery.addEventListener === 'function') {
-            mobileViewportQuery.addEventListener('change', event => {
-                shouldAutoFullscreen = event.matches;
-                if (shouldAutoFullscreen) {
-                    fullscreenController.ensure();
-                } else {
-                    fullscreenController.exit();
-                }
-            });
-        } else if (typeof mobileViewportQuery.addListener === 'function') {
-            mobileViewportQuery.addListener(event => {
-                shouldAutoFullscreen = event.matches;
-                if (shouldAutoFullscreen) {
-                    fullscreenController.ensure();
-                } else {
-                    fullscreenController.exit();
-                }
-            });
         }
 
         window.addEventListener('beforeunload', fullscreenController.exit);
