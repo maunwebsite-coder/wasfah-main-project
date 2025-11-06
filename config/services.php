@@ -51,6 +51,7 @@ return [
         'base_url' => env('JITSI_BASE_URL', 'https://meet.jit.si'),
         'room_prefix' => env('JITSI_ROOM_PREFIX', 'wasfah'),
         'default_duration' => (int) env('JITSI_DEFAULT_DURATION', 90),
+        'allow_participant_subject_edit' => env('JITSI_ALLOW_PARTICIPANT_SUBJECT_EDIT', true),
         'jaas' => [
             'app_id' => env('JITSI_JAAS_APP_ID'),
             'api_key' => env('JITSI_JAAS_API_KEY'),

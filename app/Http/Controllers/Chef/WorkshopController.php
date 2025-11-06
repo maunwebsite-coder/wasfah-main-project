@@ -517,15 +517,15 @@ class WorkshopController extends Controller
 
             $roomPath = "{$appId}/{$roomSlug}";
             $tokenService = app(\App\Services\JitsiJaasTokenService::class);
-            $jwt = $isModerator
-                ? $tokenService->createModeratorToken($roomSlug, [
-                    'name' => $displayName,
-                    'email' => $email,
-                ], $workshop->start_date)
-                : $tokenService->createParticipantToken($roomSlug, [
-                    'name' => $displayName,
-                    'email' => $email,
-                ], $workshop->start_date);
+            $allowParticipantSubject = (bool) config('services.jitsi.allow_participant_subject_edit', true);
+            $shouldIssueModeratorToken = $isModerator || (!$isModerator && $allowParticipantSubject);
+            $userContext = [
+                'name' => $displayName,
+                'email' => $email,
+            ];
+            $jwt = $shouldIssueModeratorToken
+                ? $tokenService->createModeratorToken($roomSlug, $userContext, $workshop->start_date)
+                : $tokenService->createParticipantToken($roomSlug, $userContext, $workshop->start_date);
 
             return [
                 'provider' => 'jaas',

@@ -527,6 +527,7 @@
             'raisehand',
             'fullscreen',
             'tileview',
+            'subject',
             'settings',
             'chat',
             'desktop',
@@ -538,6 +539,7 @@
             'camera',
             'raisehand',
             'fullscreen',
+            'subject',
             'settings',
             'chat',
             'hangup',
@@ -561,7 +563,7 @@
                 requireDisplayName: false,
                 enableWelcomePage: false,
                 enableClosePage: false,
-                enableUserRolesBasedOnToken: false,
+                enableUserRolesBasedOnToken: @json(($embedConfig['provider'] ?? null) === 'jaas'),
                 disableDeepLinking: true,
                 startWithAudioMuted: true,
                 startWithVideoMuted: true,
@@ -784,59 +786,73 @@
                 updateFullscreenState();
             };
 
-            const performEnter = () => {
+            const performEnter = ({ skipCommand = false } = {}) => {
                 if (isFullscreenActive()) {
                     ensureActiveState();
                     return Promise.resolve();
                 }
 
-                requestApiToggle();
+                const attemptNative = () => enterFullscreen()
+                    .catch(() => {
+                        // Native fullscreen not available; fallback already handled.
+                    })
+                    .finally(() => {
+                        ensureActiveState();
+                    });
 
                 return new Promise(resolve => {
-                    setTimeout(() => {
+                    const evaluate = () => {
                         if (isFullscreenActive()) {
                             ensureActiveState();
                             resolve();
                             return;
                         }
 
-                        enterFullscreen()
-                            .catch(() => {
-                                // Manual fallback already applied within enterFullscreen.
-                            })
-                            .finally(() => {
-                                ensureActiveState();
-                                resolve();
-                            });
-                    }, 220);
+                        attemptNative().finally(resolve);
+                    };
+
+                    if (skipCommand) {
+                        setTimeout(evaluate, 200);
+                        return;
+                    }
+
+                    requestApiToggle();
+                    setTimeout(evaluate, 220);
                 });
             };
 
-            const performExit = () => {
+            const performExit = ({ skipCommand = false } = {}) => {
                 if (!isFullscreenActive()) {
                     ensureInactiveState();
                     return Promise.resolve();
                 }
 
-                requestApiToggle();
+                const attemptNative = () => exitFullscreen()
+                    .catch(() => {
+                        // Native fullscreen not available; fallback already handled.
+                    })
+                    .finally(() => {
+                        ensureInactiveState();
+                    });
 
                 return new Promise(resolve => {
-                    setTimeout(() => {
+                    const evaluate = () => {
                         if (!isFullscreenActive()) {
                             ensureInactiveState();
                             resolve();
                             return;
                         }
 
-                        exitFullscreen()
-                            .catch(() => {
-                                // Manual fallback already applied within exitFullscreen.
-                            })
-                            .finally(() => {
-                                ensureInactiveState();
-                                resolve();
-                            });
-                    }, 220);
+                        attemptNative().finally(resolve);
+                    };
+
+                    if (skipCommand) {
+                        setTimeout(evaluate, 200);
+                        return;
+                    }
+
+                    requestApiToggle();
+                    setTimeout(evaluate, 220);
                 });
             };
 
@@ -858,7 +874,9 @@
                         return;
                     }
                     handlingToolbarToggle = true;
-                    const action = isFullscreenActive() ? performExit : performEnter;
+                    const action = isFullscreenActive()
+                        ? () => performExit({ skipCommand: true })
+                        : () => performEnter({ skipCommand: true });
                     Promise.resolve(action()).finally(() => {
                         handlingToolbarToggle = false;
                     });
