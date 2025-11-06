@@ -95,7 +95,7 @@
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-orange-500 text-white shadow-lg">
                 <div class="absolute -top-24 -left-16 h-48 w-48 rounded-full bg-white/10 blur-3xl"></div>
                 <div class="absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-white/20 blur-3xl opacity-60"></div>
-                <div class="relative grid gap-8 p-8 lg:grid-cols-[1.1fr,0.9fr]">
+                <div class="relative flex flex-col gap-8 p-6 sm:p-8 lg:grid lg:grid-cols-[1.1fr,0.9fr]">
                     <div class="space-y-6">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">ورش Wasfah</p>
@@ -107,23 +107,23 @@
                                 @endif
                             </p>
                         </div>
-                        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
+                        <div class="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 sm:grid sm:gap-3 sm:grid-cols-2 sm:overflow-visible sm:pb-0 sm:snap-none xl:grid-cols-4">
+                            <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
                                 <p class="text-xs font-semibold text-white/70">إجمالي الورش</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['total'] ?? 0 }}</p>
                                 <p class="text-xs text-white/70">كل ما أنشأته من جلسات.</p>
                             </div>
-                            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
+                            <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
                                 <p class="text-xs font-semibold text-white/70">ورش منشورة</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['active'] ?? 0 }}</p>
                                 <p class="text-xs text-white/70">مرئية الآن لجمهورك.</p>
                             </div>
-                            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
+                            <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
                                 <p class="text-xs font-semibold text-white/70">جلسات أونلاين</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['online'] ?? 0 }}</p>
                                 <p class="text-xs text-white/70">مجهزة بروابط بث مباشر.</p>
                             </div>
-                            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
+                            <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
                                 <p class="text-xs font-semibold text-white/70">ورش قادمة</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['upcoming'] ?? 0 }}</p>
                                 <p class="text-xs text-white/70">استعد لها من الآن.</p>
@@ -131,26 +131,26 @@
                         </div>
                         <div class="flex flex-col gap-3 sm:flex-row">
                             <a href="{{ route('chef.workshops.create') }}"
-                               class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-indigo-600 shadow hover:bg-indigo-50">
+                               class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-indigo-600 shadow hover:bg-indigo-50 sm:w-auto sm:justify-start">
                                 <i class="fas fa-wand-magic-sparkles"></i>
                                 أنشئ ورشة جديدة
                             </a>
                             <a href="{{ route('chef.workshops.index') }}"
-                               class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:border-white/60">
+                               class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:border-white/60 sm:w-auto sm:justify-start">
                                 <i class="fas fa-chalkboard-teacher"></i>
                                 إدارة الورش الحالية
                             </a>
                         </div>
                     </div>
-                    <div class="space-y-4 rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur">
-                        <div class="flex items-center justify-between">
+                    <div class="space-y-4 rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur sm:p-6">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div class="flex items-center gap-2 text-sm font-semibold text-white">
                                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
                                     <i class="fas fa-calendar-star"></i>
                                 </span>
                                 أقرب الورش القادمة
                             </div>
-                            <span class="text-xs text-white/70">حتى ٣ ورش</span>
+                            <span class="text-xs text-white/70 sm:text-right">حتى ٣ ورش</span>
                         </div>
                         @forelse ($upcomingWorkshops as $workshop)
                             @php
@@ -184,13 +184,13 @@
                                 </div>
                                 <div class="mt-4 flex flex-wrap items-center gap-2">
                                     <a href="{{ route('chef.workshops.edit', $workshop) }}"
-                                       class="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                                       class="inline-flex w-full items-center justify-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 sm:w-auto sm:justify-start">
                                         <i class="fas fa-pen"></i>
                                         تعديل التفاصيل
                                     </a>
                                     @if ($workshop->is_online && $workshop->meeting_link)
                                         <a href="{{ route('chef.workshops.join', $workshop) }}"
-                                           class="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
+                                           class="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700 sm:w-auto sm:justify-start">
                                             <i class="fas fa-play"></i>
                                             فتح غرفة البث
                                         </a>

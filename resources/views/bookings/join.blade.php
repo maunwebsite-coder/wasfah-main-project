@@ -459,51 +459,178 @@
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const joinModal = document.getElementById('joinConfirmationModal');
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
-        const joinPageUrl = @json(route('bookings.join', ['booking' => $booking->public_code]));
-        let hasRedirectedToJoinPage = false;
+        const meetingsPageUrl = @json(route('meetings.index'));
+        let hasRedirectedToMeetingsPage = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
         const mobileFullscreenClass = 'mobile-fullscreen-active';
-
-        const clearMobileFullscreen = () => {
-            document.body.classList.remove(mobileFullscreenClass);
-            document.querySelectorAll('.mobile-fullscreen-target').forEach(node => {
-                node.classList.remove(mobileFullscreenClass);
-            });
+        const fullscreenTarget = document.querySelector('.mobile-fullscreen-target');
+        const fullscreenState = {
+            mode: 'none',
+            meetingActive: meetingStarted,
         };
 
-        const applyMobileFullscreenIfNeeded = () => {
-            const target = document.querySelector('.mobile-fullscreen-target');
-
-            if (!meetingStarted || !target || !mobileViewportQuery.matches) {
-                clearMobileFullscreen();
+        const applyFallbackMobileFullscreen = () => {
+            if (!fullscreenTarget) {
                 return;
             }
 
             document.body.classList.add(mobileFullscreenClass);
-            target.classList.add(mobileFullscreenClass);
+            fullscreenTarget.classList.add(mobileFullscreenClass);
+            fullscreenState.mode = 'fallback';
         };
 
-        applyMobileFullscreenIfNeeded();
+        const clearFallbackMobileFullscreen = () => {
+            document.body.classList.remove(mobileFullscreenClass);
+            fullscreenTarget?.classList.remove(mobileFullscreenClass);
+            if (fullscreenState.mode === 'fallback') {
+                fullscreenState.mode = 'none';
+            }
+        };
 
-        const handleViewportChange = () => applyMobileFullscreenIfNeeded();
+        const exitNativeFullscreen = () => {
+            const exit =
+                document.exitFullscreen ||
+                document.webkitExitFullscreen ||
+                document.mozCancelFullScreen ||
+                document.msExitFullscreen;
+
+            if (!exit) {
+                return;
+            }
+
+            try {
+                exit.call(document);
+            } catch (error) {
+                console.debug('Failed to exit native fullscreen', error);
+            }
+        };
+
+        const exitMobileFullscreen = () => {
+            if (fullscreenState.mode === 'native') {
+                exitNativeFullscreen();
+            }
+
+            clearFallbackMobileFullscreen();
+            fullscreenState.mode = 'none';
+        };
+
+        const requestNativeFullscreen = () => {
+            if (!fullscreenTarget || !mobileViewportQuery.matches) {
+                return Promise.resolve(false);
+            }
+
+            const request =
+                fullscreenTarget.requestFullscreen ||
+                fullscreenTarget.webkitRequestFullscreen ||
+                fullscreenTarget.mozRequestFullScreen ||
+                fullscreenTarget.msRequestFullscreen;
+
+            if (!request) {
+                return Promise.resolve(false);
+            }
+
+            try {
+                const result = request.call(fullscreenTarget);
+
+                fullscreenState.mode = 'native';
+                document.body.classList.add(mobileFullscreenClass);
+                fullscreenTarget.classList.add(mobileFullscreenClass);
+
+                if (result && typeof result.then === 'function') {
+                    return result.then(
+                        () => true,
+                        () => false,
+                    );
+                }
+
+                return Promise.resolve(true);
+            } catch (error) {
+                console.debug('Native fullscreen request failed', error);
+                return Promise.resolve(false);
+            }
+        };
+
+        const enterMobileFullscreen = () => {
+            if (!fullscreenState.meetingActive || !mobileViewportQuery.matches || !fullscreenTarget) {
+                return;
+            }
+
+            if (fullscreenState.mode === 'native') {
+                return;
+            }
+
+            requestNativeFullscreen().then((success) => {
+                if (!success) {
+                    applyFallbackMobileFullscreen();
+                }
+            });
+        };
+
+        const ensureMobileFullscreen = () => {
+            if (!fullscreenState.meetingActive || !mobileViewportQuery.matches) {
+                exitMobileFullscreen();
+                return;
+            }
+
+            if (!fullscreenTarget) {
+                return;
+            }
+
+            if (fullscreenState.mode === 'native') {
+                return;
+            }
+
+            if (fullscreenState.mode === 'fallback') {
+                applyFallbackMobileFullscreen();
+                return;
+            }
+
+            enterMobileFullscreen();
+        };
+
+        if (meetingStarted) {
+            ensureMobileFullscreen();
+        }
+
+        const handleViewportChange = () => ensureMobileFullscreen();
         if (typeof mobileViewportQuery.addEventListener === 'function') {
             mobileViewportQuery.addEventListener('change', handleViewportChange);
         } else if (typeof mobileViewportQuery.addListener === 'function') {
             mobileViewportQuery.addListener(handleViewportChange);
         }
 
-        window.addEventListener('orientationchange', applyMobileFullscreenIfNeeded);
-        window.addEventListener('beforeunload', clearMobileFullscreen);
-        window.addEventListener('pagehide', clearMobileFullscreen);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(ensureMobileFullscreen, 180);
+        });
 
-        const redirectToJoinPage = () => {
-            if (hasRedirectedToJoinPage || !joinPageUrl) {
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && fullscreenState.mode === 'native') {
+                fullscreenState.mode = 'none';
+
+                if (fullscreenState.meetingActive) {
+                    ensureMobileFullscreen();
+                } else {
+                    clearFallbackMobileFullscreen();
+                }
+            }
+        });
+
+        const exitFullscreenAndCleanup = () => {
+            fullscreenState.meetingActive = false;
+            exitMobileFullscreen();
+        };
+
+        window.addEventListener('beforeunload', exitFullscreenAndCleanup);
+        window.addEventListener('pagehide', exitFullscreenAndCleanup);
+
+        const redirectToMeetingsPage = () => {
+            if (hasRedirectedToMeetingsPage || !meetingsPageUrl) {
                 return;
             }
 
-            hasRedirectedToJoinPage = true;
-            clearMobileFullscreen();
-            window.location.assign(joinPageUrl);
+            hasRedirectedToMeetingsPage = true;
+            exitFullscreenAndCleanup();
+            window.location.assign(meetingsPageUrl);
         };
 
         const updateMeetingSubjectLabel = (subject) => {
@@ -839,7 +966,11 @@
                     resolve(result);
                 };
 
-                const handleConfirm = () => finish(true);
+                const handleConfirm = () => {
+                    fullscreenState.meetingActive = true;
+                    enterMobileFullscreen();
+                    finish(true);
+                };
                 const handleCancel = () => finish(false);
                 const handleBackdropClick = (event) => {
                     if (event.target === joinModal) {
@@ -881,8 +1012,13 @@
                     } else {
                         alert(cancellationMessage);
                     }
+                    fullscreenState.meetingActive = false;
+                    exitMobileFullscreen();
                     return;
                 }
+
+                fullscreenState.meetingActive = true;
+                ensureMobileFullscreen();
 
                 const container = document.getElementById('jitsi-container');
 
@@ -893,8 +1029,6 @@
 
                 participantName = (await promptForDisplayName()) || fallbackGuestName;
                 updateParticipantNameLabel(participantName);
-
-                applyMobileFullscreenIfNeeded();
 
                 const domain = @json($embedConfig['domain']);
                 const jaasJwt = @json($embedConfig['jwt'] ?? null);
@@ -995,7 +1129,7 @@
                 }
 
                 const handleMeetingClosure = () => {
-                    redirectToJoinPage();
+                    redirectToMeetingsPage();
                 };
 
                 apiInstance.addListener('videoConferenceLeft', handleMeetingClosure);

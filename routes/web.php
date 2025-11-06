@@ -10,6 +10,7 @@ use App\Http\Controllers\Chef\RecipeController as ChefRecipeController;
 use App\Http\Controllers\Chef\WorkshopController as ChefWorkshopController;
 use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
+use App\Http\Controllers\UserMeetingController;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
@@ -241,6 +242,7 @@ Route::get('/tools/{tool}', [App\Http\Controllers\ToolsController::class, 'show'
 
 // مسارات الحجوزات - محمية بـ middleware المصادقة (باستثناء الانضمام الذي يسمح للضيوف)
 Route::middleware('auth')->group(function () {
+    Route::get('/meetings', [UserMeetingController::class, 'index'])->name('meetings.index');
     Route::post('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [App\Http\Controllers\WorkshopBookingController::class, 'show'])->name('bookings.show');

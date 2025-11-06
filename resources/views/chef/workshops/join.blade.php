@@ -246,44 +246,138 @@
         const presenceUrl = @json(route('chef.workshops.presence', $workshop));
         const startUrl = @json(route('chef.workshops.start', $workshop));
         const csrfToken = @json(csrf_token());
-        const joinPageUrl = @json(route('chef.workshops.join', $workshop));
+        const meetingsPageUrl = @json(route('meetings.index'));
         let lastPresenceState = null;
         let meetingStartTriggered = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
         const mobileFullscreenClass = 'mobile-fullscreen-active';
-        let mobileFullscreenEnabled = false;
-        let hasRedirectedToJoinPage = false;
-
-        const clearMobileFullscreen = () => {
-            document.body.classList.remove(mobileFullscreenClass);
-            document.querySelectorAll('.mobile-fullscreen-target').forEach(node => {
-                node.classList.remove(mobileFullscreenClass);
-            });
+        const fullscreenTarget = document.querySelector('.mobile-fullscreen-target');
+        let hasRedirectedToMeetingsPage = false;
+        const fullscreenState = {
+            mode: 'none',
+            meetingActive: false,
         };
 
-        const updateMobileFullscreen = () => {
-            const target = document.querySelector('.mobile-fullscreen-target');
-
-            if (!mobileFullscreenEnabled || !target || !mobileViewportQuery.matches) {
-                clearMobileFullscreen();
+        const applyFallbackMobileFullscreen = () => {
+            if (!fullscreenTarget) {
                 return;
             }
 
             document.body.classList.add(mobileFullscreenClass);
-            target.classList.add(mobileFullscreenClass);
+            fullscreenTarget.classList.add(mobileFullscreenClass);
+            fullscreenState.mode = 'fallback';
         };
 
-        const enableMobileFullscreen = () => {
-            mobileFullscreenEnabled = true;
-            updateMobileFullscreen();
+        const clearFallbackMobileFullscreen = () => {
+            document.body.classList.remove(mobileFullscreenClass);
+            fullscreenTarget?.classList.remove(mobileFullscreenClass);
+            if (fullscreenState.mode === 'fallback') {
+                fullscreenState.mode = 'none';
+            }
         };
 
-        const disableMobileFullscreen = () => {
-            mobileFullscreenEnabled = false;
-            clearMobileFullscreen();
+        const exitNativeFullscreen = () => {
+            const exit =
+                document.exitFullscreen ||
+                document.webkitExitFullscreen ||
+                document.mozCancelFullScreen ||
+                document.msExitFullscreen;
+
+            if (!exit) {
+                return;
+            }
+
+            try {
+                exit.call(document);
+            } catch (error) {
+                console.debug('Failed to exit native fullscreen', error);
+            }
         };
 
-        const handleViewportChange = () => updateMobileFullscreen();
+        const exitMobileFullscreen = () => {
+            if (fullscreenState.mode === 'native') {
+                exitNativeFullscreen();
+            }
+
+            clearFallbackMobileFullscreen();
+            fullscreenState.mode = 'none';
+        };
+
+        const requestNativeFullscreen = () => {
+            if (!fullscreenTarget || !mobileViewportQuery.matches) {
+                return Promise.resolve(false);
+            }
+
+            const request =
+                fullscreenTarget.requestFullscreen ||
+                fullscreenTarget.webkitRequestFullscreen ||
+                fullscreenTarget.mozRequestFullScreen ||
+                fullscreenTarget.msRequestFullscreen;
+
+            if (!request) {
+                return Promise.resolve(false);
+            }
+
+            try {
+                const result = request.call(fullscreenTarget);
+
+                fullscreenState.mode = 'native';
+                document.body.classList.add(mobileFullscreenClass);
+                fullscreenTarget.classList.add(mobileFullscreenClass);
+
+                if (result && typeof result.then === 'function') {
+                    return result.then(
+                        () => true,
+                        () => false,
+                    );
+                }
+
+                return Promise.resolve(true);
+            } catch (error) {
+                console.debug('Native fullscreen request failed', error);
+                return Promise.resolve(false);
+            }
+        };
+
+        const enterMobileFullscreen = () => {
+            if (!fullscreenState.meetingActive || !mobileViewportQuery.matches || !fullscreenTarget) {
+                return;
+            }
+
+            if (fullscreenState.mode === 'native') {
+                return;
+            }
+
+            requestNativeFullscreen().then((success) => {
+                if (!success) {
+                    applyFallbackMobileFullscreen();
+                }
+            });
+        };
+
+        const ensureMobileFullscreen = () => {
+            if (!fullscreenState.meetingActive || !mobileViewportQuery.matches) {
+                exitMobileFullscreen();
+                return;
+            }
+
+            if (!fullscreenTarget) {
+                return;
+            }
+
+            if (fullscreenState.mode === 'native') {
+                return;
+            }
+
+            if (fullscreenState.mode === 'fallback') {
+                applyFallbackMobileFullscreen();
+                return;
+            }
+
+            enterMobileFullscreen();
+        };
+
+        const handleViewportChange = () => ensureMobileFullscreen();
 
         if (typeof mobileViewportQuery.addEventListener === 'function') {
             mobileViewportQuery.addEventListener('change', handleViewportChange);
@@ -291,16 +385,31 @@
             mobileViewportQuery.addListener(handleViewportChange);
         }
 
-        window.addEventListener('orientationchange', updateMobileFullscreen);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(ensureMobileFullscreen, 180);
+        });
 
-        const redirectToJoinPage = () => {
-            if (hasRedirectedToJoinPage || !joinPageUrl) {
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && fullscreenState.mode === 'native') {
+                fullscreenState.mode = 'none';
+
+                if (fullscreenState.meetingActive) {
+                    ensureMobileFullscreen();
+                } else {
+                    clearFallbackMobileFullscreen();
+                }
+            }
+        });
+
+        const redirectToMeetingsPage = () => {
+            if (hasRedirectedToMeetingsPage || !meetingsPageUrl) {
                 return;
             }
 
-            hasRedirectedToJoinPage = true;
-            disableMobileFullscreen();
-            window.location.assign(joinPageUrl);
+            hasRedirectedToMeetingsPage = true;
+            fullscreenState.meetingActive = false;
+            exitMobileFullscreen();
+            window.location.assign(meetingsPageUrl);
         };
 
         const startMeetingForParticipants = () => {
@@ -384,6 +493,8 @@
                 };
 
                 const handleConfirm = () => {
+                    fullscreenState.meetingActive = true;
+                    enterMobileFullscreen();
                     startMeetingForParticipants();
                     finish(true);
                 };
@@ -426,11 +537,13 @@
             } else {
                 alert(cancellationMessage);
             }
-            disableMobileFullscreen();
+            fullscreenState.meetingActive = false;
+            exitMobileFullscreen();
             return;
         }
 
-        enableMobileFullscreen();
+        fullscreenState.meetingActive = true;
+        ensureMobileFullscreen();
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
@@ -645,17 +758,17 @@
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
-            updateMobileFullscreen();
+            ensureMobileFullscreen();
         });
 
         api.addListener('videoConferenceLeft', () => {
             sendPresence('offline', { force: true });
-            redirectToJoinPage();
+            redirectToMeetingsPage();
         });
 
         api.addListener('readyToClose', () => {
             sendPresence('offline', { force: true });
-            redirectToJoinPage();
+            redirectToMeetingsPage();
         });
 
         function resizeJitsi() {
@@ -667,11 +780,13 @@
         window.addEventListener('resize', resizeJitsi);
         resizeJitsi();
         window.addEventListener('beforeunload', () => {
-            disableMobileFullscreen();
+            fullscreenState.meetingActive = false;
+            exitMobileFullscreen();
             sendPresenceBeacon('offline');
         });
         window.addEventListener('pagehide', () => {
-            disableMobileFullscreen();
+            fullscreenState.meetingActive = false;
+            exitMobileFullscreen();
             sendPresenceBeacon('offline');
         });
 
