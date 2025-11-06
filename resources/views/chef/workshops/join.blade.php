@@ -51,7 +51,6 @@
         display: none;
         margin-top: 0.75rem;
         justify-content: center;
-        flex-wrap: wrap;
         gap: 0.75rem;
     }
 
@@ -162,42 +161,6 @@
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
             <div class="mobile-meeting-toolbar" id="mobileMeetingToolbar" hidden aria-hidden="true">
-                <button
-                    type="button"
-                    id="mobileMicToggle"
-                    class="mobile-meeting-toolbar__btn"
-                    aria-pressed="false"
-                >
-                    <i class="fas fa-microphone-slash" aria-hidden="true"></i>
-                    <span id="mobileMicToggleLabel">تشغيل الصوت</span>
-                </button>
-                <button
-                    type="button"
-                    id="mobileCameraToggle"
-                    class="mobile-meeting-toolbar__btn"
-                    aria-pressed="false"
-                >
-                    <i class="fas fa-video-slash" aria-hidden="true"></i>
-                    <span id="mobileCameraToggleLabel">تشغيل الكاميرا</span>
-                </button>
-                <button
-                    type="button"
-                    id="mobileRaiseHandToggle"
-                    class="mobile-meeting-toolbar__btn"
-                    aria-pressed="false"
-                >
-                    <i class="fas fa-hand" aria-hidden="true"></i>
-                    <span id="mobileRaiseHandToggleLabel">رفع اليد</span>
-                </button>
-                <button
-                    type="button"
-                    id="mobileE2eeToggle"
-                    class="mobile-meeting-toolbar__btn"
-                    aria-pressed="false"
-                >
-                    <i class="fas fa-lock-open" aria-hidden="true"></i>
-                    <span id="mobileE2eeToggleLabel">تشغيل التعمية</span>
-                </button>
                 <button
                     type="button"
                     id="mobileFullscreenToggle"
@@ -546,10 +509,6 @@
 
         const container = document.getElementById('jitsi-container');
         const mobileToolbar = document.getElementById('mobileMeetingToolbar');
-        const mobileMicToggle = document.getElementById('mobileMicToggle');
-        const mobileCameraToggle = document.getElementById('mobileCameraToggle');
-        const mobileRaiseHandToggle = document.getElementById('mobileRaiseHandToggle');
-        const mobileE2eeToggle = document.getElementById('mobileE2eeToggle');
         const mobileFullscreenToggle = document.getElementById('mobileFullscreenToggle');
         const mobileFullscreenLabel = document.getElementById('mobileFullscreenToggleLabel');
 
@@ -620,18 +579,13 @@
         }
 
         const api = new JitsiMeetExternalAPI(domain, options);
-        setupMobileControls(api, {
+        setupMobileFullscreenControl(
+            api,
             container,
-            toolbar: mobileToolbar,
-            fullscreen: {
-                button: mobileFullscreenToggle,
-                label: mobileFullscreenLabel,
-            },
-            micButton: mobileMicToggle,
-            cameraButton: mobileCameraToggle,
-            raiseHandButton: mobileRaiseHandToggle,
-            e2eeButton: mobileE2eeToggle,
-        });
+            mobileToolbar,
+            mobileFullscreenToggle,
+            mobileFullscreenLabel
+        );
 
         api.addListener('videoConferenceJoined', () => {
             sendPresence('online');
@@ -666,16 +620,8 @@
         });
         @endif
 
-        function setupMobileControls(api, {
-            container,
-            toolbar,
-            fullscreen = {},
-            micButton = null,
-            cameraButton = null,
-            raiseHandButton = null,
-            e2eeButton = null,
-        }) {
-            if (!toolbar || !container) {
+        function setupMobileFullscreenControl(api, container, toolbar, toggleButton, toggleLabel) {
+            if (!toolbar || !toggleButton || !container) {
                 return;
             }
 
@@ -691,13 +637,6 @@
                     toolbar.setAttribute('aria-hidden', 'true');
                 }
             };
-
-            updateVisibility();
-            if (typeof mobileQuery.addEventListener === 'function') {
-                mobileQuery.addEventListener('change', updateVisibility);
-            } else if (typeof mobileQuery.addListener === 'function') {
-                mobileQuery.addListener(updateVisibility);
-            }
 
             const getFullscreenElement = () => (
                 document.fullscreenElement
@@ -756,287 +695,65 @@
                 return Promise.resolve();
             };
 
-            const setPressedState = (button, pressed) => {
-                if (!button) {
-                    return;
-                }
-                button.classList.toggle('is-active', pressed);
-                button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
-            };
-
-            const setStatefulButton = (button, {
-                active,
-                activeLabel,
-                inactiveLabel,
-                activeIcon,
-                inactiveIcon,
-            }) => {
-                if (!button) {
-                    return;
-                }
-
-                setPressedState(button, active);
-
-                const icon = button.querySelector('i');
-                if (icon && (activeIcon || inactiveIcon)) {
-                    const iconsToRemove = [];
-                    if (activeIcon) {
-                        iconsToRemove.push(activeIcon);
-                    }
-                    if (inactiveIcon) {
-                        iconsToRemove.push(inactiveIcon);
-                    }
-                    if (iconsToRemove.length) {
-                        icon.classList.remove(...iconsToRemove);
-                    }
-                    const targetIcon = active ? activeIcon : inactiveIcon;
-                    if (targetIcon) {
-                        icon.classList.add(targetIcon);
-                    }
-                }
-
-                const label = button.querySelector('span');
-                if (label && activeLabel && inactiveLabel) {
-                    label.textContent = active ? activeLabel : inactiveLabel;
-                }
-            };
-
-            const { button: fullscreenButton = null, label: fullscreenLabel = null } = fullscreen || {};
-
             const updateFullscreenState = () => {
-                if (!fullscreenButton) {
-                    return;
-                }
                 const isFullscreen = Boolean(getFullscreenElement())
                     || document.body.classList.contains('mobile-fullscreen-active');
-                setPressedState(fullscreenButton, isFullscreen);
-                if (fullscreenLabel) {
-                    fullscreenLabel.textContent = isFullscreen ? 'إغلاق الشاشة الكاملة' : 'شاشة كاملة';
+                toggleButton.classList.toggle('is-active', isFullscreen);
+                toggleButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
+                if (toggleLabel) {
+                    toggleLabel.textContent = isFullscreen ? 'إغلاق الشاشة الكاملة' : 'شاشة كاملة';
                 }
             };
 
-            if (fullscreenButton) {
-                fullscreenButton.addEventListener('click', () => {
-                    const isFullscreen = Boolean(getFullscreenElement())
-                        || document.body.classList.contains('mobile-fullscreen-active');
+            toggleButton.addEventListener('click', () => {
+                const isFullscreen = Boolean(getFullscreenElement())
+                    || document.body.classList.contains('mobile-fullscreen-active');
 
-                    const onFailure = () => {
-                        try {
-                            api.executeCommand('toggleFullScreen');
-                        } catch {
-                            // ignore
-                        }
-                    };
-
-                    if (isFullscreen) {
-                        exitFullscreen().catch(onFailure).finally(updateFullscreenState);
-                    } else {
-                        enterFullscreen()
-                            .catch(onFailure)
-                            .finally(() => {
-                                if (!getFullscreenElement()
-                                    && !document.body.classList.contains('mobile-fullscreen-active')) {
-                                    applyFallback(true);
-                                }
-                                updateFullscreenState();
-                            });
-                    }
-                });
-
-                if (typeof api.addListener === 'function') {
-                    api.addListener('videoConferenceJoined', updateFullscreenState);
-                    api.addListener('videoConferenceLeft', updateFullscreenState);
-                }
-
-                ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(eventName => {
-                    document.addEventListener(eventName, updateFullscreenState);
-                    document.addEventListener(eventName, () => {
-                        if (!getFullscreenElement()) {
-                            applyFallback(false);
-                        }
-                    });
-                });
-
-                updateFullscreenState();
-            }
-
-            const updateMicState = (muted) => {
-                setStatefulButton(micButton, {
-                    active: !muted,
-                    activeLabel: 'كتم الصوت',
-                    inactiveLabel: 'تشغيل الصوت',
-                    activeIcon: 'fa-microphone',
-                    inactiveIcon: 'fa-microphone-slash',
-                });
-            };
-
-            if (micButton) {
-                micButton.addEventListener('click', () => {
+                const onFailure = () => {
                     try {
-                        api.executeCommand('toggleAudio');
+                        api.executeCommand('toggleFullScreen');
                     } catch {
                         // ignore
                     }
-                });
-
-                const syncMicState = () => {
-                    if (typeof api.isAudioMuted !== 'function') {
-                        return;
-                    }
-                    Promise.resolve(api.isAudioMuted()).then(result => {
-                        if (typeof result === 'boolean') {
-                            updateMicState(result);
-                        }
-                    }).catch(() => {});
                 };
 
-                if (typeof api.addListener === 'function') {
-                    api.addListener('audioMuteStatusChanged', event => {
-                        if (event && typeof event.muted === 'boolean') {
-                            updateMicState(event.muted);
-                        }
-                    });
-                    api.addListener('videoConferenceJoined', syncMicState);
-                }
-
-                syncMicState();
-            }
-
-            const updateCameraState = (muted) => {
-                setStatefulButton(cameraButton, {
-                    active: !muted,
-                    activeLabel: 'إيقاف الكاميرا',
-                    inactiveLabel: 'تشغيل الكاميرا',
-                    activeIcon: 'fa-video',
-                    inactiveIcon: 'fa-video-slash',
-                });
-            };
-
-            if (cameraButton) {
-                cameraButton.addEventListener('click', () => {
-                    try {
-                        api.executeCommand('toggleVideo');
-                    } catch {
-                        // ignore
-                    }
-                });
-
-                const syncCameraState = () => {
-                    if (typeof api.isVideoMuted !== 'function') {
-                        return;
-                    }
-                    Promise.resolve(api.isVideoMuted()).then(result => {
-                        if (typeof result === 'boolean') {
-                            updateCameraState(result);
-                        }
-                    }).catch(() => {});
-                };
-
-                if (typeof api.addListener === 'function') {
-                    api.addListener('videoMuteStatusChanged', event => {
-                        if (event && typeof event.muted === 'boolean') {
-                            updateCameraState(event.muted);
-                        }
-                    });
-                    api.addListener('videoConferenceJoined', syncCameraState);
-                }
-
-                syncCameraState();
-            }
-
-            let localParticipantId = null;
-
-            const updateRaiseHandState = (raised) => {
-                setStatefulButton(raiseHandButton, {
-                    active: raised,
-                    activeLabel: 'خفض اليد',
-                    inactiveLabel: 'رفع اليد',
-                    activeIcon: 'fa-hand-paper',
-                    inactiveIcon: 'fa-hand',
-                });
-            };
-
-            if (raiseHandButton) {
-                raiseHandButton.addEventListener('click', () => {
-                    try {
-                        api.executeCommand('toggleRaiseHand');
-                    } catch {
-                        // ignore
-                    }
-                });
-
-                if (typeof api.addListener === 'function') {
-                    api.addListener('videoConferenceJoined', event => {
-                        if (event && event.id) {
-                            localParticipantId = event.id;
-                        }
-                        const initialRaised = typeof event?.handRaised === 'boolean'
-                            ? event.handRaised
-                            : (typeof event?.raisedHand === 'boolean' ? event.raisedHand : false);
-                        updateRaiseHandState(Boolean(initialRaised));
-                    });
-
-                    api.addListener('raiseHandUpdated', event => {
-                        if (!event || !localParticipantId) {
-                            return;
-                        }
-                        if (event.id !== localParticipantId) {
-                            return;
-                        }
-                        const handRaisedValue = typeof event.handRaised === 'boolean'
-                            ? event.handRaised
-                            : (typeof event.raisedHand === 'boolean' ? event.raisedHand : null);
-                        if (handRaisedValue !== null) {
-                            updateRaiseHandState(handRaisedValue);
-                        }
-                    });
-                }
-            }
-
-            let e2eeState = false;
-
-            const updateE2eeState = (enabled) => {
-                e2eeState = Boolean(enabled);
-                setStatefulButton(e2eeButton, {
-                    active: e2eeState,
-                    activeLabel: 'إيقاف التعمية',
-                    inactiveLabel: 'تشغيل التعمية',
-                    activeIcon: 'fa-lock',
-                    inactiveIcon: 'fa-lock-open',
-                });
-            };
-
-            if (e2eeButton) {
-                updateE2eeState(e2eeState);
-
-                e2eeButton.addEventListener('click', () => {
-                    const nextState = !e2eeState;
-                    updateE2eeState(nextState);
-                    try {
-                        api.executeCommand('toggleE2EE');
-                    } catch {
-                        updateE2eeState(!nextState);
-                    }
-                });
-
-                if (typeof api.addListener === 'function') {
-                    api.addListener('toolbarButtonClicked', event => {
-                        if (event && event.key === 'e2ee') {
-                            if (typeof event.enabled === 'boolean') {
-                                updateE2eeState(event.enabled);
-                            } else {
-                                updateE2eeState(!e2eeState);
+                if (isFullscreen) {
+                    exitFullscreen().catch(onFailure).finally(updateFullscreenState);
+                } else {
+                    enterFullscreen()
+                        .catch(onFailure)
+                        .finally(() => {
+                            if (!getFullscreenElement()
+                                && !document.body.classList.contains('mobile-fullscreen-active')) {
+                                applyFallback(true);
                             }
-                        }
-                    });
-
-                    api.addListener('e2eeStatusChanged', event => {
-                        if (event && typeof event.enabled === 'boolean') {
-                            updateE2eeState(event.enabled);
-                        }
-                    });
+                            updateFullscreenState();
+                        });
                 }
+            });
+
+            if (typeof api.addListener === 'function') {
+                api.addListener('videoConferenceJoined', updateFullscreenState);
+                api.addListener('videoConferenceLeft', updateFullscreenState);
             }
+
+            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(eventName => {
+                document.addEventListener(eventName, updateFullscreenState);
+                document.addEventListener(eventName, () => {
+                    if (!getFullscreenElement()) {
+                        applyFallback(false);
+                    }
+                });
+            });
+
+            updateVisibility();
+            if (typeof mobileQuery.addEventListener === 'function') {
+                mobileQuery.addEventListener('change', updateVisibility);
+            } else if (typeof mobileQuery.addListener === 'function') {
+                mobileQuery.addListener(updateVisibility);
+            }
+
+            updateFullscreenState();
         }
 
     });
