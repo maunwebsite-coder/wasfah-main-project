@@ -5,6 +5,7 @@ namespace App\Livewire\Bookings;
 use App\Models\Workshop;
 use App\Models\WorkshopBooking;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -46,8 +47,14 @@ class MeetingLockOverlay extends Component
 
     public function refreshLock(): void
     {
+        $columns = ['id', 'meeting_started_at'];
+
+        if ($this->meetingLockSupported()) {
+            $columns[] = 'meeting_locked_at';
+        }
+
         $workshop = Workshop::query()
-            ->select(['id', 'meeting_started_at', 'meeting_locked_at'])
+            ->select($columns)
             ->find($this->workshopId);
 
         if (!$workshop) {
@@ -55,13 +62,33 @@ class MeetingLockOverlay extends Component
         }
 
         $this->startedAtIso = optional($workshop->meeting_started_at)->toIso8601String();
-        $this->lockedAtIso = optional($workshop->meeting_locked_at)->toIso8601String();
         $this->meetingStarted = $this->startedAtIso !== null;
-        $this->meetingLocked = $this->lockedAtIso !== null;
+
+        if ($this->meetingLockSupported()) {
+            $this->lockedAtIso = optional($workshop->meeting_locked_at)->toIso8601String();
+            $this->meetingLocked = $this->lockedAtIso !== null;
+        } else {
+            $this->lockedAtIso = null;
+            $this->meetingLocked = false;
+        }
     }
 
     public function render()
     {
         return view('livewire.bookings.meeting-lock-overlay');
+    }
+
+    protected function meetingLockSupported(): bool
+    {
+        static $supported;
+
+        if ($supported === null) {
+            $supported = Schema::hasColumns('workshops', [
+                'meeting_started_at',
+                'meeting_locked_at',
+            ]);
+        }
+
+        return $supported;
     }
 }

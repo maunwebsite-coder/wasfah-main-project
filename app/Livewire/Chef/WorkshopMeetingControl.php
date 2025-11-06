@@ -4,6 +4,7 @@ namespace App\Livewire\Chef;
 
 use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -33,6 +34,7 @@ class WorkshopMeetingControl extends Component
         $this->reset('errorMessage');
 
         $this->authorizeWorkshop($this->workshop);
+        $meetingLockSupported = $this->meetingLockSupported();
 
         if (!$this->confirmHost) {
             $this->errorMessage = 'يرجى تأكيد أنك المضيف وأن اسمك جاهز للظهور للمشاركين قبل بدء الاجتماع.';
@@ -57,7 +59,7 @@ class WorkshopMeetingControl extends Component
             $dirty = true;
         }
 
-        if ($this->workshop->meeting_locked_at !== null) {
+        if ($meetingLockSupported && $this->workshop->meeting_locked_at !== null) {
             $this->workshop->meeting_locked_at = null;
             $dirty = true;
         }
@@ -97,5 +99,19 @@ class WorkshopMeetingControl extends Component
     public function render()
     {
         return view('livewire.chef.workshop-meeting-control');
+    }
+
+    protected function meetingLockSupported(): bool
+    {
+        static $supported;
+
+        if ($supported === null) {
+            $supported = Schema::hasColumns('workshops', [
+                'meeting_started_at',
+                'meeting_locked_at',
+            ]);
+        }
+
+        return $supported;
     }
 }

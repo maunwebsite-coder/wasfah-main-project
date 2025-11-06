@@ -244,6 +244,8 @@ class WorkshopBookingController extends Controller
 
         unset($embedConfig['passcode']);
 
+        $meetingLockSupported = $this->meetingLockSupported();
+
         return view('bookings.join', [
             'booking' => $booking,
             'workshop' => $workshop,
@@ -252,12 +254,15 @@ class WorkshopBookingController extends Controller
             'hostName' => $hostName,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
             'meetingStartedAtIso' => optional($workshop->meeting_started_at)->toIso8601String(),
-            'meetingLockedAtIso' => optional($workshop->meeting_locked_at)->toIso8601String(),
-            'isMeetingLocked' => (bool) $workshop->meeting_locked_at,
+            'meetingLockedAtIso' => $meetingLockSupported
+                ? optional($workshop->meeting_locked_at)->toIso8601String()
+                : null,
+            'isMeetingLocked' => $meetingLockSupported ? (bool) $workshop->meeting_locked_at : false,
             'participantName' => $effectiveName,
             'participantEmail' => $user?->email,
             'shouldPromptForDisplayName' => $shouldPromptForDisplayName,
             'guestDisplayName' => $guestDisplayName,
+            'supportsMeetingLock' => $meetingLockSupported,
         ]);
     }
 
@@ -290,8 +295,12 @@ class WorkshopBookingController extends Controller
         return response()->json([
             'meeting_started' => (bool) ($workshop?->meeting_started_at),
             'started_at' => $workshop?->meeting_started_at?->toIso8601String(),
-            'meeting_locked' => (bool) ($workshop?->meeting_locked_at),
-            'locked_at' => $workshop?->meeting_locked_at?->toIso8601String(),
+            'meeting_locked' => $this->meetingLockSupported() && $workshop
+                ? (bool) $workshop->meeting_locked_at
+                : false,
+            'locked_at' => $this->meetingLockSupported() && $workshop
+                ? $workshop->meeting_locked_at?->toIso8601String()
+                : null,
         ]);
     }
 
@@ -405,6 +414,20 @@ class WorkshopBookingController extends Controller
                 'join_device_fingerprint',
                 'join_device_ip',
                 'join_device_user_agent',
+            ]);
+        }
+
+        return $supported;
+    }
+
+    protected function meetingLockSupported(): bool
+    {
+        static $supported;
+
+        if ($supported === null) {
+            $supported = Schema::hasColumns('workshops', [
+                'meeting_started_at',
+                'meeting_locked_at',
             ]);
         }
 

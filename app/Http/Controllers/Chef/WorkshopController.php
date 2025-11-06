@@ -194,6 +194,7 @@ class WorkshopController extends Controller
     public function startMeeting(Request $request, Workshop $workshop)
     {
         $this->authorizeWorkshop($workshop);
+        $meetingLockSupported = $this->meetingLockSupported();
 
         if (!$request->expectsJson() && !$workshop->meeting_started_at) {
             $request->validate([
@@ -221,11 +222,17 @@ class WorkshopController extends Controller
             $workshop->meeting_started_by = Auth::id();
         }
 
-        if ($workshop->meeting_locked_at !== null) {
+        if ($meetingLockSupported && $workshop->meeting_locked_at !== null) {
             $workshop->meeting_locked_at = null;
         }
 
-        if ($workshop->isDirty(['meeting_started_at', 'meeting_started_by', 'meeting_locked_at'])) {
+        $dirtyAttributes = ['meeting_started_at', 'meeting_started_by'];
+
+        if ($meetingLockSupported) {
+            $dirtyAttributes[] = 'meeting_locked_at';
+        }
+
+        if ($workshop->isDirty($dirtyAttributes)) {
             $workshop->save();
         }
 
@@ -252,6 +259,33 @@ class WorkshopController extends Controller
 
         $state = $validated['state'];
         $meetingStarted = (bool) $workshop->meeting_started_at;
+        $meetingLockSupported = $this->meetingLockSupported();
+
+        if (!$meetingLockSupported) {
+            $dirty = false;
+
+            if ($state === 'online' && !$meetingStarted) {
+                $workshop->meeting_started_at = now();
+                $workshop->meeting_started_by = Auth::id();
+                $dirty = true;
+            }
+
+            if ($state === 'online' && !$workshop->meeting_started_by) {
+                $workshop->meeting_started_by = Auth::id();
+                $dirty = true;
+            }
+
+            if ($dirty) {
+                $workshop->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'meeting_started' => (bool) $workshop->meeting_started_at,
+                'meeting_locked' => false,
+                'locked_at' => null,
+            ]);
+        }
 
         if (!$meetingStarted) {
             if ($state === 'offline' && $workshop->meeting_locked_at !== null) {
@@ -442,6 +476,20 @@ class WorkshopController extends Controller
         return $supported;
     }
 
+    protected function meetingLockSupported(): bool
+    {
+        static $supported;
+
+        if ($supported === null) {
+            $supported = Schema::hasColumns('workshops', [
+                'meeting_started_at',
+                'meeting_locked_at',
+            ]);
+        }
+
+        return $supported;
+    }
+
     protected function validateWorkshop(Request $request, ?int $workshopId = null): array
     {
         $rules = [
@@ -557,6 +605,7 @@ class WorkshopController extends Controller
     protected function applyMeetingProvider(Request $request, Workshop $workshop, ?string $inputLink = null): void
     {
         $supportsHostLock = $this->hostDeviceLockSupported();
+        $supportsMeetingLock = $this->meetingLockSupported();
 
         if (!$workshop->is_online) {
             $workshop->meeting_link = null;
@@ -565,7 +614,9 @@ class WorkshopController extends Controller
             $workshop->jitsi_passcode = null;
             $workshop->meeting_started_at = null;
             $workshop->meeting_started_by = null;
-            $workshop->meeting_locked_at = null;
+            if ($supportsMeetingLock) {
+                $workshop->meeting_locked_at = null;
+            }
 
             if ($supportsHostLock) {
                 $workshop->host_first_joined_at = null;
@@ -581,7 +632,9 @@ class WorkshopController extends Controller
 
         $workshop->meeting_started_at = null;
         $workshop->meeting_started_by = null;
-        $workshop->meeting_locked_at = null;
+        if ($supportsMeetingLock) {
+            $workshop->meeting_locked_at = null;
+        }
 
         if ($supportsHostLock) {
             $workshop->host_first_joined_at = null;
