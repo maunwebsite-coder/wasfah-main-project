@@ -600,6 +600,18 @@
 
         let autoFullscreenAttempts = 0;
         const requestAutoFullscreen = () => {
+            if (!fullscreenController) {
+                if (autoFullscreenAttempts === 0) {
+                    autoFullscreenAttempts = 2;
+                    try {
+                        api.executeCommand('toggleFullScreen');
+                    } catch {
+                        // ignore
+                    }
+                }
+                return;
+            }
+
             if (fullscreenController?.isFullscreen?.()) {
                 autoFullscreenAttempts = 2;
                 return;
@@ -664,7 +676,7 @@
 
         function setupMobileFullscreenControl(api, container, toolbar, toggleButton, toggleLabel) {
             if (!toolbar || !toggleButton || !container) {
-                return;
+                return null;
             }
 
             const mobileQuery = window.matchMedia('(max-width: 768px)');
@@ -686,6 +698,9 @@
                 || document.mozFullScreenElement
                 || document.msFullscreenElement
             );
+
+            const isFullscreenActive = () => Boolean(getFullscreenElement())
+                || document.body.classList.contains('mobile-fullscreen-active');
 
             const applyFallback = (enabled) => {
                 document.body.classList.toggle('mobile-fullscreen-active', enabled);
@@ -738,8 +753,7 @@
             };
 
             const updateFullscreenState = () => {
-                const isFullscreen = Boolean(getFullscreenElement())
-                    || document.body.classList.contains('mobile-fullscreen-active');
+                const isFullscreen = isFullscreenActive();
                 toggleButton.classList.toggle('is-active', isFullscreen);
                 toggleButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
                 if (toggleLabel) {
@@ -747,30 +761,46 @@
                 }
             };
 
+            const requestApiToggle = () => {
+                try {
+                    api.executeCommand('toggleFullScreen');
+                } catch {
+                    // ignore
+                }
+            };
+
+            const ensureActiveState = () => {
+                if (!getFullscreenElement()
+                    && !document.body.classList.contains('mobile-fullscreen-active')) {
+                    applyFallback(true);
+                }
+                updateFullscreenState();
+            };
+
+            const ensureInactiveState = () => {
+                if (!getFullscreenElement()) {
+                    applyFallback(false);
+                }
+                updateFullscreenState();
+            };
+
+            const performEnter = () => enterFullscreen()
+                .catch(() => {
+                    requestApiToggle();
+                })
+                .finally(ensureActiveState);
+
+            const performExit = () => exitFullscreen()
+                .catch(() => {
+                    requestApiToggle();
+                })
+                .finally(ensureInactiveState);
+
             toggleButton.addEventListener('click', () => {
-                const isFullscreen = Boolean(getFullscreenElement())
-                    || document.body.classList.contains('mobile-fullscreen-active');
-
-                const onFailure = () => {
-                    try {
-                        api.executeCommand('toggleFullScreen');
-                    } catch {
-                        // ignore
-                    }
-                };
-
-                if (isFullscreen) {
-                    exitFullscreen().catch(onFailure).finally(updateFullscreenState);
+                if (isFullscreenActive()) {
+                    performExit();
                 } else {
-                    enterFullscreen()
-                        .catch(onFailure)
-                        .finally(() => {
-                            if (!getFullscreenElement()
-                                && !document.body.classList.contains('mobile-fullscreen-active')) {
-                                applyFallback(true);
-                            }
-                            updateFullscreenState();
-                        });
+                    performEnter();
                 }
             });
 
@@ -796,6 +826,12 @@
             }
 
             updateFullscreenState();
+
+            return {
+                enterFullscreen: performEnter,
+                exitFullscreen: performExit,
+                isFullscreen: isFullscreenActive,
+            };
         }
 
     });
