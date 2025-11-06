@@ -47,6 +47,10 @@
         background-color: #000 !important;
     }
 
+    footer {
+        display: none !important;
+    }
+
 </style>
 @endpush
 
@@ -59,9 +63,13 @@
             </div>
         @endif
 
+        <div class="jitsi-shell mb-10" id="jitsi-shell">
+            <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
+        </div>
+
         <div
             id="joinCancellationNotice"
-            class="mb-6 hidden rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-700 shadow-lg"
+            class="mt-6 hidden rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-700 shadow-lg"
             role="alert"
             aria-live="polite"
             tabindex="-1"
@@ -69,7 +77,7 @@
             تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.
         </div>
 
-        <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(0,0.95fr)]">
+        <section class="mt-10 grid gap-6 lg:grid-cols-[minmax(0,2.15fr)_minmax(0,0.95fr)]">
             <div class="space-y-4">
                 <div>
                     <p class="text-sm uppercase tracking-[0.3em] text-orange-500">غرفة الشيف</p>
@@ -114,11 +122,7 @@
                     بعد بدء الاجتماع سيتم إخطار المشاركين تلقائياً ويصبح بإمكانهم الدخول من صفحة الحجز الخاصة بهم.
                 </p>
             </div>
-        </div>
-
-        <div class="jitsi-shell mb-10" id="jitsi-shell">
-            <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
-        </div>
+        </section>
 
         @if ($recentParticipants->isNotEmpty())
             <div class="mb-10 rounded-3xl border border-orange-200 bg-white p-6 shadow-xl ring-1 ring-orange-100/60">
