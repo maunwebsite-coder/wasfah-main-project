@@ -524,13 +524,13 @@
         const essentialToolbar = [
             'microphone',
             'camera',
-            'desktop',
-            'chat',
             'raisehand',
-            'e2ee',
-            'tileview',
             'fullscreen',
+            'tileview',
             'settings',
+            'chat',
+            'desktop',
+            'e2ee',
             'hangup',
         ];
 
