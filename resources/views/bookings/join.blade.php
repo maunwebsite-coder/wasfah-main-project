@@ -83,6 +83,10 @@
         background-color: #000 !important;
     }
 
+    footer {
+        display: none !important;
+    }
+
 </style>
 @endpush
 
@@ -95,9 +99,23 @@
             </div>
         @endif
 
+        @if ($workshop->meeting_started_at)
+            <div class="jitsi-shell mb-10" id="jitsi-shell">
+                <div class="jitsi-wrapper bg-black relative mobile-fullscreen-target" id="jitsi-container">
+                    <livewire:bookings.meeting-lock-overlay
+                        :booking-code="$booking->public_code"
+                        :workshop-id="$workshop->id"
+                        :initial-started-at="$meetingStartedAtIso"
+                        :initial-locked-at="$meetingLockedAtIso"
+                        :initial-locked="$isMeetingLocked"
+                    />
+                </div>
+            </div>
+        @endif
+
         <div
             id="joinCancellationNotice"
-            class="mb-6 hidden rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-700 shadow-lg"
+            class="mt-6 hidden rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-700 shadow-lg"
             role="alert"
             aria-live="polite"
             tabindex="-1"
@@ -105,7 +123,7 @@
             تم إيقاف الانضمام للجلسة الآن. يمكنك العودة لاحقاً من صفحة حجوزاتك والانضمام عندما تكون مستعداً.
         </div>
 
-        <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.9fr)]">
+        <section class="mt-10 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.9fr)]">
             <div class="space-y-4">
                 <div>
                     <p class="text-sm uppercase tracking-[0.3em] text-orange-500">جلسة مباشرة</p>
@@ -160,10 +178,10 @@
                     </p>
                 @endif
             </div>
-        </div>
+        </section>
 
         @if ($workshop->meeting_started_at)
-            <div class="mb-6 rounded-3xl border border-orange-200 bg-orange-500/10 px-6 py-4 text-sm text-orange-700 shadow-xl">
+            <div class="mt-8 rounded-3xl border border-orange-200 bg-orange-500/10 px-6 py-4 text-sm text-orange-700 shadow-xl">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <span class="flex items-center gap-2 text-orange-600">
                         <i class="fas fa-check-circle text-orange-500"></i>
@@ -173,20 +191,6 @@
                         إذا انقطع الاتصال، فقط أعد تحديث الصفحة وسيستمر البث تلقائياً.
                     </span>
                 </div>
-            </div>
-
-            <div class="jitsi-shell" id="jitsi-shell">
-                <div class="jitsi-wrapper bg-black relative mobile-fullscreen-target" id="jitsi-container">
-                    <livewire:bookings.meeting-lock-overlay
-                        :booking-code="$booking->public_code"
-                        :workshop-id="$workshop->id"
-                        :initial-started-at="$meetingStartedAtIso"
-                        :initial-locked-at="$meetingLockedAtIso"
-                        :initial-locked="$isMeetingLocked"
-                    />
-                </div>
-                @if ($workshop->meeting_started_at)
-                @endif
             </div>
 
             <div class="mt-6 rounded-3xl border border-orange-100 bg-orange-50 px-5 py-4 text-xs text-orange-700 shadow">
@@ -201,7 +205,7 @@
                 </ul>
             </div>
         @else
-            <div class="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            <div class="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                 <div id="waitingCard" class="rounded-3xl border border-orange-200 bg-white px-6 py-10 text-center text-slate-700 shadow-xl">
                     <div class="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-500">
                         <i class="fas fa-door-closed text-2xl"></i>

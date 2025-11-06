@@ -8,6 +8,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -192,6 +193,10 @@ class WorkshopBookingController extends Controller
             'bookings as confirmed_bookings_count' => fn ($query) => $query->where('status', 'confirmed'),
         ]);
 
+        if ($redirect = $this->enforceJoinDeviceLock($request, $booking)) {
+            return $redirect;
+        }
+
         $hostName = $workshop->instructor ?: optional($workshop->chef)->name;
         $requestedName = trim((string) $request->query('name', ''));
         $guestDisplayName = $requestedName !== '' ? $requestedName : 'ضيف وصفة';
@@ -287,6 +292,102 @@ class WorkshopBookingController extends Controller
             'meeting_locked' => (bool) ($workshop?->meeting_locked_at),
             'locked_at' => $workshop?->meeting_locked_at?->toIso8601String(),
         ]);
+    }
+
+    protected function enforceJoinDeviceLock(Request $request, WorkshopBooking $booking): ?\Illuminate\Http\RedirectResponse
+    {
+        $cookieName = $this->getJoinDeviceCookieName($booking);
+        $storedTokenHash = $booking->join_device_token;
+        $fingerprint = $this->makeDeviceFingerprint($request);
+
+        if ($storedTokenHash) {
+            $cookieToken = $request->cookie($cookieName);
+
+            if (!is_string($cookieToken) || $cookieToken === '') {
+                return $this->denyJoinFromUnrecognizedDevice($booking, $request, 'missing_cookie');
+            }
+
+            $hashedCookieToken = hash('sha256', $cookieToken);
+
+            if (!hash_equals($storedTokenHash, $hashedCookieToken)) {
+                return $this->denyJoinFromUnrecognizedDevice($booking, $request, 'cookie_mismatch');
+            }
+
+            if (!empty($booking->join_device_fingerprint) && !hash_equals($booking->join_device_fingerprint, $fingerprint)) {
+                return $this->denyJoinFromUnrecognizedDevice($booking, $request, 'fingerprint_mismatch');
+            }
+
+            return null;
+        }
+
+        $plainToken = Str::random(64);
+        $firstJoinedAt = $booking->first_joined_at ?: now();
+
+        $booking->forceFill([
+            'first_joined_at' => $firstJoinedAt,
+            'join_device_token' => hash('sha256', $plainToken),
+            'join_device_fingerprint' => $fingerprint,
+            'join_device_ip' => $request->ip(),
+            'join_device_user_agent' => $this->truncateUserAgent($request->userAgent()),
+        ])->save();
+
+        Cookie::queue(
+            cookie(
+                $cookieName,
+                $plainToken,
+                60 * 24 * 365,
+                '/',
+                config('session.domain'),
+                config('session.secure', false),
+                true,
+                false,
+                config('session.same_site', 'lax')
+            )
+        );
+
+        return null;
+    }
+
+    protected function getJoinDeviceCookieName(WorkshopBooking $booking): string
+    {
+        $code = $booking->public_code ?: $booking->id;
+
+        return 'wasfah_booking_device_' . strtolower((string) $code);
+    }
+
+    protected function makeDeviceFingerprint(Request $request): string
+    {
+        $userAgent = (string) $request->userAgent();
+        $acceptLanguage = (string) $request->header('accept-language', '');
+
+        return hash('sha256', $userAgent . '|' . $acceptLanguage);
+    }
+
+    protected function truncateUserAgent(?string $userAgent): string
+    {
+        $agent = (string) $userAgent;
+
+        if (function_exists('mb_substr')) {
+            return mb_substr($agent, 0, 1024);
+        }
+
+        return substr($agent, 0, 1024);
+    }
+
+    protected function denyJoinFromUnrecognizedDevice(WorkshopBooking $booking, Request $request, string $reason): \Illuminate\Http\RedirectResponse
+    {
+        Log::warning('Blocked workshop booking join from unrecognized device.', [
+            'booking_id' => $booking->id,
+            'booking_public_code' => $booking->public_code,
+            'user_id' => $booking->user_id,
+            'reason' => $reason,
+            'request_ip' => $request->ip(),
+            'request_user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('error', 'لا يمكن فتح رابط الورشة من جهاز مختلف. يرجى التواصل مع فريق الدعم لتحديث الوصول.');
     }
 
     protected function ensureBookingOwner(WorkshopBooking $booking): void

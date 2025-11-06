@@ -64,12 +64,18 @@ class WorkshopBooking extends Model
         'cancellation_reason',
         'admin_notes',
         'public_code',
+        'first_joined_at',
+        'join_device_token',
+        'join_device_fingerprint',
+        'join_device_ip',
+        'join_device_user_agent',
     ];
 
     protected $casts = [
         'booking_date' => 'datetime',
         'confirmed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'first_joined_at' => 'datetime',
         'payment_amount' => 'decimal:2',
     ];
 
