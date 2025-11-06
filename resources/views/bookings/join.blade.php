@@ -83,57 +83,6 @@
         background-color: #000 !important;
     }
 
-    .mobile-meeting-toolbar {
-        display: none;
-        margin-top: 0.75rem;
-        justify-content: center;
-        gap: 0.75rem;
-    }
-
-    .mobile-meeting-toolbar button {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(15, 23, 42, 0.92);
-        color: #f1f5f9;
-        border-radius: 9999px;
-        padding: 0.6rem 1.25rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border: 1px solid rgba(15, 23, 42, 0.2);
-        box-shadow: 0 8px 20px -10px rgba(30, 41, 59, 0.6);
-    }
-
-    .mobile-meeting-toolbar button.is-active {
-        background: rgba(234, 88, 12, 0.95);
-        border-color: rgba(234, 88, 12, 0.65);
-    }
-
-    .mobile-meeting-toolbar button:focus-visible {
-        outline: 2px solid rgba(234, 88, 12, 0.7);
-        outline-offset: 3px;
-    }
-
-    .mobile-meeting-toolbar.is-floating {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: 1rem;
-        z-index: 1100;
-        margin-top: 0;
-    }
-
-    @media (max-width: 768px) {
-        .mobile-meeting-toolbar[aria-hidden="false"] {
-            display: flex;
-        }
-    }
-
-    @media (min-width: 769px) {
-        .mobile-meeting-toolbar {
-            display: none !important;
-        }
-    }
 </style>
 @endpush
 
@@ -237,17 +186,6 @@
                     />
                 </div>
                 @if ($workshop->meeting_started_at)
-                    <div class="mobile-meeting-toolbar" id="mobileMeetingToolbar" hidden aria-hidden="true">
-                        <button
-                            type="button"
-                            id="mobileFullscreenToggle"
-                            class="mobile-meeting-toolbar__btn"
-                            aria-pressed="false"
-                        >
-                            <i class="fas fa-expand" aria-hidden="true"></i>
-                            <span id="mobileFullscreenToggleLabel">شاشة كاملة</span>
-                        </button>
-                    </div>
                 @endif
             </div>
 
@@ -902,9 +840,6 @@
                 }
 
                 const container = document.getElementById('jitsi-container');
-                const mobileToolbar = document.getElementById('mobileMeetingToolbar');
-                const mobileFullscreenToggle = document.getElementById('mobileFullscreenToggle');
-                const mobileFullscreenLabel = document.getElementById('mobileFullscreenToggleLabel');
 
                 if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
                     alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
@@ -1001,13 +936,6 @@
                 }
 
                 apiInstance = new JitsiMeetExternalAPI(domain, options);
-                const fullscreenController = setupMobileFullscreenControl(
-                    apiInstance,
-                    container,
-                    mobileToolbar,
-                    mobileFullscreenToggle,
-                    mobileFullscreenLabel
-                );
 
                 if (pendingSubjectUpdate !== null) {
                     try {
@@ -1019,54 +947,6 @@
                     }
                 }
 
-                const shouldAutoFullscreen = false;
-
-                let autoFullscreenAttempts = 0;
-                const requestAutoFullscreen = () => {
-                    if (!shouldAutoFullscreen) {
-                        return;
-                    }
-
-                    if (!fullscreenController) {
-                        if (autoFullscreenAttempts === 0) {
-                            autoFullscreenAttempts = 2;
-                            try {
-                                apiInstance.executeCommand('toggleFullScreen');
-                            } catch {
-                                // ignore
-                            }
-                        }
-                        return;
-                    }
-
-                    if (fullscreenController?.isFullscreen?.()) {
-                        autoFullscreenAttempts = 2;
-                        return;
-                    }
-
-                    if (autoFullscreenAttempts >= 2) {
-                        return;
-                    }
-
-                    autoFullscreenAttempts += 1;
-
-                    const fallback = () => {
-                        try {
-                            apiInstance.executeCommand('toggleFullScreen');
-                        } catch {
-                            // ignore
-                        }
-                    };
-
-                    if (typeof fullscreenController?.enterFullscreen === 'function') {
-                        fullscreenController.enterFullscreen().catch(fallback);
-                    } else {
-                        fallback();
-                    }
-                };
-
-                requestAutoFullscreen();
-
                 const resizeJitsi = () => {
                     const width = container.offsetWidth;
                     const height = container.offsetHeight || initialHeight;
@@ -1077,9 +957,6 @@
                 resizeJitsi();
 
                 if (typeof apiInstance.addListener === 'function') {
-                    apiInstance.addListener('videoConferenceJoined', () => {
-                        requestAutoFullscreen();
-                    });
                     apiInstance.addListener('subjectChanged', event => {
                         if (event && typeof event.subject !== 'undefined') {
                             updateMeetingSubjectLabel(event.subject);
@@ -1100,245 +977,6 @@
             schedulePoll(5000);
         }
 
-        function setupMobileFullscreenControl(api, container, toolbar, toggleButton, toggleLabel) {
-            if (!toolbar || !toggleButton || !container) {
-                return null;
-            }
-
-            const mobileQuery = window.matchMedia('(max-width: 768px)');
-
-            const updateVisibility = () => {
-                const isMobile = mobileQuery.matches;
-                if (isMobile) {
-                    toolbar.removeAttribute('hidden');
-                    toolbar.setAttribute('aria-hidden', 'false');
-                } else {
-                    toolbar.setAttribute('hidden', '');
-                    toolbar.setAttribute('aria-hidden', 'true');
-                }
-            };
-
-            const getFullscreenElement = () => (
-                document.fullscreenElement
-                || document.webkitFullscreenElement
-                || document.mozFullScreenElement
-                || document.msFullscreenElement
-            );
-
-            const isFullscreenActive = () => Boolean(getFullscreenElement())
-                || document.body.classList.contains('mobile-fullscreen-active');
-
-            const applyFallback = (enabled) => {
-                document.body.classList.toggle('mobile-fullscreen-active', enabled);
-                container.classList.toggle('mobile-fullscreen-active', enabled);
-                if (toolbar) {
-                    toolbar.classList.toggle('is-floating', enabled);
-                }
-            };
-
-            const enterFullscreen = () => {
-                const iframe = typeof api.getIFrame === 'function' ? api.getIFrame() : null;
-                const target = iframe || container;
-
-                if (target.requestFullscreen) {
-                    return target.requestFullscreen();
-                }
-                if (target.webkitRequestFullscreen) {
-                    return target.webkitRequestFullscreen();
-                }
-                if (target.mozRequestFullScreen) {
-                    return target.mozRequestFullScreen();
-                }
-                if (target.msRequestFullscreen) {
-                    return target.msRequestFullscreen();
-                }
-
-                applyFallback(true);
-                return Promise.resolve('fallback');
-            };
-
-            const exitFullscreen = () => {
-                if (getFullscreenElement()) {
-                    if (document.exitFullscreen) {
-                        return document.exitFullscreen();
-                    }
-                    if (document.webkitExitFullscreen) {
-                        return document.webkitExitFullscreen();
-                    }
-                    if (document.mozCancelFullScreen) {
-                        return document.mozCancelFullScreen();
-                    }
-                    if (document.msExitFullscreen) {
-                        return document.msExitFullscreen();
-                    }
-                }
-
-                if (document.body.classList.contains('mobile-fullscreen-active')) {
-                    applyFallback(false);
-                    return Promise.resolve('fallback');
-                }
-
-                return Promise.resolve();
-            };
-
-            const updateFullscreenState = () => {
-                const isFullscreen = isFullscreenActive();
-                toggleButton.classList.toggle('is-active', isFullscreen);
-                toggleButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
-                if (toggleLabel) {
-                    toggleLabel.textContent = isFullscreen ? 'إغلاق الشاشة الكاملة' : 'شاشة كاملة';
-                }
-            };
-
-            const requestApiToggle = () => {
-                try {
-                    api.executeCommand('toggleFullScreen');
-                } catch {
-                    // ignore
-                }
-            };
-
-            const ensureActiveState = () => {
-                if (!getFullscreenElement()
-                    && !document.body.classList.contains('mobile-fullscreen-active')) {
-                    applyFallback(true);
-                }
-                updateFullscreenState();
-            };
-
-            const ensureInactiveState = () => {
-                if (!getFullscreenElement()) {
-                    applyFallback(false);
-                }
-                updateFullscreenState();
-            };
-
-            const performEnter = ({ skipCommand = false } = {}) => {
-                if (isFullscreenActive()) {
-                    ensureActiveState();
-                    return Promise.resolve();
-                }
-
-                const attemptNative = () => enterFullscreen()
-                    .catch(() => {
-                        // Native fullscreen not available; fallback already handled.
-                    })
-                    .finally(() => {
-                        ensureActiveState();
-                    });
-
-                return new Promise(resolve => {
-                    const evaluate = () => {
-                        if (isFullscreenActive()) {
-                            ensureActiveState();
-                            resolve();
-                            return;
-                        }
-
-                        attemptNative().finally(resolve);
-                    };
-
-                    if (skipCommand) {
-                        setTimeout(evaluate, 200);
-                        return;
-                    }
-
-                    requestApiToggle();
-                    setTimeout(evaluate, 220);
-                });
-            };
-
-            const performExit = ({ skipCommand = false } = {}) => {
-                if (!isFullscreenActive()) {
-                    ensureInactiveState();
-                    return Promise.resolve();
-                }
-
-                const attemptNative = () => exitFullscreen()
-                    .catch(() => {
-                        // Native fullscreen not available; fallback already handled.
-                    })
-                    .finally(() => {
-                        ensureInactiveState();
-                    });
-
-                return new Promise(resolve => {
-                    const evaluate = () => {
-                        if (!isFullscreenActive()) {
-                            ensureInactiveState();
-                            resolve();
-                            return;
-                        }
-
-                        attemptNative().finally(resolve);
-                    };
-
-                    if (skipCommand) {
-                        setTimeout(evaluate, 200);
-                        return;
-                    }
-
-                    requestApiToggle();
-                    setTimeout(evaluate, 220);
-                });
-            };
-
-            toggleButton.addEventListener('click', () => {
-                if (isFullscreenActive()) {
-                    performExit();
-                } else {
-                    performEnter();
-                }
-            });
-
-            let handlingToolbarToggle = false;
-            if (typeof api.addListener === 'function') {
-                api.addListener('toolbarButtonClicked', event => {
-                    if (!event || event.key !== 'fullscreen') {
-                        return;
-                    }
-                    if (handlingToolbarToggle) {
-                        return;
-                    }
-                    handlingToolbarToggle = true;
-                    const action = isFullscreenActive()
-                        ? () => performExit({ skipCommand: true })
-                        : () => performEnter({ skipCommand: true });
-                    Promise.resolve(action()).finally(() => {
-                        handlingToolbarToggle = false;
-                    });
-                });
-            }
-
-            if (typeof api.addListener === 'function') {
-                api.addListener('videoConferenceJoined', updateFullscreenState);
-                api.addListener('videoConferenceLeft', updateFullscreenState);
-            }
-
-            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(eventName => {
-                document.addEventListener(eventName, updateFullscreenState);
-                document.addEventListener(eventName, () => {
-                    if (!getFullscreenElement()) {
-                        applyFallback(false);
-                    }
-                });
-            });
-
-            updateVisibility();
-            if (typeof mobileQuery.addEventListener === 'function') {
-                mobileQuery.addEventListener('change', updateVisibility);
-            } else if (typeof mobileQuery.addListener === 'function') {
-                mobileQuery.addListener(updateVisibility);
-            }
-
-            updateFullscreenState();
-
-            return {
-                enterFullscreen: performEnter,
-                exitFullscreen: performExit,
-                isFullscreen: isFullscreenActive,
-            };
-        }
     });
 </script>
 @endpush
