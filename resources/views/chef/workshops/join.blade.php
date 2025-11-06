@@ -784,17 +784,61 @@
                 updateFullscreenState();
             };
 
-            const performEnter = () => enterFullscreen()
-                .catch(() => {
-                    requestApiToggle();
-                })
-                .finally(ensureActiveState);
+            const performEnter = () => {
+                if (isFullscreenActive()) {
+                    ensureActiveState();
+                    return Promise.resolve();
+                }
 
-            const performExit = () => exitFullscreen()
-                .catch(() => {
-                    requestApiToggle();
-                })
-                .finally(ensureInactiveState);
+                requestApiToggle();
+
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        if (isFullscreenActive()) {
+                            ensureActiveState();
+                            resolve();
+                            return;
+                        }
+
+                        enterFullscreen()
+                            .catch(() => {
+                                // Manual fallback already applied within enterFullscreen.
+                            })
+                            .finally(() => {
+                                ensureActiveState();
+                                resolve();
+                            });
+                    }, 220);
+                });
+            };
+
+            const performExit = () => {
+                if (!isFullscreenActive()) {
+                    ensureInactiveState();
+                    return Promise.resolve();
+                }
+
+                requestApiToggle();
+
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        if (!isFullscreenActive()) {
+                            ensureInactiveState();
+                            resolve();
+                            return;
+                        }
+
+                        exitFullscreen()
+                            .catch(() => {
+                                // Manual fallback already applied within exitFullscreen.
+                            })
+                            .finally(() => {
+                                ensureInactiveState();
+                                resolve();
+                            });
+                    }, 220);
+                });
+            };
 
             toggleButton.addEventListener('click', () => {
                 if (isFullscreenActive()) {
