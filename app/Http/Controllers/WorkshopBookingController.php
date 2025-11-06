@@ -281,6 +281,7 @@ class WorkshopBookingController extends Controller
             'supportsMeetingLock' => $meetingLockSupported,
             'secureJoinUrl' => $this->linkSecurity->makeParticipantJoinUrl($booking),
             'secureStatusUrl' => $this->linkSecurity->makeParticipantStatusUrl($booking),
+            'secureMobileJoinUrl' => $this->linkSecurity->makeParticipantMobileUrl($booking),
         ]);
     }
 
@@ -324,6 +325,77 @@ class WorkshopBookingController extends Controller
                 ? $workshop->meeting_locked_at?->toIso8601String()
                 : null,
         ]);
+    }
+
+    public function mobileEntry(Request $request, WorkshopBooking $booking)
+    {
+        if (!$request->hasValidSignature()) {
+            abort(403);
+        }
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'يجب تسجيل الدخول قبل فتح الغرفة من الجوال.');
+        }
+
+        if ($booking->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($booking->status !== 'confirmed') {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'يجب تأكيد الحجز قبل الانضمام إلى الغرفة.');
+        }
+
+        $booking->load('workshop');
+        $workshop = $booking->workshop;
+
+        if (!$workshop || !$workshop->is_online || !$workshop->meeting_link) {
+            return redirect()
+                ->route('bookings.join', ['booking' => $booking->public_code])
+                ->with('error', 'هذه الورشة لا تملك غرفة بث متاحة حالياً.');
+        }
+
+        if (!$workshop->meeting_started_at) {
+            return redirect()
+                ->route('bookings.join', ['booking' => $booking->public_code])
+                ->with('error', 'لم يتم فتح الغرفة بعد. سنخبرك فور بدء البث.');
+        }
+
+        if ($this->meetingLockSupported() && $workshop->meeting_locked_at) {
+            return redirect()
+                ->route('bookings.join', ['booking' => $booking->public_code])
+                ->with('error', 'قام الشيف بقفل الغرفة مؤقتاً. حاول لاحقاً.');
+        }
+
+        try {
+            $embedConfig = $this->buildJitsiEmbedConfig(
+                $workshop,
+                $user->name ?: 'مشارك وصفة',
+                $user->email,
+                false,
+                true,
+            );
+
+            $directUrl = $this->buildDirectJitsiUrl($embedConfig);
+        } catch (\Throwable $exception) {
+            Log::error('Failed to prepare mobile Jitsi redirect for booking join.', [
+                'booking_id' => $booking->id,
+                'workshop_id' => $workshop->id ?? null,
+                'user_id' => $user->id,
+                'exception_message' => $exception->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('bookings.join', ['booking' => $booking->public_code])
+                ->with('error', 'تعذر فتح الغرفة للجوال الآن. حاول مرة أخرى بعد لحظات.');
+        }
+
+        return redirect()->away($directUrl);
     }
 
     protected function enforceJoinDeviceLock(Request $request, WorkshopBooking $booking): ?\Illuminate\Http\RedirectResponse
@@ -481,7 +553,13 @@ class WorkshopBookingController extends Controller
         return $missing;
     }
 
-    protected function buildJitsiEmbedConfig(Workshop $workshop, ?string $displayName = null, ?string $email = null, bool $isModerator = false): array
+    protected function buildJitsiEmbedConfig(
+        Workshop $workshop,
+        ?string $displayName = null,
+        ?string $email = null,
+        bool $isModerator = false,
+        bool $forceParticipantToken = false,
+    ): array
     {
         $provider = $workshop->meeting_provider ?: config('services.jitsi.provider', 'meet');
 
@@ -506,7 +584,8 @@ class WorkshopBookingController extends Controller
             $roomPath = "{$appId}/{$roomSlug}";
             $tokenService = app(\App\Services\JitsiJaasTokenService::class);
             $allowParticipantSubject = (bool) config('services.jitsi.allow_participant_subject_edit', true);
-            $shouldIssueModeratorToken = $isModerator || (!$isModerator && $allowParticipantSubject);
+            $shouldIssueModeratorToken = !$forceParticipantToken
+                && ($isModerator || (!$isModerator && $allowParticipantSubject));
             $userContext = [
                 'name' => $displayName,
                 'email' => $email,
@@ -521,6 +600,7 @@ class WorkshopBookingController extends Controller
                 'room' => $roomPath,
                 'jwt' => $jwt,
                 'passcode' => null,
+                'scheme' => $scheme,
                 'external_api_url' => "{$scheme}://{$domain}/external_api.js",
             ];
         }
@@ -554,7 +634,32 @@ class WorkshopBookingController extends Controller
             'domain' => $domain,
             'room' => $room,
             'passcode' => $workshop->jitsi_passcode,
+            'scheme' => $scheme,
             'external_api_url' => "{$scheme}://{$domain}/external_api.js",
         ];
+    }
+
+    protected function buildDirectJitsiUrl(array $embedConfig): string
+    {
+        $scheme = $embedConfig['scheme'] ?? 'https';
+        $domain = $embedConfig['domain'] ?? 'meet.jit.si';
+        $room = trim((string) ($embedConfig['room'] ?? ''), '/');
+
+        if ($room === '') {
+            $room = 'wasfah-session';
+        }
+
+        $url = "{$scheme}://{$domain}/{$room}";
+        $query = [];
+
+        if (!empty($embedConfig['jwt'])) {
+            $query['jwt'] = $embedConfig['jwt'];
+        }
+
+        if (!empty($query)) {
+            $url .= '?' . http_build_query($query);
+        }
+
+        return $url;
     }
 }

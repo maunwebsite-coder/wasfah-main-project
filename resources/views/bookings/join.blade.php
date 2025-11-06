@@ -123,6 +123,16 @@
             تم إيقاف الانضمام للجلسة الآن. يمكنك العودة لاحقاً من صفحة حجوزاتك والانضمام عندما تكون مستعداً.
         </div>
 
+        <div
+            id="mobileJoinOpenedNotice"
+            class="mt-6 hidden rounded-3xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm text-emerald-700 shadow-lg"
+            role="status"
+            aria-live="polite"
+            tabindex="-1"
+        >
+            تم فتح الغرفة في تبويب جديد على جهازك. إذا لم يظهر التبويب، فعّل النوافذ المنبثقة ثم أعد المحاولة بالضغط على زر الانضمام.
+        </div>
+
         <section class="mt-10 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.9fr)]">
             <div class="space-y-4">
                 <div>
@@ -461,6 +471,8 @@
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
         const joinPageUrl = @json($secureJoinUrl ?? $booking->secure_join_url);
         let hasRedirectedToJoinPage = false;
+        const mobileJoinOpenedNotice = document.getElementById('mobileJoinOpenedNotice');
+        const secureMobileJoinUrl = @json($secureMobileJoinUrl ?? null);
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
         const tabletViewportQuery = window.matchMedia('(max-width: 1024px)');
         const shortHeightViewportQuery = window.matchMedia('(max-height: 540px)');
@@ -473,6 +485,9 @@
             return narrowWidth || compactTabletWidth || shortLandscapeHeight;
         };
         let shouldAutoFullscreen = computeAutoFullscreenPreference();
+        let joinHandledViaMobileTab = false;
+        const computeMobileJoinPreference = () => coarsePointerQuery.matches && mobileViewportQuery.matches;
+        let shouldUseMobileJoinTab = computeMobileJoinPreference();
 
         const bodyFullscreenClass = 'mobile-fullscreen-active';
         const targetFullscreenClass = 'mobile-fullscreen-active';
@@ -610,6 +625,36 @@
             };
         })();
 
+        const showMobileJoinNotice = () => {
+            if (!mobileJoinOpenedNotice) {
+                return;
+            }
+
+            mobileJoinOpenedNotice.classList.remove('hidden');
+            mobileJoinOpenedNotice.focus?.();
+        };
+
+        const openMobileJoinTab = () => {
+            if (!secureMobileJoinUrl) {
+                return false;
+            }
+
+            const popup = window.open(secureMobileJoinUrl, '_blank', 'noopener');
+
+            if (!popup) {
+                alert('لم نتمكن من فتح التبويب الجديد. يرجى تفعيل النوافذ المنبثقة ثم إعادة المحاولة.');
+                return false;
+            }
+
+            popup.opener = null;
+            showMobileJoinNotice();
+            return true;
+        };
+
+        const syncMobileJoinPreference = () => {
+            shouldUseMobileJoinTab = computeMobileJoinPreference();
+        };
+
         const syncFullscreenPreference = (force = false) => {
             const nextPreference = computeAutoFullscreenPreference();
             if (!force && nextPreference === shouldAutoFullscreen) {
@@ -632,7 +677,10 @@
                 return;
             }
 
-            const handler = () => syncFullscreenPreference();
+            const handler = () => {
+                syncFullscreenPreference();
+                syncMobileJoinPreference();
+            };
             if (typeof query.addEventListener === 'function') {
                 query.addEventListener('change', handler);
             } else if (typeof query.addListener === 'function') {
@@ -643,7 +691,10 @@
         [mobileViewportQuery, tabletViewportQuery, shortHeightViewportQuery, coarsePointerQuery].forEach(registerViewportPreferenceListener);
 
         window.addEventListener('orientationchange', () => {
-            window.setTimeout(() => syncFullscreenPreference(true), 160);
+            window.setTimeout(() => {
+                syncFullscreenPreference(true);
+                syncMobileJoinPreference();
+            }, 160);
         });
 
         if (meetingStarted && shouldAutoFullscreen) {
@@ -956,10 +1007,15 @@
                 joinCancellationNotice.classList.add('hidden');
             }
 
+            joinHandledViaMobileTab = false;
             const fallbackConfirmation = 'هل ترغب في الانضمام إلى الجلسة الآن؟';
 
             if (!joinModal) {
-                return Promise.resolve(window.confirm(fallbackConfirmation));
+                const confirmed = window.confirm(fallbackConfirmation);
+                if (confirmed && shouldUseMobileJoinTab && openMobileJoinTab()) {
+                    joinHandledViaMobileTab = true;
+                }
+                return Promise.resolve(confirmed);
             }
 
             return new Promise((resolve) => {
@@ -971,7 +1027,7 @@
                 const closeButton = joinModal.querySelector('[data-action="close"]');
                 let resolved = false;
 
-                const finish = (result) => {
+                const finish = (result, handledExternally = false) => {
                     if (resolved) {
                         return;
                     }
@@ -997,26 +1053,32 @@
                         fullscreenController.exit();
                     }
 
+                    joinHandledViaMobileTab = handledExternally;
                     resolve(result);
                 };
 
                 const handleConfirm = () => {
+                    if (shouldUseMobileJoinTab && openMobileJoinTab()) {
+                        finish(true, true);
+                        return;
+                    }
+
                     fullscreenController.ensureFromGesture();
-                    finish(true);
+                    finish(true, false);
                 };
                 const handleCancel = () => {
                     fullscreenController.exit();
-                    finish(false);
+                    finish(false, false);
                 };
                 const handleBackdropClick = (event) => {
                     if (event.target === joinModal) {
-                        finish(false);
+                        finish(false, false);
                     }
                 };
                 const handleKeydown = (event) => {
                     if (event.key === 'Escape') {
                         event.preventDefault();
-                        finish(false);
+                        finish(false, false);
                     }
                 };
 
@@ -1048,6 +1110,10 @@
                     } else {
                         alert(cancellationMessage);
                     }
+                    return;
+                }
+
+                if (joinHandledViaMobileTab) {
                     return;
                 }
 

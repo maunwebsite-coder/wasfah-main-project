@@ -38,6 +38,17 @@ class WorkshopLinkSecurityService
         );
     }
 
+    public function makeParticipantMobileUrl(WorkshopBooking $booking, ?Carbon $expiresAt = null): string
+    {
+        $expires = $expiresAt ?? $this->expiryFromConfig('participant_mobile_ttl');
+
+        return $this->urlGenerator->temporarySignedRoute(
+            'bookings.mobile-entry',
+            $expires,
+            ['booking' => $booking->public_code],
+        );
+    }
+
     protected function expiryFromConfig(string $key): Carbon
     {
         $minutes = (int) $this->config->get("workshop-links.{$key}", 60);
