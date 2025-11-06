@@ -210,14 +210,10 @@
                     <div class="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-500">
                         <i class="fas fa-door-closed text-2xl"></i>
                     </div>
-                    <h2 class="mb-2 text-2xl font-bold text-slate-900">ننتظر دخول الشيف</h2>
-                    <p class="text-sm text-slate-500">
-                        نغلق الغرفة إلى أن يؤكد الشيف بدء الورشة للحفاظ على خصوصية البث. أبقِ هذه الصفحة مفتوحة وسنحدثها بمجرد فتح الغرفة لك.
-                    </p>
                     <div class="mt-6 flex flex-col items-center gap-4">
                         <div class="flex flex-col items-center gap-2 text-sm">
                             <span id="waitingCountdownBadge" class="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 transition-colors">
-                                {{ $startsAtIso ? 'سيبدأ قريباً' : 'بانتظار إشارة الشيف' }}
+                                {{ $startsAtIso ? 'جاهزون تقريباً' : 'بانتظار إشارة الشيف' }}
                             </span>
                             <span id="waitingCountdownLabel" class="text-xs text-slate-500">
                                 {{ $startsAtIso ? 'يتم احتساب الوقت المتبقي.' : 'سنرسل تحديثاً فور فتح الغرفة.' }}
@@ -229,7 +225,7 @@
                             class="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
                         >
                             <i class="fas fa-sync"></i>
-                            تحديث الحالة الآن
+                            تحديث الحالة
                         </button>
                         <div class="text-xs text-slate-500" id="pollStatusHint">
                             يتم التحقق من حالة الغرفة كل بضع ثوانٍ...
@@ -728,7 +724,7 @@
                             return;
                         }
 
-                        setHint('لم يبدأ البث بعد. سنحاول مجدداً خلال لحظات.');
+                        setHint('لا توجد إشارة حالياً. سنعيد المحاولة تلقائياً.');
                         schedulePoll(8000);
                         return;
                     }
@@ -748,7 +744,6 @@
         const waitingCountdownLabel = document.getElementById('waitingCountdownLabel');
         const waitingCountdownBadge = document.getElementById('waitingCountdownBadge');
         setupCountdown(startsAtIso, waitingCountdownLabel, waitingCountdownBadge, {
-            futureBadge: 'سيبدأ قريباً',
             soonBadge: 'اقترب الوقت',
             lateBadge: 'بانتظار الشيف',
         });
