@@ -66,7 +66,10 @@
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
             <div class="rounded-3xl border border-slate-800/70 bg-slate-950/90 px-6 py-5 text-slate-200 shadow-2xl backdrop-blur">
-                @livewire('chef.workshop-meeting-control', ['workshop' => $workshop], key('chef-workshop-meeting-control-' . $workshop->id))
+                <livewire:chef.workshop-meeting-control
+                    :workshop="$workshop"
+                    :key="'chef-workshop-meeting-control-' . $workshop->id"
+                />
             </div>
         </div>
 
@@ -236,6 +239,50 @@
         const joinModal = document.getElementById('joinConfirmationModal');
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const cancellationMessage = 'تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.';
+        const countdownCard = document.getElementById('countdownCard');
+        const countdownLabel = document.getElementById('countdownLabel');
+        const countdownBadge = document.getElementById('countdownBadge');
+        const startsAtIso = countdownCard?.dataset.startsAt || null;
+        const presenceUrl = @json(route('chef.workshops.presence', $workshop));
+        const startUrl = @json(route('chef.workshops.start', $workshop));
+        const csrfToken = @json(csrf_token());
+        let lastPresenceState = null;
+        let meetingStartTriggered = false;
+
+        const startMeetingForParticipants = () => {
+            if (meetingStartTriggered) {
+                return;
+            }
+
+            meetingStartTriggered = true;
+
+            if (window.Livewire?.dispatch) {
+                window.Livewire.dispatch('chef-start-meeting', { confirmHost: true });
+            } else {
+                document.addEventListener('livewire:load', () => {
+                    if (window.Livewire?.dispatch) {
+                        window.Livewire.dispatch('chef-start-meeting', { confirmHost: true });
+                    }
+                }, { once: true });
+            }
+
+            if (!startUrl || !csrfToken) {
+                return;
+            }
+
+            const payload = new FormData();
+            payload.append('_token', csrfToken);
+            payload.append('confirm_host', '1');
+
+            fetch(startUrl, {
+                method: 'POST',
+                body: payload,
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' },
+            }).catch(() => {
+                // Non-blocking fallback; Livewire should handle opening the room.
+            });
+        };
 
         const requestJoinConfirmation = () => {
             if (joinCancellationNotice) {
@@ -327,51 +374,6 @@
             }
             return;
         }
-
-        const countdownCard = document.getElementById('countdownCard');
-        const countdownLabel = document.getElementById('countdownLabel');
-        const countdownBadge = document.getElementById('countdownBadge');
-        const startsAtIso = countdownCard?.dataset.startsAt || null;
-        const presenceUrl = @json(route('chef.workshops.presence', $workshop));
-        const startUrl = @json(route('chef.workshops.start', $workshop));
-        const csrfToken = @json(csrf_token());
-        let lastPresenceState = null;
-        let meetingStartTriggered = false;
-
-        const startMeetingForParticipants = () => {
-            if (meetingStartTriggered) {
-                return;
-            }
-
-            meetingStartTriggered = true;
-
-            if (window.Livewire?.dispatch) {
-                window.Livewire.dispatch('chef-start-meeting', { confirmHost: true });
-            } else {
-                document.addEventListener('livewire:load', () => {
-                    if (window.Livewire?.dispatch) {
-                        window.Livewire.dispatch('chef-start-meeting', { confirmHost: true });
-                    }
-                }, { once: true });
-            }
-
-            if (!startUrl || !csrfToken) {
-                return;
-            }
-
-            const payload = new FormData();
-            payload.append('_token', csrfToken);
-            payload.append('confirm_host', '1');
-
-            fetch(startUrl, {
-                method: 'POST',
-                body: payload,
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' },
-            }).catch(() => {
-                // Non-blocking fallback; Livewire should handle opening the room.
-            });
-        };
 
         const sendPresence = (state, { keepalive = false, force = false } = {}) => {
             if (!presenceUrl) {
