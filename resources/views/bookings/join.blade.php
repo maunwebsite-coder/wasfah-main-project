@@ -459,8 +459,8 @@
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const joinModal = document.getElementById('joinConfirmationModal');
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
-        const joinPageUrl = @json($secureJoinUrl ?? $booking->secure_join_url);
-        let hasRedirectedToJoinPage = false;
+        const bookingDetailsUrl = @json(route('bookings.show', $booking));
+        let hasRedirectedToBookingDetails = false;
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
         const tabletViewportQuery = window.matchMedia('(max-width: 1024px)');
         const shortHeightViewportQuery = window.matchMedia('(max-height: 540px)');
@@ -653,14 +653,14 @@
         window.addEventListener('beforeunload', fullscreenController.exit);
         window.addEventListener('pagehide', fullscreenController.exit);
 
-        const redirectToJoinPage = () => {
-            if (hasRedirectedToJoinPage || !joinPageUrl) {
+        const redirectToBookingDetails = () => {
+            if (hasRedirectedToBookingDetails || !bookingDetailsUrl) {
                 return;
             }
 
-            hasRedirectedToJoinPage = true;
+            hasRedirectedToBookingDetails = true;
             fullscreenController.exit();
-            window.location.assign(joinPageUrl);
+            window.location.assign(bookingDetailsUrl);
         };
 
         const updateMeetingSubjectLabel = (subject) => {
@@ -1170,7 +1170,7 @@
 
                 const handleMeetingClosure = () => {
                     fullscreenController.exit();
-                    redirectToJoinPage();
+                    redirectToBookingDetails();
                 };
 
                 apiInstance.addListener('videoConferenceLeft', handleMeetingClosure);
