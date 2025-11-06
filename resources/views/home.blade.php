@@ -2543,6 +2543,7 @@ async function confirmBooking() {
         }
     } finally {
         setButtonLoadingState(context.triggerButton, false);
+        whatsappBookingState.activeContext = null;
     }
 }
 
@@ -2564,7 +2565,53 @@ function showLoginRequiredModal(details = getActiveBookingDetails()) {
         existingModal.remove();
     }
 
-    const modalHTML = ;
+    const modalHTML = `
+        <div id="login-required-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeLoginRequiredModal(event)">
+            <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 relative" onclick="event.stopPropagation()">
+                <button onclick="closeLoginRequiredModal()" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-lock text-amber-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول مطلوب</h3>
+                    <p class="text-gray-600 mb-6">يجب تسجيل الدخول أولاً لحجز الورشة</p>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6 text-right">
+                        <h4 class="font-semibold text-gray-900 mb-2">${bookingDetails.title}</h4>
+                        <div class="space-y-1 text-sm text-gray-600">
+                            <div class="flex justify-between">
+                                <span>التاريخ:</span>
+                                <span class="font-medium">${bookingDetails.date}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>المدرب:</span>
+                                <span class="font-medium">${bookingDetails.instructor}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>المكان:</span>
+                                <span class="font-medium">${bookingDetails.location}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>السعر:</span>
+                                <span class="font-medium text-green-600">${bookingDetails.price}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <a href="{{ route('login') }}" class="block w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-sign-in-alt ml-2"></i>
+                            تسجيل الدخول
+                        </a>
+                        <a href="{{ route('register') }}" class="block w-full border-2 border-amber-200 text-amber-600 font-bold py-3 rounded-xl transition-all duration-200 hover:bg-amber-50">
+                            <i class="fas fa-user-plus ml-2"></i>
+                            إنشاء حساب
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
@@ -2632,7 +2679,8 @@ function setButtonLoadingState(button, isLoading) {
 }
 
 function markWorkshopAsBooked(workshopId) {
-    const buttons = document.querySelectorAll();
+    const selector = `.js-whatsapp-booking[data-workshop-id="${workshopId}"]`;
+    const buttons = document.querySelectorAll(selector);
 
     buttons.forEach(button => {
         const existingIcon = button.querySelector('.booking-button-icon');
@@ -2671,22 +2719,52 @@ window.closeCustomAlert = closeCustomAlert;
 window.markWorkshopAsBooked = markWorkshopAsBooked;
 
 
-
 // إرسال رسالة الواتساب
-function sendWhatsAppMessage(title, price, date, instructor, location, deadline) {
+function sendWhatsAppMessage(detailsOrTitle, price, date, instructor, location, deadline, maybeBridgeWindow = null) {
     const userName = @json(auth()->check() ? auth()->user()->name : 'مستخدم');
     const userPhone = @json(auth()->check() && auth()->user()->phone ? auth()->user()->phone : 'غير محدد');
     const userEmail = @json(auth()->check() ? auth()->user()->email : 'غير محدد');
-    
+
+    let details;
+    let bridgeWindow = null;
+
+    if (typeof detailsOrTitle === 'object' && detailsOrTitle !== null && !Array.isArray(detailsOrTitle)) {
+        details = {
+            title: detailsOrTitle.title || '',
+            price: detailsOrTitle.price || '',
+            date: detailsOrTitle.date || '',
+            instructor: detailsOrTitle.instructor || '',
+            location: detailsOrTitle.location || '',
+            deadline: detailsOrTitle.deadline || '',
+        };
+
+        if (price && typeof price === 'object' && 'closed' in price) {
+            bridgeWindow = price;
+        }
+    } else {
+        details = {
+            title: detailsOrTitle || '',
+            price: price || '',
+            date: date || '',
+            instructor: instructor || '',
+            location: location || '',
+            deadline: deadline || '',
+        };
+
+        if (typeof maybeBridgeWindow === 'object' && maybeBridgeWindow !== null && 'closed' in maybeBridgeWindow) {
+            bridgeWindow = maybeBridgeWindow;
+        }
+    }
+
     const whatsappMessage = `مرحباً! أريد حجز مقعد في الورشة التالية:
 
-🏆 *${title}*
+🏆 *${details.title}*
 
-📅 التاريخ: ${date}
-👨‍🏫 المدرب: ${instructor}
-📍 المكان: ${location}
-💰 السعر: ${price}
-⏰ آخر موعد للتسجيل: ${deadline}
+📅 التاريخ: ${details.date}
+👨‍🏫 المدرب: ${details.instructor}
+📍 المكان: ${details.location}
+💰 السعر: ${details.price}
+⏰ آخر موعد للتسجيل: ${details.deadline}
 
 📋 *معلوماتي الشخصية:*
 👤 الاسم: ${userName}
@@ -2698,9 +2776,15 @@ function sendWhatsAppMessage(title, price, date, instructor, location, deadline)
 💡 *ملاحظة:* تم حفظ الحجز في نظامنا تلقائياً.`;
 
     const encodedMessage = encodeURIComponent(whatsappMessage);
-    const whatsappNumber = "962790553680";
+    const whatsappNumber = whatsappBookingConfig.whatsappNumber || '962790553680';
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+
+    if (bridgeWindow && !bridgeWindow.closed) {
+        bridgeWindow.location.href = whatsappUrl;
+        bridgeWindow.focus();
+    } else {
+        window.open(whatsappUrl, '_blank');
+    }
 }
 
 // دالة عرض التنبيه المخصص
