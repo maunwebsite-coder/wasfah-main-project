@@ -1098,7 +1098,7 @@
     </script>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 pt-12 pb-6">
+    <footer class="bg-orange-50 pt-12 pb-6">
         <div class="container mx-auto px-4">
             <!-- Main Footer Content -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-10 border-b border-gray-200 footer-content">
@@ -1111,11 +1111,6 @@
                     <p class="text-gray-600 leading-relaxed">
                         منصّة وصفة للحلويات الفاخرة والراقية، نرافقك في كل خطوة لتقديم أطيب الحلويات.
                     </p>
-                    <div class="flex items-center justify-center sm:justify-end space-x-4 rtl:space-x-reverse">
-                        <a href="https://www.instagram.com/wasfah.jo/" target="_blank" class="text-gray-600 hover:text-orange-500 transition-colors" aria-label="Instagram">
-                            <i class="fab fa-instagram text-2xl"></i>
-                        </a>
-                    </div>
                 </div>
 
                 <!-- Explore -->
@@ -1145,10 +1140,6 @@
                         <div class="flex items-center justify-center sm:justify-end space-x-2 rtl:space-x-reverse">
                             <i class="fas fa-envelope text-orange-500"></i>
                             <span>wasfah99@gmail.com</span>
-                        </div>
-                        <div class="flex items-center justify-center sm:justify-end space-x-2 rtl:space-x-reverse">
-                            <i class="fas fa-phone text-orange-500"></i>
-                            <span>+962 6 123 4567</span>
                         </div>
                         <div class="pt-2">
                             <a href="{{ route('contact') }}" class="inline-block hover:text-orange-500 transition-colors">اتصل بنا</a>

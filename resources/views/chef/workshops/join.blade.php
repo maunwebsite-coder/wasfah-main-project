@@ -848,6 +848,23 @@
                 }
             });
 
+            let handlingToolbarToggle = false;
+            if (typeof api.addListener === 'function') {
+                api.addListener('toolbarButtonClicked', event => {
+                    if (!event || event.key !== 'fullscreen') {
+                        return;
+                    }
+                    if (handlingToolbarToggle) {
+                        return;
+                    }
+                    handlingToolbarToggle = true;
+                    const action = isFullscreenActive() ? performExit : performEnter;
+                    Promise.resolve(action()).finally(() => {
+                        handlingToolbarToggle = false;
+                    });
+                });
+            }
+
             if (typeof api.addListener === 'function') {
                 api.addListener('videoConferenceJoined', updateFullscreenState);
                 api.addListener('videoConferenceLeft', updateFullscreenState);
