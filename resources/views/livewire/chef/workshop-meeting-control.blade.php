@@ -1,9 +1,8 @@
 <div class="flex flex-col items-start gap-3 text-sm text-slate-200" id="meetingStateLabel">
     @if ($started)
-        <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 font-semibold text-emerald-200">
-            <i class="fas fa-check-circle"></i>
-            تم فتح الاجتماع {{ $startedAtHuman }}
-        </span>
+        <p class="text-slate-300">
+            تم فتح الاجتماع {{ $startedAtHuman }}. راقب لوحة التحكم أدناه لإدارة البث.
+        </p>
     @else
         <p class="text-slate-300">
             سيتم تشغيل غرفة الاجتماع فور الموافقة. تأكد من أن الصوت والكاميرا جاهزان وأن اسمك المعروض هو الاسم الصحيح قبل المتابعة.

@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('hide-navbar', true)
-
 @section('title', 'تشغيل ورشة: ' . $workshop->title)
 
 @push('styles')
@@ -49,8 +47,60 @@
         background-color: #000 !important;
     }
 
+    .jitsi-fullscreen-toggle {
+        position: absolute;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 45;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.65rem 1rem;
+        border: 0;
+        border-radius: 9999px;
+        background: rgba(12, 12, 12, 0.78);
+        color: #fff;
+        font-size: 0.95rem;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 15px 35px -15px rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(10px);
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .jitsi-fullscreen-toggle:hover {
+        background: rgba(12, 12, 12, 0.92);
+        transform: translateY(-1px);
+    }
+
+    .jitsi-fullscreen-toggle:focus-visible {
+        outline: 2px solid #fb923c;
+        outline-offset: 3px;
+    }
+
+    .jitsi-fullscreen-toggle span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+        .jitsi-fullscreen-toggle {
+            right: 0.9rem;
+            bottom: 0.9rem;
+            font-size: 0.9rem;
+            padding: 0.55rem 0.9rem;
+        }
+    }
+
     footer {
         display: none !important;
+    }
+
+    @media (max-width: 768px) {
+        header.sticky.top-0 {
+            display: none !important;
+        }
     }
 
 </style>
@@ -98,87 +148,21 @@
                     : 'أضف تفاصيل الموقع من صفحة تعديل الورشة لتسهيل وصول المشاركين.');
         @endphp
 
-        <div class="mb-8 flex flex-col gap-4 lg:flex-row">
-            <div class="flex-1 rounded-3xl border border-slate-900/20 bg-slate-900 px-6 py-6 text-white shadow-2xl shadow-slate-900/20">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">المضيف</p>
-                        <p class="mt-2 text-lg font-semibold">{{ $hostStatusTitle }}</p>
-                        <p class="mt-2 text-sm text-white/80">{{ $hostStatusDescription }}</p>
-                        @if ($isMeetingLive && $workshop->meeting_started_at)
-                            <p class="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/80">
-                                <i class="fas fa-bolt"></i>
-                                بدأ قبل {{ $workshop->meeting_started_at->locale('ar')->diffForHumans(null, true) }}
-                            </p>
-                        @elseif (!$workshop->is_online)
-                            <p class="mt-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70">
-                                <i class="fas fa-map-marker-alt"></i>
-                                ورشة حضورية
-                            </p>
-                        @endif
-                    </div>
-                    <a href="#jitsi-shell" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20">
-                        <i class="fas fa-video"></i>
-                        إدارة غرفة البث
-                    </a>
-                </div>
-            </div>
-            <div class="flex-1 rounded-3xl border border-orange-200 bg-white px-6 py-6 shadow-xl shadow-orange-200/40">
-                <div class="flex flex-col gap-4">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-orange-500">المشتركون</p>
-                        <p class="mt-2 text-lg font-semibold text-slate-900">{{ $participantStatusTitle }}</p>
-                        <p class="mt-2 text-sm text-slate-600">{{ $participantStatusDescription }}</p>
-                    </div>
-                    @if ($workshop->is_online && $workshop->meeting_link)
-                        <div class="space-y-2">
-                            @if ($canViewRawMeetingLink)
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <a
-                                        href="{{ $workshop->meeting_link }}"
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-xs font-semibold text-white shadow transition hover:from-orange-600 hover:to-orange-700"
-                                    >
-                                        <i class="fas fa-link"></i>
-                                        فتح رابط المشاركين
-                                    </a>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-4 py-2 text-xs font-semibold text-orange-600 transition hover:bg-orange-50"
-                                        data-copy-link="{{ $workshop->meeting_link }}"
-                                        data-copy-feedback-target="participant-link-feedback"
-                                    >
-                                        <i class="fas fa-copy"></i>
-                                        نسخ الرابط
-                                    </button>
-                                </div>
-                                <p class="break-all rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-700 ltr:text-left rtl:text-right">
-                                    {{ $workshop->meeting_link }}
-                                </p>
-                                <p id="participant-link-feedback" class="hidden text-xs font-semibold text-emerald-600">تم نسخ رابط الدخول للمشاركين.</p>
-                            @else
-                                <div class="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-700">
-                                    روابط المشاركين محفوظة داخل أنظمة وصفة ولن تظهر لأحد حفاظاً على سرية جلساتك.
-                                </div>
-                            @endif
-                        </div>
-                    @elseif(!$workshop->is_online)
-                        <div class="space-y-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-                            <p class="font-semibold text-slate-700">تفاصيل الحضور</p>
-                            <p>{{ $workshop->location ?? 'لم يتم إدخال عنوان الورشة بعد.' }}</p>
-                        </div>
-                    @else
-                        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                            لم يتم ضبط رابط البث بعد. أضف الرابط من صفحة تعديل الورشة لتتمكن من مشاركته مع المشاركين.
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
+        
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
+            <button
+                type="button"
+                id="fullscreenToggleButton"
+                class="jitsi-fullscreen-toggle"
+                aria-pressed="false"
+                aria-controls="jitsi-container"
+                title="تكبير مساحة البث"
+            >
+                <span id="fullscreenToggleIcon" aria-hidden="true">⤢</span>
+                <span id="fullscreenToggleText">تكبير</span>
+            </button>
             <div class="rounded-3xl border border-slate-800/70 bg-slate-950/90 px-6 py-5 text-slate-200 shadow-2xl backdrop-blur">
                 <livewire:chef.workshop-meeting-control
                     :workshop="$workshop"
@@ -362,6 +346,9 @@
         const csrfToken = @json(csrf_token());
         const joinPageUrl = @json(route('chef.workshops.join', $workshop));
         const copyButtons = document.querySelectorAll('[data-copy-link]');
+        const fullscreenToggleButton = document.getElementById('fullscreenToggleButton');
+        const fullscreenToggleIcon = document.getElementById('fullscreenToggleIcon');
+        const fullscreenToggleText = document.getElementById('fullscreenToggleText');
 
         copyButtons.forEach(button => {
             button.addEventListener('click', async () => {
@@ -415,9 +402,34 @@
         let shouldAutoFullscreen = mobileViewportQuery.matches;
         let hasRedirectedToJoinPage = false;
         let apiInstance = null;
+        let manualFullscreen = false;
 
         const bodyFullscreenClass = 'mobile-fullscreen-active';
         const targetFullscreenClass = 'mobile-fullscreen-active';
+
+        const isNativeFullscreenActive = () => Boolean(document.fullscreenElement);
+        const isCssFullscreenActive = () => document.body.classList.contains(bodyFullscreenClass);
+        const isFullscreenActive = () => isNativeFullscreenActive() || isCssFullscreenActive();
+
+        const updateFullscreenToggleState = () => {
+            if (!fullscreenToggleButton) {
+                return;
+            }
+
+            const active = isFullscreenActive();
+            fullscreenToggleButton.setAttribute('aria-pressed', active ? 'true' : 'false');
+            fullscreenToggleButton.setAttribute('title', active ? 'تصغير مساحة البث' : 'تكبير مساحة البث');
+
+            if (fullscreenToggleIcon) {
+                fullscreenToggleIcon.textContent = active ? '⤡' : '⤢';
+            }
+
+            if (fullscreenToggleText) {
+                fullscreenToggleText.textContent = active ? 'تصغير' : 'تكبير';
+            }
+        };
+
+        updateFullscreenToggleState();
         const fullscreenController = (() => {
             let mode = 'none'; // none | css | native | pending-native
 
@@ -437,11 +449,13 @@
             const addClasses = () => {
                 document.body.classList.add(bodyFullscreenClass);
                 getContainer()?.classList.add(targetFullscreenClass);
+                updateFullscreenToggleState();
             };
 
             const removeClasses = () => {
                 document.body.classList.remove(bodyFullscreenClass);
                 getContainer()?.classList.remove(targetFullscreenClass);
+                updateFullscreenToggleState();
             };
 
             const requestNative = () => {
@@ -491,7 +505,7 @@
             };
 
             const ensure = (fromGesture = false) => {
-                if (!shouldAutoFullscreen) {
+                if (!shouldAutoFullscreen && !manualFullscreen) {
                     exit();
                     return;
                 }
@@ -528,6 +542,7 @@
             };
 
             const exit = () => {
+                manualFullscreen = false;
                 if (mode === 'native' || mode === 'pending-native') {
                     exitNative();
                 }
@@ -537,12 +552,20 @@
 
             document.addEventListener('fullscreenchange', () => {
                 if (!document.fullscreenElement && mode === 'native') {
+                    if (manualFullscreen) {
+                        exit();
+                        return;
+                    }
+
                     if (shouldAutoFullscreen) {
                         applyFallback();
                     } else {
                         exit();
+                        return;
                     }
                 }
+
+                updateFullscreenToggleState();
             });
 
             return {
@@ -552,28 +575,38 @@
             };
         })();
 
+        const handleViewportPreferenceChange = (matches) => {
+            shouldAutoFullscreen = matches;
+            if (shouldAutoFullscreen || manualFullscreen) {
+                fullscreenController.ensure();
+            } else {
+                fullscreenController.exit();
+            }
+        };
+
         if (typeof mobileViewportQuery.addEventListener === 'function') {
             mobileViewportQuery.addEventListener('change', event => {
-                shouldAutoFullscreen = event.matches;
-                if (shouldAutoFullscreen) {
-                    fullscreenController.ensure();
-                } else {
-                    fullscreenController.exit();
-                }
+                handleViewportPreferenceChange(event.matches);
             });
         } else if (typeof mobileViewportQuery.addListener === 'function') {
             mobileViewportQuery.addListener(event => {
-                shouldAutoFullscreen = event.matches;
-                if (shouldAutoFullscreen) {
-                    fullscreenController.ensure();
-                } else {
-                    fullscreenController.exit();
-                }
+                handleViewportPreferenceChange(event.matches);
             });
         }
 
         window.addEventListener('beforeunload', fullscreenController.exit);
         window.addEventListener('pagehide', fullscreenController.exit);
+
+        fullscreenToggleButton?.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (isFullscreenActive()) {
+                fullscreenController.exit();
+                return;
+            }
+
+            manualFullscreen = true;
+            fullscreenController.ensureFromGesture();
+        });
 
         const redirectToJoinPage = () => {
             if (hasRedirectedToJoinPage || !joinPageUrl) {
