@@ -47,52 +47,6 @@
         background-color: #000 !important;
     }
 
-    .jitsi-fullscreen-toggle {
-        position: absolute;
-        right: 1.25rem;
-        bottom: 1.25rem;
-        z-index: 45;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.65rem 1rem;
-        border: 0;
-        border-radius: 9999px;
-        background: rgba(12, 12, 12, 0.78);
-        color: #fff;
-        font-size: 0.95rem;
-        line-height: 1;
-        cursor: pointer;
-        box-shadow: 0 15px 35px -15px rgba(0, 0, 0, 0.65);
-        backdrop-filter: blur(10px);
-        transition: background 0.2s ease, transform 0.2s ease;
-    }
-
-    .jitsi-fullscreen-toggle:hover {
-        background: rgba(12, 12, 12, 0.92);
-        transform: translateY(-1px);
-    }
-
-    .jitsi-fullscreen-toggle:focus-visible {
-        outline: 2px solid #fb923c;
-        outline-offset: 3px;
-    }
-
-    .jitsi-fullscreen-toggle span {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    @media (max-width: 768px) {
-        .jitsi-fullscreen-toggle {
-            right: 0.9rem;
-            bottom: 0.9rem;
-            font-size: 0.9rem;
-            padding: 0.55rem 0.9rem;
-        }
-    }
-
     footer {
         display: none !important;
     }
@@ -152,17 +106,6 @@
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
             <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
-            <button
-                type="button"
-                id="fullscreenToggleButton"
-                class="jitsi-fullscreen-toggle"
-                aria-pressed="false"
-                aria-controls="jitsi-container"
-                title="تكبير مساحة البث"
-            >
-                <span id="fullscreenToggleIcon" aria-hidden="true">⤢</span>
-                <span id="fullscreenToggleText">تكبير</span>
-            </button>
             <div class="rounded-3xl border border-slate-800/70 bg-slate-950/90 px-6 py-5 text-slate-200 shadow-2xl backdrop-blur">
                 <livewire:chef.workshop-meeting-control
                     :workshop="$workshop"
@@ -346,9 +289,6 @@
         const csrfToken = @json(csrf_token());
         const joinPageUrl = @json(route('chef.workshops.join', $workshop));
         const copyButtons = document.querySelectorAll('[data-copy-link]');
-        const fullscreenToggleButton = document.getElementById('fullscreenToggleButton');
-        const fullscreenToggleIcon = document.getElementById('fullscreenToggleIcon');
-        const fullscreenToggleText = document.getElementById('fullscreenToggleText');
 
         copyButtons.forEach(button => {
             button.addEventListener('click', async () => {
@@ -402,34 +342,9 @@
         let shouldAutoFullscreen = mobileViewportQuery.matches;
         let hasRedirectedToJoinPage = false;
         let apiInstance = null;
-        let manualFullscreen = false;
 
         const bodyFullscreenClass = 'mobile-fullscreen-active';
         const targetFullscreenClass = 'mobile-fullscreen-active';
-
-        const isNativeFullscreenActive = () => Boolean(document.fullscreenElement);
-        const isCssFullscreenActive = () => document.body.classList.contains(bodyFullscreenClass);
-        const isFullscreenActive = () => isNativeFullscreenActive() || isCssFullscreenActive();
-
-        const updateFullscreenToggleState = () => {
-            if (!fullscreenToggleButton) {
-                return;
-            }
-
-            const active = isFullscreenActive();
-            fullscreenToggleButton.setAttribute('aria-pressed', active ? 'true' : 'false');
-            fullscreenToggleButton.setAttribute('title', active ? 'تصغير مساحة البث' : 'تكبير مساحة البث');
-
-            if (fullscreenToggleIcon) {
-                fullscreenToggleIcon.textContent = active ? '⤡' : '⤢';
-            }
-
-            if (fullscreenToggleText) {
-                fullscreenToggleText.textContent = active ? 'تصغير' : 'تكبير';
-            }
-        };
-
-        updateFullscreenToggleState();
         const fullscreenController = (() => {
             let mode = 'none'; // none | css | native | pending-native
 
@@ -449,13 +364,11 @@
             const addClasses = () => {
                 document.body.classList.add(bodyFullscreenClass);
                 getContainer()?.classList.add(targetFullscreenClass);
-                updateFullscreenToggleState();
             };
 
             const removeClasses = () => {
                 document.body.classList.remove(bodyFullscreenClass);
                 getContainer()?.classList.remove(targetFullscreenClass);
-                updateFullscreenToggleState();
             };
 
             const requestNative = () => {
@@ -505,7 +418,7 @@
             };
 
             const ensure = (fromGesture = false) => {
-                if (!shouldAutoFullscreen && !manualFullscreen) {
+                if (!shouldAutoFullscreen) {
                     exit();
                     return;
                 }
@@ -542,7 +455,6 @@
             };
 
             const exit = () => {
-                manualFullscreen = false;
                 if (mode === 'native' || mode === 'pending-native') {
                     exitNative();
                 }
@@ -552,20 +464,12 @@
 
             document.addEventListener('fullscreenchange', () => {
                 if (!document.fullscreenElement && mode === 'native') {
-                    if (manualFullscreen) {
-                        exit();
-                        return;
-                    }
-
                     if (shouldAutoFullscreen) {
                         applyFallback();
                     } else {
                         exit();
-                        return;
                     }
                 }
-
-                updateFullscreenToggleState();
             });
 
             return {
@@ -577,7 +481,7 @@
 
         const handleViewportPreferenceChange = (matches) => {
             shouldAutoFullscreen = matches;
-            if (shouldAutoFullscreen || manualFullscreen) {
+            if (shouldAutoFullscreen) {
                 fullscreenController.ensure();
             } else {
                 fullscreenController.exit();
@@ -596,17 +500,6 @@
 
         window.addEventListener('beforeunload', fullscreenController.exit);
         window.addEventListener('pagehide', fullscreenController.exit);
-
-        fullscreenToggleButton?.addEventListener('click', (event) => {
-            event.preventDefault();
-            if (isFullscreenActive()) {
-                fullscreenController.exit();
-                return;
-            }
-
-            manualFullscreen = true;
-            fullscreenController.ensureFromGesture();
-        });
 
         const redirectToJoinPage = () => {
             if (hasRedirectedToJoinPage || !joinPageUrl) {

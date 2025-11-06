@@ -1713,7 +1713,7 @@
                             </button>
                         @else
                             <button type="button"
-                                    class="js-unified-booking bg-white text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl w-full sm:w-auto"
+                                    class="js-whatsapp-booking bg-white text-green-600 hover:bg-green-50 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl w-full sm:w-auto"
                                     data-workshop-id="{{ $featuredWorkshop->id }}"
                                     data-title="{{ e($featuredWorkshop->title) }}"
                                     data-price="{{ e($featuredWorkshop->formatted_price) }}"
@@ -2099,7 +2099,7 @@
                                                         </button>
                                                     @else
                                                         <button type="button"
-                                                                class="js-unified-booking flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}"
+                                                                class="js-whatsapp-booking flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}"
                                                                 data-workshop-id="{{ $workshop->id }}"
                                                                 data-title="{{ e($workshop->title) }}"
                                                                 data-price="{{ e($workshop->formatted_price) }}"
@@ -2144,26 +2144,35 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const bookingButtons = document.querySelectorAll('.js-unified-booking');
+const whatsappBookingConfig = @json([
+    'isLoggedIn' => auth()->check(),
+    'user' => [
+        'name' => optional(auth()->user())->name ?? 'مستخدم',
+        'phone' => optional(auth()->user())->phone ?? 'غير محدد',
+        'email' => optional(auth()->user())->email ?? 'غير محدد',
+    ],
+    'whatsappNumber' => '962790553680',
+]);
 
-    bookingButtons.forEach(button => {
-        button.addEventListener('click', function(event) {
+const whatsappBookingState = {
+    activeContext: null,
+};
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingButtons = document.querySelectorAll('.js-whatsapp-booking');
+
+    bookingButtons.forEach((button) => {
+        button.addEventListener('click', (event) => {
             event.preventDefault();
 
-            if (button.disabled || button.dataset.isBooked === 'true') {
+            if (
+                button.disabled ||
+                button.dataset.isBooked === 'true' ||
+                button.dataset.loading === 'true'
+            ) {
                 return;
             }
 
-            unifiedBooking(
-                Number(button.dataset.workshopId),
-                button.dataset.title || '',
-                button.dataset.price || '',
-                button.dataset.date || '',
-                button.dataset.instructor || '',
-                button.dataset.location || '',
-                button.dataset.deadline || ''
-            );
+            startWhatsAppBookingFlow(button);
         });
     });
 

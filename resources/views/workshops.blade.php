@@ -172,7 +172,7 @@
                             </button>
                         @else
                             <button type="button"
-                                    class="js-unified-booking bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                                    class="js-whatsapp-booking bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
                                     data-workshop-id="{{ $featuredWorkshop->id }}"
                                     data-title="{{ e($featuredWorkshop->title) }}"
                                     data-price="{{ e($featuredWorkshop->formatted_price) }}"
@@ -357,8 +357,8 @@
                                                 انتهى التسجيل
                                             </button>
                                         @else
-                                            <button type="button"
-                                                    class="js-unified-booking flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}"
+                                                        <button type="button"
+                                                                class="js-whatsapp-booking flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}"
                                                     data-workshop-id="{{ $workshop->id }}"
                                                     data-title="{{ e($workshop->title) }}"
                                                     data-price="{{ e($workshop->formatted_price) }}"
