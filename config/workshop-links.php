@@ -22,15 +22,4 @@ return [
     |
     */
     'participant_status_ttl' => env('WORKSHOP_LINK_STATUS_TTL', 90),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Participant Mobile Join Link Lifetime (minutes)
-    |--------------------------------------------------------------------------
-    |
-    | Determines how long the signed redirect that opens Jitsi in a new
-    | browser tab for phones stays valid.
-    |
-    */
-    'participant_mobile_ttl' => env('WORKSHOP_LINK_MOBILE_TTL', 30),
 ];

@@ -60,26 +60,6 @@ class ParticipantWorkshopLinkSecurityTest extends TestCase
             ->assertOk();
     }
 
-    public function test_mobile_entry_requires_signed_url_and_redirects_to_jitsi(): void
-    {
-        $user = User::factory()->create();
-        $booking = $this->createConfirmedOnlineBooking($user);
-        $booking->workshop->update([
-            'meeting_started_at' => Carbon::now()->subMinute(),
-        ]);
-
-        $this->actingAs($user)
-            ->get(route('bookings.mobile-entry', ['booking' => $booking->public_code]))
-            ->assertForbidden();
-
-        $signedMobileUrl = app(WorkshopLinkSecurityService::class)->makeParticipantMobileUrl($booking);
-
-        $response = $this->actingAs($user)->get($signedMobileUrl);
-
-        $response->assertRedirect();
-        $this->assertStringContainsString('meet.example.com', $response->headers->get('Location'));
-    }
-
     protected function createConfirmedOnlineBooking(User $user): WorkshopBooking
     {
         $workshop = Workshop::create(array_merge(

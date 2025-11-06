@@ -253,8 +253,6 @@ Route::get('/bookings/{booking:public_code}/status', [App\Http\Controllers\Works
     ->name('bookings.status');
 Route::get('/bookings/{booking:public_code}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])
     ->name('bookings.join');
-Route::get('/bookings/{booking:public_code}/mobile-entry', [App\Http\Controllers\WorkshopBookingController::class, 'mobileEntry'])
-    ->name('bookings.mobile-entry');
 
 // مسارات الإشعارات - محمية بـ middleware المصادقة
 Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
