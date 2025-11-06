@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -296,6 +297,10 @@ class WorkshopBookingController extends Controller
 
     protected function enforceJoinDeviceLock(Request $request, WorkshopBooking $booking): ?\Illuminate\Http\RedirectResponse
     {
+        if (!$this->bookingDeviceLockSupported()) {
+            return null;
+        }
+
         $cookieName = $this->getJoinDeviceCookieName($booking);
         $storedTokenHash = $booking->join_device_token;
         $fingerprint = $this->makeDeviceFingerprint($request);
@@ -388,6 +393,22 @@ class WorkshopBookingController extends Controller
         return redirect()
             ->route('bookings.show', $booking)
             ->with('error', 'لا يمكن فتح رابط الورشة من جهاز مختلف. يرجى التواصل مع فريق الدعم لتحديث الوصول.');
+    }
+
+    protected function bookingDeviceLockSupported(): bool
+    {
+        static $supported;
+
+        if ($supported === null) {
+            $supported = Schema::hasColumns('workshop_bookings', [
+                'join_device_token',
+                'join_device_fingerprint',
+                'join_device_ip',
+                'join_device_user_agent',
+            ]);
+        }
+
+        return $supported;
     }
 
     protected function ensureBookingOwner(WorkshopBooking $booking): void

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -324,6 +325,10 @@ class WorkshopController extends Controller
 
     protected function enforceHostJoinDeviceLock(Request $request, Workshop $workshop): ?RedirectResponse
     {
+        if (!$this->hostDeviceLockSupported()) {
+            return null;
+        }
+
         $currentUser = Auth::user();
 
         if ($currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin()) {
@@ -419,6 +424,22 @@ class WorkshopController extends Controller
         return redirect()
             ->route('chef.workshops.index')
             ->with('error', 'لا يمكن فتح غرفة الورشة من جهاز مختلف. يرجى التواصل مع فريق الدعم لتحديث الوصول.');
+    }
+
+    protected function hostDeviceLockSupported(): bool
+    {
+        static $supported;
+
+        if ($supported === null) {
+            $supported = Schema::hasColumns('workshops', [
+                'host_join_device_token',
+                'host_join_device_fingerprint',
+                'host_join_device_ip',
+                'host_join_device_user_agent',
+            ]);
+        }
+
+        return $supported;
     }
 
     protected function validateWorkshop(Request $request, ?int $workshopId = null): array
@@ -535,6 +556,8 @@ class WorkshopController extends Controller
 
     protected function applyMeetingProvider(Request $request, Workshop $workshop, ?string $inputLink = null): void
     {
+        $supportsHostLock = $this->hostDeviceLockSupported();
+
         if (!$workshop->is_online) {
             $workshop->meeting_link = null;
             $workshop->meeting_provider = 'manual';
@@ -543,11 +566,14 @@ class WorkshopController extends Controller
             $workshop->meeting_started_at = null;
             $workshop->meeting_started_by = null;
             $workshop->meeting_locked_at = null;
-            $workshop->host_first_joined_at = null;
-            $workshop->host_join_device_token = null;
-            $workshop->host_join_device_fingerprint = null;
-            $workshop->host_join_device_ip = null;
-            $workshop->host_join_device_user_agent = null;
+
+            if ($supportsHostLock) {
+                $workshop->host_first_joined_at = null;
+                $workshop->host_join_device_token = null;
+                $workshop->host_join_device_fingerprint = null;
+                $workshop->host_join_device_ip = null;
+                $workshop->host_join_device_user_agent = null;
+            }
             return;
         }
 
@@ -556,11 +582,14 @@ class WorkshopController extends Controller
         $workshop->meeting_started_at = null;
         $workshop->meeting_started_by = null;
         $workshop->meeting_locked_at = null;
-        $workshop->host_first_joined_at = null;
-        $workshop->host_join_device_token = null;
-        $workshop->host_join_device_fingerprint = null;
-        $workshop->host_join_device_ip = null;
-        $workshop->host_join_device_user_agent = null;
+
+        if ($supportsHostLock) {
+            $workshop->host_first_joined_at = null;
+            $workshop->host_join_device_token = null;
+            $workshop->host_join_device_fingerprint = null;
+            $workshop->host_join_device_ip = null;
+            $workshop->host_join_device_user_agent = null;
+        }
 
         if ($autoGenerate || empty($inputLink)) {
             $meeting = $this->jitsiMeetingService->createMeeting(
