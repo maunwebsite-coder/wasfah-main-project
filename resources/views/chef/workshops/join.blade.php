@@ -105,8 +105,8 @@
         
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
-            <div class="jitsi-wrapper bg-slate-950 mobile-fullscreen-target" id="jitsi-container"></div>
-            <div class="rounded-3xl border border-slate-800/70 bg-slate-950/90 px-6 py-5 text-slate-200 shadow-2xl backdrop-blur">
+            <div class="jitsi-wrapper bg-white mobile-fullscreen-target" id="jitsi-container"></div>
+            <div class="rounded-3xl border border-orange-200 bg-white px-6 py-5 text-slate-900 shadow-xl">
                 <livewire:chef.workshop-meeting-control
                     :workshop="$workshop"
                     :key="'chef-workshop-meeting-control-' . $workshop->id"

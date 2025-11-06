@@ -2411,73 +2411,84 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// الحجز الموحد (يتطلب تسجيل الدخول)
-function unifiedBooking(workshopId, title, price, date, instructor, location, deadline) {
-    const isLoggedIn = @json(auth()->check());
-    
-    if (isLoggedIn) {
-        // المستخدم مسجل دخول - حفظ الحجز + إرسال واتساب
-        showBookingConfirmation(workshopId, title, price, date, instructor, location, deadline);
+// إعادة بناء تدفق الحجز عبر واتساب
+function startWhatsAppBookingFlow(button) {
+    const bookingDetails = extractBookingDetails(button);
+
+    whatsappBookingState.activeContext = {
+        triggerButton: button,
+        details: bookingDetails,
+    };
+
+    if (whatsappBookingConfig.isLoggedIn) {
+        showBookingConfirmation(bookingDetails);
     } else {
-        // المستخدم غير مسجل دخول - إظهار modal تسجيل الدخول
-        showLoginRequiredModal(title, price, date, instructor, location, deadline);
+        showLoginRequiredModal(bookingDetails);
     }
 }
 
-// دالة تأكيد الحجز الجميلة
-function showBookingConfirmation(workshopId, title, price, date, instructor, location, deadline) {
-    // إزالة أي modal سابق
+function extractBookingDetails(button) {
+    return {
+        id: Number(button.dataset.workshopId),
+        title: button.dataset.title || '',
+        price: button.dataset.price || '',
+        date: button.dataset.date || '',
+        instructor: button.dataset.instructor || '',
+        location: button.dataset.location || '',
+        deadline: button.dataset.deadline || '',
+    };
+}
+
+function getActiveBookingDetails() {
+    return whatsappBookingState.activeContext?.details ?? null;
+}
+
+function showBookingConfirmation(details = getActiveBookingDetails()) {
+    if (!details) {
+        return;
+    }
+
     const existingModal = document.getElementById('booking-confirmation-modal');
     if (existingModal) {
         existingModal.remove();
     }
 
-    // إنشاء modal التأكيد
     const modalHTML = `
         <div id="booking-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300">
                 <div class="text-center">
-                    <!-- الأيقونة -->
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-calendar-check text-green-600 text-2xl"></i>
                     </div>
-                    
-                    <!-- العنوان -->
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">تأكيد الحجز</h3>
                     <p class="text-gray-600 mb-6">هل أنت متأكد من حجز هذه الورشة؟</p>
-                    
-                    <!-- تفاصيل الورشة -->
                     <div class="bg-gray-50 rounded-lg p-4 mb-6 text-right">
-                        <h4 class="font-semibold text-gray-900 mb-2">${title}</h4>
+                        <h4 class="font-semibold text-gray-900 mb-2">${details.title}</h4>
                         <div class="space-y-1 text-sm text-gray-600">
                             <div class="flex justify-between">
                                 <span>التاريخ:</span>
-                                <span class="font-medium">${date}</span>
+                                <span class="font-medium">${details.date}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>المدرب:</span>
-                                <span class="font-medium">${instructor}</span>
+                                <span class="font-medium">${details.instructor}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>المكان:</span>
-                                <span class="font-medium">${location}</span>
+                                <span class="font-medium">${details.location}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>السعر:</span>
-                                <span class="font-medium text-green-600">${price}</span>
+                                <span class="font-medium text-green-600">${details.price}</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- الأزرار -->
                     <div class="flex gap-3">
-                        <button onclick="confirmBooking(${workshopId}, '${title}', '${price}', '${date}', '${instructor}', '${location}', '${deadline}')" 
-                                class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
+                        <button onclick="confirmBooking()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
                             <i class="fas fa-check ml-2"></i>
                             نعم، احجز الآن
                         </button>
-                        <button onclick="closeBookingConfirmation()" 
-                                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
+                        <button onclick="closeBookingConfirmation()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
                             <i class="fas fa-times ml-2"></i>
                             إلغاء
                         </button>
@@ -2487,55 +2498,54 @@ function showBookingConfirmation(workshopId, title, price, date, instructor, loc
         </div>
     `;
 
-    // إضافة modal للصفحة
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-// دالة تأكيد الحجز
-function confirmBooking(workshopId, title, price, date, instructor, location, deadline) {
+async function confirmBooking() {
+    const context = whatsappBookingState.activeContext;
+    if (!context) {
+        return;
+    }
+
     closeBookingConfirmation();
-    
-    // حفظ الحجز في قاعدة البيانات
-    fetch('{{ route("bookings.store") }}', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            workshop_id: workshopId,
-            notes: 'حجز موحد - واتساب + قاعدة بيانات'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
+
+    const whatsappBridgeWindow = openWhatsAppBridgeWindow();
+    setButtonLoadingState(context.triggerButton, true);
+
+    try {
+        const data = await persistBooking(context.details.id);
+
         if (data.success) {
-            // إرسال رسالة الواتساب
-            sendWhatsAppMessage(title, price, date, instructor, location, deadline);
-            
-            // إظهار رسالة نجاح
+            markWorkshopAsBooked(context.details.id);
+            sendWhatsAppMessage(context.details, whatsappBridgeWindow);
             showCustomAlert('تم حفظ الحجز في النظام وإرسال رسالة الواتساب!', 'success');
-            
-            // إعادة تحميل الصفحة
             setTimeout(() => {
                 location.reload();
             }, 2000);
-        } else {
-            if (data.message && data.message.includes('حجز')) {
-                markWorkshopAsBooked(workshopId);
-                showCustomAlert('تم حجز هذه الورشة بالفعل.', 'success');
-            } else {
-                showCustomAlert('خطأ في حفظ الحجز: ' + data.message, 'error');
-            }
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+
+        if (data.message && data.message.includes('حجز')) {
+            markWorkshopAsBooked(context.details.id);
+            showCustomAlert('تم حجز هذه الورشة بالفعل.', 'success');
+            if (whatsappBridgeWindow && !whatsappBridgeWindow.closed) {
+                whatsappBridgeWindow.close();
+            }
+            return;
+        }
+
+        throw new Error(data.message || 'booking_failed');
+    } catch (error) {
+        console.error('Booking error:', error);
         showCustomAlert('حدث خطأ أثناء حفظ الحجز', 'error');
-    });
+        if (whatsappBridgeWindow && !whatsappBridgeWindow.closed) {
+            whatsappBridgeWindow.close();
+        }
+    } finally {
+        setButtonLoadingState(context.triggerButton, false);
+    }
 }
 
-// دالة إغلاق modal التأكيد
 function closeBookingConfirmation() {
     const modal = document.getElementById('booking-confirmation-modal');
     if (modal) {
@@ -2543,91 +2553,32 @@ function closeBookingConfirmation() {
     }
 }
 
-// دالة إظهار modal تسجيل الدخول المطلوب
-function showLoginRequiredModal(title, price, date, instructor, location, deadline) {
-    // إزالة أي modal سابق
+function showLoginRequiredModal(details = getActiveBookingDetails()) {
+    const bookingDetails = details || whatsappBookingState.activeContext?.details;
+    if (!bookingDetails) {
+        return;
+    }
+
     const existingModal = document.getElementById('login-required-modal');
     if (existingModal) {
         existingModal.remove();
     }
 
-    // إنشاء modal تسجيل الدخول
-    const modalHTML = `
-        <div id="login-required-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeLoginRequiredModal(event)">
-            <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 relative" onclick="event.stopPropagation()">
-                <!-- زر الإغلاق في الزاوية العلوية -->
-                <button onclick="closeLoginRequiredModal()" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-                
-                <div class="text-center">
-                    <!-- الأيقونة -->
-                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-lock text-amber-600 text-2xl"></i>
-                    </div>
-                    
-                    <!-- العنوان -->
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">تسجيل الدخول مطلوب</h3>
-                    <p class="text-gray-600 mb-6">يجب تسجيل الدخول أولاً لحجز الورشة</p>
-                    
-                    <!-- تفاصيل الورشة -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6 text-right">
-                        <h4 class="font-semibold text-gray-900 mb-2">${title}</h4>
-                        <div class="space-y-1 text-sm text-gray-600">
-                            <div class="flex justify-between">
-                                <span>التاريخ:</span>
-                                <span class="font-medium">${date}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>المدرب:</span>
-                                <span class="font-medium">${instructor}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>المكان:</span>
-                                <span class="font-medium">${location}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>السعر:</span>
-                                <span class="font-medium text-green-600">${price}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- رسالة إضافية -->
-                    <p class="text-sm text-gray-500 mb-6">سجل دخولك أو أنشئ حساب جديد للمتابعة</p>
-                    
-                    <!-- الأزرار -->
-                    <div class="flex flex-col gap-3">
-                        <a href="{{ route('login') }}" 
-                           class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
-                            <i class="fas fa-sign-in-alt ml-2"></i>
-                            تسجيل الدخول
-                        </a>
-                        <a href="{{ route('register') }}" 
-                           class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
-                            <i class="fas fa-user-plus ml-2"></i>
-                            إنشاء حساب
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+    const modalHTML = ;
 
-    // إضافة modal للصفحة
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // إضافة مستمع حدث للضغط على مفتاح Escape
-    document.addEventListener('keydown', function(event) {
+
+    const escListener = function(event) {
         if (event.key === 'Escape') {
             closeLoginRequiredModal();
+            document.removeEventListener('keydown', escListener);
         }
-    });
+    };
+
+    document.addEventListener('keydown', escListener);
 }
 
-// دالة إغلاق modal تسجيل الدخول
 function closeLoginRequiredModal(event) {
-    // إذا كان الحدث من النقر على الخلفية، أغلق الـ modal
     if (event && event.target.id === 'login-required-modal') {
         const modal = document.getElementById('login-required-modal');
         if (modal) {
@@ -2635,16 +2586,53 @@ function closeLoginRequiredModal(event) {
         }
         return;
     }
-    
-    // إغلاق الـ modal في جميع الحالات الأخرى
+
     const modal = document.getElementById('login-required-modal');
     if (modal) {
         modal.remove();
     }
 }
 
+function persistBooking(workshopId) {
+    return fetch('{{ route("bookings.store") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            workshop_id: workshopId,
+            notes: 'حجز موحد - واتساب + قاعدة بيانات',
+        }),
+    }).then(response => response.json());
+}
+
+function openWhatsAppBridgeWindow() {
+    try {
+        return window.open('', '_blank');
+    } catch (error) {
+        console.warn('Unable to pre-open WhatsApp window:', error);
+        return null;
+    }
+}
+
+function setButtonLoadingState(button, isLoading) {
+    if (!button) {
+        return;
+    }
+
+    button.dataset.loading = isLoading ? 'true' : 'false';
+    button.classList.toggle('opacity-60', isLoading);
+
+    if (isLoading) {
+        button.disabled = true;
+    } else if (button.dataset.isBooked !== 'true') {
+        button.disabled = false;
+    }
+}
+
 function markWorkshopAsBooked(workshopId) {
-    const buttons = document.querySelectorAll(`.js-unified-booking[data-workshop-id="${workshopId}"]`);
+    const buttons = document.querySelectorAll();
 
     buttons.forEach(button => {
         const existingIcon = button.querySelector('.booking-button-icon');
@@ -2653,7 +2641,7 @@ function markWorkshopAsBooked(workshopId) {
         button.disabled = true;
         button.dataset.isBooked = 'true';
         button.classList.add('cursor-not-allowed', 'bg-green-500', 'text-white');
-        button.classList.remove('hover:bg-green-600', 'hover:bg-green-50', 'bg-white', 'text-green-600');
+        button.classList.remove('hover:bg-green-600', 'hover:bg-green-50', 'bg-white', 'text-green-600', 'opacity-60');
 
         if (existingIcon) {
             existingIcon.className = 'fas fa-check ml-2 booking-button-icon';
@@ -2671,17 +2659,18 @@ function markWorkshopAsBooked(workshopId) {
     });
 }
 
-// جعل الدوال متاحة عالمياً
+window.startWhatsAppBookingFlow = startWhatsAppBookingFlow;
 window.confirmBooking = confirmBooking;
 window.closeBookingConfirmation = closeBookingConfirmation;
 window.showBookingConfirmation = showBookingConfirmation;
 window.showLoginRequiredModal = showLoginRequiredModal;
 window.closeLoginRequiredModal = closeLoginRequiredModal;
-window.unifiedBooking = unifiedBooking;
 window.sendWhatsAppMessage = sendWhatsAppMessage;
 window.showCustomAlert = showCustomAlert;
 window.closeCustomAlert = closeCustomAlert;
 window.markWorkshopAsBooked = markWorkshopAsBooked;
+
+
 
 // إرسال رسالة الواتساب
 function sendWhatsAppMessage(title, price, date, instructor, location, deadline) {

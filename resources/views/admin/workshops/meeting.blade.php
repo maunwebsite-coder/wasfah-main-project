@@ -142,6 +142,22 @@
 
         function initializeJitsi() {
             const domain = @json($embedConfig['domain']);
+            const toolbarButtons = [
+                'camera',
+                'microphone',
+                'chat',
+                'desktop',
+                'hangup',
+                'tileview',
+                'raisehand',
+                'participants-pane',
+                'settings',
+                'filmstrip',
+                'select-background',
+                'shortcuts',
+                'toggle-camera',
+                'fullscreen',
+            ];
             const options = {
                 roomName: @json($embedConfig['room']),
                 parentNode: container,
@@ -154,10 +170,11 @@
                 },
                 configOverwrite: {
                     prejoinPageEnabled: false,
-                    disableDeepLinking: false,
+                    disableDeepLinking: true,
                     startWithAudioMuted: false,
                     startWithVideoMuted: false,
                     enableClosePage: true,
+                    toolbarButtons,
                 },
                 interfaceConfigOverwrite: {
                     SHOW_PROMOTIONAL_CLOSE_PAGE: false,
