@@ -465,7 +465,11 @@
         const tabletViewportQuery = window.matchMedia('(max-width: 1024px)');
         const shortHeightViewportQuery = window.matchMedia('(max-height: 540px)');
         const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
+        const mobileAutoFullscreenEnabled = false;
         const computeAutoFullscreenPreference = () => {
+            if (!mobileAutoFullscreenEnabled) {
+                return false;
+            }
             const hasCoarsePointer = coarsePointerQuery.matches;
             const narrowWidth = mobileViewportQuery.matches;
             const compactTabletWidth = tabletViewportQuery.matches && hasCoarsePointer;

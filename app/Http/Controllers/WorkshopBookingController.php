@@ -328,7 +328,39 @@ class WorkshopBookingController extends Controller
 
     protected function enforceJoinDeviceLock(Request $request, WorkshopBooking $booking): ?\Illuminate\Http\RedirectResponse
     {
-        if (!$this->bookingDeviceLockSupported()) {
+        $currentUser = $request->user();
+        $booking->loadMissing('user');
+
+        $bookingEmail = strtolower((string) optional($booking->user)->email);
+        $currentEmail = strtolower((string) ($currentUser?->email ?? ''));
+        $deviceLockSupported = $this->bookingDeviceLockSupported();
+
+        // Allow multiple devices as long as the authenticated user owns the same email as the booking.
+        if ($bookingEmail !== '' && $currentEmail !== '' && hash_equals($bookingEmail, $currentEmail)) {
+            if ($deviceLockSupported) {
+                $updates = [];
+
+                if (!$booking->first_joined_at) {
+                    $updates['first_joined_at'] = now();
+                }
+
+                if (!$booking->join_device_ip) {
+                    $updates['join_device_ip'] = $request->ip();
+                }
+
+                if (!$booking->join_device_user_agent) {
+                    $updates['join_device_user_agent'] = $this->truncateUserAgent($request->userAgent());
+                }
+
+                if (!empty($updates)) {
+                    $booking->forceFill($updates)->save();
+                }
+            }
+
+            return null;
+        }
+
+        if (!$deviceLockSupported) {
             return null;
         }
 
