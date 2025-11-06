@@ -6,6 +6,7 @@ use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class WorkshopMeetingControl extends Component
@@ -72,6 +73,24 @@ class WorkshopMeetingControl extends Component
         $this->syncState();
 
         $this->dispatch('meeting-started', startedAt: $this->startedAtIso);
+    }
+
+    #[On('chef-start-meeting')]
+    public function startMeetingFromEvent(?array $payload = null): void
+    {
+        if (is_array($payload)) {
+            if (array_key_exists('confirmHost', $payload)) {
+                $this->confirmHost = (bool) $payload['confirmHost'];
+            } elseif (array_key_exists('confirm_host', $payload)) {
+                $this->confirmHost = (bool) $payload['confirm_host'];
+            }
+        }
+
+        if (!$this->confirmHost) {
+            $this->confirmHost = true;
+        }
+
+        $this->startMeeting();
     }
 
     protected function authorizeWorkshop(Workshop $workshop): void
