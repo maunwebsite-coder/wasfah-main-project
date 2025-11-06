@@ -114,6 +114,15 @@
         outline-offset: 3px;
     }
 
+    .mobile-meeting-toolbar.is-floating {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 1rem;
+        z-index: 1100;
+        margin-top: 0;
+    }
+
     @media (max-width: 768px) {
         .mobile-meeting-toolbar[aria-hidden="false"] {
             display: flex;
@@ -1025,6 +1034,9 @@
             const applyFallback = (enabled) => {
                 document.body.classList.toggle('mobile-fullscreen-active', enabled);
                 container.classList.toggle('mobile-fullscreen-active', enabled);
+                if (toolbar) {
+                    toolbar.classList.toggle('is-floating', enabled);
+                }
             };
 
             const enterFullscreen = () => {
