@@ -36,7 +36,8 @@
         },
         "files": [
             "app/Helpers/VisibilityHelper.php",
-            "app/Helpers/BladeVisibilityHelper.php"
+            "app/Helpers/BladeVisibilityHelper.php",
+            "bootstrap/polyfills/LaravelScoutPolyfill.php"
         ]
     },
     "autoload-dev": {
