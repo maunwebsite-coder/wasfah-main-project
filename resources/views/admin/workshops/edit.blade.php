@@ -52,6 +52,95 @@
         background-color: #fff7ed;
         box-shadow: 0 20px 35px -25px rgba(249, 115, 22, 0.6);
     }
+
+    .online-meeting-tools {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(16, 185, 129, 0.18);
+        background: rgba(236, 253, 245, 0.65);
+        padding: 1rem 1.25rem;
+    }
+
+    .meeting-generator-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(16, 185, 129, 0.12);
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 18px 32px -25px rgba(5, 150, 105, 0.6);
+    }
+
+    .generator-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: space-between;
+    }
+
+    .meeting-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 999px;
+        padding: 0.35rem 0.9rem;
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .meeting-status[data-state="ready"] {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .meeting-status[data-state="manual"] {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .meeting-status[data-state="error"] {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .generate-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 999px;
+        padding: 0.6rem 1.3rem;
+        background: linear-gradient(135deg, #10b981, #0d9488);
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 18px 32px -18px rgba(16, 185, 129, 0.8);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .generate-link-btn:not(:disabled):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 34px -20px rgba(16, 185, 129, 0.9);
+    }
+
+    .generate-link-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .meeting-info-card {
+        border-radius: 1rem;
+        border: 1px dashed rgba(16, 185, 129, 0.4);
+        background: rgba(236, 253, 245, 0.75);
+        padding: 0.95rem 1.1rem;
+    }
+
+    .readonly-input {
+        background: #f1f5f9;
+        color: #475569;
+    }
 </style>
 @endpush
 
@@ -64,6 +153,27 @@
                 'AED' => 'درهم إماراتي',
             ];
             $priceFormatted = number_format($workshop->price, 2);
+            $isOnlineOld = old('is_online', $workshop->is_online);
+            $autoGenerateMeeting = (bool) old(
+                'auto_generate_meeting',
+                ($workshop->meeting_provider ?? null) === 'jitsi' ? 1 : 0
+            );
+            $storedMeetingLink = old('meeting_link', $workshop->meeting_link);
+            $storedJitsiRoom = old('jitsi_room', $workshop->jitsi_room);
+            $storedJitsiPasscode = old('jitsi_passcode', $workshop->jitsi_passcode);
+            $hasGeneratedMeeting = !empty($storedJitsiRoom) && !empty($storedMeetingLink);
+            $meetingStatusState = !$isOnlineOld
+                ? 'idle'
+                : ($hasGeneratedMeeting
+                    ? 'ready'
+                    : ($autoGenerateMeeting ? 'idle' : 'manual'));
+            $meetingStatusText = !$isOnlineOld
+                ? 'قم بتفعيل الورشة الأونلاين للوصول إلى توليد الروابط.'
+                : ($hasGeneratedMeeting
+                    ? 'تم إنشاء رابط Jitsi جاهز للمشاركين.'
+                    : ($autoGenerateMeeting
+                        ? 'سيتم توليد رابط Jitsi تلقائياً بعد الحفظ.'
+                        : 'أدخل رابط الاجتماع المخصص يدوياً.'));
         @endphp
 
         <div class="relative overflow-hidden rounded-3xl border border-orange-100 bg-gradient-to-br from-white via-orange-50/70 to-sky-50/70 shadow-2xl p-8 md:p-10">
@@ -329,7 +439,7 @@
                     <div class="grid gap-6 md:grid-cols-2">
                         <div>
                         <label for="location" class="block text-sm font-semibold text-slate-700 mb-2">الموقع (للورش الحضورية)</label>
-                        <input id="location" name="location" type="text" value="{{ old('location', $workshop->location) }}" required
+                        <input id="location" name="location" type="text" value="{{ old('location', $workshop->location) }}" @if(!$isOnlineOld) required @endif
                                class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200 @error('location') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror"
                                placeholder="مثال: عمان - شارع الملكة رانيا">
                         <p id="location-help" class="mt-2 text-xs text-slate-500">يجب تحديد الموقع عند اختيار ورشة حضورية.</p>
@@ -348,18 +458,71 @@
                             @enderror
                         </div>
 
-                        <div class="md:col-span-2">
-                            <label for="meeting_link" class="block text-sm font-semibold text-slate-700 mb-2">رابط الاجتماع (للورش الأونلاين)</label>
-                            <input id="meeting_link" name="meeting_link" type="url" value="{{ old('meeting_link', $workshop->meeting_link) }}"
-                                   class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200 @error('meeting_link') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror"
-                                   placeholder="https://meet.google.com/abc-defg-hij">
-                            <p id="meeting-link-help" class="mt-2 text-xs text-slate-500">سيظهر الرابط للمشاركين بعد تأكيد حجزهم في الورشة الأونلاين.</p>
-                            @error('meeting_link')
-                                <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
-                            @enderror
-                            <p class="mt-2 text-xs text-slate-500">
-                                سيتم إرسال الرابط للمسجلين مباشرة عند إتمام الدفع إذا كانت الورشة أونلاين.
-                            </p>
+                        <div class="md:col-span-2 space-y-4">
+                            <div id="onlineMeetingTools" class="online-meeting-tools {{ $isOnlineOld ? '' : 'hidden' }} space-y-3">
+                                <div class="meeting-generator-card">
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">توليد رابط الاجتماع الذكي</p>
+                                        <p class="text-xs text-slate-500">
+                                            أنشئ رابط Jitsi آمن بضغطة زر أو اترك التوليد التلقائي مفعلاً للحفظ.
+                                        </p>
+                                    </div>
+                                    <div class="generator-actions">
+                                        <span class="meeting-status" id="meetingStatusBadge" data-state="{{ $meetingStatusState }}">
+                                            {{ $meetingStatusText }}
+                                        </span>
+                                        <div class="flex flex-wrap items-center gap-3">
+                                            <input type="hidden" name="auto_generate_meeting" value="0">
+                                            <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                                <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerateMeeting ? 'checked' : '' }}>
+                                                توليد تلقائي عبر Jitsi
+                                            </label>
+                                            <button type="button"
+                                                    id="generateJitsiLinkBtn"
+                                                    data-url="{{ route('admin.workshops.generate-link') }}"
+                                                    class="generate-link-btn">
+                                                <i class="fas fa-bolt"></i>
+                                                <span>توليد رابط الآن</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="generatedMeetingInfo" class="{{ $hasGeneratedMeeting ? '' : 'hidden' }} meeting-info-card space-y-2">
+                                    @if($hasGeneratedMeeting)
+                                        <p class="font-semibold text-slate-800">تم إنشاء رابط Jitsi:</p>
+                                        <p class="mt-1 text-sm break-all text-slate-700">{{ $storedMeetingLink }}</p>
+                                        @if($storedJitsiPasscode)
+                                            <p class="mt-2 text-xs text-emerald-700">
+                                                رمز الدخول: <span class="font-semibold">{{ $storedJitsiPasscode }}</span>
+                                            </p>
+                                        @endif
+                                    @else
+                                        <p class="text-sm text-slate-600">سيظهر الرابط والمعلومات الإضافية هنا بعد توليده.</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <div id="manualMeetingField" class="space-y-2">
+                                <label for="meeting_link" class="block text-sm font-semibold text-slate-700 mb-2">رابط الاجتماع (للورش الأونلاين)</label>
+                                <input id="meeting_link" name="meeting_link" type="url" value="{{ $storedMeetingLink }}"
+                                       class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200 @error('meeting_link') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror{{ $autoGenerateMeeting && $isOnlineOld ? ' readonly-input' : '' }}"
+                                       placeholder="https://meet.jit.si/wasfah-room"
+                                       @if($isOnlineOld && !$autoGenerateMeeting) required @endif
+                                       @if($isOnlineOld && $autoGenerateMeeting) readonly @endif>
+                                <p id="meeting-link-help" class="mt-2 text-xs text-slate-500">
+                                    @if(!$isOnlineOld)
+                                        هذا الحقل اختياري للورش الحضورية.
+                                    @elseif($autoGenerateMeeting)
+                                        سيتم تعيين الرابط تلقائياً بعد الحفظ أو فور الضغط على زر التوليد.
+                                    @else
+                                        يجب إضافة رابط الاجتماع، وسيظهر للمشاركين بعد تأكيد الحجز.
+                                    @endif
+                                </p>
+                                @error('meeting_link')
+                                    <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <input type="hidden" id="jitsi_room_field" name="jitsi_room" value="{{ $storedJitsiRoom }}">
+                            <input type="hidden" id="jitsi_passcode_field" name="jitsi_passcode" value="{{ $storedJitsiPasscode }}">
                         </div>
                     </div>
                 </section>
