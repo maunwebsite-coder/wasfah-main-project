@@ -5,15 +5,29 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HeroSlideRequest;
 use App\Models\HeroSlide;
-use Illuminate\Support\Facades\DB;
+use App\Support\HeroSlideSchemaState;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class HeroSlideController extends Controller
 {
     public function index()
     {
+        $schemaStatus = HeroSlideSchemaState::describe();
+
+        if (!$schemaStatus['ready']) {
+            return view('admin.hero-slides.index', [
+                'slides' => collect(),
+                'activeCount' => 0,
+                'schemaStatus' => $schemaStatus,
+            ]);
+        }
+
         if (!HeroSlide::exists()) {
             $this->seedDefaultSlides();
         }
@@ -21,11 +35,15 @@ class HeroSlideController extends Controller
         $slides = HeroSlide::orderBy('sort_order')->orderBy('id')->get();
         $activeCount = $slides->where('is_active', true)->count();
 
-        return view('admin.hero-slides.index', compact('slides', 'activeCount'));
+        return view('admin.hero-slides.index', compact('slides', 'activeCount', 'schemaStatus'));
     }
 
     public function create()
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         $heroSlide = new HeroSlide([
             'is_active' => true,
             'features' => [''],
@@ -37,6 +55,10 @@ class HeroSlideController extends Controller
 
     public function store(HeroSlideRequest $request)
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         $payload = $this->preparePayload($request);
 
         HeroSlide::create($payload);
@@ -48,6 +70,10 @@ class HeroSlideController extends Controller
 
     public function initializeDefaults()
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         if (HeroSlide::exists()) {
             return redirect()
                 ->route('admin.hero-slides.index')
@@ -63,11 +89,19 @@ class HeroSlideController extends Controller
 
     public function edit(HeroSlide $heroSlide)
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         return view('admin.hero-slides.edit', compact('heroSlide'));
     }
 
     public function update(HeroSlideRequest $request, HeroSlide $heroSlide)
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         $payload = $this->preparePayload($request, $heroSlide);
 
         $heroSlide->update($payload);
@@ -79,6 +113,10 @@ class HeroSlideController extends Controller
 
     public function destroy(HeroSlide $heroSlide)
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         $this->deleteImage($heroSlide->desktop_image_path);
         $this->deleteImage($heroSlide->mobile_image_path);
 
@@ -91,6 +129,10 @@ class HeroSlideController extends Controller
 
     public function toggleStatus(HeroSlide $heroSlide)
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         $heroSlide->is_active = ! $heroSlide->is_active;
         $heroSlide->save();
 
@@ -101,6 +143,10 @@ class HeroSlideController extends Controller
 
     public function reorder(Request $request)
     {
+        if ($response = $this->interruptIfSchemaMissing()) {
+            return $response;
+        }
+
         $validated = $request->validate([
             'order' => ['required', 'array'],
             'order.*' => ['integer', 'min:0', 'max:1000'],
@@ -226,14 +272,23 @@ class HeroSlideController extends Controller
      */
     protected function seedDefaultSlides(): void
     {
-        DB::transaction(function () {
-            foreach ($this->defaultBlueprints() as $index => $slide) {
-                HeroSlide::create(array_merge($slide, [
-                    'sort_order' => ($index + 1) * 10,
-                    'is_active' => true,
-                ]));
-            }
-        });
+        try {
+            DB::transaction(function () {
+                foreach ($this->defaultBlueprints() as $index => $slide) {
+                    HeroSlide::create(array_merge($slide, [
+                        'sort_order' => ($index + 1) * 10,
+                        'is_active' => true,
+                    ]));
+                }
+            });
+        } catch (Throwable $exception) {
+            Log::error('Failed to seed default hero slides.', [
+                'message' => $exception->getMessage(),
+                'exception' => $exception::class,
+            ]);
+
+            throw $exception;
+        }
     }
 
     /**
@@ -372,5 +427,24 @@ class HeroSlideController extends Controller
                 ],
             ],
         ];
+    }
+
+    protected function interruptIfSchemaMissing(): ?RedirectResponse
+    {
+        if (HeroSlideSchemaState::isReady()) {
+            return null;
+        }
+
+        $missingColumns = HeroSlideSchemaState::missingColumns();
+
+        $message = 'لا يمكن إدارة شرائح الهيرو قبل تحديث قاعدة البيانات (php artisan migrate --force).';
+
+        if (!empty($missingColumns)) {
+            $message .= ' الأعمدة/الجدول الناقصة: ' . implode(', ', $missingColumns) . '.';
+        }
+
+        return redirect()
+            ->route('admin.hero-slides.index')
+            ->with('error', $message);
     }
 }

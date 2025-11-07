@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\HeroSlide;
-use App\Models\Workshop;
 use App\Models\Recipe;
+use App\Models\HeroSlide;
 use App\Models\Tool;
-use Illuminate\Http\Request;
+use App\Models\Workshop;
+use App\Support\HeroSlideSchemaState;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class HomeController extends Controller
@@ -142,7 +144,7 @@ class HomeController extends Controller
             'open_in_new_tab' => false,
         ];
 
-        $managedHeroSlides = HeroSlide::active()->ordered()->get();
+        $managedHeroSlides = $this->loadManagedHeroSlides();
         $heroSlides = $this->transformHeroSlides($managedHeroSlides, $heroMedia, $createWorkshopAction, $createWasfahLinkAction);
 
         $bookedWorkshopIds = [];
@@ -167,6 +169,25 @@ class HomeController extends Controller
             'homeTools',
             'bookedWorkshopIds'
         ));
+    }
+
+    protected function loadManagedHeroSlides(): Collection
+    {
+        if (!HeroSlideSchemaState::isReady()) {
+            return collect();
+        }
+
+        try {
+            return HeroSlide::active()->ordered()->get();
+        } catch (QueryException $exception) {
+            Log::warning('Failed to load managed hero slides, falling back to defaults.', [
+                'sql_state' => $exception->errorInfo[0] ?? null,
+                'code' => $exception->getCode(),
+                'message' => $exception->getMessage(),
+            ]);
+
+            return collect();
+        }
     }
 
     /**

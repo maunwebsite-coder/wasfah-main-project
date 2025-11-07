@@ -28,6 +28,11 @@
 @endpush
 
 @section('content')
+@php
+    $schemaStatus = $schemaStatus ?? ['ready' => true, 'missing_columns' => []];
+    $schemaReady = $schemaStatus['ready'] ?? true;
+    $missingColumns = $schemaStatus['missing_columns'] ?? [];
+@endphp
 <div class="min-h-screen bg-gray-50 pb-12">
     <div class="hero-admin-card text-white py-8">
         <div class="container mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -36,19 +41,26 @@
                 <p class="text-white/90">أنشئ الشرائح، عدل محتواها، واضبط ترتيب ظهورها في الصفحة الرئيسية.</p>
             </div>
             <div class="flex flex-wrap gap-3">
-                @if($slides->isEmpty())
-                    <form method="POST" action="{{ route('admin.hero-slides.initialize-defaults') }}" onsubmit="return confirm('سيتم إنشاء الشرائح الافتراضية الحالية لتعديلها. هل أنت متأكد؟');">
-                        @csrf
-                        <button type="submit" class="bg-white/20 hover:bg-white/30 text-white font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition">
-                            <i class="fas fa-download"></i>
-                            استيراد الشرائح الحالية
-                        </button>
-                    </form>
+                @if($schemaReady)
+                    @if($slides->isEmpty())
+                        <form method="POST" action="{{ route('admin.hero-slides.initialize-defaults') }}" onsubmit="return confirm('سيتم إنشاء الشرائح الافتراضية الحالية لتعديلها. هل أنت متأكد؟');">
+                            @csrf
+                            <button type="submit" class="bg-white/20 hover:bg-white/30 text-white font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition">
+                                <i class="fas fa-download"></i>
+                                استيراد الشرائح الحالية
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('admin.hero-slides.create') }}" class="bg-white text-orange-600 hover:bg-gray-100 font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition">
+                        <i class="fas fa-plus"></i>
+                        شريحة جديدة
+                    </a>
+                @else
+                    <div class="bg-white/20 text-white font-semibold px-5 py-3 rounded-xl flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i>
+                        الترقية مطلوبة قبل إدارة الشرائح
+                    </div>
                 @endif
-                <a href="{{ route('admin.hero-slides.create') }}" class="bg-white text-orange-600 hover:bg-gray-100 font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition">
-                    <i class="fas fa-plus"></i>
-                    شريحة جديدة
-                </a>
                 <a href="{{ route('home') }}" target="_blank" class="bg-white/20 hover:bg-white/30 text-white font-semibold px-5 py-3 rounded-xl flex items-center gap-2 transition">
                     <i class="fas fa-eye"></i>
                     عرض الصفحة الرئيسية
@@ -79,6 +91,24 @@
             </div>
         @endif
 
+        @unless($schemaReady)
+            <div class="mb-6 p-5 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl leading-7">
+                <p class="font-semibold text-amber-900 mb-2">تم تعطيل إدارة سلايدر الهيرو مؤقتاً.</p>
+                <p class="text-sm mb-2">
+                    لتفعيل هذه الصفحة يرجى تشغيل أوامر التهجير على الخادم (مثال:
+                    <code class="bg-white/90 px-2 py-0.5 rounded text-xs text-amber-900">php artisan migrate --force</code>)
+                    ثم إعادة تحميل الصفحة.
+                </p>
+                @if(!empty($missingColumns))
+                    <p class="text-sm">
+                        <span class="font-semibold">المكونات الناقصة:</span>
+                        {{ implode('، ', $missingColumns) }}
+                    </p>
+                @endif
+            </div>
+        @endunless
+
+        @if($schemaReady)
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div class="bg-white rounded-2xl shadow p-5">
                 <p class="text-sm text-gray-500 mb-1">إجمالي الشرائح</p>
@@ -189,6 +219,7 @@
                 </div>
             </form>
         </div>
+        @endif
     </div>
 </div>
 @endsection
