@@ -467,6 +467,7 @@ class Workshop extends Model
                 ->where('table_schema', $database)
                 ->where('table_name', $table)
                 ->where('index_name', $indexName)
+                ->where('index_type', 'FULLTEXT')
                 ->count();
 
             return $count > 0;
