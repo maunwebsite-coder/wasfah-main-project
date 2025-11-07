@@ -382,15 +382,20 @@ document.addEventListener('DOMContentLoaded', function() {
         itemElement.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            
+
             // إزالة القائمة المنسدلة قبل الانتقال
             removeExistingSuggestions();
-            
-            if (type === 'recipe') {
-                window.location.href = `/recipe/${item.recipe_id}`;
-            } else {
-                window.location.href = `/workshops/${item.id}`;
+
+            const targetSlug = type === 'recipe'
+                ? (item.slug || item.recipe_slug || item.recipe_id)
+                : (item.slug || item.workshop_slug || item.id);
+
+            if (!targetSlug) {
+                return;
             }
+
+            const targetPath = type === 'recipe' ? '/recipe' : '/workshops';
+            window.location.href = `${targetPath}/${encodeURIComponent(String(targetSlug))}`;
         });
         
         return itemElement;
