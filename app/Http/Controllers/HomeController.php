@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HeroSlide;
 use App\Models\Workshop;
 use App\Models\Recipe;
 use App\Models\Tool;
@@ -86,9 +87,11 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
+        $authenticatedUser = auth()->user();
+
         // إضافة حالة الحفظ للمستخدمين المسجلين
-        if (auth()->check()) {
-            $user = auth()->user();
+        if ($authenticatedUser) {
+            $user = $authenticatedUser;
             $savedRecipes = $user->interactions()
                 ->where('is_saved', true)
                 ->pluck('recipe_id')
@@ -120,10 +123,32 @@ class HomeController extends Controller
             'links' => $this->resolveLinksHeroMedia(),
         ];
 
+        $isAuthenticated = (bool) $authenticatedUser;
+        $isChefUser = $authenticatedUser?->isChef() ?? false;
+
+        $createWorkshopAction = [
+            'label' => $isChefUser ? 'أنشئ ورشتك الآن' : ($isAuthenticated ? 'أكمل ملفك كشيف وأنشئ ورشتك' : 'انضم كشيف وأنشئ ورشتك'),
+            'url' => $isChefUser ? route('chef.workshops.create') : ($isAuthenticated ? route('onboarding.show') : route('login')),
+            'icon' => $isChefUser ? 'fas fa-plus-circle' : 'fas fa-user-plus',
+            'type' => 'accent',
+            'open_in_new_tab' => false,
+        ];
+
+        $createWasfahLinkAction = [
+            'label' => $isChefUser ? 'أنشئ Wasfah Link الآن' : ($isAuthenticated ? 'أكمل ملفك لتفعيل Wasfah Links' : 'سجل وابدأ Wasfah Links'),
+            'url' => $isChefUser ? route('chef.links.edit') : ($isAuthenticated ? route('onboarding.show') : route('register')),
+            'icon' => 'fas fa-link',
+            'type' => 'primary',
+            'open_in_new_tab' => false,
+        ];
+
+        $managedHeroSlides = HeroSlide::active()->ordered()->get();
+        $heroSlides = $this->transformHeroSlides($managedHeroSlides, $heroMedia, $createWorkshopAction, $createWasfahLinkAction);
+
         $bookedWorkshopIds = [];
 
-        if (auth()->check()) {
-            $bookedWorkshopIds = auth()->user()
+        if ($authenticatedUser) {
+            $bookedWorkshopIds = $authenticatedUser
                 ->workshopBookings()
                 ->pluck('workshop_id')
                 ->unique()
@@ -138,6 +163,7 @@ class HomeController extends Controller
             'featuredRecipes',
             'hasUpcomingWorkshops',
             'heroMedia',
+            'heroSlides',
             'homeTools',
             'bookedWorkshopIds'
         ));
@@ -245,7 +271,7 @@ class HomeController extends Controller
      */
     protected function resolveLinksHeroMedia(): array
     {
-        $fallback = asset('image/wasfah-links.png');
+        $fallback = asset('image/wasfah-links.webm');
 
         return [
             'desktop' => $fallback,
@@ -267,5 +293,214 @@ class HomeController extends Controller
         }
 
         return asset('storage/' . ltrim($path, '/'));
+    }
+
+    protected function transformHeroSlides(Collection $managedSlides, array $heroMedia, array $createWorkshopAction, array $createWasfahLinkAction): array
+    {
+        if ($managedSlides->isEmpty()) {
+            return $this->defaultHeroSlides($heroMedia, $createWorkshopAction, $createWasfahLinkAction);
+        }
+
+        $fallbackDesktop = data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'));
+        $fallbackMobile = data_get($heroMedia, 'workshop.mobile', $fallbackDesktop);
+
+        return $managedSlides->map(function (HeroSlide $slide) use ($fallbackDesktop, $fallbackMobile, $createWorkshopAction, $createWasfahLinkAction) {
+            $desktop = $slide->desktop_image_url ?? $fallbackDesktop;
+            $mobile = $slide->mobile_image_url ?? $slide->desktop_image_url ?? $fallbackMobile;
+
+            $features = collect($slide->features ?? [])->filter()->values()->all();
+
+            $actions = collect($slide->actions ?? [])
+                ->map(fn ($action) => $this->resolveHeroSlideAction($action, $createWorkshopAction, $createWasfahLinkAction))
+                ->filter()
+                ->values()
+                ->all();
+
+            return [
+                'badge' => $slide->badge,
+                'title' => $slide->title,
+                'description' => $slide->description,
+                'features' => $features,
+                'image' => $desktop,
+                'mobile_image' => $mobile,
+                'image_alt' => $slide->image_alt ?: $slide->title,
+                'actions' => $actions,
+            ];
+        })->all();
+    }
+
+    protected function defaultHeroSlides(array $heroMedia, array $createWorkshopAction, array $createWasfahLinkAction): array
+    {
+        return [
+            [
+                'badge' => 'ورشات العمل',
+                'title' => 'ورشات حلويات احترافية',
+                'description' => 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.',
+                'features' => [
+                    'جلسات تفاعلية محدودة العدد',
+                    'ملفات تطبيقية وشهادة حضور',
+                ],
+                'image' => data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png')),
+                'mobile_image' => data_get($heroMedia, 'workshop.mobile', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'))),
+                'image_alt' => 'ورشة عمل للحلويات الاحترافية',
+                'actions' => [
+                    [
+                        'label' => 'استكشف الورشات',
+                        'url' => route('workshops'),
+                        'icon' => 'fas fa-chalkboard-teacher',
+                        'type' => 'primary',
+                        'open_in_new_tab' => false,
+                    ],
+                    [
+                        'label' => 'جدول الورشات',
+                        'url' => route('workshops'),
+                        'icon' => 'fas fa-calendar-alt',
+                        'type' => 'secondary',
+                        'open_in_new_tab' => false,
+                    ],
+                ],
+            ],
+            [
+                'badge' => 'للشيفات',
+                'title' => 'أنشئ ورشتك على وصفة',
+                'description' => 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق مصممة للشيفات.',
+                'features' => [
+                    'لوحة تحكم لإدارة الجلسات والمدفوعات',
+                    'رابط تسجيل مباشر للمتدربين',
+                    'دعم فني وخبراء يساعدونك في كل خطوة',
+                ],
+                'image' => data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'))),
+                'mobile_image' => data_get($heroMedia, 'chef.mobile', data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png')))),
+                'image_alt' => 'شيف يطلق ورشته الخاصة',
+                'actions' => [
+                    $createWorkshopAction,
+                ],
+            ],
+            [
+                'badge' => 'Wasfah Links',
+                'title' => 'Wasfah Links للشيفات',
+                'description' => 'اجمع ورشاتك وروابطك المهمة في صفحة واحدة قابلة للمشاركة مع متابعيك.',
+                'features' => [
+                    'صفحة مخصصة باسمك مع رابط قصير',
+                    'تحكم كامل من لوحة الشيف لتحديث المحتوى فوراً',
+                    'مثالية لمشاركتها على إنستغرام وواتساب',
+                ],
+                'image' => data_get($heroMedia, 'links.desktop', asset('image/wasfah-links.webm')),
+                'mobile_image' => data_get($heroMedia, 'links.mobile', data_get($heroMedia, 'links.desktop', asset('image/wasfah-links.webm'))),
+                'image_alt' => 'صفحة Wasfah Links للشيف',
+                'actions' => [
+                    $createWasfahLinkAction,
+                    [
+                        'label' => 'استعرض Wasfah Links',
+                        'url' => route('links'),
+                        'icon' => 'fas fa-eye',
+                        'type' => 'secondary',
+                        'open_in_new_tab' => false,
+                    ],
+                ],
+            ],
+            [
+                'badge' => 'أدوات الشيف',
+                'title' => 'دليل أدوات الشيف',
+                'description' => 'اختيارات دقيقة لأدوات تساعدك على الإتقان.',
+                'features' => [
+                    'قوائم محدثة وروابط موثوقة',
+                    'نصائح استخدام وصيانة مختصرة',
+                ],
+                'image' => data_get($heroMedia, 'tool.desktop', asset('image/tnl.png')),
+                'mobile_image' => data_get($heroMedia, 'tool.mobile', data_get($heroMedia, 'tool.desktop', asset('image/tnl.png'))),
+                'image_alt' => 'مجموعة أدوات لتحضير الحلويات',
+                'actions' => [
+                    [
+                        'label' => 'استعرض أدوات الشيف',
+                        'url' => route('tools'),
+                        'icon' => 'fas fa-toolbox',
+                        'type' => 'primary',
+                        'open_in_new_tab' => false,
+                    ],
+                    [
+                        'label' => 'الأدوات المحفوظة',
+                        'url' => route('saved.index'),
+                        'icon' => 'fas fa-heart',
+                        'type' => 'secondary',
+                        'open_in_new_tab' => false,
+                    ],
+                ],
+            ],
+            [
+                'badge' => 'الوصفات',
+                'title' => 'مكتبة وصفات عالمية',
+                'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
+                'features' => [
+                    'تصنيفات حسب المستوى والمناسبة',
+                    'حفظ ومزامنة وصفاتك المفضلة',
+                ],
+                'image' => data_get($heroMedia, 'recipe.desktop', asset('image/Brownies.png')),
+                'mobile_image' => data_get($heroMedia, 'recipe.mobile', data_get($heroMedia, 'recipe.desktop', asset('image/Brownies.png'))),
+                'image_alt' => 'حلى براونيز فاخرة',
+                'actions' => [
+                    [
+                        'label' => 'ابدأ اكتشاف الوصفات',
+                        'url' => route('recipes'),
+                        'icon' => 'fas fa-utensils',
+                        'type' => 'primary',
+                        'open_in_new_tab' => false,
+                    ],
+                    [
+                        'label' => 'الوصفات المحفوظة',
+                        'url' => route('saved.index'),
+                        'icon' => 'fas fa-bookmark',
+                        'type' => 'secondary',
+                        'open_in_new_tab' => false,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    protected function resolveHeroSlideAction(array $action, array $createWorkshopAction, array $createWasfahLinkAction): ?array
+    {
+        $behavior = $action['behavior'] ?? 'static';
+
+        if (in_array($behavior, ['create_workshop', 'create_wasfah_link'], true)) {
+            $base = $behavior === 'create_workshop' ? $createWorkshopAction : $createWasfahLinkAction;
+
+            if (!empty($action['label'])) {
+                $base['label'] = $action['label'];
+            }
+
+            if (!empty($action['icon'])) {
+                $base['icon'] = $action['icon'];
+            }
+
+            if (!empty($action['type'])) {
+                $base['type'] = $action['type'];
+            }
+
+            if (!empty($action['url'])) {
+                $base['url'] = $action['url'];
+            }
+
+            if (array_key_exists('open_in_new_tab', $action)) {
+                $base['open_in_new_tab'] = (bool) $action['open_in_new_tab'];
+            }
+
+            return $base;
+        }
+
+        $label = $action['label'] ?? null;
+        $url = $action['url'] ?? null;
+
+        if (!$label || !$url) {
+            return null;
+        }
+
+        return [
+            'label' => $label,
+            'url' => $url,
+            'icon' => $action['icon'] ?? null,
+            'type' => $action['type'] ?? 'primary',
+            'open_in_new_tab' => (bool) ($action['open_in_new_tab'] ?? false),
+        ];
     }
 }

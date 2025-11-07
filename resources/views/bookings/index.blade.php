@@ -17,6 +17,18 @@
         'confirmed' => 'bg-green-100 text-green-700',
         'cancelled' => 'bg-red-100 text-red-700',
     ];
+
+    $cardBackgroundClasses = [
+        'pending' => 'border-amber-100 bg-gradient-to-br from-amber-50 via-white to-white shadow-amber-100/50',
+        'confirmed' => 'border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-white shadow-emerald-100/50',
+        'cancelled' => 'border-rose-100 bg-gradient-to-br from-rose-50 via-white to-white shadow-rose-100/50',
+    ];
+
+    $accentGradientClasses = [
+        'pending' => 'from-amber-400/80 via-amber-300/70 to-transparent',
+        'confirmed' => 'from-emerald-400/80 via-emerald-300/70 to-transparent',
+        'cancelled' => 'from-rose-400/80 via-rose-300/70 to-transparent',
+    ];
 @endphp
 
 @section('content')
@@ -85,62 +97,63 @@
                 </div>
 
                 @if ($bookings->count())
-                    <div class="mt-5 overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100 text-right text-sm">
-                            <thead>
-                                <tr class="text-gray-500">
-                                    <th class="px-4 py-2 font-semibold">الورشة</th>
-                                    <th class="px-4 py-2 font-semibold">التاريخ</th>
-                                    <th class="px-4 py-2 font-semibold">الحالة</th>
-                                    <th class="px-4 py-2 font-semibold">طريقة الحضور</th>
-                                    <th class="px-4 py-2 font-semibold">إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach ($bookings as $booking)
-                                    @php
-                                        $workshop = $booking->workshop;
-                                        $start = optional($workshop?->start_date);
-                                        $status = $booking->status;
-                                    @endphp
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-4">
-                                            <div class="font-semibold text-gray-800">
-                                                {{ $workshop?->title ?? 'ورشة بدون عنوان' }}
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                رقم الحجز: {{ strtoupper(Str::slug($booking->public_code ?? $booking->id)) }}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 text-gray-600">
+                    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($bookings as $booking)
+                            @php
+                                $workshop = $booking->workshop;
+                                $start = optional($workshop?->start_date);
+                                $status = $booking->status;
+                                $cardBackground = $cardBackgroundClasses[$status] ?? 'border-gray-100 bg-white';
+                                $accentGradient = $accentGradientClasses[$status] ?? 'from-gray-200 via-gray-100 to-transparent';
+                            @endphp
+                            <article class="group relative flex h-full flex-col rounded-2xl border {{ $cardBackground }} p-5 text-right shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">الورشة</p>
+                                        <h3 class="mt-1 text-lg font-bold text-gray-900">
+                                            {{ $workshop?->title ?? 'ورشة بدون عنوان' }}
+                                        </h3>
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            رقم الحجز: {{ strtoupper(Str::slug($booking->public_code ?? $booking->id)) }}
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium {{ $statusClasses[$status] ?? 'bg-gray-100 text-gray-600' }}">
+                                        <i class="fas fa-circle text-[6px]"></i>
+                                        {{ $statusLabels[$status] ?? $status }}
+                                    </span>
+                                </div>
+
+                                <dl class="mt-4 grid grid-cols-1 gap-4 text-sm text-gray-600 sm:grid-cols-2">
+                                    <div class="rounded-xl border border-white/60 bg-white/40 px-4 py-3">
+                                        <dt class="text-xs font-semibold text-gray-400">التاريخ</dt>
+                                        <dd class="mt-1 font-semibold text-gray-800">
                                             {{ $start ? $start->locale('ar')->translatedFormat('d F Y • h:i a') : '—' }}
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium {{ $statusClasses[$status] ?? 'bg-gray-100 text-gray-600' }}">
-                                                <i class="fas fa-circle text-[6px]"></i>
-                                                {{ $statusLabels[$status] ?? $status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-4 text-gray-600">
+                                        </dd>
+                                    </div>
+                                    <div class="rounded-xl border border-white/60 bg-white/40 px-4 py-3">
+                                        <dt class="text-xs font-semibold text-gray-400">طريقة الحضور</dt>
+                                        <dd class="mt-1 font-semibold text-gray-800">
                                             {{ $workshop?->is_online ? 'أونلاين' : 'حضوري' }}
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <div class="flex items-center gap-3 text-sm">
-                                                <a href="{{ route('bookings.show', $booking) }}" class="text-orange-600 hover:text-orange-700 font-semibold">
-                                                    التفاصيل
-                                                </a>
-                                                @if ($status === 'confirmed' && $workshop?->is_online)
-                                                    <a href="{{ $booking->secure_join_url }}" class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 focus:ring-offset-white">
-                                                        <i class="fas fa-door-open text-xs"></i>
-                                                        دخول الورشة
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                        </dd>
+                                    </div>
+                                </dl>
+
+                                <div class="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+                                    <a href="{{ route('bookings.show', $booking) }}" class="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 py-2 text-orange-600 transition hover:border-orange-300 hover:bg-orange-50">
+                                        <i class="fas fa-info-circle text-xs"></i>
+                                        التفاصيل
+                                    </a>
+                                    @if ($status === 'confirmed' && $workshop?->is_online)
+                                        <a href="{{ $booking->secure_join_url }}" class="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2 text-white shadow-sm transition hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 focus:ring-offset-white">
+                                            <i class="fas fa-door-open text-xs"></i>
+                                            دخول الورشة
+                                        </a>
+                                    @endif
+                                </div>
+
+                                <div class="pointer-events-none absolute inset-x-4 bottom-2 h-1 rounded-full bg-gradient-to-r {{ $accentGradient }} opacity-80"></div>
+                            </article>
+                        @endforeach
                     </div>
 
                     <div class="mt-6">

@@ -325,7 +325,7 @@ class Breadcrumbs
     {
         $trail = [
             [
-                'label' => 'منطقة الإدارة',
+                'label' => 'منطقة الإدمن',
                 'url' => self::routeUrl('admin.dashboard'),
             ],
         ];
@@ -454,11 +454,11 @@ class Breadcrumbs
     {
         return [
             'dashboard' => [
-                'label' => 'لوحة التحكم',
+                'label' => 'منطقة الإدارة (لوحة التحكم)',
                 'route' => 'admin.dashboard',
             ],
             'admin-area' => [
-                'label' => 'منطقة الإدمن',
+                'label' => 'منطقة الإدارة (لوحة التحكم)',
                 'route' => 'admin.admin-area',
             ],
             'tools' => [
@@ -488,6 +488,10 @@ class Breadcrumbs
             'visibility' => [
                 'label' => 'إعدادات الظهور',
                 'route' => 'admin.visibility.index',
+            ],
+            'hero-slides' => [
+                'label' => 'سلايدر الهيرو',
+                'route' => 'admin.hero-slides.index',
             ],
             'chefs' => [
                 'label' => 'طلبات الشيفات',
@@ -618,6 +622,12 @@ class Breadcrumbs
                     ];
                 }
                 break;
+
+            case 'hero-slides':
+                return self::resourceActionTrail($action, 'heroSlide', [
+                    'create' => 'إضافة شريحة جديدة',
+                    'edit' => fn ($slide) => 'تعديل: ' . self::modelLabel($slide, 'title', 'الشريحة'),
+                ]);
 
             case 'chefs':
                 if ($action === 'requests') {

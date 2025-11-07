@@ -12,6 +12,7 @@ use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
 use App\Http\Controllers\ReferralDashboardController;
 use App\Http\Controllers\UserMeetingController;
+use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 use App\Http\Controllers\Admin\UserManagementController as AdminUserManagementController;
 use App\Models\Recipe;
@@ -329,6 +330,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('visibility/clear-cache', [App\Http\Controllers\Admin\VisibilityController::class, 'clearCache'])->name('visibility.clear-cache');
     Route::post('visibility/initialize-defaults', [App\Http\Controllers\Admin\VisibilityController::class, 'initializeDefaults'])->name('visibility.initialize-defaults');
     Route::post('visibility/bulk-update', [App\Http\Controllers\Admin\VisibilityController::class, 'bulkUpdate'])->name('visibility.bulk-update');
+
+    // إدارة شرائح الهيرو
+    Route::resource('hero-slides', HeroSlideController::class)->except(['show']);
+    Route::post('hero-slides/{heroSlide}/toggle', [HeroSlideController::class, 'toggleStatus'])->name('hero-slides.toggle');
+    Route::post('hero-slides/reorder', [HeroSlideController::class, 'reorder'])->name('hero-slides.reorder');
+    Route::post('hero-slides/initialize-defaults', [HeroSlideController::class, 'initializeDefaults'])->name('hero-slides.initialize-defaults');
 
     // إدارة المستخدمين
     Route::get('users', [AdminUserManagementController::class, 'index'])->name('users.index');

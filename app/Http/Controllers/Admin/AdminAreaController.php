@@ -118,6 +118,11 @@ class AdminAreaController extends Controller
                 'route' => 'admin.tools.create',
             ],
             [
+                'label' => 'شريحة هيرو',
+                'icon' => 'fa-images',
+                'route' => 'admin.hero-slides.create',
+            ],
+            [
                 'label' => 'برنامج الإحالات',
                 'icon' => 'fa-link',
                 'route' => 'admin.referrals.index',
@@ -189,6 +194,10 @@ class AdminAreaController extends Controller
                     [
                         'label' => 'صفحة روابط Wasfah',
                         'url' => 'https://wasfah.ae/wasfah-links',
+                    ],
+                    [
+                        'label' => 'إدارة سلايدر الهيرو',
+                        'route' => 'admin.hero-slides.index',
                     ],
                 ],
             ],

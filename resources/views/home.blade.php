@@ -1190,29 +1190,48 @@
                 border-radius: 1.5rem;
             }
             .hero-actions {
-                gap: 0.75rem;
+                gap: 0.5rem;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .hero-action {
+                flex: 1 1 calc(50% - 0.5rem);
+                min-width: 140px;
+                padding: 0.65rem 1rem;
+                font-size: 0.92rem;
             }
             .hero-badge {
                 font-size: 0.9rem;
                 padding: 0.5rem 1.15rem;
             }
             .hero-main-image {
-                max-height: 160px;
+                max-height: none;
             }
             .hero-media {
-                min-height: 120px;
+                min-height: 0;
+                aspect-ratio: 1 / 1;
+            }
+            .hero-media picture,
+            .hero-media img,
+            .hero-media video {
+                height: 100%;
+                width: 100%;
             }
             .hero-content {
-                gap: 0.7rem;
+                gap: 0.55rem;
             }
             .hero-title {
-                font-size: 1.7rem;
+                font-size: 1.4rem;
             }
             .hero-description {
-                font-size: 0.95rem;
+                font-size: 0.85rem;
             }
             .hero-features {
-                gap: 0.5rem;
+                gap: 0.45rem;
+            }
+            .hero-feature {
+                font-size: 0.82rem;
             }
             .hero-latest-card {
                 border-radius: 1.5rem;
@@ -1268,10 +1287,22 @@
 
         @media (max-width: 480px) {
             .hero-title {
-                font-size: 1.85rem;
+                font-size: 1.2rem;
             }
             .hero-description {
-                font-size: 0.98rem;
+                font-size: 0.78rem;
+            }
+            .hero-feature {
+                font-size: 0.78rem;
+            }
+            .hero-actions {
+                gap: 0.35rem;
+            }
+            .hero-action {
+                flex-basis: calc(50% - 0.35rem);
+                min-width: 120px;
+                padding: 0.5rem 0.85rem;
+                font-size: 0.8rem;
             }
             .hero-latest-header h2 {
                 font-size: 1.35rem;
@@ -1406,140 +1437,6 @@
     <main class="container mx-auto px-4 py-6 lg:py-8">
         <div class="home-hero-shell">
             <div class="home-hero-grid">
-                @php
-                    $isAuthenticated = auth()->check();
-                    $isChefUser = $isAuthenticated && auth()->user()->isChef();
-                    $createWorkshopAction = [
-                        'label' => $isChefUser ? 'أنشئ ورشتك الآن' : ($isAuthenticated ? 'أكمل ملفك كشيف وأنشئ ورشتك' : 'انضم كشيف وأنشئ ورشتك'),
-                        'url' => $isChefUser ? route('chef.workshops.create') : ($isAuthenticated ? route('onboarding.show') : route('login')),
-                        'icon' => $isChefUser ? 'fas fa-plus-circle' : 'fas fa-user-plus',
-                        'type' => 'accent',
-                    ];
-                    $createWasfahLinkAction = [
-                        'label' => $isChefUser ? 'أنشئ Wasfah Link الآن' : ($isAuthenticated ? 'أكمل ملفك لتفعيل Wasfah Links' : 'سجل وابدأ Wasfah Links'),
-                        'url' => $isChefUser ? route('chef.links.edit') : ($isAuthenticated ? route('onboarding.show') : route('register')),
-                        'icon' => 'fas fa-link',
-                        'type' => 'primary',
-                    ];
-                    $heroSlides = [
-                        [
-                            'badge' => 'ورشات العمل',
-                            'title' => 'ورشات حلويات احترافية',
-                            'description' => 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.',
-                            'features' => [
-                                'جلسات تفاعلية محدودة العدد',
-                                'ملفات تطبيقية وشهادة حضور',
-                            ],
-                            'image' => data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png')),
-                            'mobile_image' => data_get($heroMedia ?? [], 'workshop.mobile', data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png'))),
-                            'image_alt' => 'ورشة عمل للحلويات الاحترافية',
-                            'actions' => [
-                                [
-                                    'label' => 'استكشف الورشات',
-                                    'url' => route('workshops'),
-                                    'icon' => 'fas fa-chalkboard-teacher',
-                                    'type' => 'primary',
-                                ],
-                                [
-                                    'label' => 'جدول الورشات',
-                                    'url' => route('workshops'),
-                                    'icon' => 'fas fa-calendar-alt',
-                                    'type' => 'secondary',
-                                ],
-                            ],
-                        ],
-                        [
-                            'badge' => 'للشيفات',
-                            'title' => 'أنشئ ورشتك على وصفة',
-                            'description' => 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق مصممة للشيفات.',
-                            'features' => [
-                                'لوحة تحكم لإدارة الجلسات والمدفوعات',
-                                'رابط تسجيل مباشر للمتدربين',
-                                'دعم فني وخبراء يساعدونك في كل خطوة',
-                            ],
-                            'image' => data_get($heroMedia ?? [], 'chef.desktop', data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png'))),
-                            'mobile_image' => data_get($heroMedia ?? [], 'chef.mobile', data_get($heroMedia ?? [], 'chef.desktop', data_get($heroMedia ?? [], 'workshop.desktop', asset('image/wterm.png')))),
-                            'image_alt' => 'شيف يطلق ورشته الخاصة',
-                            'actions' => [
-                                $createWorkshopAction,
-                            ],
-                        ],
-                        [
-                            'badge' => 'Wasfah Links',
-                            'title' => 'Wasfah Links للشيفات',
-                            'description' => 'اجمع ورشاتك وروابطك المهمة في صفحة واحدة قابلة للمشاركة مع متابعيك.',
-                            'features' => [
-                                'صفحة مخصصة باسمك مع رابط قصير',
-                                'تحكم كامل من لوحة الشيف لتحديث المحتوى فوراً',
-                                'مثالية لمشاركتها على إنستغرام وواتساب',
-                            ],
-                            'image' => data_get($heroMedia ?? [], 'links.desktop', asset('image/wasfah-links.png')),
-                            'mobile_image' => data_get($heroMedia ?? [], 'links.mobile', data_get($heroMedia ?? [], 'links.desktop', asset('image/wasfah-links.png'))),
-                            'image_alt' => 'صفحة Wasfah Links للشيف',
-                            'actions' => [
-                                $createWasfahLinkAction,
-                                [
-                                    'label' => 'استعرض Wasfah Links',
-                                    'url' => route('links'),
-                                    'icon' => 'fas fa-eye',
-                                    'type' => 'secondary',
-                                ],
-                            ],
-                        ],
-                        [
-                            'badge' => 'أدوات الشيف',
-                            'title' => 'دليل أدوات الشيف',
-                            'description' => 'اختيارات دقيقة لأدوات تساعدك على الإتقان.',
-                            'features' => [
-                                'قوائم محدثة وروابط موثوقة',
-                                'نصائح استخدام وصيانة مختصرة',
-                            ],
-                            'image' => data_get($heroMedia ?? [], 'tool.desktop', asset('image/tnl.png')),
-                            'mobile_image' => data_get($heroMedia ?? [], 'tool.mobile', data_get($heroMedia ?? [], 'tool.desktop', asset('image/tnl.png'))),
-                            'image_alt' => 'مجموعة أدوات لتحضير الحلويات',
-                            'actions' => [
-                                [
-                                    'label' => 'استعرض أدوات الشيف',
-                                    'url' => route('tools'),
-                                    'icon' => 'fas fa-toolbox',
-                                    'type' => 'primary',
-                                ],
-                                [
-                                    'label' => 'الأدوات المحفوظة',
-                                    'url' => route('saved.index'),
-                                    'icon' => 'fas fa-heart',
-                                    'type' => 'secondary',
-                                ],
-                            ],
-                        ],
-                        [
-                            'badge' => 'الوصفات',
-                            'title' => 'مكتبة وصفات عالمية',
-                            'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
-                            'features' => [
-                                'تصنيفات حسب المستوى والمناسبة',
-                                'حفظ ومزامنة وصفاتك المفضلة',
-                            ],
-                            'image' => data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png')),
-                            'mobile_image' => data_get($heroMedia ?? [], 'recipe.mobile', data_get($heroMedia ?? [], 'recipe.desktop', asset('image/Brownies.png'))),
-                            'image_alt' => 'حلى براونيز فاخرة',
-                            'actions' => [
-                                [
-                                    'label' => 'ابدأ اكتشاف الوصفات',
-                                    'url' => route('recipes'),
-                                    'icon' => 'fas fa-utensils',
-                                    'type' => 'primary',
-                                ],
-                                [
-                                    'label' => 'الوصفات المحفوظة',
-                                    'url' => route('saved.index'),
-                                    'icon' => 'fas fa-bookmark',
-                                    'type' => 'secondary',
-                                ],
-                            ],
-                        ],
-                    ];
-                @endphp
                 <!-- القسم الرئيسي -->
                 <article class="hero-main-card">
                     <div class="hero-slider swiper">
@@ -1548,10 +1445,26 @@
                                 <div class="swiper-slide">
                                     <div class="hero-slide">
                                         <div class="hero-media">
-                                            <picture>
-                                                <source media="(max-width: 640px)" srcset="{{ $slide['mobile_image'] ?? $slide['image'] }}">
-                                                <img src="{{ $slide['image'] }}" alt="{{ $slide['image_alt'] }}" class="hero-main-image">
-                                            </picture>
+                                            @php
+                                                $desktopMedia = $slide['image'] ?? '';
+                                                $mobileMedia = $slide['mobile_image'] ?? $desktopMedia;
+                                                $hasVideoMedia = \Illuminate\Support\Str::endsWith($desktopMedia, '.webm') || \Illuminate\Support\Str::endsWith($mobileMedia, '.webm');
+                                            @endphp
+
+                                            @if($hasVideoMedia)
+                                                <video class="hero-main-image" autoplay muted loop playsinline preload="metadata">
+                                                    @if($mobileMedia && $mobileMedia !== $desktopMedia)
+                                                        <source src="{{ $mobileMedia }}" media="(max-width: 640px)" type="video/webm">
+                                                    @endif
+                                                    <source src="{{ $desktopMedia }}" type="video/webm">
+                                                    {{ __('متصفحك لا يدعم تشغيل الفيديو.') }}
+                                                </video>
+                                            @else
+                                                <picture>
+                                                    <source media="(max-width: 640px)" srcset="{{ $mobileMedia }}">
+                                                    <img src="{{ $desktopMedia }}" alt="{{ $slide['image_alt'] }}" class="hero-main-image">
+                                                </picture>
+                                            @endif
                                         </div>
                                         <div class="hero-content">
                                             @if(!empty($slide['badge']))
@@ -1577,9 +1490,11 @@
                                                             $actionClass = $actionType === 'secondary'
                                                                 ? 'secondary-action'
                                                                 : ($actionType === 'accent' ? 'accent-action' : 'primary-action');
+                                                            $openInNewTab = !empty($action['open_in_new_tab']);
                                                         @endphp
-                                                        <a href="{{ $action['url'] }}"
-                                                           class="hero-action {{ $actionClass }}">
+                                                        <a href="{{ $action['url'] ?? '#' }}"
+                                                           class="hero-action {{ $actionClass }}"
+                                                           @if($openInNewTab) target="_blank" rel="noopener noreferrer" @endif>
                                                             <span>{{ $action['label'] }}</span>
                                                             @if(!empty($action['icon']))
                                                                 <i class="{{ $action['icon'] }}"></i>
