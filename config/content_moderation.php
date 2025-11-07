@@ -72,7 +72,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'image' => [
-        'max_kilobytes' => (int) env('IMAGE_UPLOAD_MAX_KB', 2048),
+        'max_kilobytes' => (int) env('IMAGE_UPLOAD_MAX_KB', 5120),
 
         'allowed_mime_types' => [
             'image/jpeg',
@@ -83,9 +83,9 @@ return [
         ],
 
         'processing' => [
-            'quality' => (int) env('IMAGE_PROCESSING_QUALITY', 85),
-            'max_width' => (int) env('IMAGE_PROCESSING_MAX_WIDTH', 1200),
-            'max_height' => (int) env('IMAGE_PROCESSING_MAX_HEIGHT', 1200),
+            'quality' => (int) env('IMAGE_PROCESSING_QUALITY', 80),
+            'max_width' => (int) env('IMAGE_PROCESSING_MAX_WIDTH', 1920),
+            'max_height' => (int) env('IMAGE_PROCESSING_MAX_HEIGHT', 1920),
         ],
 
         'review' => [

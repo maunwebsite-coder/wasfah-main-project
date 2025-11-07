@@ -8,6 +8,10 @@ use Illuminate\Support\Str;
 
 class ImageCompressionService
 {
+    private const DEFAULT_MAX_WIDTH = 1920;
+    private const DEFAULT_MAX_HEIGHT = 1920;
+    private const DEFAULT_QUALITY = 80;
+
     /**
      * التحقق من إمكانيات النظام
      *
@@ -42,37 +46,30 @@ class ImageCompressionService
     public static function compressAndStore(
         UploadedFile $file,
         string $directory = 'images',
-        int $quality = 80,
-        int $maxWidth = 1200,
-        int $maxHeight = 1200,
+        int $quality = self::DEFAULT_QUALITY,
+        int $maxWidth = self::DEFAULT_MAX_WIDTH,
+        int $maxHeight = self::DEFAULT_MAX_HEIGHT,
         $model = null
     ): ?string {
         try {
-            // التحقق من وجود PHP GD extension
-            if (!extension_loaded('gd')) {
-                \Log::warning('PHP GD extension غير متوفر، سيتم حفظ الصورة بدون ضغط');
+            if (!extension_loaded('gd') || !function_exists('imagewebp')) {
+                \Log::warning('GD/WebP not available; storing original file without optimization.');
                 return $file->store($directory, 'public');
             }
 
-            // التحقق من نوع الملف
-            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-            if (!in_array($file->getMimeType(), $allowedTypes)) {
+            $mime = $file->getMimeType() ?: '';
+            if (!self::isSupportedMime($mime)) {
                 throw new \InvalidArgumentException('نوع الملف غير مدعوم');
             }
 
-            // قراءة الصورة
-            $imageData = file_get_contents($file->getPathname());
-            $image = imagecreatefromstring($imageData);
-
+            $image = self::createImageResource($file);
             if (!$image) {
-                throw new \Exception('فشل في قراءة الصورة');
+                throw new \RuntimeException('فشل في قراءة الصورة');
             }
 
-            // الحصول على الأبعاد الأصلية
             $originalWidth = imagesx($image);
             $originalHeight = imagesy($image);
 
-            // حساب الأبعاد الجديدة مع الحفاظ على النسبة
             $newDimensions = self::calculateNewDimensions(
                 $originalWidth,
                 $originalHeight,
@@ -80,52 +77,62 @@ class ImageCompressionService
                 $maxHeight
             );
 
-            // إنشاء صورة جديدة بالأبعاد المحدثة
-            $compressedImage = imagecreatetruecolor(
+            $optimizedImage = imagecreatetruecolor(
                 $newDimensions['width'],
                 $newDimensions['height']
             );
 
-            // الحفاظ على الشفافية للصور PNG
-            if ($file->getMimeType() === 'image/png') {
-                imagealphablending($compressedImage, false);
-                imagesavealpha($compressedImage, true);
-                $transparent = imagecolorallocatealpha($compressedImage, 255, 255, 255, 127);
-                imagefill($compressedImage, 0, 0, $transparent);
+            if (self::supportsAlpha($mime)) {
+                imagealphablending($optimizedImage, false);
+                imagesavealpha($optimizedImage, true);
+                $transparent = imagecolorallocatealpha($optimizedImage, 255, 255, 255, 127);
+                imagefill($optimizedImage, 0, 0, $transparent);
+            } else {
+                $background = imagecolorallocate($optimizedImage, 255, 255, 255);
+                imagefill($optimizedImage, 0, 0, $background);
             }
 
-            // تغيير حجم الصورة
             imagecopyresampled(
-                $compressedImage,
+                $optimizedImage,
                 $image,
-                0, 0, 0, 0,
+                0,
+                0,
+                0,
+                0,
                 $newDimensions['width'],
                 $newDimensions['height'],
                 $originalWidth,
                 $originalHeight
             );
 
-            // إنشاء اسم فريد للملف
-            $extension = $file->getClientOriginalExtension();
-            $filename = Str::uuid() . '.' . $extension;
-            $filePath = $directory . '/' . $filename;
+            $tempPath = self::writeWebpTempFile($optimizedImage, $quality);
 
-            // حفظ الصورة المضغوطة
-            $tempPath = tempnam(sys_get_temp_dir(), 'compressed_');
-            
-            switch ($file->getMimeType()) {
-                case 'image/jpeg':
-                case 'image/jpg':
-                    imagejpeg($compressedImage, $tempPath, $quality);
-                    break;
-                case 'image/png':
-                    imagepng($compressedImage, $tempPath, 9 - (int)($quality / 10));
-                    break;
-                case 'image/gif':
-                    imagegif($compressedImage, $tempPath);
-                    break;
-                case 'image/webp':
-                    imagewebp($compressedImage, $tempPath, $quality);
+            $filename = Str::uuid() . '.webp';
+            $relativePath = trim($directory, '/') . '/' . $filename;
+
+            $stream = fopen($tempPath, 'rb');
+            if (!$stream) {
+                throw new \RuntimeException('فشل في قراءة الملف المؤقت بعد التحويل إلى WebP.');
+            }
+
+            try {
+                if (!Storage::disk('public')->put($relativePath, $stream)) {
+                    throw new \RuntimeException('تعذر حفظ الصورة بعد التحويل إلى WebP.');
+                }
+            } finally {
+                fclose($stream);
+            }
+
+            imagedestroy($image);
+            imagedestroy($optimizedImage);
+            @unlink($tempPath);
+
+            return $relativePath;
+        } catch (\Throwable $e) {
+            \Log::error('خطأ في ضغط الصورة: ' . $e->getMessage());
+            return null;
+        }
+    }
                     break;
             }
 
