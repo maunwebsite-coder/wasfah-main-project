@@ -651,12 +651,20 @@
                                             اختر صورة
                                         </div>
                                     </div>
-                                    <input type="file" name="image{{ $i == 1 ? '' : '_' . $i }}" id="image_{{$i}}" class="hidden" 
-                                           accept="image/*" onchange="previewImage(this, {{$i}})">
+                                    <input type="file"
+                                           name="image{{ $i == 1 ? '' : '_' . $i }}"
+                                           id="image_{{$i}}"
+                                           class="hidden"
+                                           accept="image/*"
+                                           onchange="previewImage(this, {{$i}})"
+                                           data-max-size="5120"
+                                           data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                                           data-error-target="#edit_image_{{$i}}_error">
                                     <p class="text-xs text-gray-500 mt-2">
                                         <i class="fas fa-info-circle ml-1"></i>
-                                        JPG, PNG, GIF - الحد الأقصى 2MB
+                                        JPG, PNG, GIF - الحد الأقصى 5MB
                                     </p>
+                                    <p id="edit_image_{{$i}}_error" class="text-xs text-red-600 mt-1 hidden"></p>
                                     @error('image' . ($i == 1 ? '' : '_' . $i))
                                         <div class="error-message mt-2">{{ $message }}</div>
                                     @enderror
@@ -1101,9 +1109,9 @@ function previewImage(input, imageNumber = 1) {
     const previewImg = document.getElementById(`preview-img-${imageNumber}`);
     
     if (input.files && input.files[0]) {
-        // Check file size (2MB limit)
-        if (input.files[0].size > 2 * 1024 * 1024) {
-            showNotification('حجم الصورة يجب أن يكون أقل من 2 ميجابايت', 'error');
+        // Check file size (5MB limit)
+        if (input.files[0].size > 5 * 1024 * 1024) {
+            showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
             input.value = '';
             return;
         }
