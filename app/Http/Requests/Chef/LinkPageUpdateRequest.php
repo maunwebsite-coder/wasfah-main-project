@@ -32,7 +32,7 @@ class LinkPageUpdateRequest extends FormRequest
             'accent_color' => ['nullable', 'regex:/^#?[0-9a-fA-F]{3,8}$/'],
             'is_published' => ['nullable', 'boolean'],
             'show_upcoming_workshop' => ['nullable', 'boolean'],
-            'hero_image' => ['nullable', 'image', 'max:3072'],
+            'hero_image' => ['nullable', 'image', 'max:5120'],
             'remove_hero_image' => ['nullable', 'boolean'],
         ];
     }
