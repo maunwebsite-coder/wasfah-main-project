@@ -492,6 +492,7 @@
         const meetingStarted = Boolean(meetingStartedAtIso);
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const joinModal = document.getElementById('joinConfirmationModal');
+        let joinModalTriggeredMeetingClose = false;
         const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
         const bookingDetailsUrl = @json(route('bookings.show', $booking));
         let hasRedirectedToBookingDetails = false;
@@ -1059,6 +1060,7 @@
             if (joinCancellationNotice) {
                 joinCancellationNotice.classList.add('hidden');
             }
+            joinModalTriggeredMeetingClose = false;
 
             const fallbackConfirmation = 'هل ترغب في الانضمام إلى الجلسة الآن؟';
 
@@ -1075,7 +1077,7 @@
                 const closeButton = joinModal.querySelector('[data-action="close"]');
                 let resolved = false;
 
-                const finish = (result) => {
+                const finish = (result, { skipFullscreenExit = false } = {}) => {
                     if (resolved) {
                         return;
                     }
@@ -1085,7 +1087,8 @@
                     joinModal.classList.add('opacity-0');
                     joinModal.setAttribute('aria-hidden', 'true');
 
-                    joinModal.removeEventListener('click', handleBackdropClick);
+                    joinModal.removeEventListener('pointerdown', blockBackdropInteraction);
+                    joinModal.removeEventListener('click', blockBackdropInteraction);
                     window.removeEventListener('keydown', handleKeydown);
                     confirmButton?.removeEventListener('click', handleConfirm);
                     cancelButton?.removeEventListener('click', handleCancel);
@@ -1097,7 +1100,7 @@
                         previouslyFocused?.focus?.();
                     }, 220);
 
-                    if (!result) {
+                    if (!result && !skipFullscreenExit) {
                         fullscreenController.exit();
                     }
 
@@ -1109,18 +1112,20 @@
                     finish(true);
                 };
                 const handleCancel = () => {
-                    fullscreenController.exit();
-                    finish(false);
-                };
-                const handleBackdropClick = (event) => {
-                    if (event.target === joinModal) {
-                        finish(false);
-                    }
+                    joinModalTriggeredMeetingClose = true;
+                    redirectToBookingDetails();
+                    finish(false, { skipFullscreenExit: true });
                 };
                 const handleKeydown = (event) => {
                     if (event.key === 'Escape') {
                         event.preventDefault();
                         finish(false);
+                    }
+                };
+                const blockBackdropInteraction = (event) => {
+                    if (event.target === joinModal) {
+                        event.preventDefault();
+                        event.stopPropagation();
                     }
                 };
 
@@ -1137,7 +1142,8 @@
                 confirmButton?.addEventListener('click', handleConfirm);
                 cancelButton?.addEventListener('click', handleCancel);
                 closeButton?.addEventListener('click', handleCancel);
-                joinModal.addEventListener('click', handleBackdropClick);
+                joinModal.addEventListener('pointerdown', blockBackdropInteraction);
+                joinModal.addEventListener('click', blockBackdropInteraction);
                 window.addEventListener('keydown', handleKeydown);
             });
         };
@@ -1146,6 +1152,9 @@
             const initializeMeeting = async () => {
                 const confirmed = await requestJoinConfirmation();
                 if (!confirmed) {
+                    if (joinModalTriggeredMeetingClose) {
+                        return;
+                    }
                     if (joinCancellationNotice) {
                         joinCancellationNotice.classList.remove('hidden');
                         joinCancellationNotice.focus?.();

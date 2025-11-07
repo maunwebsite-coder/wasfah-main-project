@@ -63,6 +63,11 @@ class ManualBookingController extends Controller
         // إنشاء إشعار للمستخدم حسب حالة الحجز
         $profileUrl = route('profile');
         $workshop = Workshop::find($request->workshop_id);
+        $workshopSlug = $workshop?->slug;
+        $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
+        $workshopUrl = $workshopSlug
+            ? route('workshop.show', ['workshop' => $workshopSlug])
+            : route('workshops');
         
         if ($request->status === 'confirmed') {
             Notification::createNotification(
@@ -73,7 +78,9 @@ class ManualBookingController extends Controller
                 [
                     'workshop_id' => $workshop->id, 
                     'booking_id' => $booking->id,
-                    'profile_url' => $profileUrl
+                    'workshop_slug' => $workshopSlug,
+                    'profile_url' => $profileUrl,
+                    'action_url' => $bookingShowUrl,
                 ]
             );
             
@@ -85,7 +92,9 @@ class ManualBookingController extends Controller
                 "نحن متحمسون لرؤيتك في ورشة '{$workshop->title}'! تأكد من الوصول في الوقت المحدد.",
                 [
                     'workshop_id' => $workshop->id,
-                    'workshop_title' => $workshop->title
+                    'workshop_slug' => $workshopSlug,
+                    'workshop_title' => $workshop->title,
+                    'action_url' => $workshopUrl,
                 ]
             );
             
@@ -98,7 +107,9 @@ class ManualBookingController extends Controller
                 [
                     'workshop_id' => $workshop->id, 
                     'booking_id' => $booking->id,
-                    'profile_url' => $profileUrl
+                    'workshop_slug' => $workshopSlug,
+                    'profile_url' => $profileUrl,
+                    'action_url' => $bookingShowUrl,
                 ]
             );
             
@@ -110,7 +121,9 @@ class ManualBookingController extends Controller
                 "يرجى مراجعة تفاصيل ورشة '{$workshop->title}' في ملفك الشخصي. سنقوم بتأكيد الحجز قريباً وإرسال جميع التفاصيل المطلوبة.",
                 [
                     'workshop_id' => $workshop->id,
-                    'workshop_title' => $workshop->title
+                    'workshop_slug' => $workshopSlug,
+                    'workshop_title' => $workshop->title,
+                    'action_url' => $workshopUrl,
                 ]
             );
         }
@@ -177,6 +190,10 @@ class ManualBookingController extends Controller
 
         // إنشاء إشعار للمستخدم
         $profileUrl = route('profile');
+        $workshopSlug = $workshop->slug;
+        $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
+        $workshopUrl = route('workshop.show', ['workshop' => $workshopSlug]);
+
         Notification::createNotification(
             $user->id,
             'workshop_booking',
@@ -185,7 +202,9 @@ class ManualBookingController extends Controller
             [
                 'workshop_id' => $workshop->id, 
                 'booking_id' => $booking->id,
-                'profile_url' => $profileUrl
+                'workshop_slug' => $workshopSlug,
+                'profile_url' => $profileUrl,
+                'action_url' => $bookingShowUrl,
             ]
         );
         
@@ -197,7 +216,9 @@ class ManualBookingController extends Controller
             "نرحب بك في مجتمع وصفة! نحن متحمسون لرؤيتك في ورشة '{$workshop->title}'. استكشف موقعنا واكتشف المزيد من الوصفات والأدوات.",
             [
                 'workshop_id' => $workshop->id,
-                'workshop_title' => $workshop->title
+                'workshop_slug' => $workshopSlug,
+                'workshop_title' => $workshop->title,
+                'action_url' => $workshopUrl,
             ]
         );
         
@@ -209,7 +230,9 @@ class ManualBookingController extends Controller
             "للاستعداد لورشة '{$workshop->title}'، تأكد من إحضار الأدوات المطلوبة والوصول قبل 10 دقائق من بداية الورشة.",
             [
                 'workshop_id' => $workshop->id,
-                'workshop_title' => $workshop->title
+                'workshop_slug' => $workshopSlug,
+                'workshop_title' => $workshop->title,
+                'action_url' => $workshopUrl,
             ]
         );
 

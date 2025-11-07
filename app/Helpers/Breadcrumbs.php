@@ -146,6 +146,8 @@ class Breadcrumbs
             }
         }
 
+        $breadcrumbs = self::collapseConsecutiveDuplicates($breadcrumbs);
+
         if (count($breadcrumbs) <= 1) {
             return [];
         }
@@ -380,6 +382,67 @@ class Breadcrumbs
         }
 
         return $trail;
+    }
+
+    /**
+     * Remove consecutive breadcrumbs that point to the same destination.
+     *
+     * @param array<int, array{label: string, url: string|null}> $trail
+     * @return array<int, array{label: string, url: string|null}>
+     */
+    protected static function collapseConsecutiveDuplicates(array $trail): array
+    {
+        if (count($trail) < 2) {
+            return $trail;
+        }
+
+        $collapsed = [];
+
+        foreach ($trail as $crumb) {
+            if (!isset($crumb['label'])) {
+                continue;
+            }
+
+            $crumb = [
+                'label' => $crumb['label'],
+                'url' => $crumb['url'] ?? null,
+            ];
+
+            $lastIndex = count($collapsed) - 1;
+            $last = $lastIndex >= 0 ? $collapsed[$lastIndex] : null;
+
+            if ($last && self::crumbsPointToSameTarget($last, $crumb)) {
+                $collapsed[$lastIndex] = [
+                    'label' => $crumb['label'],
+                    'url' => $crumb['url'] ?? $last['url'],
+                ];
+                continue;
+            }
+
+            $collapsed[] = $crumb;
+        }
+
+        return $collapsed;
+    }
+
+    /**
+     * Determine if two breadcrumbs represent the same target.
+     *
+     * @param array{label: string, url: string|null} $first
+     * @param array{label: string, url: string|null} $second
+     */
+    protected static function crumbsPointToSameTarget(array $first, array $second): bool
+    {
+        $firstUrl = $first['url'] ?? null;
+        $secondUrl = $second['url'] ?? null;
+
+        if ($firstUrl !== null || $secondUrl !== null) {
+            return $firstUrl !== null
+                && $secondUrl !== null
+                && $firstUrl === $secondUrl;
+        }
+
+        return $first['label'] === $second['label'];
     }
 
     /**

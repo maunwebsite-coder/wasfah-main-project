@@ -304,6 +304,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const joinModal = document.getElementById('joinConfirmationModal');
+        let joinModalTriggeredMeetingClose = false;
         const joinCancellationNotice = document.getElementById('joinCancellationNotice');
         const cancellationMessage = 'تم إيقاف الانضمام للاجتماع. يمكنك إعادة المحاولة لاحقاً من لوحة الشيف.';
         const countdownCard = document.getElementById('countdownCard');
@@ -313,7 +314,7 @@
         const presenceUrl = @json(route('chef.workshops.presence', $workshop));
         const startUrl = @json(route('chef.workshops.start', $workshop));
         const csrfToken = @json(csrf_token());
-        const joinPageUrl = @json(route('chef.workshops.join', $workshop));
+        const workshopsIndexUrl = @json(route('chef.workshops.index'));
         const copyButtons = document.querySelectorAll('[data-copy-link]');
 
         copyButtons.forEach(button => {
@@ -367,7 +368,7 @@
         const enableMobileAutoFullscreen = false; // mobile screens should stay inline per product request
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
         let shouldAutoFullscreen = enableMobileAutoFullscreen && mobileViewportQuery.matches;
-        let hasRedirectedToJoinPage = false;
+        let hasRedirectedToWorkshopsIndex = false;
         let apiInstance = null;
         let onViewportChange = null;
         let jitsiContainer = null;
@@ -596,14 +597,14 @@
             resizeJitsi();
         };
 
-        const redirectToJoinPage = () => {
-            if (hasRedirectedToJoinPage || !joinPageUrl) {
+        const redirectToWorkshopsPage = () => {
+            if (hasRedirectedToWorkshopsIndex || !workshopsIndexUrl) {
                 return;
             }
 
-            hasRedirectedToJoinPage = true;
+            hasRedirectedToWorkshopsIndex = true;
             fullscreenController.exit();
-            window.location.assign(joinPageUrl);
+            window.location.assign(workshopsIndexUrl);
         };
 
         const startMeetingForParticipants = () => {
@@ -645,6 +646,7 @@
             if (joinCancellationNotice) {
                 joinCancellationNotice.classList.add('hidden');
             }
+            joinModalTriggeredMeetingClose = false;
 
             const fallbackConfirmation = 'هل تريد فتح الاجتماع للمشاركين الآن؟';
 
@@ -661,7 +663,7 @@
                 const closeButton = joinModal.querySelector('[data-action="close"]');
                 let resolved = false;
 
-                const finish = (result) => {
+                const finish = (result, { skipFullscreenExit = false } = {}) => {
                     if (resolved) {
                         return;
                     }
@@ -671,7 +673,8 @@
                     joinModal.classList.add('opacity-0');
                     joinModal.setAttribute('aria-hidden', 'true');
 
-                    joinModal.removeEventListener('click', handleBackdropClick);
+                    joinModal.removeEventListener('pointerdown', blockBackdropInteraction);
+                    joinModal.removeEventListener('click', blockBackdropInteraction);
                     window.removeEventListener('keydown', handleKeydown);
                     confirmButton?.removeEventListener('click', handleConfirm);
                     cancelButton?.removeEventListener('click', handleCancel);
@@ -683,7 +686,7 @@
                         previouslyFocused?.focus?.();
                     }, 220);
 
-                    if (!result) {
+                    if (!result && !skipFullscreenExit) {
                         fullscreenController.exit();
                     }
 
@@ -696,18 +699,20 @@
                     finish(true);
                 };
                 const handleCancel = () => {
-                    fullscreenController.exit();
-                    finish(false);
-                };
-                const handleBackdropClick = (event) => {
-                    if (event.target === joinModal) {
-                        finish(false);
-                    }
+                    joinModalTriggeredMeetingClose = true;
+                    redirectToWorkshopsPage();
+                    finish(false, { skipFullscreenExit: true });
                 };
                 const handleKeydown = (event) => {
                     if (event.key === 'Escape') {
                         event.preventDefault();
                         finish(false);
+                    }
+                };
+                const blockBackdropInteraction = (event) => {
+                    if (event.target === joinModal) {
+                        event.preventDefault();
+                        event.stopPropagation();
                     }
                 };
 
@@ -724,13 +729,17 @@
                 confirmButton?.addEventListener('click', handleConfirm);
                 cancelButton?.addEventListener('click', handleCancel);
                 closeButton?.addEventListener('click', handleCancel);
-                joinModal.addEventListener('click', handleBackdropClick);
+                joinModal.addEventListener('pointerdown', blockBackdropInteraction);
+                joinModal.addEventListener('click', blockBackdropInteraction);
                 window.addEventListener('keydown', handleKeydown);
             });
         };
 
         const confirmed = await requestJoinConfirmation();
         if (!confirmed) {
+            if (joinModalTriggeredMeetingClose) {
+                return;
+            }
             if (joinCancellationNotice) {
                 joinCancellationNotice.classList.remove('hidden');
                 joinCancellationNotice.focus?.();
@@ -966,14 +975,14 @@
             sendPresence('offline', { force: true });
             fullscreenController.exit();
             window.removeEventListener('resize', resizeJitsi);
-            redirectToJoinPage();
+            redirectToWorkshopsPage();
         });
 
         apiInstance.addListener('readyToClose', () => {
             sendPresence('offline', { force: true });
             fullscreenController.exit();
             window.removeEventListener('resize', resizeJitsi);
-            redirectToJoinPage();
+            redirectToWorkshopsPage();
         });
 
         window.addEventListener('resize', resizeJitsi);

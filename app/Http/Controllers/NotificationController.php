@@ -35,7 +35,7 @@ class NotificationController extends Controller
 
         // جلب البيانات من قاعدة البيانات مع تحسينات إضافية
         $notifications = Auth::user()->notifications()
-            ->select('id', 'type', 'title', 'message', 'is_read', 'created_at') // تحديد الأعمدة المطلوبة فقط
+            ->select('id', 'type', 'title', 'message', 'data', 'is_read', 'created_at') // تحديد الأعمدة المطلوبة فقط
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

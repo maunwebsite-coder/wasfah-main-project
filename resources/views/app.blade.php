@@ -180,49 +180,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-100 py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-8">
-                <div class="col-span-1 md:col-span-2 lg:col-span-2">
-                    <div class="flex items-center mb-4"><span class="text-2xl font-bold text-gray-800 ml-2">وصفة</span></div>
-                    <p class="text-gray-500 mb-2">تابعنا</p>
-                    <div class="flex space-x-4 text-gray-500">
-                        <a href="https://www.instagram.com/wasfah.jo/" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" alt="Instagram" class="h-8 w-8" /></a>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="font-bold text-gray-800 mb-4">أصناف</h3>
-                    <ul class="space-y-2 text-gray-600">
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">براونيز</a></li>
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">تيرامياسو</a></li>
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">شوكولوته</a></li>
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">سان سبستيان</a></li>
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">كيك</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-bold text-gray-800 mb-4">روابط سريعة</h3>
-                    <ul class="space-y-2 text-gray-600">
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">عن وصفة</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-bold text-gray-800 mb-4">المزيد</h3>
-                    <ul class="space-y-2 text-gray-600">
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">نصائح الخبز</a></li>
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">الإعلان</a></li>
-                        <li><a href="#" class="hover:text-orange-500 transition-colors">اتصل بنا</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-300 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center text-gray-500">
-                <div class="flex items-center mb-4 md:mb-0">
-                    <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-8 w-auto">
-                    <span class="ml-4 text-sm">موقع وصفه هو جزء من شركة وصفة الاردن</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @include('layouts.partials.footer')
 
     @vite(['resources/js/script.js', 'resources/js/header.js'])
     @stack('scripts')

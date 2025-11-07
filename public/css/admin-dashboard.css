@@ -347,6 +347,58 @@
     position: relative;
 }
 
+/* مرشحات لوحة التحكم */
+.dashboard-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-filter-field {
+    min-width: 200px;
+}
+
+.dashboard-select {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-align: right;
+    color: #111827;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.dashboard-filter-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.dashboard-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 9999px;
+    padding: 0.35rem 0.8rem;
+    font-weight: 600;
+}
+
+.dashboard-filter-note {
+    font-size: 0.7rem;
+}
+
 .dashboard-search-input {
     width: 100%;
     padding: 0.65rem 0.9rem;
@@ -425,5 +477,9 @@
     .dashboard-nav-pill {
         flex: 1 1 auto;
         justify-content: center;
+    }
+
+    .dashboard-filter-field {
+        min-width: 100%;
     }
 }

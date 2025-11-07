@@ -9,20 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let formToSubmit = null;
+    const defaultMessage = modalMessage.dataset.defaultMessage || modalMessage.textContent.trim();
+    const defaultConfirmLabel = confirmButton.dataset.defaultLabel || confirmButton.textContent.trim();
 
-    const openModal = (form, message) => {
+    const openModal = (form, message, confirmLabel) => {
         formToSubmit = form;
-        if (message) {
-            modalMessage.textContent = message;
-        }
+        modalMessage.textContent = message || defaultMessage;
+        confirmButton.textContent = confirmLabel || defaultConfirmLabel;
         modal.classList.remove('hidden');
     };
 
     const closeModal = () => {
         modal.classList.add('hidden');
         formToSubmit = null;
-        // Reset message to default
-        modalMessage.textContent = 'لا يمكن التراجع عن هذا الإجراء. سيتم حذف العنصر نهائياً.';
+        modalMessage.textContent = defaultMessage;
+        confirmButton.textContent = defaultConfirmLabel;
     };
 
     confirmButton.addEventListener('click', () => {
@@ -49,13 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const onsubmitAttr = form.getAttribute('onsubmit');
             const match = onsubmitAttr.match(/confirm\('(.+?)'\)/);
             const message = match ? match[1] : 'هل أنت متأكد من أنك تريد حذف هذا العنصر؟';
+            const confirmLabel = submitButton.getAttribute('data-confirm-button');
 
             // Remove the onsubmit attribute to prevent the old dialog
             form.removeAttribute('onsubmit');
 
             submitButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                openModal(form, message);
+                openModal(form, message, confirmLabel);
             });
         }
     });

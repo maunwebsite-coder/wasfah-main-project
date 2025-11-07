@@ -222,17 +222,14 @@ class WorkshopController extends Controller
             return redirect()->route('workshops');
         }
 
-        $workshops = Workshop::active()
-            ->withCount(['bookings' => function ($query) {
-                $query->where('status', 'confirmed');
-            }])
-            ->where(function ($q) use ($query) {
-                $q->where('title', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  ->orWhere('instructor', 'like', "%{$query}%")
-                  ->orWhere('category', 'like', "%{$query}%");
+        $workshops = Workshop::search($query)
+            ->query(function ($builder) {
+                $builder->active()
+                    ->withCount(['bookings' => function ($bookingQuery) {
+                        $bookingQuery->where('status', 'confirmed');
+                    }])
+                    ->orderBy('start_date', 'asc');
             })
-            ->orderBy('start_date')
             ->get();
 
         return view('workshops', compact('workshops'))->with('searchQuery', $query);

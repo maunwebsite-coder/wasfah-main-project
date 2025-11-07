@@ -22,7 +22,7 @@
                             تتبع أداء شركاء النمو وحدد نسب العمولات المناسبة، مع نظرة كاملة على الحجوزات المدفوعة التي تستحق الدفع.
                         </p>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-right">
                             <p class="text-xs font-semibold text-emerald-600 uppercase">عمولات جاهزة</p>
                             <p class="text-2xl font-black text-emerald-700">{{ number_format($stats['ready_amount'], 2) }} {{ $defaultReferralSymbol }}</p>
@@ -62,7 +62,7 @@
                         </button>
                     </form>
 
-                    <div class="mt-6 overflow-x-auto">
+                    <div class="mt-6 hidden overflow-x-auto md:block">
                         <table class="min-w-full divide-y divide-slate-100">
                             <thead>
                                 <tr class="bg-slate-50">
@@ -104,6 +104,55 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+                    <div class="mt-6 space-y-4 md:hidden">
+                        @if ($partners->count())
+                            @foreach ($partners as $partner)
+                                <div class="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
+                                    <div class="flex flex-wrap items-start gap-3">
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-slate-900">{{ $partner->name }}</p>
+                                            <p class="text-xs text-slate-500">{{ $partner->email }}</p>
+                                        </div>
+                                        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-mono text-slate-700">
+                                            {{ $partner->referral_code }}
+                                        </span>
+                                    </div>
+                                    <dl class="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-600 sm:grid-cols-3">
+                                        <div class="rounded-2xl bg-slate-50 px-3 py-2">
+                                            <dt class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">مستخدمون</dt>
+                                            <dd class="font-semibold text-slate-700">
+                                                {{ number_format($partner->referred_users_count) }}
+                                            </dd>
+                                        </div>
+                                        <div class="rounded-2xl bg-emerald-50 px-3 py-2">
+                                            <dt class="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">جاهز</dt>
+                                            <dd class="font-semibold text-emerald-700">
+                                                {{ number_format($partner->pending_commission_total ?? 0, 2) }} {{ $partner->referral_currency_symbol }}
+                                            </dd>
+                                        </div>
+                                        <div class="rounded-2xl bg-blue-50 px-3 py-2">
+                                            <dt class="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">مدفوع</dt>
+                                            <dd class="font-semibold text-blue-700">
+                                                {{ number_format($partner->paid_commission_total ?? 0, 2) }} {{ $partner->referral_currency_symbol }}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                    <div class="mt-4 flex items-center justify-between">
+                                        <p class="text-xs text-slate-500">
+                                            {{ number_format($partner->referred_users_count) }} إحالة مسجلة
+                                        </p>
+                                        <a href="{{ route('admin.referrals.show', $partner) }}" class="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-600">
+                                            إدارة
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500">
+                                لا يوجد شركاء مطابقون لنتيجة البحث الحالية.
+                            </div>
+                        @endif
                     </div>
 
                     <div class="border-t border-slate-100 mt-4 pt-4">

@@ -227,7 +227,8 @@ class SocialiteController extends Controller
             "أهلاً وسهلاً بك {$user->name}! نحن سعداء لانضمامك إلى مجتمع وصفة. استكشف ورشات الطبخ المتنوعة واكتشف وصفات جديدة.",
             [
                 'welcome' => true,
-                'user_name' => $user->name
+                'user_name' => $user->name,
+                'action_url' => route('home'),
             ]
         );
         
@@ -239,7 +240,8 @@ class SocialiteController extends Controller
             "يمكنك الآن حجز الورشات، حفظ الوصفات المفضلة، وتتبع أدوات الطبخ. ابدأ رحلتك في عالم الطبخ معنا!",
             [
                 'features' => true,
-                'user_name' => $user->name
+                'user_name' => $user->name,
+                'action_url' => route('home'),
             ]
         );
         
@@ -251,7 +253,8 @@ class SocialiteController extends Controller
             "لدينا مجموعة متنوعة من ورشات الطبخ التي تناسب جميع المستويات. تصفح الورشات المتاحة واحجز مكانك اليوم!",
             [
                 'workshops' => true,
-                'user_name' => $user->name
+                'user_name' => $user->name,
+                'action_url' => route('workshops'),
             ]
         );
         
@@ -263,7 +266,8 @@ class SocialiteController extends Controller
             "للاستفادة القصوى من موقع وصفة، تأكد من تحديث ملفك الشخصي واستكشاف جميع الأقسام المتاحة.",
             [
                 'tips' => true,
-                'user_name' => $user->name
+                'user_name' => $user->name,
+                'action_url' => route('profile'),
             ]
         );
     }

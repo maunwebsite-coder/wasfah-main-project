@@ -13,6 +13,8 @@ class NotificationManager {
         this.maxRetries = 3;
         this.badgeSelector = '[data-notification-badge]';
         this.badgeAnimationDuration = 2000;
+        this.realtimeSubscription = null;
+        this.maxRealtimeNotifications = 10;
     }
 
     /**
@@ -154,6 +156,84 @@ class NotificationManager {
     }
 
     /**
+     * Merge realtime notification payload into cache and UI
+     * @param {Object} payload
+     */
+    handleRealtimeNotification(payload) {
+        if (!payload?.notification) {
+            return;
+        }
+
+        const existing = Array.isArray(this.cachedData?.notifications)
+            ? this.cachedData.notifications
+            : [];
+
+        const notifications = [payload.notification, ...existing];
+        const deduped = [];
+        const seen = new Set();
+
+        notifications.forEach(notification => {
+            if (!notification || seen.has(notification.id)) {
+                return;
+            }
+            seen.add(notification.id);
+            deduped.push(notification);
+        });
+
+        const unreadCount = Number(
+            payload.unread_count ?? this.cachedData?.unreadCount ?? 0
+        );
+
+        const updatedData = {
+            ...(this.cachedData || {}),
+            notifications: deduped.slice(0, this.maxRealtimeNotifications),
+            unreadCount,
+            timestamp: payload.timestamp ?? Date.now()
+        };
+
+        this.updateCache(updatedData);
+        this.updateBadgeElements(unreadCount);
+        this.dispatchUpdateEvent(updatedData);
+    }
+
+    /**
+     * Subscribe to the authenticated user's notification channel
+     */
+    initializeRealtimeChannel() {
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            return;
+        }
+
+        const attach = () => {
+            const userId = document.body?.dataset?.userId;
+            if (!userId || typeof window.Echo === 'undefined' || this.realtimeSubscription) {
+                return;
+            }
+
+            this.realtimeSubscription = window.Echo
+                .private(`notifications.${userId}`)
+                .listen('.notification.created', event => {
+                    this.handleRealtimeNotification(event);
+                })
+                .error(error => {
+                    console.error('Realtime notifications error:', error);
+                });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attach, { once: true });
+        } else {
+            attach();
+        }
+
+        document.addEventListener('echo:initialized', () => {
+            if (!this.realtimeSubscription) {
+                attach();
+            }
+        });
+    }
+
+    /**
      * Update all notification badges in the UI
      * @param {number} count - Number of unread notifications
      */
@@ -212,6 +292,7 @@ class NotificationManager {
 
 // Create global instance
 window.NotificationManager = new NotificationManager();
+window.NotificationManager.initializeRealtimeChannel();
 
 // Legacy compatibility functions
 window.loadNotificationsCount = function() {

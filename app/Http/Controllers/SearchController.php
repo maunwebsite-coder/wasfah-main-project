@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Recipe;
 use App\Models\Workshop;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
@@ -24,184 +24,15 @@ class SearchController extends Controller
         
         if ($query) {
             if ($type === 'all' || $type === 'recipes') {
-                $recipesQuery = Recipe::select([
-                        'recipes.recipe_id',
-                        'recipes.title',
-                        'recipes.slug',
-                        'recipes.description',
-                        'recipes.author',
-                        'recipes.image',
-                        'recipes.image_url',
-                        'recipes.created_at',
-                        'recipes.category_id',
-                        'recipes.prep_time'
-                    ])
-                    ->distinct()
-                    ->with(['category:category_id,name', 'ingredients:id,name'])
-                    ->withCount(['interactions as saved_count' => function ($query) {
-                        $query->where('is_saved', true);
-                    }])
-                    ->withCount(['interactions as made_count' => function ($query) {
-                        $query->where('is_made', true);
-                    }])
-                    ->withCount(['interactions as interactions_count'])
-                    ->withAvg('interactions', 'rating')
-                    ->where(function ($q) use ($query) {
-                        $q->where('recipes.title', 'like', "%{$query}%")
-                          ->orWhere('recipes.description', 'like', "%{$query}%")
-                          ->orWhere('recipes.author', 'like', "%{$query}%")
-                          ->orWhereHas('category', function ($subQ) use ($query) {
-                              $subQ->where('name', 'like', "%{$query}%");
-                          })
-                          ->orWhereHas('ingredients', function ($subQ) use ($query) {
-                              $subQ->where('name', 'like', "%{$query}%");
-                          });
-                    });
-
-                if (Recipe::supportsModerationStatus()) {
-                    $recipesQuery->where('recipes.status', Recipe::STATUS_APPROVED);
-                }
-
-                if (Recipe::supportsVisibilityFlag()) {
-                    $recipesQuery->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC);
-                }
-
-                // Apply recipe filters
-                if ($request->has('recipe_category') && $request->recipe_category) {
-                    $recipesQuery->whereHas('category', function ($q) use ($request) {
-                        $q->where('name', $request->recipe_category);
-                    });
-                }
-
-                if ($request->has('difficulty') && $request->difficulty) {
-                    $recipesQuery->where('difficulty', $request->difficulty);
-                }
-
-                if ($request->has('prep_time') && $request->prep_time) {
-                    switch ($request->prep_time) {
-                        case '0-30':
-                            $recipesQuery->where('prep_time', '<=', 30);
-                            break;
-                        case '30-60':
-                            $recipesQuery->whereBetween('prep_time', [30, 60]);
-                            break;
-                        case '60-120':
-                            $recipesQuery->whereBetween('prep_time', [60, 120]);
-                            break;
-                        case '120+':
-                            $recipesQuery->where('prep_time', '>', 120);
-                            break;
-                    }
-                }
-
-                // Apply sorting
-                if ($request->has('recipe_sort') && $request->recipe_sort) {
-                    switch ($request->recipe_sort) {
-                        case 'newest':
-                            $recipesQuery->orderBy('created_at', 'desc');
-                            break;
-                        case 'rating':
-                            $recipesQuery->orderBy('interactions_avg_rating', 'desc');
-                            break;
-                        case 'popular':
-                            $recipesQuery->orderBy('saved_count', 'desc');
-                            break;
-                        case 'relevance':
-                        default:
-                            $recipesQuery->orderBy('created_at', 'desc');
-                            break;
-                    }
-                } else {
-                    $recipesQuery->orderBy('created_at', 'desc');
-                }
-
-                $recipes = $recipesQuery->limit(20)->get();
+                $recipes = $this->recipeSearchBuilder($request, $query)
+                    ->take(20)
+                    ->get();
             }
             
             if ($type === 'all' || $type === 'workshops') {
-                $workshopsQuery = Workshop::select([
-                        'id',
-                        'slug',
-                        'title',
-                        'description',
-                        'instructor',
-                        'category',
-                        'price',
-                        'currency',
-                        'start_date',
-                        'location',
-                        'image',
-                        'is_online',
-                        'rating',
-                        'reviews_count'
-                    ])
-                    ->where('is_active', true)
-                    ->where(function ($q) use ($query) {
-                        $q->where('title', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%")
-                          ->orWhere('instructor', 'like', "%{$query}%")
-                          ->orWhere('category', 'like', "%{$query}%");
-                    });
-
-                // Apply workshop filters
-                if ($request->has('workshop_type') && $request->workshop_type) {
-                    if ($request->workshop_type === 'online') {
-                        $workshopsQuery->online();
-                    } elseif ($request->workshop_type === 'offline') {
-                        $workshopsQuery->offline();
-                    }
-                }
-
-                if ($request->has('workshop_level') && $request->workshop_level) {
-                    $workshopsQuery->byLevel($request->workshop_level);
-                }
-
-                if ($request->has('workshop_category') && $request->workshop_category) {
-                    $workshopsQuery->byCategory($request->workshop_category);
-                }
-
-                if ($request->has('price_range') && $request->price_range) {
-                    switch ($request->price_range) {
-                        case '0-100':
-                            $workshopsQuery->where('price', '<=', 100);
-                            break;
-                        case '100-200':
-                            $workshopsQuery->whereBetween('price', [100, 200]);
-                            break;
-                        case '200-300':
-                            $workshopsQuery->whereBetween('price', [200, 300]);
-                            break;
-                        case '300+':
-                            $workshopsQuery->where('price', '>', 300);
-                            break;
-                    }
-                }
-
-                // Apply sorting
-                if ($request->has('sort_by') && $request->sort_by) {
-                    switch ($request->sort_by) {
-                        case 'price_low':
-                            $workshopsQuery->orderBy('price', 'asc');
-                            break;
-                        case 'price_high':
-                            $workshopsQuery->orderBy('price', 'desc');
-                            break;
-                        case 'date_soon':
-                            $workshopsQuery->orderBy('start_date', 'asc');
-                            break;
-                        case 'rating':
-                            $workshopsQuery->orderBy('rating', 'desc');
-                            break;
-                        case 'relevance':
-                        default:
-                            $workshopsQuery->orderBy('start_date', 'asc');
-                            break;
-                    }
-                } else {
-                    $workshopsQuery->orderBy('start_date', 'asc');
-                }
-
-                $workshops = $workshopsQuery->limit(20)->get();
+                $workshops = $this->workshopSearchBuilder($request, $query)
+                    ->take(20)
+                    ->get();
             }
         }
         
@@ -245,11 +76,11 @@ class SearchController extends Controller
             
             if ($query) {
                 if ($type === 'all' || $type === 'recipes') {
-                    $results['recipes'] = $this->searchRecipes($query);
+                    $results['recipes'] = $this->searchRecipes($query, $request);
                 }
                 
                 if ($type === 'all' || $type === 'workshops') {
-                    $results['workshops'] = $this->searchWorkshops($query);
+                    $results['workshops'] = $this->searchWorkshops($query, $request);
                 }
             }
             
@@ -284,85 +115,279 @@ class SearchController extends Controller
     }
     
     /**
+     * إنشاء استعلام Scout الخاص بالوصفات مع جميع علاقاتها ومرشحاتها.
+     */
+    private function recipeSearchBuilder(Request $request, string $query)
+    {
+        $callback = $this->recipeQueryCallback($request);
+
+        if (Recipe::hasDescriptionFullTextIndex()) {
+            return Recipe::search($query)
+                ->query($callback);
+        }
+
+        $builder = Recipe::query();
+        $callback($builder);
+        $this->applyRecipeLikeSearch($builder, $query);
+
+        return $builder;
+    }
+    
+    /**
      * البحث في الوصفات مع تحسينات الأداء
      */
-    private function searchRecipes($query)
+    private function searchRecipes(string $query, Request $request)
     {
-        $recipesQuery = Recipe::select([
-                'recipes.recipe_id',
-                'recipes.title',
-                'recipes.slug',
-                'recipes.description',
-                'recipes.author',
-                'recipes.image',
-                'recipes.image_url',
-                'recipes.created_at',
-                'recipes.prep_time'
-            ])
-            ->distinct()
-            ->with(['category:category_id,name', 'ingredients:id,name'])
-            ->withCount(['interactions as saved_count' => function ($query) {
-                $query->where('is_saved', true);
-            }])
-            ->withCount(['interactions as made_count' => function ($query) {
-                $query->where('is_made', true);
-            }])
-            ->withCount(['interactions as interactions_count'])
-            ->withAvg('interactions', 'rating')
-            ->where(function ($q) use ($query) {
-                $q->where('recipes.title', 'like', "%{$query}%")
-                  ->orWhere('recipes.description', 'like', "%{$query}%")
-                  ->orWhere('recipes.author', 'like', "%{$query}%")
-                  ->orWhereHas('category', function ($subQ) use ($query) {
-                      $subQ->where('name', 'like', "%{$query}%");
-                  })
-                  ->orWhereHas('ingredients', function ($subQ) use ($query) {
-                      $subQ->where('name', 'like', "%{$query}%");
-                  });
-            });
-
-        if (Recipe::supportsModerationStatus()) {
-            $recipesQuery->where('recipes.status', Recipe::STATUS_APPROVED);
-        }
-
-        if (Recipe::supportsVisibilityFlag()) {
-            $recipesQuery->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC);
-        }
-
-        return $recipesQuery
-            ->orderBy('recipes.created_at', 'desc')
-            ->limit(5)
+        return $this->recipeSearchBuilder($request, $query)
+            ->take(5)
             ->get();
+    }
+    
+    /**
+     * إنشاء استعلام Scout الخاص بالورشات مع المرشحات والترتيب.
+     */
+    private function workshopSearchBuilder(Request $request, string $query)
+    {
+        $callback = $this->workshopQueryCallback($request);
+
+        if (Workshop::hasDescriptionFullTextIndex()) {
+            return Workshop::search($query)
+                ->query($callback);
+        }
+
+        $builder = Workshop::query();
+        $callback($builder);
+        $this->applyWorkshopLikeSearch($builder, $query);
+
+        return $builder;
     }
     
     /**
      * البحث في الورشات مع تحسينات الأداء
      */
-    private function searchWorkshops($query)
+    private function searchWorkshops(string $query, Request $request)
     {
-        return Workshop::select([
-                'id',
-                'slug',
-                'title',
-                'description',
-                'instructor',
-                'category',
-                'price',
-                'currency',
-                'start_date',
-                'location',
-                'image',
-                'is_online'
-            ])
-            ->where('is_active', true)
-            ->where(function ($q) use ($query) {
-                $q->where('title', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  ->orWhere('instructor', 'like', "%{$query}%")
-                  ->orWhere('category', 'like', "%{$query}%");
-            })
-            ->orderBy('start_date', 'asc')
-            ->limit(5)
+        return $this->workshopSearchBuilder($request, $query)
+            ->take(5)
             ->get();
+    }
+
+    private function recipeQueryCallback(Request $request): \Closure
+    {
+        return function (EloquentBuilder $builder) use ($request) {
+            $builder->select([
+                    'recipes.recipe_id',
+                    'recipes.title',
+                    'recipes.slug',
+                    'recipes.description',
+                    'recipes.author',
+                    'recipes.image',
+                    'recipes.image_url',
+                    'recipes.created_at',
+                    'recipes.category_id',
+                    'recipes.prep_time',
+                ])
+                ->distinct()
+                ->with(['category:category_id,name', 'ingredients:id,name,recipe_id'])
+                ->withCount(['interactions as saved_count' => function ($interactionQuery) {
+                    $interactionQuery->where('is_saved', true);
+                }])
+                ->withCount(['interactions as made_count' => function ($interactionQuery) {
+                    $interactionQuery->where('is_made', true);
+                }])
+                ->withCount(['interactions as interactions_count'])
+                ->withAvg('interactions', 'rating');
+
+            if (Recipe::supportsModerationStatus()) {
+                $builder->where('recipes.status', Recipe::STATUS_APPROVED);
+            }
+
+            if (Recipe::supportsVisibilityFlag()) {
+                $builder->where('recipes.visibility', Recipe::VISIBILITY_PUBLIC);
+            }
+
+            if ($request->filled('recipe_category')) {
+                $categoryName = $request->recipe_category;
+                $builder->whereHas('category', function ($categoryQuery) use ($categoryName) {
+                    $categoryQuery->where('name', $categoryName);
+                });
+            }
+
+            if ($request->filled('difficulty')) {
+                $builder->where('difficulty', $request->difficulty);
+            }
+
+            if ($request->filled('prep_time')) {
+                switch ($request->prep_time) {
+                    case '0-30':
+                        $builder->where('prep_time', '<=', 30);
+                        break;
+                    case '30-60':
+                        $builder->whereBetween('prep_time', [30, 60]);
+                        break;
+                    case '60-120':
+                        $builder->whereBetween('prep_time', [60, 120]);
+                        break;
+                    case '120+':
+                        $builder->where('prep_time', '>', 120);
+                        break;
+                }
+            }
+
+            $sort = $request->get('recipe_sort');
+
+            switch ($sort) {
+                case 'newest':
+                    $builder->orderBy('recipes.created_at', 'desc');
+                    break;
+                case 'rating':
+                    $builder->orderBy('interactions_avg_rating', 'desc');
+                    break;
+                case 'popular':
+                    $builder->orderBy('saved_count', 'desc');
+                    break;
+                default:
+                    $builder->orderBy('recipes.created_at', 'desc');
+                    break;
+            }
+        };
+    }
+
+    private function workshopQueryCallback(Request $request): \Closure
+    {
+        return function (EloquentBuilder $builder) use ($request) {
+            $builder->select([
+                    'id',
+                    'slug',
+                    'title',
+                    'description',
+                    'instructor',
+                    'category',
+                    'price',
+                    'currency',
+                    'start_date',
+                    'location',
+                    'image',
+                    'is_online',
+                    'rating',
+                    'reviews_count',
+                ])
+                ->where('is_active', true);
+
+            if ($request->filled('workshop_type')) {
+                if ($request->workshop_type === 'online') {
+                    $builder->online();
+                } elseif ($request->workshop_type === 'offline') {
+                    $builder->offline();
+                }
+            }
+
+            if ($request->filled('workshop_level')) {
+                $builder->byLevel($request->workshop_level);
+            }
+
+            if ($request->filled('workshop_category')) {
+                $builder->byCategory($request->workshop_category);
+            }
+
+            if ($request->filled('price_range')) {
+                switch ($request->price_range) {
+                    case '0-100':
+                        $builder->where('price', '<=', 100);
+                        break;
+                    case '100-200':
+                        $builder->whereBetween('price', [100, 200]);
+                        break;
+                    case '200-300':
+                        $builder->whereBetween('price', [200, 300]);
+                        break;
+                    case '300+':
+                        $builder->where('price', '>', 300);
+                        break;
+                }
+            }
+
+            $sortBy = $request->get('sort_by');
+
+            switch ($sortBy) {
+                case 'price_low':
+                    $builder->orderBy('price', 'asc');
+                    break;
+                case 'price_high':
+                    $builder->orderBy('price', 'desc');
+                    break;
+                case 'date_soon':
+                    $builder->orderBy('start_date', 'asc');
+                    break;
+                case 'rating':
+                    $builder->orderBy('rating', 'desc');
+                    break;
+                default:
+                    $builder->orderBy('start_date', 'asc');
+                    break;
+            }
+        };
+    }
+
+    private function applyRecipeLikeSearch(EloquentBuilder $builder, string $query): void
+    {
+        $this->applyLikeSearch(
+            $builder,
+            $query,
+            [
+                'recipes.title',
+                'recipes.author',
+                'recipes.description',
+            ],
+            ['recipes.slug']
+        );
+    }
+
+    private function applyWorkshopLikeSearch(EloquentBuilder $builder, string $query): void
+    {
+        $this->applyLikeSearch(
+            $builder,
+            $query,
+            [
+                'workshops.title',
+                'workshops.instructor',
+                'workshops.category',
+                'workshops.location',
+                'workshops.description',
+            ],
+            ['workshops.slug']
+        );
+    }
+
+    private function applyLikeSearch(EloquentBuilder $builder, string $query, array $columns, array $prefixColumns = []): void
+    {
+        if (empty($columns)) {
+            return;
+        }
+
+        $escaped = $this->escapeLikeValue($query);
+
+        $firstColumn = array_shift($columns);
+
+        $builder->where(function (EloquentBuilder $likeQuery) use ($firstColumn, $columns, $prefixColumns, $escaped) {
+            $likeQuery->where($firstColumn, 'like', "%{$escaped}%");
+
+            foreach ($columns as $column) {
+                $likeQuery->orWhere($column, 'like', "%{$escaped}%");
+            }
+
+            foreach ($prefixColumns as $column) {
+                $likeQuery->orWhere($column, 'like', "{$escaped}%");
+            }
+        });
+    }
+
+    private function escapeLikeValue(string $value): string
+    {
+        return str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $value
+        );
     }
 }

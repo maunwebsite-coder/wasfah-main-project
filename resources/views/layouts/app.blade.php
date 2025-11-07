@@ -1098,69 +1098,7 @@
     </script>
 
     <!-- Footer -->
-    <footer class="bg-orange-50 pt-12 pb-6">
-        <div class="container mx-auto px-4">
-            <!-- Main Footer Content -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-10 border-b border-gray-200 footer-content">
-                <!-- Brand & Social -->
-                <div class="space-y-4 text-center sm:text-right">
-                    <div class="flex items-center justify-center sm:justify-end space-x-3 rtl:space-x-reverse">
-                        <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-12 w-auto">
-                        <!-- <span class="text-lg font-semibold text-gray-800 hidden sm:inline">وصفة</span> -->
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        منصّة وصفة للحلويات الفاخرة والراقية، نرافقك في كل خطوة لتقديم أطيب الحلويات.
-                    </p>
-                </div>
-
-                <!-- Explore -->
-                <div class="space-y-4 text-center sm:text-right">
-                    <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">اكتشف</h3>
-                    <ul class="space-y-2 text-gray-600">
-                        <li><a href="{{ route('recipes') }}" class="hover:text-orange-500 transition-colors">جميع الوصفات</a></li>
-                        <li><a href="{{ route('workshops') }}" class="hover:text-orange-500 transition-colors">ورشات العمل</a></li>
-                        <li><a href="{{ route('baking-tips') }}" class="hover:text-orange-500 transition-colors">نصائح الحلويات</a></li>
-                    </ul>
-                </div>
-
-                <!-- Resources -->
-                <div class="space-y-4 text-center sm:text-right">
-                    <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">الدليل السريع</h3>
-                    <div class="grid grid-cols-1 gap-3 text-gray-600 sm:grid-cols-1">
-                        <a href="{{ route('tools') }}" class="hover:text-orange-500 transition-colors">أدوات الشيف</a>
-                        <a href="{{ route('search') }}" class="hover:text-orange-500 transition-colors">البحث عن وصفة</a>
-                        <a href="{{ route('about') }}" class="hover:text-orange-500 transition-colors">من نحن</a>
-                    </div>
-                </div>
-
-                <!-- Contact Info -->
-                <div class="space-y-4 text-center sm:text-right">
-                    <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">تواصل معنا</h3>
-                    <div class="space-y-3 text-gray-600">
-                        <div class="flex items-center justify-center sm:justify-end space-x-2 rtl:space-x-reverse">
-                            <i class="fas fa-envelope text-orange-500"></i>
-                            <span>wasfah99@gmail.com</span>
-                        </div>
-                        <div class="pt-2">
-                            <a href="{{ route('contact') }}" class="inline-block hover:text-orange-500 transition-colors">اتصل بنا</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom Bar -->
-            <div class="pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-sm text-gray-500 footer-bottom">
-                <div class="text-center md:text-right">
-                    <span>&copy; {{ now()->year }} وصفة. جميع الحقوق محفوظة.</span>
-                </div>
-                <div class="flex flex-col items-center gap-1 text-center md:flex-row md:items-center md:gap-4">
-                    <span>موقع وصفة هو جزء من شركة وصفة الأردن.</span>
-                    <span class="hidden md:inline-block text-gray-300">|</span>
-                    <span>نهتم بجودة تفاصيل كل وصفة.</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @include('layouts.partials.footer')
 
     @include('components.confirmation-modal')
 
@@ -1240,8 +1178,8 @@
                             });
                             
                             notificationsHTML += `
-                                <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${isRead ? 'opacity-75' : 'bg-orange-50'}" 
-                                     onclick="markNotificationAsRead(${notification.id})">
+                                <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer notification-dropdown-item ${isRead ? 'opacity-75' : 'bg-orange-50'}" 
+                                     data-notification-id="${notification.id}">
                                     <div class="flex items-start space-x-3 rtl:space-x-reverse">
                                         <div class="flex-shrink-0">
                                             <div class="w-8 h-8 ${notification.type === 'workshop_booking' ? 'bg-blue-100' : (notification.type === 'workshop_confirmed' ? 'bg-green-100' : (notification.type === 'workshop_cancelled' ? 'bg-red-100' : 'bg-orange-100'))} rounded-full flex items-center justify-center">
@@ -1260,6 +1198,31 @@
                         });
                         
                         notificationList.innerHTML = notificationsHTML;
+
+                        notificationList.querySelectorAll('.notification-dropdown-item').forEach(item => {
+                            const notificationId = item.dataset.notificationId;
+                            const notificationData = notifications.find(n => String(n.id) === String(notificationId));
+
+                            if (notificationData?.action_url) {
+                                item.dataset.actionUrl = notificationData.action_url;
+                            }
+
+                            item.addEventListener('click', (event) => {
+                                if (event.target.closest('button')) {
+                                    return;
+                                }
+
+                                const actionUrl = item.dataset.actionUrl || '';
+
+                                if (typeof openNotification === 'function') {
+                                    openNotification(notificationId, actionUrl);
+                                } else if (actionUrl) {
+                                    window.location.href = actionUrl;
+                                } else {
+                                    markNotificationAsRead(notificationId);
+                                }
+                            });
+                        });
                     }
                 });
             }
@@ -1267,7 +1230,7 @@
 
         // Mark notification as read
         function markNotificationAsRead(notificationId) {
-            fetch(`/notifications/${notificationId}/mark-read`, {
+            return fetch(`/notifications/${notificationId}/mark-read`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -1282,11 +1245,32 @@
                     // Reload dropdown
                     loadNotificationDropdown();
                 }
+
+                return data;
             })
             .catch(error => {
                 console.error('Error marking notification as read:', error);
+                throw error;
             });
         }
+
+        function openNotification(notificationId, actionUrl = '') {
+            const navigate = () => {
+                if (actionUrl) {
+                    window.location.href = actionUrl;
+                }
+            };
+
+            if (!notificationId) {
+                navigate();
+                return;
+            }
+
+            markNotificationAsRead(notificationId)
+                .finally(navigate);
+        }
+
+        window.openNotification = openNotification;
 
         // Update notification counts
         function updateNotificationCounts() {

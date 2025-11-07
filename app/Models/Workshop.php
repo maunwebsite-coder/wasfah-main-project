@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Laravel\Scout\Attributes\SearchUsingFullText;
+use Laravel\Scout\Attributes\SearchUsingPrefix;
+use Laravel\Scout\Searchable;
 
 class Workshop extends Model
 {
     use HasFactory;
+    use Searchable;
 
     protected $fillable = [
         'user_id',
@@ -81,6 +85,9 @@ class Workshop extends Model
     protected $hidden = [
         'meeting_link_cipher',
     ];
+
+    protected static bool $descriptionFullTextChecked = false;
+    protected static bool $descriptionFullTextExists = false;
 
     protected function meetingLink(): Attribute
     {
@@ -430,5 +437,65 @@ class Workshop extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Determine if the workshops table has the description full-text index.
+     */
+    public static function hasDescriptionFullTextIndex(): bool
+    {
+        if (! static::$descriptionFullTextChecked) {
+            static::$descriptionFullTextExists = static::fullTextIndexExists('workshops_description_fulltext');
+            static::$descriptionFullTextChecked = true;
+        }
+
+        return static::$descriptionFullTextExists;
+    }
+
+    /**
+     * Inspect information_schema to check for a full-text index.
+     */
+    protected static function fullTextIndexExists(string $indexName): bool
+    {
+        try {
+            $instance = new static();
+            $connection = $instance->getConnection();
+            $database = $connection->getDatabaseName();
+            $table = $connection->getTablePrefix().$instance->getTable();
+
+            $count = $connection->table('information_schema.statistics')
+                ->where('table_schema', $database)
+                ->where('table_name', $table)
+                ->where('index_name', $indexName)
+                ->count();
+
+            return $count > 0;
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to detect workshops full-text index.', [
+                'index' => $indexName,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    #[SearchUsingFullText(['description'])]
+    #[SearchUsingPrefix(['slug'])]
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => (string) $this->title,
+            'slug' => (string) $this->slug,
+            'description' => (string) $this->description,
+            'instructor' => (string) $this->instructor,
+            'category' => (string) $this->category,
+            'location' => (string) $this->location,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->is_active;
     }
 }

@@ -89,7 +89,12 @@ class WorkshopBookingController extends Controller
             'workshop_booking',
             'تم إرسال طلب حجز الورشة',
             "تم إرسال طلب حجز ورشة '{$workshop->title}' بنجاح. يرجى التحقق من ملفك الشخصي لمتابعة حالة الحجز والورشات المحجوزة.",
-            ['workshop_id' => $workshop->id, 'booking_id' => $booking->id]
+            [
+                'workshop_id' => $workshop->id,
+                'workshop_slug' => $workshop->slug,
+                'booking_id' => $booking->id,
+                'action_url' => route('bookings.show', ['booking' => $booking->id]),
+            ]
         );
 
         // سيتم تحديث عدد الحجوزات تلقائياً عبر event listeners

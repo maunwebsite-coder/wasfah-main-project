@@ -4,11 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Scout\Attributes\SearchUsingFullText;
+use Laravel\Scout\Attributes\SearchUsingPrefix;
+use Laravel\Scout\Searchable;
 
 class Recipe extends Model
 {
     use HasFactory;
+    use Searchable;
 
     /**
      * Custom primary key configuration.
@@ -82,6 +87,9 @@ class Recipe extends Model
 
     protected static bool $statusColumnChecked = false;
     protected static bool $statusColumnExists = false;
+
+    protected static bool $descriptionFullTextChecked = false;
+    protected static bool $descriptionFullTextExists = false;
 
     /**
      * العلاقات
@@ -395,5 +403,71 @@ class Recipe extends Model
     public static function supportsVisibilityFlag(): bool
     {
         return static::visibilityColumnExists();
+    }
+
+    /**
+     * Determine if the recipes table has the description full-text index.
+     */
+    public static function hasDescriptionFullTextIndex(): bool
+    {
+        if (! static::$descriptionFullTextChecked) {
+            static::$descriptionFullTextExists = static::fullTextIndexExists('recipes_description_fulltext');
+            static::$descriptionFullTextChecked = true;
+        }
+
+        return static::$descriptionFullTextExists;
+    }
+
+    /**
+     * Inspect information_schema to check for a full-text index.
+     */
+    protected static function fullTextIndexExists(string $indexName): bool
+    {
+        try {
+            $instance = new static();
+            $connection = $instance->getConnection();
+            $database = $connection->getDatabaseName();
+            $table = $connection->getTablePrefix().$instance->getTable();
+
+            $count = $connection->table('information_schema.statistics')
+                ->where('table_schema', $database)
+                ->where('table_name', $table)
+                ->where('index_name', $indexName)
+                ->count();
+
+            return $count > 0;
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to detect recipes full-text index.', [
+                'index' => $indexName,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    #[SearchUsingFullText(['description'])]
+    #[SearchUsingPrefix(['slug'])]
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => (string) $this->title,
+            'slug' => (string) $this->slug,
+            'description' => (string) $this->description,
+            'author' => (string) $this->author,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        if (self::supportsModerationStatus() && $this->status !== self::STATUS_APPROVED) {
+            return false;
+        }
+
+        if (self::supportsVisibilityFlag() && $this->visibility !== self::VISIBILITY_PUBLIC) {
+            return false;
+        }
+
+        return true;
     }
 }

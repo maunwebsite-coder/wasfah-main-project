@@ -449,8 +449,16 @@ class BookingController extends Controller
             'confirmed_at' => now()
         ]);
 
-        // إنشاء إشعار للمستخدم عند تأكيد الحجز
+        $booking->loadMissing('workshop');
+
         $profileUrl = route('profile');
+        $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
+        $workshopSlug = $booking->workshop?->slug;
+        $workshopUrl = $workshopSlug
+            ? route('workshop.show', ['workshop' => $workshopSlug])
+            : route('workshops');
+
+        // إنشاء إشعار للمستخدم عند تأكيد الحجز
         Notification::createNotification(
             $booking->user_id,
             'workshop_confirmed',
@@ -458,8 +466,10 @@ class BookingController extends Controller
             "تم تأكيد حجز ورشة '{$booking->workshop->title}' بنجاح! يمكنك الآن الدخول إلى ملفك الشخصي لمتابعة تفاصيل الورشة",
             [
                 'workshop_id' => $booking->workshop_id, 
+                'workshop_slug' => $workshopSlug,
                 'booking_id' => $booking->id,
-                'profile_url' => $profileUrl
+                'profile_url' => $profileUrl,
+                'action_url' => $bookingShowUrl,
             ]
         );
         
@@ -471,7 +481,9 @@ class BookingController extends Controller
             "نحن متحمسون لرؤيتك في ورشة '{$booking->workshop->title}'! تأكد من الوصول في الوقت المحدد.",
             [
                 'workshop_id' => $booking->workshop_id,
-                'workshop_title' => $booking->workshop->title
+                'workshop_slug' => $workshopSlug,
+                'workshop_title' => $booking->workshop->title,
+                'action_url' => $workshopUrl,
             ]
         );
         
@@ -483,7 +495,9 @@ class BookingController extends Controller
             "ورشة '{$booking->workshop->title}' مؤكدة! لا تنس مراجعة تفاصيل الورشة في ملفك الشخصي قبل الموعد المحدد.",
             [
                 'workshop_id' => $booking->workshop_id,
-                'workshop_title' => $booking->workshop->title
+                'workshop_slug' => $workshopSlug,
+                'workshop_title' => $booking->workshop->title,
+                'action_url' => $workshopUrl,
             ]
         );
 
@@ -511,8 +525,16 @@ class BookingController extends Controller
             'cancellation_reason' => $request->cancellation_reason ?? 'تم الإلغاء من قبل الإدارة'
         ]);
 
+        $booking->loadMissing('workshop');
+
         // إنشاء إشعار للمستخدم عند إلغاء الحجز
         $profileUrl = route('profile');
+        $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
+        $workshopSlug = $booking->workshop?->slug;
+        $workshopUrl = $workshopSlug
+            ? route('workshop.show', ['workshop' => $workshopSlug])
+            : route('workshops');
+
         Notification::createNotification(
             $booking->user_id,
             'workshop_cancelled',
@@ -520,9 +542,11 @@ class BookingController extends Controller
             "تم إلغاء حجز ورشة '{$booking->workshop->title}'. يمكنك الدخول إلى ملفك الشخصي لمتابعة تفاصيل الإلغاء: {$profileUrl}",
             [
                 'workshop_id' => $booking->workshop_id, 
+                'workshop_slug' => $workshopSlug,
                 'booking_id' => $booking->id,
                 'profile_url' => $profileUrl,
-                'cancellation_reason' => $request->cancellation_reason ?? 'تم الإلغاء من قبل الإدارة'
+                'cancellation_reason' => $request->cancellation_reason ?? 'تم الإلغاء من قبل الإدارة',
+                'action_url' => $bookingShowUrl,
             ]
         );
         
@@ -534,7 +558,9 @@ class BookingController extends Controller
             "نعتذر عن إلغاء ورشة '{$booking->workshop->title}'. نأمل أن نراك في ورشات أخرى قريباً. تحقق من الورشات المتاحة في موقعنا.",
             [
                 'workshop_id' => $booking->workshop_id,
-                'workshop_title' => $booking->workshop->title
+                'workshop_slug' => $workshopSlug,
+                'workshop_title' => $booking->workshop->title,
+                'action_url' => $workshopUrl,
             ]
         );
         
@@ -546,7 +572,9 @@ class BookingController extends Controller
             "نقترح عليك تصفح الورشات الأخرى المتاحة. قد تجد ورشة أخرى تناسب اهتماماتك وتوقيتك.",
             [
                 'workshop_id' => $booking->workshop_id,
-                'workshop_title' => $booking->workshop->title
+                'workshop_slug' => $workshopSlug,
+                'workshop_title' => $booking->workshop->title,
+                'action_url' => route('workshops'),
             ]
         );
 

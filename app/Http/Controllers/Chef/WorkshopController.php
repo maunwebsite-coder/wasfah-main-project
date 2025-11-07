@@ -699,13 +699,14 @@ class WorkshopController extends Controller
                 'ورشة جديدة بانتظار المراجعة',
                 "قام {$chefName} بتسجيل ورشة '{$workshop->title}' وهي بانتظار مراجعتك قبل التفعيل.",
                 [
-                    'workshop_id' => $workshop->id,
-                    'workshop_slug' => $workshop->slug,
-                    'review_url' => $reviewUrl,
-                    'chef_id' => $workshop->user_id,
-                ]
-            );
-        }
+                'workshop_id' => $workshop->id,
+                'workshop_slug' => $workshop->slug,
+                'review_url' => $reviewUrl,
+                'chef_id' => $workshop->user_id,
+                'action_url' => $reviewUrl,
+            ]
+        );
+    }
     }
 
     protected function workshopRequiresAdminReview(Workshop $workshop): bool

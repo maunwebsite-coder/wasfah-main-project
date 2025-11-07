@@ -46,6 +46,10 @@
 
         <div class="dashboard-quick-nav bg-white shadow-sm rounded-lg p-4 mb-8">
             <div class="flex flex-wrap gap-2 justify-start" role="navigation" aria-label="أقسام لوحة التحكم">
+                <button type="button" class="dashboard-nav-pill" data-scroll-target="#period-summary-section">
+                    <i class="fas fa-clock ml-2"></i>
+                    النطاق الزمني
+                </button>
                 <button type="button" class="dashboard-nav-pill" data-scroll-target="#overview-section">
                     <i class="fas fa-chart-line ml-2"></i>
                     نظرة عامة
@@ -78,6 +82,107 @@
                     <i class="fas fa-bolt ml-2"></i>
                     إجراءات سريعة
                 </button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-sm rounded-lg p-4 mb-8">
+            <form method="GET" class="dashboard-filter-form w-full">
+                <div class="dashboard-filter-field flex-1">
+                    <label for="dashboard-period" class="block text-xs font-semibold text-gray-500 mb-1">
+                        نطاق البيانات
+                    </label>
+                    <select id="dashboard-period" name="period" class="dashboard-select" onchange="this.form.submit()">
+                        @foreach($periodOptions as $value => $label)
+                            <option value="{{ $value }}" {{ (int) $value === (int) $selectedPeriod ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="dashboard-filter-field flex-1">
+                    <label for="dashboard-workshop-mode" class="block text-xs font-semibold text-gray-500 mb-1">
+                        نوع الورشات
+                    </label>
+                    <select id="dashboard-workshop-mode" name="workshop_mode" class="dashboard-select" onchange="this.form.submit()">
+                        @foreach($workshopModeOptions as $value => $label)
+                            <option value="{{ $value }}" {{ $value === $selectedWorkshopMode ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <noscript>
+                    <button type="submit" class="dashboard-btn inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">
+                        تطبيق
+                    </button>
+                </noscript>
+            </form>
+            <div class="dashboard-filter-meta mt-3 text-xs text-gray-500">
+                <span class="dashboard-filter-chip">
+                    <i class="fas fa-calendar-alt ml-1"></i>
+                    {{ $filterContext['period_label'] }}
+                </span>
+                <span class="dashboard-filter-chip">
+                    <i class="fas fa-map-marker-alt ml-1"></i>
+                    {{ $filterContext['workshop_label'] }}
+                </span>
+                <span class="text-gray-400">{{ $filterContext['range'] }}</span>
+            </div>
+            <p class="dashboard-filter-note text-[0.7rem] text-gray-400 mt-1">
+                ينطبق هذا التخصيص على ملخص النطاق والرسوم البيانية والقوائم التفاعلية.
+            </p>
+        </div>
+
+        <div id="period-summary-section" class="dashboard-anchor bg-white shadow-lg rounded-2xl p-6 mb-10">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">ملخص {{ $periodContext['label'] }}</h2>
+                    <p class="text-sm text-gray-500">
+                        من
+                        {{ $periodContext['start']->copy()->locale(app()->getLocale())->translatedFormat('d F Y') }}
+                        إلى
+                        {{ $periodContext['end']->copy()->locale(app()->getLocale())->translatedFormat('d F Y') }}
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-blue-600">
+                    <i class="fas fa-bolt"></i>
+                    يتم تحديث هذه البيانات كل خمس دقائق عبر تخزين ذكي.
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                @foreach($selectedPeriodSummary as $summary)
+                    <div class="dashboard-card bg-gray-50 border border-gray-100 rounded-xl p-4 flex flex-col h-full">
+                        <div class="flex items-center justify-between text-xs text-gray-500">
+                            <div class="flex items-center gap-2">
+                                <i class="fas {{ $summary['icon'] }} text-gray-400"></i>
+                                <span>{{ $summary['label'] }}</span>
+                            </div>
+                            <span class="trend-indicator {{ $summary['change'] >= 0 ? 'trend-positive' : 'trend-negative' }}">
+                                {{ $summary['change'] >= 0 ? '+' : '−' }}{{ number_format(abs($summary['change']), 1) }}%
+                            </span>
+                        </div>
+                        <div class="mt-3 text-3xl font-bold text-gray-900">
+                            @if($summary['unit'] === 'ر.س')
+                                {{ number_format($summary['value'], 2) }}
+                            @else
+                                {{ number_format($summary['value']) }}
+                            @endif
+                            @if($summary['unit'])
+                                <span class="text-base text-gray-500">{{ $summary['unit'] }}</span>
+                            @endif
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500">{{ $summary['description'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+            <div class="mt-8">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-semibold text-gray-900">تحليل النطاق المحدد</h3>
+                    <span class="text-xs text-gray-500">{{ $periodContext['formatted_range'] }}</span>
+                </div>
+                <div class="chart-container h-72">
+                    <canvas id="periodChart" aria-label="رسم بياني لتحليل النطاق الزمني" role="img"></canvas>
+                </div>
             </div>
         </div>
 
@@ -1032,6 +1137,96 @@ const weeklyChart = new Chart(weeklyCtx, {
         }
     }
 });
+
+// رسم بياني للنطاق الزمني المحدد
+const periodCanvas = document.getElementById('periodChart');
+const periodStatsData = @json($selectedPeriodStats);
+
+if (periodCanvas && periodStatsData.length) {
+    const periodCtx = periodCanvas.getContext('2d');
+    const periodLabels = periodStatsData.map((point) => point.label);
+    const periodBookings = periodStatsData.map((point) => point.bookings);
+    const periodRevenue = periodStatsData.map((point) => point.revenue);
+    const periodUsers = periodStatsData.map((point) => point.users);
+
+    const periodChart = new Chart(periodCtx, {
+        data: {
+            labels: periodLabels,
+            datasets: [{
+                type: 'bar',
+                label: 'الحجوزات',
+                data: periodBookings,
+                backgroundColor: 'rgba(59, 130, 246, 0.35)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1,
+                borderRadius: 6,
+                yAxisID: 'y',
+            }, {
+                type: 'line',
+                label: 'الإيرادات (ر.س)',
+                data: periodRevenue,
+                borderColor: 'rgb(249, 115, 22)',
+                backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                tension: 0.35,
+                fill: true,
+                yAxisID: 'y1',
+            }, {
+                type: 'line',
+                label: 'المستخدمون الجدد',
+                data: periodUsers,
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderDash: [4, 4],
+                tension: 0.25,
+                yAxisID: 'y',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const value = context.parsed.y ?? 0;
+                            if (context.dataset.yAxisID === 'y1') {
+                                return `${context.dataset.label}: ${value.toLocaleString()} ر.س`;
+                            }
+                            return `${context.dataset.label}: ${value.toLocaleString()}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'عدد العمليات'
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'الإيرادات (ر.س)'
+                    }
+                }
+            }
+        }
+    });
+}
 
 // رسم بياني للحجوزات
 const bookingsCtx = document.getElementById('bookingsChart').getContext('2d');

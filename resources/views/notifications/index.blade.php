@@ -42,8 +42,9 @@
                     <!-- Notifications List -->
                     <div class="space-y-4">
                         @foreach($notifications as $notification)
-                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow notification-item {{ $notification->is_read ? 'opacity-75' : 'bg-orange-50 border-orange-200' }}" 
-                                 data-id="{{ $notification->id }}">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow notification-item {{ $notification->is_read ? 'opacity-75' : 'bg-orange-50 border-orange-200' }} cursor-pointer" 
+                                 data-id="{{ $notification->id }}"
+                                 data-action-url="{{ $notification->action_url }}">
                                 <div class="p-6">
                                     <div class="flex items-start space-x-4 rtl:space-x-reverse">
                                         <!-- Icon -->
@@ -250,24 +251,36 @@ document.addEventListener('DOMContentLoaded', function() {
         clearReadNotifications();
     });
     
-    // النقر على إشعار لتحديده كمقروء
+    // النقر على إشعار لتحديده كمقروء والتنقل
     document.querySelectorAll('.notification-item').forEach(item => {
         item.addEventListener('click', function(e) {
-            // تجنب التنفيذ عند النقر على الأزرار
             if (e.target.closest('button')) return;
-            
+
             const notificationId = this.dataset.id;
-            const isRead = this.classList.contains('opacity-75');
-            
-            if (!isRead) {
-                markAsRead(notificationId);
+            const actionUrl = this.dataset.actionUrl || '';
+
+            if (typeof openNotification === 'function') {
+                openNotification(notificationId, actionUrl);
+                return;
+            }
+
+            const navigate = () => {
+                if (actionUrl) {
+                    window.location.href = actionUrl;
+                }
+            };
+
+            if (notificationId) {
+                markAsRead(notificationId).finally(navigate);
+            } else {
+                navigate();
             }
         });
     });
 });
 
 function markAsRead(notificationId) {
-    fetch(`/notifications/${notificationId}/mark-read`, {
+    return fetch(`/notifications/${notificationId}/mark-read`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
