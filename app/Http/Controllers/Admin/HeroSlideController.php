@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HeroSlideRequest;
 use App\Models\HeroSlide;
+use App\Services\HeroSlideMediaService;
 use App\Support\HeroSlideSchemaState;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -251,7 +252,7 @@ class HeroSlideController extends Controller
 
         if ($request->hasFile($key)) {
             $this->deleteImage($original);
-            return $request->file($key)->store('hero-slides', 'public');
+            return HeroSlideMediaService::store($request->file($key));
         }
 
         if ($request->filled($urlKey)) {
@@ -279,7 +280,7 @@ class HeroSlideController extends Controller
             if ($request->hasFile($key)) {
                 $this->deleteImage($original);
 
-                return $request->file($key)->store('hero-slides', 'public');
+                return HeroSlideMediaService::store($request->file($key));
             }
         }
 
