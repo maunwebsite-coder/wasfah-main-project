@@ -15,9 +15,9 @@ class EnhancedImageUploadService
     public static function uploadImage(
         UploadedFile $file,
         string $directory = 'images',
-        int $quality = 85,
-        int $maxWidth = 1200,
-        int $maxHeight = 1200
+        int $quality = 80,
+        int $maxWidth = 1920,
+        int $maxHeight = 1920
     ): array {
         try {
             if (!$file->isValid()) {
@@ -107,9 +107,9 @@ class EnhancedImageUploadService
     public static function compressUploadedFile(
         UploadedFile $file,
         int $maxBytes,
-        int $quality = 85,
-        int $maxWidth = 1200,
-        int $maxHeight = 1200
+        int $quality = 80,
+        int $maxWidth = 1920,
+        int $maxHeight = 1920
     ): array {
         $extension = self::guessExtension($file);
         $mimeType = $file->getMimeType();
