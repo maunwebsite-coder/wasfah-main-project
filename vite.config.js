@@ -28,6 +28,7 @@ export default defineConfig({
                 'resources/js/rating.js',
                 'resources/js/notification-manager.js',
                 'resources/js/confirmation-modal.js',
+                'resources/js/whatsapp-booking.js',
             ],
             refresh: true,
         }),
