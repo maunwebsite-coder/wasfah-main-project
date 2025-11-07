@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Workshop;
 use App\Models\WorkshopView;
+use App\Support\Concerns\HandlesFullTextSearchFallback;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
 
 class WorkshopController extends Controller
 {
+    use HandlesFullTextSearchFallback;
+
     /**
      * عرض صفحة الورشات
      */
@@ -231,15 +234,28 @@ class WorkshopController extends Controller
                 ->orderBy('start_date', 'asc');
         };
 
-        if (Workshop::hasDescriptionFullTextIndex()) {
-            $workshops = Workshop::search($query)
-                ->query($searchQueryCallback)
-                ->get();
-        } else {
+        $fallbackBuilder = function () use ($searchQueryCallback, $query) {
             $builder = Workshop::query();
             $searchQueryCallback($builder);
             $this->applyWorkshopLikeSearch($builder, $query);
-            $workshops = $builder->get();
+
+            return $builder;
+        };
+
+        if (Workshop::hasDescriptionFullTextIndex()) {
+            $workshops = $this->runFullTextAwareQuery(
+                fn () => Workshop::search($query)
+                    ->query($searchQueryCallback)
+                    ->get(),
+                function ($exception) use ($fallbackBuilder) {
+                    Workshop::markDescriptionFullTextUnavailable();
+
+                    return $fallbackBuilder()->get();
+                },
+                'workshops'
+            );
+        } else {
+            $workshops = $fallbackBuilder()->get();
         }
 
         return view('workshops', compact('workshops'))->with('searchQuery', $query);

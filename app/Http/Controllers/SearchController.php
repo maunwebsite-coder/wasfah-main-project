@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Recipe;
 use App\Models\Workshop;
+use App\Support\Concerns\HandlesFullTextSearchFallback;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class SearchController extends Controller
 {
+    use HandlesFullTextSearchFallback;
+
     /**
      * عرض صفحة نتائج البحث
      */
@@ -24,15 +27,11 @@ class SearchController extends Controller
         
         if ($query) {
             if ($type === 'all' || $type === 'recipes') {
-                $recipes = $this->recipeSearchBuilder($request, $query)
-                    ->take(20)
-                    ->get();
+                $recipes = $this->performRecipeSearch($request, $query, 20);
             }
             
             if ($type === 'all' || $type === 'workshops') {
-                $workshops = $this->workshopSearchBuilder($request, $query)
-                    ->take(20)
-                    ->get();
+                $workshops = $this->performWorkshopSearch($request, $query, 20);
             }
         }
         
@@ -138,9 +137,7 @@ class SearchController extends Controller
      */
     private function searchRecipes(string $query, Request $request)
     {
-        return $this->recipeSearchBuilder($request, $query)
-            ->take(5)
-            ->get();
+        return $this->performRecipeSearch($request, $query, 5);
     }
     
     /**
@@ -167,9 +164,37 @@ class SearchController extends Controller
      */
     private function searchWorkshops(string $query, Request $request)
     {
-        return $this->workshopSearchBuilder($request, $query)
-            ->take(5)
-            ->get();
+        return $this->performWorkshopSearch($request, $query, 5);
+    }
+
+    private function performRecipeSearch(Request $request, string $query, int $limit)
+    {
+        return $this->runFullTextAwareQuery(
+            fn () => $this->recipeSearchBuilder($request, $query)->take($limit)->get(),
+            function ($exception) use ($request, $query, $limit) {
+                Recipe::markDescriptionFullTextUnavailable();
+
+                return $this->recipeSearchBuilder($request, $query)
+                    ->take($limit)
+                    ->get();
+            },
+            'recipes'
+        );
+    }
+
+    private function performWorkshopSearch(Request $request, string $query, int $limit)
+    {
+        return $this->runFullTextAwareQuery(
+            fn () => $this->workshopSearchBuilder($request, $query)->take($limit)->get(),
+            function ($exception) use ($request, $query, $limit) {
+                Workshop::markDescriptionFullTextUnavailable();
+
+                return $this->workshopSearchBuilder($request, $query)
+                    ->take($limit)
+                    ->get();
+            },
+            'workshops'
+        );
     }
 
     private function recipeQueryCallback(Request $request): \Closure

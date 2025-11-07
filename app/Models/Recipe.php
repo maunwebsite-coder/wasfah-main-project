@@ -419,6 +419,15 @@ class Recipe extends Model
     }
 
     /**
+     * Mark the description full-text index as unavailable for the current request.
+     */
+    public static function markDescriptionFullTextUnavailable(): void
+    {
+        static::$descriptionFullTextChecked = true;
+        static::$descriptionFullTextExists = false;
+    }
+
+    /**
      * Inspect information_schema to check for a full-text index.
      */
     protected static function fullTextIndexExists(string $indexName): bool
