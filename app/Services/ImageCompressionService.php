@@ -51,6 +51,10 @@ class ImageCompressionService
         int $maxHeight = self::DEFAULT_MAX_HEIGHT,
         $model = null
     ): ?string {
+        $imageResource = null;
+        $optimizedImage = null;
+        $tempPath = null;
+
         try {
             if (!extension_loaded('gd') || !function_exists('imagewebp')) {
                 \Log::warning('GD/WebP not available; storing original file without optimization.');
@@ -62,13 +66,13 @@ class ImageCompressionService
                 throw new \InvalidArgumentException('نوع الملف غير مدعوم');
             }
 
-            $image = self::createImageResource($file);
-            if (!$image) {
+            $imageResource = self::createImageResource($file);
+            if (!$imageResource) {
                 throw new \RuntimeException('فشل في قراءة الصورة');
             }
 
-            $originalWidth = imagesx($image);
-            $originalHeight = imagesy($image);
+            $originalWidth = imagesx($imageResource);
+            $originalHeight = imagesy($imageResource);
 
             $newDimensions = self::calculateNewDimensions(
                 $originalWidth,
@@ -94,7 +98,7 @@ class ImageCompressionService
 
             imagecopyresampled(
                 $optimizedImage,
-                $image,
+                $imageResource,
                 0,
                 0,
                 0,
@@ -123,14 +127,22 @@ class ImageCompressionService
                 fclose($stream);
             }
 
-            imagedestroy($image);
-            imagedestroy($optimizedImage);
-            @unlink($tempPath);
-
             return $relativePath;
         } catch (\Throwable $e) {
             \Log::error('خطأ في ضغط الصورة: ' . $e->getMessage());
             return null;
+        } finally {
+            if ($imageResource instanceof \GdImage || is_resource($imageResource)) {
+                imagedestroy($imageResource);
+            }
+
+            if ($optimizedImage instanceof \GdImage || is_resource($optimizedImage)) {
+                imagedestroy($optimizedImage);
+            }
+
+            if ($tempPath && is_file($tempPath)) {
+                @unlink($tempPath);
+            }
         }
     }
                     break;
@@ -169,22 +181,12 @@ class ImageCompressionService
         }
     }
 
-    /**
-     * حساب الأبعاد الجديدة مع الحفاظ على النسبة
-     *
-     * @param int $originalWidth
-     * @param int $originalHeight
-     * @param int $maxWidth
-     * @param int $maxHeight
-     * @return array
-     */
     private static function calculateNewDimensions(
         int $originalWidth,
         int $originalHeight,
         int $maxWidth,
         int $maxHeight
     ): array {
-        // إذا كانت الصورة أصغر من الحد الأقصى، لا نحتاج لتغيير الحجم
         if ($originalWidth <= $maxWidth && $originalHeight <= $maxHeight) {
             return [
                 'width' => $originalWidth,
@@ -192,15 +194,78 @@ class ImageCompressionService
             ];
         }
 
-        // حساب النسبة
-        $widthRatio = $maxWidth / $originalWidth;
-        $heightRatio = $maxHeight / $originalHeight;
+        $widthRatio = $maxWidth / max(1, $originalWidth);
+        $heightRatio = $maxHeight / max(1, $originalHeight);
         $ratio = min($widthRatio, $heightRatio);
 
         return [
-            'width' => (int)($originalWidth * $ratio),
-            'height' => (int)($originalHeight * $ratio)
+            'width' => max(1, (int) round($originalWidth * $ratio)),
+            'height' => max(1, (int) round($originalHeight * $ratio))
         ];
+    }
+
+    private static function isSupportedMime(?string $mime): bool
+    {
+        if (!$mime) {
+            return false;
+        }
+
+        return in_array(strtolower($mime), [
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'image/bmp',
+            'image/x-ms-bmp',
+        ], true);
+    }
+
+    private static function supportsAlpha(string $mime): bool
+    {
+        return in_array(strtolower($mime), ['image/png', 'image/gif', 'image/webp'], true);
+    }
+
+    private static function createImageResource(UploadedFile $file)
+    {
+        $path = $file->getRealPath() ?: $file->getPathname();
+
+        if (!$path || !is_readable($path)) {
+            return null;
+        }
+
+        $mime = strtolower($file->getMimeType() ?: '');
+
+        return match ($mime) {
+            'image/jpeg', 'image/jpg' => function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($path) : null,
+            'image/png' => function_exists('imagecreatefrompng') ? @imagecreatefrompng($path) : null,
+            'image/gif' => function_exists('imagecreatefromgif') ? @imagecreatefromgif($path) : null,
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($path) : null,
+            'image/bmp', 'image/x-ms-bmp' => function_exists('imagecreatefrombmp') ? @imagecreatefrombmp($path) : null,
+            default => @imagecreatefromstring(file_get_contents($path)),
+        };
+    }
+
+    private static function writeWebpTempFile($image, int $quality): string
+    {
+        $quality = max(10, min(100, $quality));
+
+        $tempBase = tempnam(sys_get_temp_dir(), 'wasfah_webp_');
+        if ($tempBase === false) {
+            throw new \RuntimeException('تعذر إنشاء ملف مؤقت للصورة.');
+        }
+
+        $tempPath = $tempBase . '.webp';
+        if (!@rename($tempBase, $tempPath)) {
+            $tempPath = $tempBase;
+        }
+
+        if (!imagewebp($image, $tempPath, $quality)) {
+            @unlink($tempPath);
+            throw new \RuntimeException('فشل تحويل الصورة إلى WebP.');
+        }
+
+        return $tempPath;
     }
 
     /**
@@ -216,41 +281,11 @@ class ImageCompressionService
     public static function compressFromUrl(
         string $imageUrl,
         string $directory = 'images',
-        int $quality = 80,
-        int $maxWidth = 1200,
-        int $maxHeight = 1200
+        int $quality = self::DEFAULT_QUALITY,
+        int $maxWidth = self::DEFAULT_MAX_WIDTH,
+        int $maxHeight = self::DEFAULT_MAX_HEIGHT
     ): ?string {
         try {
-            // التحقق من وجود PHP GD extension
-            if (!extension_loaded('gd')) {
-                \Log::warning('PHP GD extension غير متوفر، سيتم حفظ الصورة بدون ضغط');
-
-                $context = stream_context_create([
-                    'http' => [
-                        'method' => 'GET',
-                        'header' => [
-                            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
-                            'Accept: image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-                            'Accept-Language: en-US,en;q=0.9'
-                        ]
-                    ]
-                ]);
-
-                $imageData = @file_get_contents($imageUrl, false, $context);
-                if (!$imageData) {
-                    throw new \Exception('فشل في تحميل الصورة من URL');
-                }
-
-                $extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'jpg';
-                $filename = Str::uuid() . '.' . strtolower($extension);
-                $relativePath = trim($directory, '/') . '/' . $filename;
-
-                Storage::disk('public')->put($relativePath, $imageData);
-
-                return $relativePath;
-            }
-
-            // تحميل الصورة من URL
             $context = stream_context_create([
                 'http' => [
                     'method' => 'GET',
@@ -267,27 +302,28 @@ class ImageCompressionService
                 throw new \Exception('فشل في تحميل الصورة من URL');
             }
 
-            // إنشاء ملف مؤقت
             $tempFile = tempnam(sys_get_temp_dir(), 'downloaded_image_');
+            if ($tempFile === false) {
+                throw new \RuntimeException('تعذر إنشاء ملف مؤقت لتحميل الصورة.');
+            }
+
             file_put_contents($tempFile, $imageData);
 
-            // إنشاء UploadedFile وهمي
-            $uploadedFile = new UploadedFile(
-                $tempFile,
-                basename($imageUrl),
-                mime_content_type($tempFile),
-                null,
-                true
-            );
+            try {
+                $uploadedFile = new UploadedFile(
+                    $tempFile,
+                    basename(parse_url($imageUrl, PHP_URL_PATH) ?: Str::uuid() . '.jpg'),
+                    mime_content_type($tempFile) ?: null,
+                    null,
+                    true
+                );
 
-            // ضغط الصورة
-            $result = self::compressAndStore($uploadedFile, $directory, $quality, $maxWidth, $maxHeight);
-
-            // حذف الملف المؤقت
-            unlink($tempFile);
-
-            return $result;
-
+                return self::compressAndStore($uploadedFile, $directory, $quality, $maxWidth, $maxHeight);
+            } finally {
+                if (is_file($tempFile)) {
+                    @unlink($tempFile);
+                }
+            }
         } catch (\Exception $e) {
             \Log::error('خطأ في ضغط الصورة من URL: ' . $e->getMessage());
             return null;
