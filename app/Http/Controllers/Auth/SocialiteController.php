@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Notification;
+use App\Services\ReferralProgramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,11 @@ class SocialiteController extends Controller
         'register_customer',
         'register_chef',
     ];
+
+    public function __construct(
+        protected ReferralProgramService $referrals,
+    ) {
+    }
 
     /**
      * Redirect the user to Google's authentication page.
@@ -57,7 +63,7 @@ class SocialiteController extends Controller
     /**
      * Obtain the user information from Google.
      */
-    public function callback()
+    public function callback(Request $request)
     {
         $stage = 'start';
         $socialUser = null;
@@ -137,6 +143,8 @@ class SocialiteController extends Controller
                 $stage = 'create-new-user:' . $flow;
                 $user = User::create($newUserData);
                 $isNewUser = true;
+
+                $this->assignReferralPartner($request, $user);
 
                 // إنشاء إشعارات ترحيبية للمستخدم الجديد بدون تعطيل عملية تسجيل الدخول في حال الفشل
                 try {
@@ -301,6 +309,19 @@ class SocialiteController extends Controller
             User::CHEF_STATUS_NEEDS_PROFILE,
             User::CHEF_STATUS_REJECTED,
         ], true);
+    }
+
+    private function assignReferralPartner(Request $request, User $user): void
+    {
+        if ($user->referrer_id) {
+            return;
+        }
+
+        $referrer = $this->referrals->rememberedPartner($request);
+
+        if ($referrer) {
+            $this->referrals->assignReferrerIfNeeded($user, $referrer);
+        }
     }
 }
 

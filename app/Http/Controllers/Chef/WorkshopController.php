@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Chef;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
+use App\Models\User;
 use App\Models\Workshop;
+use App\Models\WorkshopBooking;
 use App\Services\EnhancedImageUploadService;
 use App\Services\JitsiMeetingService;
 use Carbon\Carbon;
@@ -50,6 +53,59 @@ class WorkshopController extends Controller
         return view('chef.workshops.index', compact('workshops', 'stats'));
     }
 
+    public function earnings(): \Illuminate\View\View
+    {
+        $chefId = Auth::id();
+
+        $paidBookingsQuery = WorkshopBooking::query()
+            ->where('payment_status', 'paid')
+            ->whereHas('workshop', fn ($query) => $query->where('user_id', $chefId));
+
+        $lifetimeGross = (clone $paidBookingsQuery)->sum('payment_amount');
+        $paidSeats = (clone $paidBookingsQuery)->count();
+        $averageSeat = $paidSeats > 0 ? $lifetimeGross / $paidSeats : 0;
+
+        $now = now();
+        $currentMonthRange = [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()];
+        $previousMonth = $now->copy()->subMonthNoOverflow();
+        $previousMonthRange = [$previousMonth->copy()->startOfMonth(), $previousMonth->copy()->endOfMonth()];
+
+        $currentMonthGross = (clone $paidBookingsQuery)
+            ->whereBetween('created_at', $currentMonthRange)
+            ->sum('payment_amount');
+
+        $previousMonthGross = (clone $paidBookingsQuery)
+            ->whereBetween('created_at', $previousMonthRange)
+            ->sum('payment_amount');
+
+        $workshopBreakdown = Workshop::query()
+            ->where('user_id', $chefId)
+            ->withCount([
+                'bookings as paid_seats' => fn ($query) => $query->where('payment_status', 'paid'),
+            ])
+            ->withSum([
+                'bookings as paid_total' => fn ($query) => $query->where('payment_status', 'paid'),
+            ], 'payment_amount')
+            ->orderByDesc('paid_total')
+            ->take(10)
+            ->get();
+
+        $netRange = [
+            'low' => $lifetimeGross * 0.70,
+            'high' => $lifetimeGross * 0.75,
+        ];
+
+        return view('chef.workshops.earnings', [
+            'lifetimeGross' => $lifetimeGross,
+            'paidSeats' => $paidSeats,
+            'averageSeat' => $averageSeat,
+            'currentMonthGross' => $currentMonthGross,
+            'previousMonthGross' => $previousMonthGross,
+            'netRange' => $netRange,
+            'workshopBreakdown' => $workshopBreakdown,
+        ]);
+    }
+
     public function create(): \Illuminate\View\View
     {
         return view('chef.workshops.create');
@@ -71,6 +127,7 @@ class WorkshopController extends Controller
         $workshop->instructor_avatar = Auth::user()->avatar;
         $workshop->is_featured = false;
         $workshop->save();
+        $this->notifyAdminsIfReviewRequired($workshop);
 
         return redirect()
             ->route('chef.workshops.index')
@@ -568,7 +625,7 @@ class WorkshopController extends Controller
             'duration' => ['required', 'integer', 'min:30', 'max:600'],
             'max_participants' => ['required', 'integer', 'min:1', 'max:500'],
             'price' => ['required', 'numeric', 'min:0'],
-            'currency' => ['required', Rule::in(['JOD', 'AED', 'SAR'])],
+            'currency' => ['required', Rule::in(['JOD'])],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'registration_deadline' => ['nullable', 'date', 'before:start_date'],
@@ -608,6 +665,58 @@ class WorkshopController extends Controller
         }
 
         return $data;
+    }
+
+    protected function notifyAdminsIfReviewRequired(Workshop $workshop): void
+    {
+        if (!$this->workshopRequiresAdminReview($workshop)) {
+            return;
+        }
+
+        $adminIds = User::query()
+            ->where(function ($query) {
+                $query->where('is_admin', true)
+                    ->orWhere('role', User::ROLE_ADMIN);
+            })
+            ->pluck('id');
+
+        if ($adminIds->isEmpty()) {
+            Log::warning('No admin recipients found for workshop review notification.', [
+                'workshop_id' => $workshop->id,
+            ]);
+
+            return;
+        }
+
+        $workshop->loadMissing('chef');
+        $chefName = $workshop->chef?->name ?? 'أحد الشيفات';
+        $reviewUrl = route('admin.workshops.show', $workshop);
+
+        foreach ($adminIds as $adminId) {
+            Notification::createNotification(
+                $adminId,
+                'workshop_review_required',
+                'ورشة جديدة بانتظار المراجعة',
+                "قام {$chefName} بتسجيل ورشة '{$workshop->title}' وهي بانتظار مراجعتك قبل التفعيل.",
+                [
+                    'workshop_id' => $workshop->id,
+                    'workshop_slug' => $workshop->slug,
+                    'review_url' => $reviewUrl,
+                    'chef_id' => $workshop->user_id,
+                ]
+            );
+        }
+    }
+
+    protected function workshopRequiresAdminReview(Workshop $workshop): bool
+    {
+        $currentUser = Auth::user();
+
+        if ($currentUser && $currentUser->isAdmin()) {
+            return false;
+        }
+
+        return !$workshop->is_active;
     }
 
     protected function fillWorkshopData(Workshop $workshop, array $data): void

@@ -9,6 +9,7 @@ use App\Models\Workshop;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens; // ✅ تم إضافة هذا السطر
 
 class User extends Authenticatable
@@ -46,6 +47,13 @@ class User extends Authenticatable
         'last_login_ip',
         'remember_me',
         'remember_me_expires_at',
+        'is_referral_partner',
+        'referral_code',
+        'referrer_id',
+        'referral_commission_rate',
+        'referral_commission_currency',
+        'referral_partner_since_at',
+        'referral_admin_notes',
     ];
 
     /**
@@ -76,7 +84,55 @@ class User extends Authenticatable
             'instagram_followers' => 'integer',
             'youtube_followers' => 'integer',
             'chef_approved_at' => 'datetime',
+            'is_referral_partner' => 'boolean',
+            'referral_partner_since_at' => 'datetime',
+            'referral_commission_rate' => 'decimal:2',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (blank($user->referral_code)) {
+                $user->referral_code = static::generateUniqueReferralCode();
+            }
+        });
+
+        static::saving(function (User $user) {
+            if ($user->is_referral_partner && blank($user->referral_code)) {
+                $user->referral_code = static::generateUniqueReferralCode();
+            }
+
+            if ($user->isDirty('is_referral_partner') && $user->is_referral_partner && blank($user->referral_partner_since_at)) {
+                $user->referral_partner_since_at = now();
+            }
+        });
+    }
+
+    public static function generateUniqueReferralCode(int $length = 10): string
+    {
+        $length = max(6, $length);
+
+        do {
+            $code = Str::upper(Str::random($length));
+        } while (static::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
+    public function ensureReferralCode(bool $persist = true): string
+    {
+        if (filled($this->referral_code)) {
+            return $this->referral_code;
+        }
+
+        $this->referral_code = static::generateUniqueReferralCode();
+
+        if ($persist && $this->exists) {
+            $this->saveQuietly();
+        }
+
+        return $this->referral_code;
     }
 
     /**
@@ -128,6 +184,14 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin || $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Determine if the user can share referral links.
+     */
+    public function isReferralPartner(): bool
+    {
+        return (bool) $this->is_referral_partner;
     }
 
     /**
@@ -196,9 +260,66 @@ class User extends Authenticatable
         return $page->fresh('items');
     }
 
+    public function getReferralCurrencyCodeAttribute(): string
+    {
+        return $this->referral_commission_currency ?: (string) config('referrals.default_currency', 'JOD');
+    }
+
+    public function getReferralCurrencySymbolAttribute(): string
+    {
+        $currency = $this->referral_currency_code;
+
+        return data_get(config('referrals.currencies', []), "{$currency}.symbol", $currency);
+    }
+
+    public function getReferralCurrencyLabelAttribute(): string
+    {
+        $currency = $this->referral_currency_code;
+
+        return data_get(config('referrals.currencies', []), "{$currency}.label", $currency);
+    }
+
+    /**
+     * الرابط القابل للمشاركة لطلبات الدعوة.
+     */
+    public function getReferralLinkAttribute(): ?string
+    {
+        if (!$this->isReferralPartner()) {
+            return null;
+        }
+
+        $code = $this->ensureReferralCode();
+
+        return route('register', ['ref' => $code]);
+    }
+
     /**
      * العلاقات
      */
+    
+    // المستخدم الذي قام بدعوة هذا الحساب
+    public function referralPartner()
+    {
+        return $this->belongsTo(User::class, 'referrer_id');
+    }
+
+    // المستخدمون الذين تم تسجيلهم عبر هذا الحساب
+    public function referredUsers()
+    {
+        return $this->hasMany(User::class, 'referrer_id');
+    }
+
+    // العمولات المكتسبة كشريك إحالة
+    public function referralCommissions()
+    {
+        return $this->hasMany(ReferralCommission::class, 'referral_partner_id');
+    }
+
+    // العمولات الناتجة عن نشاط هذا المستخدم (كمُحال)
+    public function generatedReferralCommissions()
+    {
+        return $this->hasMany(ReferralCommission::class, 'referred_user_id');
+    }
     
     // علاقة مع حجوزات الورشات
     public function workshopBookings()

@@ -369,10 +369,16 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @foreach($attentionItems as $item)
                 @php
-                    $isEmpty = (int) $item['value'] === 0;
+                    $format = $item['format'] ?? 'number';
+                    $rawValue = $item['value'] ?? 0;
+                    $isEmpty = (float) $rawValue === 0.0;
                     $destination = $item['route'] ?? null;
                     $params = $item['route_params'] ?? [];
                     $url = $item['url'] ?? ($destination ? route($destination, $params) : '#');
+
+                    $displayValue = $format === 'currency'
+                        ? number_format((float) $rawValue, 2) . ' د.أ'
+                        : number_format((int) $rawValue);
                 @endphp
                 <a href="{{ $url }}" class="attention-card {{ $isEmpty ? 'is-empty' : '' }}">
                     <div class="attention-card__icon">
@@ -380,7 +386,7 @@
                     </div>
                     <div>
                         <span class="attention-card__label">{{ $item['label'] }}</span>
-                        <span class="attention-card__value">{{ number_format($item['value']) }}</span>
+                        <span class="attention-card__value">{{ $displayValue }}</span>
                         <span class="attention-card__status">
                             {{ $isEmpty ? $item['empty_state'] : $item['cta'] }}
                         </span>

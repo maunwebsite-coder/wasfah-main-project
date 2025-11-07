@@ -860,7 +860,6 @@
                                     <select name="currency"
                                             class="form-select sm:w-44 @error('currency') is-invalid @enderror">
                                         <option value="JOD" {{ old('currency', 'JOD') == 'JOD' ? 'selected' : '' }}>دينار أردني</option>
-                                        <option value="AED" {{ old('currency', 'JOD') == 'AED' ? 'selected' : '' }}>درهم إماراتي</option>
                                     </select>
                                 </div>
                                 @error('price')

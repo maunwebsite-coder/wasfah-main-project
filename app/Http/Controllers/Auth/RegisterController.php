@@ -7,6 +7,7 @@ use App\Mail\RegistrationVerificationCodeMail;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
 use App\Models\Workshop;
+use App\Services\ReferralProgramService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,11 @@ use Throwable;
 class RegisterController extends Controller
 {
     private const MAX_VERIFICATION_ATTEMPTS = 5;
+
+    public function __construct(
+        protected ReferralProgramService $referrals,
+    ) {
+    }
 
     /**
      * Handle registration with email/password.
@@ -49,18 +55,19 @@ class RegisterController extends Controller
         }
 
         $role = $data['role'] ?? User::ROLE_CUSTOMER;
+        $pendingReferrer = $this->referrals->rememberedPartner($request);
 
         $requireVerification = (bool) config('services.registration.require_email_verification', false);
 
         if (!$requireVerification) {
-            return $this->registerWithoutEmailVerification($request, $data, $role)
+            return $this->registerWithoutEmailVerification($request, $data, $role, $pendingReferrer)
                 ->with('info', 'تم إنشاء الحساب مباشرةً بدون الحاجة لتفعيل البريد الإلكتروني.');
         }
 
         if (!Schema::hasTable('email_verification_codes')) {
             Log::warning('email_verification_codes table missing; falling back to direct registration.');
 
-            return $this->registerWithoutEmailVerification($request, $data, $role)
+            return $this->registerWithoutEmailVerification($request, $data, $role, $pendingReferrer)
                 ->with('info', 'تم إنشاء الحساب مباشرةً بسبب صيانة نظام التحقق.');
         }
 
@@ -74,6 +81,7 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'password_hash' => Hash::make($data['password']),
             'role' => $role,
+            'referrer_id' => $pendingReferrer?->id,
             'verification_code' => Hash::make($verificationCode),
             'expires_at' => now()->addMinutes(15),
         ]);
@@ -215,6 +223,8 @@ class RegisterController extends Controller
                 : null,
         ]);
 
+        $this->attachReferrerIfAvailable($request, $user, $verification->referrer_id);
+
         $verification->delete();
         session()->forget(['register_verification_token', 'register_pending_email']);
 
@@ -318,7 +328,7 @@ class RegisterController extends Controller
     /**
      * Create the user immediately when verification storage is unavailable.
      */
-    private function registerWithoutEmailVerification(Request $request, array $data, string $role): RedirectResponse
+    private function registerWithoutEmailVerification(Request $request, array $data, string $role, ?User $referrer = null): RedirectResponse
     {
         $user = User::create([
             'name' => $data['name'],
@@ -333,6 +343,30 @@ class RegisterController extends Controller
                 : null,
         ]);
 
+        $this->attachReferrerIfAvailable($request, $user, $referrer?->id);
+
         return $this->completeRegistration($request, $user);
+    }
+
+    /**
+     * Link the new user to a referral partner when available.
+     */
+    private function attachReferrerIfAvailable(Request $request, User $user, ?int $fallbackReferrerId = null): void
+    {
+        $referrer = null;
+
+        if ($fallbackReferrerId) {
+            $referrer = User::where('id', $fallbackReferrerId)
+                ->where('is_referral_partner', true)
+                ->first();
+        }
+
+        if (!$referrer) {
+            $referrer = $this->referrals->rememberedPartner($request);
+        }
+
+        if ($referrer) {
+            $this->referrals->assignReferrerIfNeeded($user, $referrer);
+        }
     }
 }

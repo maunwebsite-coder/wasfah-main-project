@@ -130,8 +130,17 @@ class WorkshopController extends Controller
     /**
      * عرض تفاصيل ورشة محددة
      */
-    public function show(Workshop $workshop)
+    public function show(string $slug)
     {
+        $workshop = Workshop::active()
+            ->with('recipes')
+            ->where('slug', $slug)
+            ->first();
+
+        if (!$workshop) {
+            return $this->renderWorkshopNotFoundResponse($slug);
+        }
+
         // الحصول على عنوان IP للمستخدم
         $ipAddress = request()->ip();
         $userAgent = request()->userAgent();
@@ -152,9 +161,6 @@ class WorkshopController extends Controller
         if ($view->wasRecentlyCreated) {
             $workshop->increment('views_count');
         }
-
-        // جلب الوصفات المرتبطة بالورشة
-        $workshop->load('recipes');
 
         // ورشات مشابهة
         $relatedWorkshops = Workshop::active()
@@ -177,6 +183,32 @@ class WorkshopController extends Controller
         }
 
         return view('workshop-details', compact('workshop', 'relatedWorkshops', 'userBooking'));
+    }
+
+    /**
+     * واجهة صديقة للمستخدم عند عدم العثور على ورشة
+     */
+    protected function renderWorkshopNotFoundResponse(string $slug)
+    {
+        $suggestedWorkshops = Workshop::active()
+            ->upcoming()
+            ->orderBy('start_date', 'asc')
+            ->take(3)
+            ->get();
+
+        $popularCategories = Workshop::active()
+            ->selectRaw('category, COUNT(*) as total')
+            ->whereNotNull('category')
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get();
+
+        return response()->view('workshops.not-found', [
+            'missingSlug' => $slug,
+            'suggestedWorkshops' => $suggestedWorkshops,
+            'popularCategories' => $popularCategories,
+        ], 404);
     }
 
     /**

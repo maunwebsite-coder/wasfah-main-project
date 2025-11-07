@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('duration'); // مدة الورشة بالدقائق
             $table->integer('max_participants')->default(20); // الحد الأقصى للمشاركين
             $table->decimal('price', 8, 2); // سعر الورشة
-            $table->string('currency', 3)->default('SAR'); // العملة
+            $table->string('currency', 3)->default('JOD'); // العملة
             $table->string('image')->nullable(); // صورة الورشة
             $table->json('images')->nullable(); // صور إضافية للورشة
             $table->string('location'); // موقع الورشة

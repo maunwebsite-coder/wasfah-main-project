@@ -57,7 +57,7 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <dt class="font-semibold text-slate-800">المبلغ</dt>
-                        <dd>{{ number_format($booking->payment_amount ?? $workshop->price ?? 0, 2) }} {{ $workshop->currency ?? 'SAR' }}</dd>
+                        <dd>{{ number_format($booking->payment_amount ?? $workshop->price ?? 0, 2) }} {{ $workshop->currency ?? 'JOD' }}</dd>
                     </div>
                     <div>
                         <dt class="font-semibold text-slate-800 mb-1">الملاحظات</dt>

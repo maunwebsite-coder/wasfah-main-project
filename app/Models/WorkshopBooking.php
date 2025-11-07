@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Services\WorkshopLinkSecurityService;
+use App\Services\ReferralProgramService;
 
 class WorkshopBooking extends Model
 {
@@ -32,6 +33,8 @@ class WorkshopBooking extends Model
         static::updated(function ($booking) {
             $originalStatus = $booking->getOriginal('status');
             $newStatus = $booking->status;
+            $originalPaymentStatus = $booking->getOriginal('payment_status');
+            $newPaymentStatus = $booking->payment_status;
 
             // إذا تغيرت الحالة من غير مؤكد إلى مؤكد
             if ($originalStatus !== 'confirmed' && $newStatus === 'confirmed') {
@@ -41,12 +44,26 @@ class WorkshopBooking extends Model
             elseif ($originalStatus === 'confirmed' && $newStatus !== 'confirmed') {
                 $booking->workshop->decrement('bookings_count');
             }
+
+            if ($originalPaymentStatus !== $newPaymentStatus) {
+                $referrals = app(ReferralProgramService::class);
+
+                if ($newPaymentStatus === 'paid') {
+                    $referrals->handleBookingPaid($booking);
+                } elseif ($originalPaymentStatus === 'paid') {
+                    $referrals->handleBookingPaymentReverted($booking);
+                }
+            }
         });
 
         // عند حذف حجز
         static::deleted(function ($booking) {
             if ($booking->status === 'confirmed') {
                 $booking->workshop->decrement('bookings_count');
+            }
+
+            if ($booking->payment_status === 'paid') {
+                app(ReferralProgramService::class)->handleBookingPaymentReverted($booking, 'booking_deleted');
             }
         });
     }

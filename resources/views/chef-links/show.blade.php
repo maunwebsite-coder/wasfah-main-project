@@ -298,7 +298,7 @@
                 @php
                     $upcomingDate = optional($upcomingWorkshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a');
                     $upcomingLocation = $upcomingWorkshop->is_online ? 'أونلاين عبر المنصة' : ($upcomingWorkshop->location ?: 'سيتم تحديد الموقع');
-                    $upcomingPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'SAR'));
+                    $upcomingPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'JOD'));
                 @endphp
                 <a href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop->slug]) }}" target="_blank" rel="noopener" class="link-card link-card--upcoming">
                     <span class="link-icon">

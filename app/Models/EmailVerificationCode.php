@@ -17,6 +17,7 @@ class EmailVerificationCode extends Model
         'email',
         'password_hash',
         'role',
+        'referrer_id',
         'verification_code',
         'expires_at',
         'attempts',
@@ -25,6 +26,7 @@ class EmailVerificationCode extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'attempts' => 'integer',
+        'referrer_id' => 'integer',
     ];
 
     public function isExpired(): bool
@@ -34,4 +36,3 @@ class EmailVerificationCode extends Model
             : true;
     }
 }
-

@@ -1125,7 +1125,7 @@ function initWorkshopDetailsBooking() {
                                 <p><i class="fas fa-calendar-alt text-blue-500 ml-2"></i> ${workshopDate}</p>
                                 <p><i class="fas fa-user text-purple-500 ml-2"></i> ${workshopInstructor}</p>
                                 <p><i class="fas fa-map-marker-alt text-red-500 ml-2"></i> ${workshopLocation}</p>
-                                <p><i class="fas fa-tag text-green-500 ml-2"></i> ${workshopPrice} ريال</p>
+                                <p><i class="fas fa-tag text-green-500 ml-2"></i> ${workshopPrice} دينار أردني</p>
                             </div>
                         </div>
                         

@@ -11,8 +11,6 @@
     ];
     $currencies = [
         'JOD' => 'دينار أردني',
-        'AED' => 'درهم إماراتي',
-        'SAR' => 'ريال سعودي',
     ];
     $isOnline = old('is_online', $workshop->is_online ?? true);
     $autoGenerateMeeting = old(
@@ -150,6 +148,20 @@
                 <input type="number" id="max_participants" name="max_participants" min="1" max="500" required
                        value="{{ old('max_participants', $workshop->max_participants ?? 15) }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('max_participants') border-red-400 focus:ring-red-200 @enderror">
+            </div>
+            <div class="md:col-span-3">
+                <div class="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white text-amber-500 shadow-inner">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="font-semibold text-amber-900">هام:</p>
+                        <p class="leading-relaxed">
+                            يتم اقتطاع نسبة تتراوح بين <strong>25% – 30%</strong> لصالح منصّة وصفة عند إنشاء الورشة لتغطية بوابات الدفع، الدعم التقني والتسويق.
+                            بعد خصم هذه النسبة يتم تحويل الصافي إليك خلال 7 أيام عمل من انتهاء الورشة.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

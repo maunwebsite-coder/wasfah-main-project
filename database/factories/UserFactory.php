@@ -33,6 +33,12 @@ class UserFactory extends Factory
             'chef_status' => \App\Models\User::CHEF_STATUS_NEEDS_PROFILE,
             'instagram_followers' => 0,
             'youtube_followers' => 0,
+            'is_referral_partner' => false,
+            'referral_commission_rate' => 5,
+            'referral_commission_currency' => config('referrals.default_currency', 'JOD'),
+            'referrer_id' => null,
+            'referral_partner_since_at' => null,
+            'referral_admin_notes' => null,
         ];
     }
 

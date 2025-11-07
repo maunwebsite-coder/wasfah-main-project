@@ -99,7 +99,7 @@ class ParticipantWorkshopLinkSecurityTest extends TestCase
             'duration' => 120,
             'max_participants' => 30,
             'price' => 150.00,
-            'currency' => 'SAR',
+            'currency' => 'JOD',
             'image' => null,
             'images' => null,
             'location' => 'Online',

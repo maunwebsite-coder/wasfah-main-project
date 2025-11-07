@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Recipe;
+use App\Models\ReferralCommission;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Support\Carbon;
@@ -19,12 +20,12 @@ class AdminAreaController extends Controller
         $pendingRecipeCount = Recipe::where('status', Recipe::STATUS_PENDING)->count();
 
         $chefCount = User::where('role', User::ROLE_CHEF)->count();
-        $pendingChefCount = User::where('role', User::ROLE_CHEF)
-            ->where('chef_status', User::CHEF_STATUS_PENDING)
-            ->count();
 
         $workshopCount = Workshop::count();
         $activeWorkshopCount = Workshop::where('is_active', true)->count();
+
+        $referralPartnerCount = User::where('is_referral_partner', true)->count();
+        $pendingReferralAmount = ReferralCommission::where('status', ReferralCommission::STATUS_READY)->sum('commission_amount');
 
         $metrics = [
             [
@@ -55,17 +56,16 @@ class AdminAreaController extends Controller
                 'route' => 'admin.workshops.index',
                 'hint' => 'ورشات متاحة للحجوزات',
             ],
+            [
+                'label' => 'شركاء الإحالات',
+                'value' => $referralPartnerCount,
+                'icon' => 'fa-link',
+                'route' => 'admin.referrals.index',
+                'hint' => 'برنامج الشركاء ومراقبة العمولات',
+            ],
         ];
 
         $attentionItems = [
-            [
-                'label' => 'طلبات الشيفات المعلقة',
-                'value' => $pendingChefCount,
-                'icon' => 'fa-user-clock',
-                'route' => 'admin.chefs.requests',
-                'cta' => 'مراجعة الطلبات',
-                'empty_state' => 'لا توجد طلبات جديدة الآن',
-            ],
             [
                 'label' => 'وصفات تنتظر الموافقة',
                 'value' => $pendingRecipeCount,
@@ -74,6 +74,15 @@ class AdminAreaController extends Controller
                 'route_params' => ['status' => Recipe::STATUS_PENDING],
                 'cta' => 'مراجعة الوصفات',
                 'empty_state' => 'كل الوصفات منشورة',
+            ],
+            [
+                'label' => 'عمولات جاهزة للتحويل',
+                'value' => $pendingReferralAmount,
+                'icon' => 'fa-coins',
+                'route' => 'admin.referrals.index',
+                'cta' => 'مراجعة العمولات',
+                'empty_state' => 'لا توجد مبالغ جاهزة',
+                'format' => 'currency',
             ],
         ];
 
@@ -107,6 +116,16 @@ class AdminAreaController extends Controller
                 'label' => 'إضافة أداة',
                 'icon' => 'fa-tools',
                 'route' => 'admin.tools.create',
+            ],
+            [
+                'label' => 'برنامج الإحالات',
+                'icon' => 'fa-link',
+                'route' => 'admin.referrals.index',
+            ],
+            [
+                'label' => 'إدارة المستخدمين',
+                'icon' => 'fa-users',
+                'route' => 'admin.users.index',
             ],
         ];
 
@@ -170,6 +189,41 @@ class AdminAreaController extends Controller
                     [
                         'label' => 'صفحة روابط Wasfah',
                         'url' => 'https://wasfah.ae/wasfah-links',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'المستخدمون',
+                'description' => 'متابعة المشتركين، الشيفات، وشركاء الإحالات.',
+                'icon' => 'fa-users',
+                'items' => [
+                    [
+                        'label' => 'جميع المستخدمين',
+                        'route' => 'admin.users.index',
+                    ],
+                    [
+                        'label' => 'طلبات الشيفات',
+                        'route' => 'admin.chefs.requests',
+                    ],
+                    [
+                        'label' => 'شركاء الإحالات',
+                        'route' => 'admin.referrals.index',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'برنامج الإحالات',
+                'description' => 'إدارة الشركاء ومتابعة العمولات الجاهزة للدفع.',
+                'icon' => 'fa-link',
+                'items' => [
+                    [
+                        'label' => 'إحصائيات الشركاء',
+                        'route' => 'admin.referrals.index',
+                    ],
+                    [
+                        'label' => 'تفعيل شريك جديد',
+                        'route' => 'admin.referrals.index',
+                        'params' => ['open' => 'activate'],
                     ],
                 ],
             ],

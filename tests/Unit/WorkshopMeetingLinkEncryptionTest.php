@@ -68,7 +68,7 @@ class WorkshopMeetingLinkEncryptionTest extends TestCase
             'duration' => 90,
             'max_participants' => 25,
             'price' => 200.00,
-            'currency' => 'SAR',
+            'currency' => 'JOD',
             'image' => null,
             'images' => null,
             'location' => 'Online',

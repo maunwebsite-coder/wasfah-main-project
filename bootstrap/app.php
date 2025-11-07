@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
 			'update.last.login' => \App\Http\Middleware\UpdateLastLogin::class,
 			'chef' => \App\Http\Middleware\EnsureUserIsChef::class,
 			'moderate.content' => \App\Http\Middleware\EnforceContentModeration::class,
+			'capture.referral' => \App\Http\Middleware\CaptureReferralFromRequest::class,
+			'referral.partner' => \App\Http\Middleware\EnsureReferralPartner::class,
 		]);
 		
 		// إضافة middleware لتحديث آخر تسجيل دخول لجميع الطلبات المصادق عليها
@@ -29,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
 				\App\Http\Middleware\EnforceContentModeration::class,
 			],
 			append: [
+				\App\Http\Middleware\CaptureReferralFromRequest::class,
 				\App\Http\Middleware\UpdateLastLogin::class,
 			]
 		);

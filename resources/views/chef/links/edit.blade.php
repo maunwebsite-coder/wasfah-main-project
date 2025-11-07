@@ -37,12 +37,12 @@
                 <h1 class="text-3xl font-bold text-gray-900">إدارة صفحة الروابط الخاصة بك</h1>
                 <p class="text-gray-600 mt-1">خصص صفحتك الموحدة وشاركها مع جمهورك عبر المنصات الاجتماعية.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ $publicUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 py-2 text-orange-600 hover:bg-orange-50 transition">
+            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
+                <a href="{{ $publicUrl }}" target="_blank" rel="noopener" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-4 py-2 text-orange-600 hover:bg-orange-50 transition sm:w-auto">
                     <i class="fas fa-external-link-alt"></i>
                     معاينة الصفحة
                 </a>
-                <button type="button" data-copy-target="#chef-links-url" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
+                <button type="button" data-copy-target="#chef-links-url" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition sm:w-auto">
                     <i class="fas fa-copy"></i>
                     نسخ الرابط
                 </button>
@@ -67,15 +67,15 @@
             </div>
         @endif
 
-        <div class="grid gap-8 lg:grid-cols-3">
-            <div class="lg:col-span-2 space-y-8">
+        <div class="grid gap-8 lg:grid-cols-3 lg:items-start">
+            <div class="order-2 space-y-8 lg:order-1 lg:col-span-2">
                 <div class="rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
+                    <div class="border-b border-gray-100 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
                         <h2 class="text-lg font-semibold text-gray-800">محتوى الصفحة</h2>
                         <p class="text-sm text-gray-500 mt-1">حدد العناوين والألوان وصورة العرض لتظهر بشكل متناسق مع هويتك.</p>
                     </div>
 
-                    <form action="{{ route('chef.links.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6 px-6 py-6">
+                    <form action="{{ route('chef.links.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
                         @csrf
                         @method('PUT')
 
@@ -143,7 +143,7 @@
                         </div>
 
                         <div class="space-y-4 rounded-2xl border border-orange-100 bg-orange-50/40 px-5 py-5">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
                                     <p class="text-sm font-semibold text-gray-900">إبراز الورشة القادمة</p>
                                     <p class="text-xs text-gray-500 mt-1">فعّل الخيار لإظهار بطاقة الورشة القادمة تلقائياً في صفحة Wasfah Links الخاصة بك.</p>
@@ -169,7 +169,7 @@
                                     $workshopPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'SAR'));
                                 @endphp
                                 <div class="rounded-2xl border border-dashed border-orange-200 bg-white/90 px-4 py-4 shadow-sm">
-                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
                                             <h3 class="text-base font-semibold text-gray-900">{{ $upcomingWorkshop->title }}</h3>
                                             <p class="text-xs text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($upcomingWorkshop->description ?? 'ورشة مميزة يقدمها الشيف.', 120) }}</p>
@@ -195,7 +195,7 @@
                                             <span>{{ $workshopPrice }}</span>
                                         </div>
                                     </div>
-                                    <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                    <div class="mt-4 flex flex-col gap-3 text-xs text-gray-500 sm:flex-row sm:flex-wrap sm:items-center">
                                         <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-700">
                                             <i class="fas fa-users"></i>
                                             {{ number_format($upcomingWorkshop->bookings_count ?? 0) }} حجز
@@ -208,7 +208,7 @@
                                         @endif
                                     </div>
                                     <div class="mt-4">
-                                        <a href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop->slug]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700">
+                                        <a href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop->slug]) }}" target="_blank" rel="noopener" class="inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-700 sm:w-auto sm:justify-start">
                                             <i class="fas fa-arrow-up-right-from-square"></i>
                                             عرض صفحة الورشة
                                         </a>
@@ -234,12 +234,12 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap gap-3">
-                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                            <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition sm:w-auto">
                                 <i class="fas fa-save"></i>
                                 حفظ المحتوى
                             </button>
-                            <a href="{{ $publicUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-5 py-3 text-gray-600 hover:bg-gray-50 transition">
+                            <a href="{{ $publicUrl }}" target="_blank" rel="noopener" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-5 py-3 text-gray-600 hover:bg-gray-50 transition sm:w-auto">
                                 <i class="fas fa-eye"></i>
                                 مشاهدة الصفحة
                             </a>
@@ -248,12 +248,12 @@
                 </div>
 
                 <div class="rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
+                    <div class="border-b border-gray-100 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
                         <h2 class="text-lg font-semibold text-gray-800">روابط الصفحة</h2>
                         <p class="text-sm text-gray-500 mt-1">أضف الروابط المهمة لجمهورك ورتّبها حسب الأولوية.</p>
                     </div>
 
-                    <div class="space-y-4 px-6 py-6">
+                    <div class="space-y-4 px-4 py-5 sm:px-6 sm:py-6">
                         @forelse ($items as $item)
                             @php
                                 $isCurrent = (int) old('item_id') === $item->id && old('form_context') !== 'create';
@@ -276,13 +276,13 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="flex flex-wrap items-center gap-3 text-xs">
+                                    <div class="flex flex-col gap-3 text-xs sm:flex-row sm:flex-wrap sm:items-center">
                                         <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold {{ $item->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
                                             <span class="h-2 w-2 rounded-full {{ $item->is_active ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
                                             {{ $item->is_active ? 'مفعل' : 'معطل' }}
                                         </span>
                                         <span class="rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-500">#{{ $item->position }}</span>
-                                        <button type="button" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 hover:text-gray-700 transition" data-copy-link="{{ $item->url }}">
+                                        <button type="button" class="inline-flex w-full items-center justify-center gap-1 rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 hover:text-gray-700 transition sm:w-auto" data-copy-link="{{ $item->url }}">
                                             <i class="fas fa-copy text-xs"></i>
                                             نسخ الرابط
                                         </button>
@@ -332,16 +332,16 @@
                                             </div>
                                         </div>
 
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-white text-sm font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                            <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-white text-sm font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition sm:w-auto">
                                                 <i class="fas fa-save"></i>
                                                 حفظ التعديلات
                                             </button>
-                                            <a href="{{ $itemUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition">
+                                            <a href="{{ $itemUrl }}" target="_blank" rel="noopener" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition sm:w-auto">
                                                 <i class="fas fa-external-link-alt"></i>
                                                 فتح الرابط
                                             </a>
-                                            <button type="submit" form="delete-link-{{ $item->id }}" class="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition" data-delete-button data-delete-confirm="هل أنت متأكد من رغبتك في حذف هذا الرابط؟">
+                                            <button type="submit" form="delete-link-{{ $item->id }}" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition sm:w-auto" data-delete-button data-delete-confirm="هل أنت متأكد من رغبتك في حذف هذا الرابط؟">
                                                 <i class="fas fa-trash"></i>
                                                 حذف الرابط
                                             </button>
@@ -355,7 +355,7 @@
                                 </div>
                             </details>
                         @empty
-                            <div class="rounded-2xl border border-dashed border-gray-200 bg-white px-6 py-10 text-center text-gray-500">
+                            <div class="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-gray-500 sm:px-6 sm:py-10">
                                 <i class="fas fa-link text-3xl text-orange-400 mb-3"></i>
                                 <p class="font-semibold text-gray-700 mb-2">لم تضف أي رابط بعد</p>
                                 <p class="text-sm mb-0">ابدأ بإضافة أول رابط لك من النموذج أدناه.</p>
@@ -365,7 +365,7 @@
                 </div>
             </div>
 
-            <div class="space-y-8">
+            <div class="order-1 space-y-8 lg:order-2 lg:sticky lg:top-8">
                 <div id="chef-links-preview" class="rounded-3xl border border-orange-100 bg-white shadow-sm overflow-hidden" style="--accent-color: {{ $accentColorValue }};" data-default-color="{{ $accentColorValue }}">
                     <div class="relative h-36" style="background: linear-gradient(135deg, var(--accent-color), rgba(249, 115, 22, 0.3));">
                         <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.7), transparent 60%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.5), transparent 60%);"></div>
@@ -379,7 +379,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="space-y-4 px-6 py-6">
+                    <div class="space-y-4 px-4 py-5 sm:px-6 sm:py-6">
                         <p id="preview-subheadline" class="text-sm font-medium text-gray-800" data-default="عرّف متابعيك بلمحة سريعة عنك">{{ $subheadlineValue ?: 'عرّف متابعيك بلمحة سريعة عنك' }}</p>
                         <p id="preview-bio" class="text-sm text-gray-500 leading-relaxed" data-default="شارك وصفاً قصيراً، روابطك، وأبرز إنجازاتك لتشجيع الجمهور على التفاعل." data-preview-type="multiline">{{ $bioValue ?: 'شارك وصفاً قصيراً، روابطك، وأبرز إنجازاتك لتشجيع الجمهور على التفاعل.' }}</p>
                         <a id="preview-cta" href="{{ $ctaUrlValue }}" class="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition" style="background-color: var(--accent-color); box-shadow: 0 14px 28px -16px var(--accent-color);">
@@ -419,7 +419,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-3xl border border-gray-100 bg-white shadow-sm px-6 py-6 space-y-4">
+                <div class="rounded-3xl border border-gray-100 bg-white shadow-sm px-4 py-5 space-y-4 sm:px-6 sm:py-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <p class="text-sm font-semibold text-gray-800">حالة الصفحة</p>
@@ -430,7 +430,7 @@
                             {{ $page->is_published ? 'منشورة' : 'غير منشورة' }}
                         </span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="grid grid-cols-1 gap-3 text-center sm:grid-cols-2">
                         <div class="rounded-2xl bg-gray-50 px-3 py-4">
                             <p class="text-xs text-gray-500 mb-1">روابط فعّالة</p>
                             <p class="text-xl font-semibold text-gray-800">{{ $activeItemsCount }}</p>
@@ -446,13 +446,13 @@
                     </div>
                 </div>
                 <div class="rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
+                    <div class="border-b border-gray-100 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
                         <h3 class="text-lg font-semibold text-gray-800">إضافة رابط جديد</h3>
                         <p class="text-sm text-gray-500 mt-1">أضف روابط الشبكات الاجتماعية أو الورشات أو أي محتوى تريد الترويج له.</p>
                     </div>
 
                     @if (!empty($linkPresets))
-                        <div class="px-6 pt-6">
+                        <div class="px-4 pt-5 sm:px-6 sm:pt-6">
                             <div class="rounded-2xl border border-dashed border-orange-200 bg-orange-50/70 px-4 py-4 space-y-3">
                                 <p class="text-xs font-semibold uppercase tracking-widest text-orange-600">قوالب جاهزة</p>
                                 <div class="grid gap-2 sm:grid-cols-2">
@@ -468,7 +468,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('chef.links.items.store') }}" method="POST" class="px-6 py-6 space-y-4" data-new-link-form>
+                    <form action="{{ route('chef.links.items.store') }}" method="POST" class="px-4 py-5 space-y-4 sm:px-6 sm:py-6" data-new-link-form>
                         @csrf
                         <input type="hidden" name="form_context" value="create">
 
@@ -509,7 +509,7 @@
                     </form>
                 </div>
 
-                <div class="rounded-3xl border border-gray-100 bg-white shadow-sm p-6 space-y-4">
+                <div class="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 space-y-4 sm:p-6">
                     <h3 class="text-lg font-semibold text-gray-800">نصائح سريعة</h3>
                     <ul class="space-y-3 text-sm text-gray-600 leading-relaxed">
                         <li class="flex items-start gap-3">

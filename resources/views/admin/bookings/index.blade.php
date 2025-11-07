@@ -667,11 +667,11 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">نطاق السعر</label>
                             <select name="price_range" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">جميع الأسعار</option>
-                                <option value="0-50" {{ request('price_range') == '0-50' ? 'selected' : '' }}>0 - 50 ريال</option>
-                                <option value="50-100" {{ request('price_range') == '50-100' ? 'selected' : '' }}>50 - 100 ريال</option>
-                                <option value="100-200" {{ request('price_range') == '100-200' ? 'selected' : '' }}>100 - 200 ريال</option>
-                                <option value="200-500" {{ request('price_range') == '200-500' ? 'selected' : '' }}>200 - 500 ريال</option>
-                                <option value="500+" {{ request('price_range') == '500+' ? 'selected' : '' }}>أكثر من 500 ريال</option>
+                                <option value="0-50" {{ request('price_range') == '0-50' ? 'selected' : '' }}>0 - 50 دينار أردني</option>
+                                <option value="50-100" {{ request('price_range') == '50-100' ? 'selected' : '' }}>50 - 100 دينار أردني</option>
+                                <option value="100-200" {{ request('price_range') == '100-200' ? 'selected' : '' }}>100 - 200 دينار أردني</option>
+                                <option value="200-500" {{ request('price_range') == '200-500' ? 'selected' : '' }}>200 - 500 دينار أردني</option>
+                                <option value="500+" {{ request('price_range') == '500+' ? 'selected' : '' }}>أكثر من 500 دينار أردني</option>
                             </select>
                         </div>
 
@@ -811,7 +811,7 @@
                 @endif
                 @if(request('price_range'))
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-                        السعر: {{ request('price_range') == '0-50' ? '0-50 ريال' : (request('price_range') == '50-100' ? '50-100 ريال' : (request('price_range') == '100-200' ? '100-200 ريال' : (request('price_range') == '200-500' ? '200-500 ريال' : 'أكثر من 500 ريال'))) }}
+                        السعر: {{ request('price_range') == '0-50' ? '0-50 دينار أردني' : (request('price_range') == '50-100' ? '50-100 دينار أردني' : (request('price_range') == '100-200' ? '100-200 دينار أردني' : (request('price_range') == '200-500' ? '200-500 دينار أردني' : 'أكثر من 500 دينار أردني'))) }}
                     </span>
                 @endif
                 @if(request('payment_method'))

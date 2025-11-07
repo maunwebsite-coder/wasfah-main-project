@@ -21,6 +21,11 @@
                     <i class="fas fa-plus"></i>
                     إضافة ورشة جديدة
                 </a>
+                <a href="{{ route('chef.workshops.earnings') }}"
+                   class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-emerald-600 shadow-sm hover:border-emerald-300 hover:text-emerald-700">
+                    <i class="fas fa-wallet"></i>
+                    عوائد الورش
+                </a>
                 <a href="{{ route('chef.dashboard') }}"
                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-slate-600 shadow-sm hover:border-slate-300 hover:text-slate-800">
                     <i class="fas fa-arrow-right"></i>

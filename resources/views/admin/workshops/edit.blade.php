@@ -150,7 +150,6 @@
         @php
             $currencyLabels = [
                 'JOD' => 'دينار أردني',
-                'AED' => 'درهم إماراتي',
             ];
             $priceFormatted = number_format($workshop->price, 2);
             $isOnlineOld = old('is_online', $workshop->is_online);
@@ -398,7 +397,6 @@
                                 <select name="currency"
                                         class="rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 @error('currency') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror">
                                     <option value="JOD" {{ old('currency', $workshop->currency) == 'JOD' ? 'selected' : '' }}>دينار أردني</option>
-                                    <option value="AED" {{ old('currency', $workshop->currency) == 'AED' ? 'selected' : '' }}>درهم إماراتي</option>
                                 </select>
                             </div>
                             @error('price')

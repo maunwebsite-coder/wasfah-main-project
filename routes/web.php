@@ -10,7 +10,10 @@ use App\Http\Controllers\Chef\RecipeController as ChefRecipeController;
 use App\Http\Controllers\Chef\WorkshopController as ChefWorkshopController;
 use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
+use App\Http\Controllers\ReferralDashboardController;
 use App\Http\Controllers\UserMeetingController;
+use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
+use App\Http\Controllers\Admin\UserManagementController as AdminUserManagementController;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use Illuminate\Support\Facades\Auth;
@@ -220,6 +223,7 @@ Route::middleware(['auth', 'chef'])->prefix('chef')->name('chef.')->group(functi
     Route::post('workshops/{workshop}/presence', [ChefWorkshopController::class, 'updatePresence'])->name('workshops.presence');
     Route::post('workshops/{workshop}/reset-device', [ChefWorkshopController::class, 'resetHostDeviceLock'])->name('workshops.reset-device');
     Route::post('workshops/generate-meeting-link', [ChefWorkshopController::class, 'generateMeetingLink'])->name('workshops.generate-link');
+    Route::get('workshops/earnings', [ChefWorkshopController::class, 'earnings'])->name('workshops.earnings');
     Route::resource('workshops', ChefWorkshopController::class)->except(['show']);
 });
 
@@ -227,7 +231,7 @@ Route::get('/recipe/{recipe:slug}', [App\Http\Controllers\RecipeController::clas
 
 // مسار ورشات العمل
 Route::get('/workshops', [App\Http\Controllers\WorkshopController::class, 'index'])->name('workshops');
-Route::get('/workshops/{workshop:slug}', [App\Http\Controllers\WorkshopController::class, 'show'])->name('workshop.show');
+Route::get('/workshops/{workshop}', [App\Http\Controllers\WorkshopController::class, 'show'])->name('workshop.show');
 Route::get('/workshops/search', [App\Http\Controllers\WorkshopController::class, 'search'])->name('workshops.search');
 
 // مسار البحث
@@ -279,6 +283,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
 
+Route::middleware(['auth', 'referral.partner'])->prefix('referrals')->name('referrals.')->group(function () {
+    Route::get('/', [ReferralDashboardController::class, 'index'])->name('dashboard');
+});
+
 // مسارات الإدارة - محمية بـ middleware المصادقة والادمن
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // لوحة التحكم
@@ -321,6 +329,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('visibility/clear-cache', [App\Http\Controllers\Admin\VisibilityController::class, 'clearCache'])->name('visibility.clear-cache');
     Route::post('visibility/initialize-defaults', [App\Http\Controllers\Admin\VisibilityController::class, 'initializeDefaults'])->name('visibility.initialize-defaults');
     Route::post('visibility/bulk-update', [App\Http\Controllers\Admin\VisibilityController::class, 'bulkUpdate'])->name('visibility.bulk-update');
+
+    // إدارة المستخدمين
+    Route::get('users', [AdminUserManagementController::class, 'index'])->name('users.index');
+
+    // إدارة برنامج الإحالات
+    Route::get('referrals', [AdminReferralController::class, 'index'])->name('referrals.index');
+    Route::post('referrals/activate', [AdminReferralController::class, 'activate'])->name('referrals.activate');
+    Route::get('referrals/{user}', [AdminReferralController::class, 'show'])->name('referrals.show');
+    Route::patch('referrals/{user}', [AdminReferralController::class, 'update'])->name('referrals.update');
+    Route::patch('referrals/{user}/commissions/{commission}/status', [AdminReferralController::class, 'updateCommissionStatus'])->name('referrals.commissions.update-status');
 });
 
 // مسارات الصفحات العامة

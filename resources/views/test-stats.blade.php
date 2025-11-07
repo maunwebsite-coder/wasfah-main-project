@@ -84,7 +84,7 @@
                                     إجمالي الإيرادات
                                 </dt>
                                 <dd class="text-2xl font-bold text-gray-900">
-                                    {{ number_format($totalRevenue, 2) }} ريال
+                                    {{ number_format($totalRevenue, 2) }} دينار أردني
                                 </dd>
                             </dl>
                         </div>

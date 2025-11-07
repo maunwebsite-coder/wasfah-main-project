@@ -364,8 +364,9 @@
 
         let lastPresenceState = null;
         let meetingStartTriggered = false;
+        const enableMobileAutoFullscreen = false; // mobile screens should stay inline per product request
         const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
-        let shouldAutoFullscreen = mobileViewportQuery.matches;
+        let shouldAutoFullscreen = enableMobileAutoFullscreen && mobileViewportQuery.matches;
         let hasRedirectedToJoinPage = false;
         let apiInstance = null;
         let onViewportChange = null;
@@ -551,7 +552,7 @@
         })();
 
         const handleViewportPreferenceChange = (matches) => {
-            shouldAutoFullscreen = matches;
+            shouldAutoFullscreen = enableMobileAutoFullscreen && matches;
             if (shouldAutoFullscreen) {
                 fullscreenController.ensure();
             } else {

@@ -198,10 +198,17 @@
                         </div>
                     @endauth
 
-                    @guest
+                    @if($authUser)
+                        @if($authUser->isReferralPartner())
+                            <a href="{{ route('referrals.dashboard') }}" class="rounded-full border border-emerald-200 px-4 py-2 text-emerald-600 transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                <i class="fas fa-link ml-2"></i>
+                                برنامج الشركاء
+                            </a>
+                        @endif
+                    @else
                         <a href="{{ route('login') }}" class="rounded-full border border-transparent bg-orange-500 px-4 py-2 text-white shadow-sm transition-all duration-200 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">تسجيل الدخول</a>
-                        <a href="{{ route('register') }}" class="rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-200">إنشاء حساب</a>
-                    @endguest
+                        <a href="{{ route('register') }}" class="rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition-all	duration-200 hover:border-orange-300 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-200">إنشاء حساب</a>
+                    @endif
                 </nav>
             </div>
         </div>
@@ -246,10 +253,16 @@
                         <span>{{ $chefLinkData['label'] }}</span>
                     </a>
                 @endif
-                @if(Auth::user()->isAdmin())
+                @if($authUser?->isAdmin())
                     <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
                         <i class="fas fa-crown text-orange-500"></i>
                         <span>منطقة الإدمن</span>
+                    </a>
+                @endif
+                @if($authUser?->isReferralPartner())
+                    <a href="{{ route('referrals.dashboard') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
+                        <i class="fas fa-link text-emerald-500"></i>
+                        <span>برنامج الشركاء</span>
                     </a>
                 @endif
                 <form method="POST" action="{{ route('logout') }}">

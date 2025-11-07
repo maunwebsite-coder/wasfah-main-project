@@ -33,108 +33,117 @@ class Breadcrumbs
             ],
         ];
 
-        switch ($routeName) {
-            case 'recipes':
-                $breadcrumbs = array_merge(
-                    $breadcrumbs,
-                    self::recipesTrail()
-                );
-                break;
+        if (str_starts_with($routeName, 'admin.')) {
+            $breadcrumbs = array_merge(
+                $breadcrumbs,
+                self::adminTrail($routeName)
+            );
+        } elseif (str_starts_with($routeName, 'chef.')) {
+            $breadcrumbs = array_merge(
+                $breadcrumbs,
+                self::chefTrail($routeName)
+            );
+        } else {
+            switch ($routeName) {
+                case 'recipes':
+                    $breadcrumbs = array_merge(
+                        $breadcrumbs,
+                        self::recipesTrail()
+                    );
+                    break;
 
-            case 'recipe.show':
-                $breadcrumbs = array_merge(
-                    $breadcrumbs,
-                    self::recipeTrail()
-                );
-                break;
+                case 'recipe.show':
+                    $breadcrumbs = array_merge(
+                        $breadcrumbs,
+                        self::recipeTrail()
+                    );
+                    break;
 
-            case 'tools':
-                $breadcrumbs = array_merge(
-                    $breadcrumbs,
-                    self::toolsTrail()
-                );
-                break;
+                case 'tools':
+                    $breadcrumbs = array_merge(
+                        $breadcrumbs,
+                        self::toolsTrail()
+                    );
+                    break;
 
-            case 'tools.show':
-                $breadcrumbs = array_merge(
-                    $breadcrumbs,
-                    self::toolDetailsTrail()
-                );
-                break;
+                case 'tools.show':
+                    $breadcrumbs = array_merge(
+                        $breadcrumbs,
+                        self::toolDetailsTrail()
+                    );
+                    break;
 
-            case 'workshops':
-            case 'workshops.search':
-                $breadcrumbs = array_merge(
-                    $breadcrumbs,
-                    self::workshopsTrail($routeName === 'workshops.search')
-                );
-                break;
+                case 'workshops':
+                case 'workshops.search':
+                    $breadcrumbs = array_merge(
+                        $breadcrumbs,
+                        self::workshopsTrail($routeName === 'workshops.search')
+                    );
+                    break;
 
-            case 'workshop.show':
-                $breadcrumbs = array_merge(
-                    $breadcrumbs,
-                    self::workshopTrail()
-                );
-                break;
+                case 'workshop.show':
+                    $breadcrumbs = array_merge(
+                        $breadcrumbs,
+                        self::workshopTrail()
+                    );
+                    break;
 
-            case 'search':
-                $breadcrumbs[] = [
-                    'label' => 'نتائج البحث',
-                    'url' => null,
-                ];
-                break;
+                case 'search':
+                    $breadcrumbs[] = [
+                        'label' => 'نتائج البحث',
+                        'url' => null,
+                    ];
+                    break;
 
-            case 'saved.index':
-                $breadcrumbs[] = [
-                    'label' => 'الأدوات المحفوظة',
-                    'url' => null,
-                ];
-                break;
+                case 'saved.index':
+                    $breadcrumbs[] = [
+                        'label' => 'الأدوات المحفوظة',
+                        'url' => null,
+                    ];
+                    break;
 
-            case 'profile':
-                $breadcrumbs[] = [
-                    'label' => 'الملف الشخصي',
-                    'url' => null,
-                ];
-                break;
+                case 'profile':
+                    $breadcrumbs[] = [
+                        'label' => 'الملف الشخصي',
+                        'url' => null,
+                    ];
+                    break;
 
-            case 'about':
-                $breadcrumbs[] = [
-                    'label' => 'عن وصفة',
-                    'url' => null,
-                ];
-                break;
+                case 'about':
+                    $breadcrumbs[] = [
+                        'label' => 'عن وصفة',
+                        'url' => null,
+                    ];
+                    break;
 
-            case 'contact':
-                $breadcrumbs[] = [
-                    'label' => 'اتصل بنا',
-                    'url' => null,
-                ];
-                break;
+                case 'contact':
+                    $breadcrumbs[] = [
+                        'label' => 'اتصل بنا',
+                        'url' => null,
+                    ];
+                    break;
 
-            case 'advertising':
-                $breadcrumbs[] = [
-                    'label' => 'الإعلان',
-                    'url' => null,
-                ];
-                break;
+                case 'advertising':
+                    $breadcrumbs[] = [
+                        'label' => 'الإعلان',
+                        'url' => null,
+                    ];
+                    break;
 
-            case 'baking-tips':
-                $breadcrumbs[] = [
-                    'label' => 'نصائح الخَبز',
-                    'url' => null,
-                ];
-                break;
+                case 'baking-tips':
+                    $breadcrumbs[] = [
+                        'label' => 'نصائح الخَبز',
+                        'url' => null,
+                    ];
+                    break;
 
-            default:
-                // Do not render breadcrumbs for admin or unsupported routes.
-                if (!str_starts_with($routeName, 'admin.')) {
+                default:
                     $breadcrumbs[] = [
                         'label' => self::titleCaseLastSegment($routeName),
                         'url' => null,
                     ];
-                }
-                break;
+                    break;
+            }
         }
 
         if (count($breadcrumbs) <= 1) {
@@ -305,6 +314,368 @@ class Breadcrumbs
         }
 
         return $trail;
+    }
+
+    /**
+     * Build breadcrumbs for admin routes.
+     */
+    protected static function adminTrail(string $routeName): array
+    {
+        $trail = [
+            [
+                'label' => 'منطقة الإدارة',
+                'url' => self::routeUrl('admin.dashboard'),
+            ],
+        ];
+
+        $segments = explode('.', $routeName);
+        array_shift($segments); // Remove "admin"
+
+        if (empty($segments)) {
+            return $trail;
+        }
+
+        $sectionKey = array_shift($segments);
+        $sectionBreadcrumb = self::sectionBreadcrumb($sectionKey, self::adminSections());
+
+        if ($sectionBreadcrumb) {
+            $trail[] = $sectionBreadcrumb;
+        }
+
+        if (!empty($segments)) {
+            $trail = array_merge($trail, self::adminActionTrail($sectionKey, $segments));
+        }
+
+        return $trail;
+    }
+
+    /**
+     * Build breadcrumbs for chef routes.
+     */
+    protected static function chefTrail(string $routeName): array
+    {
+        $trail = [
+            [
+                'label' => 'منطقة الشيف',
+                'url' => self::routeUrl('chef.dashboard'),
+            ],
+        ];
+
+        $segments = explode('.', $routeName);
+        array_shift($segments); // Remove "chef"
+
+        if (empty($segments)) {
+            return $trail;
+        }
+
+        $sectionKey = array_shift($segments);
+        $sectionBreadcrumb = self::sectionBreadcrumb($sectionKey, self::chefSections());
+
+        if ($sectionBreadcrumb) {
+            $trail[] = $sectionBreadcrumb;
+        }
+
+        if (!empty($segments)) {
+            $trail = array_merge($trail, self::chefActionTrail($sectionKey, $segments));
+        }
+
+        return $trail;
+    }
+
+    /**
+     * Map admin sections to readable labels and default routes.
+     *
+     * @return array<string, array{label: string, route?: string}>
+     */
+    protected static function adminSections(): array
+    {
+        return [
+            'dashboard' => [
+                'label' => 'لوحة التحكم',
+                'route' => 'admin.dashboard',
+            ],
+            'admin-area' => [
+                'label' => 'منطقة الإدمن',
+                'route' => 'admin.admin-area',
+            ],
+            'tools' => [
+                'label' => 'أدوات المطبخ',
+                'route' => 'admin.tools.index',
+            ],
+            'workshops' => [
+                'label' => 'ورشات العمل',
+                'route' => 'admin.workshops.index',
+            ],
+            'bookings' => [
+                'label' => 'حجوزات الورش',
+                'route' => 'admin.bookings.index',
+            ],
+            'recipes' => [
+                'label' => 'الوصفات',
+                'route' => 'admin.recipes.index',
+            ],
+            'users' => [
+                'label' => 'إدارة المستخدمين',
+                'route' => 'admin.users.index',
+            ],
+            'referrals' => [
+                'label' => 'برنامج الإحالات',
+                'route' => 'admin.referrals.index',
+            ],
+            'visibility' => [
+                'label' => 'إعدادات الظهور',
+                'route' => 'admin.visibility.index',
+            ],
+            'chefs' => [
+                'label' => 'طلبات الشيفات',
+                'route' => 'admin.chefs.requests',
+            ],
+        ];
+    }
+
+    /**
+     * Map chef sections to readable labels and default routes.
+     *
+     * @return array<string, array{label: string, route?: string}>
+     */
+    protected static function chefSections(): array
+    {
+        return [
+            'dashboard' => [
+                'label' => 'لوحة الشيف',
+                'route' => 'chef.dashboard',
+            ],
+            'links' => [
+                'label' => 'روابط Wasfah',
+                'route' => 'chef.links.edit',
+            ],
+            'recipes' => [
+                'label' => 'وصفاتي',
+                'route' => 'chef.recipes.index',
+            ],
+            'workshops' => [
+                'label' => 'ورش الشيف',
+                'route' => 'chef.workshops.index',
+            ],
+        ];
+    }
+
+    /**
+     * Convert a section key into a breadcrumb entry.
+     *
+     * @param array<string, array{label: string, route?: string}> $map
+     */
+    protected static function sectionBreadcrumb(?string $sectionKey, array $map): ?array
+    {
+        if (!$sectionKey) {
+            return null;
+        }
+
+        $section = $map[$sectionKey] ?? null;
+        $label = $section['label'] ?? self::titleCaseLastSegment($sectionKey);
+        $url = $section['route'] ?? null;
+
+        return [
+            'label' => $label,
+            'url' => $url ? self::routeUrl($url) : null,
+        ];
+    }
+
+    /**
+     * Generate action-specific crumbs for admin sections.
+     *
+     * @param array<int, string> $segments
+     * @return array<int, array{label: string, url: string|null}>
+     */
+    protected static function adminActionTrail(string $sectionKey, array $segments): array
+    {
+        $action = $segments[0] ?? null;
+
+        if (!$action || in_array($action, ['index', 'store', 'update', 'destroy'], true)) {
+            return [];
+        }
+
+        switch ($sectionKey) {
+            case 'tools':
+                return self::resourceActionTrail($action, 'tool', [
+                    'create' => 'إضافة أداة جديدة',
+                    'show' => fn ($tool) => 'تفاصيل: ' . self::modelLabel($tool, 'name', 'الأداة'),
+                    'edit' => fn ($tool) => 'تعديل: ' . self::modelLabel($tool, 'name', 'الأداة'),
+                ]);
+
+            case 'workshops':
+                return self::resourceActionTrail($action, 'workshop', [
+                    'create' => 'إضافة ورشة جديدة',
+                    'show' => fn ($workshop) => 'تفاصيل: ' . self::modelLabel($workshop, 'title', 'الورشة'),
+                    'edit' => fn ($workshop) => 'تعديل: ' . self::modelLabel($workshop, 'title', 'الورشة'),
+                    'meeting' => fn ($workshop) => 'رابط الاجتماع - ' . self::modelLabel($workshop, 'title', 'الورشة'),
+                ]);
+
+            case 'recipes':
+                return self::resourceActionTrail($action, 'recipe', [
+                    'create' => 'إضافة وصفة جديدة',
+                    'show' => fn ($recipe) => 'تفاصيل: ' . self::modelLabel($recipe, 'title', 'الوصفة'),
+                    'edit' => fn ($recipe) => 'تعديل: ' . self::modelLabel($recipe, 'title', 'الوصفة'),
+                ]);
+
+            case 'bookings':
+                $trail = self::resourceActionTrail($action, 'booking', [
+                    'show' => function ($booking) {
+                        $id = $booking->id ?? null;
+                        return $id ? "تفاصيل الحجز #{$id}" : 'تفاصيل الحجز';
+                    },
+                ]);
+
+                if ($trail) {
+                    return $trail;
+                }
+
+                if ($action === 'export') {
+                    return [
+                        [
+                            'label' => 'تصدير الحجوزات',
+                            'url' => null,
+                        ],
+                    ];
+                }
+                break;
+
+            case 'referrals':
+                return self::resourceActionTrail($action, 'user', [
+                    'show' => fn ($user) => 'شريك الإحالة: ' . self::modelLabel($user, 'name', 'الحساب'),
+                ]);
+
+            case 'visibility':
+                if ($action === 'config') {
+                    return [
+                        [
+                            'label' => 'تهيئة الإعدادات',
+                            'url' => null,
+                        ],
+                    ];
+                }
+                break;
+
+            case 'chefs':
+                if ($action === 'requests') {
+                    return [];
+                }
+                break;
+        }
+
+        return [
+            [
+                'label' => self::titleCaseLastSegment($action),
+                'url' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Generate action-specific crumbs for chef sections.
+     *
+     * @param array<int, string> $segments
+     * @return array<int, array{label: string, url: string|null}>
+     */
+    protected static function chefActionTrail(string $sectionKey, array $segments): array
+    {
+        $action = $segments[0] ?? null;
+
+        if (!$action || in_array($action, ['index', 'store', 'update', 'destroy'], true)) {
+            return [];
+        }
+
+        switch ($sectionKey) {
+            case 'links':
+                if ($action === 'edit') {
+                    return [
+                        [
+                            'label' => 'تعديل صفحة الروابط',
+                            'url' => null,
+                        ],
+                    ];
+                }
+                return [];
+
+            case 'recipes':
+                return self::resourceActionTrail($action, 'recipe', [
+                    'create' => 'إضافة وصفة جديدة',
+                    'edit' => fn ($recipe) => 'تعديل: ' . self::modelLabel($recipe, 'title', 'الوصفة'),
+                ]);
+
+            case 'workshops':
+                return self::resourceActionTrail($action, 'workshop', [
+                    'create' => 'إنشاء ورشة جديدة',
+                    'edit' => fn ($workshop) => 'تعديل: ' . self::modelLabel($workshop, 'title', 'الورشة'),
+                    'earnings' => 'أرباح الورش',
+                    'join' => fn ($workshop) => 'انضمام إلى ' . self::modelLabel($workshop, 'title', 'الورشة'),
+                ]);
+        }
+
+        return [
+            [
+                'label' => self::titleCaseLastSegment($action),
+                'url' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Helper to convert CRUD-like actions into breadcrumb entries.
+     *
+     * @param array<string, string|callable> $labels
+     * @return array<int, array{label: string, url: string|null}>
+     */
+    protected static function resourceActionTrail(?string $action, ?string $paramName, array $labels): array
+    {
+        if (!$action || !array_key_exists($action, $labels)) {
+            return [];
+        }
+
+        $labelResolver = $labels[$action];
+        $model = $paramName ? request()->route($paramName) : null;
+        $label = is_callable($labelResolver)
+            ? $labelResolver($model)
+            : $labelResolver;
+
+        if (!$label) {
+            return [];
+        }
+
+        return [
+            [
+                'label' => $label,
+                'url' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Safely read a human value from the given model.
+     */
+    protected static function modelLabel($model, string $attribute, string $fallback): string
+    {
+        if ($model && isset($model->{$attribute}) && $model->{$attribute} !== '') {
+            return (string) $model->{$attribute};
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * Resolve a route name to URL if it exists.
+     */
+    protected static function routeUrl(?string $routeName): ?string
+    {
+        if (!$routeName || !Route::has($routeName)) {
+            return null;
+        }
+
+        try {
+            return route($routeName);
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 
     /**

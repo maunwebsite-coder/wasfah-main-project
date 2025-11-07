@@ -222,7 +222,9 @@ class Workshop extends Model
     // Accessors
     public function getFormattedPriceAttribute()
     {
-        return number_format($this->price, 2) . ' ' . $this->currency;
+        $currencyCode = $this->currency ?: 'JOD';
+
+        return number_format($this->price, 2) . ' ' . $currencyCode;
     }
 
     public function getFormattedDurationAttribute()
@@ -290,7 +292,7 @@ class Workshop extends Model
             'duration' => 'required|integer|min:30',
             'max_participants' => 'required|integer|min:1|max:1000',
             'price' => 'required|numeric|min:0',
-            'currency' => 'required|string|in:JOD,AED,SAR',
+            'currency' => 'required|string|in:JOD',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'location' => ['required_unless:is_online,1', 'nullable', 'string', 'max:255'],

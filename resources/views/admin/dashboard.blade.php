@@ -390,13 +390,13 @@
                             <div class="text-3xl font-bold text-green-600">
                                 {{ number_format($totalRevenue, 2) }}
                             </div>
-                            <div class="text-sm text-gray-500">ريال إجمالي</div>
+                            <div class="text-sm text-gray-500">دينار أردني إجمالي</div>
                         </div>
                         <div class="text-center">
                             <div class="text-3xl font-bold text-blue-600">
                                 {{ number_format($monthlyRevenue, 2) }}
                             </div>
-                            <div class="text-sm text-gray-500">ريال هذا الشهر</div>
+                            <div class="text-sm text-gray-500">دينار أردني هذا الشهر</div>
                         </div>
                     </div>
                 </div>

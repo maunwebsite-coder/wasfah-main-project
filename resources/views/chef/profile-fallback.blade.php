@@ -91,7 +91,7 @@
                                                 : 'سيتم التحديد لاحقاً';
                                             $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
                                             $priceLabel = $workshop->formatted_price
-                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
                                             $deadlineLabel = $workshop->registration_deadline
                                                 ? $workshop->registration_deadline->copy()->locale('ar')->translatedFormat('j F Y')
                                                 : null;
@@ -168,7 +168,7 @@
                                                 : 'موعد غير محدد';
                                             $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
                                             $priceLabel = $workshop->formatted_price
-                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
                                         @endphp
                                         <div class="rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden flex flex-col">
                                             <div class="h-44 bg-gray-200">

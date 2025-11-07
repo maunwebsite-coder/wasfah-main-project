@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'موقع وصفه - دليلك لعالم الحلويات')
 
@@ -250,18 +250,6 @@
         }
         .home-tool-card__actions a {
             flex: 1;
-        }
-        .home-tools-pagination {
-            margin-top: 1.5rem;
-        }
-        .home-tools-pagination .swiper-pagination-bullet {
-            width: 10px;
-            height: 10px;
-            background: rgba(249, 115, 22, 0.28);
-            opacity: 1;
-        }
-        .home-tools-pagination .swiper-pagination-bullet-active {
-            background: var(--wasfa-primary-strong);
         }
         .home-tools-nav {
             display: flex;
@@ -1605,15 +1593,6 @@
                                 </div>
                             @endforeach
                         </div>
-                        <div class="hero-slider-pagination swiper-pagination"></div>
-                    </div>
-                    <div class="hero-slider-nav">
-                        <button type="button" class="hero-slider-prev" aria-label="الشريحة السابقة">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                        <button type="button" class="hero-slider-next" aria-label="الشريحة التالية">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
                     </div>
                 </article>
                 
@@ -1871,7 +1850,6 @@
                         @endforeach
                     </div>
                 </div>
-                <div class="home-tools-pagination swiper-pagination mt-6 lg:hidden"></div>
             @else
                 <div class="text-center py-16">
                     <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-500">
@@ -2178,14 +2156,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 disableOnInteraction: false,
             },
             grabCursor: true,
-            navigation: {
-                nextEl: '.hero-slider-next',
-                prevEl: '.hero-slider-prev',
-            },
-            pagination: {
-                el: '.hero-slider-pagination',
-                clickable: true,
-            },
         });
     }
 
@@ -2214,10 +2184,6 @@ document.addEventListener('DOMContentLoaded', function() {
             navigation: {
                 nextEl: '.home-tools-next',
                 prevEl: '.home-tools-prev',
-            },
-            pagination: {
-                el: '.home-tools-pagination',
-                clickable: true,
             },
             breakpoints: {
                 640: {

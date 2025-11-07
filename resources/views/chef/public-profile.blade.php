@@ -1106,7 +1106,7 @@
                                             : 'سيتم التحديد لاحقاً';
                                         $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
                                         $priceLabel = $workshop->formatted_price
-                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
                                         $levelLabels = [
                                             'beginner' => 'مبتدئ',
                                             'intermediate' => 'متوسط',
@@ -1207,7 +1207,7 @@
                                             : 'موعد غير محدد';
                                         $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
                                         $priceLabel = $workshop->formatted_price
-                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'SAR'));
+                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
                                         $levelLabels = [
                                             'beginner' => 'مبتدئ',
                                             'intermediate' => 'متوسط',
