@@ -1,0 +1,103 @@
+@props([
+    'isOnline' => false,
+    'autoGenerate' => false,
+    'meetingLink' => '',
+    'jitsiRoom' => '',
+    'jitsiPasscode' => '',
+    'hasGeneratedMeeting' => false,
+    'meetingStatusState' => 'idle',
+    'meetingStatusText' => 'سيتم توليد الرابط تلقائياً بعد الحفظ.',
+    'generateUrl' => '#',
+    'labelClass' => 'form-label',
+    'inputClass' => 'form-input',
+    'inputErrorClass' => 'is-invalid',
+    'hintClass' => 'form-hint',
+    'errorClass' => 'error-text',
+])
+
+@php
+    $meetingLinkValue = trim((string) ($meetingLink ?? ''));
+    $jitsiRoomValue = trim((string) ($jitsiRoom ?? ''));
+    $jitsiPasscodeValue = trim((string) ($jitsiPasscode ?? ''));
+    $showGeneratedInfo = $hasGeneratedMeeting || ($meetingLinkValue !== '' && $jitsiRoomValue !== '');
+
+    $inputClasses = trim(
+        $inputClass .
+        ($isOnline && $autoGenerate ? ' readonly-input' : '') .
+        ($errors->has('meeting_link') ? ' ' . $inputErrorClass : '')
+    );
+@endphp
+
+<div {{ $attributes->class(['md:col-span-2 space-y-4']) }}>
+    <div id="onlineMeetingTools" class="online-meeting-tools {{ $isOnline ? '' : 'hidden' }} space-y-3">
+        <div class="meeting-generator-card">
+            <div>
+                <p class="text-sm font-semibold text-slate-800">توليد رابط الاجتماع الذكي</p>
+                <p class="text-xs text-slate-500">
+                    أنشئ رابط Jitsi آمن بضغطة زر أو دع النظام يقوم بذلك تلقائياً عند الحفظ.
+                </p>
+            </div>
+            <div class="generator-actions">
+                <span class="meeting-status" id="meetingStatusBadge" data-state="{{ $meetingStatusState }}">
+                    {{ $meetingStatusText }}
+                </span>
+                <div class="flex flex-wrap items-center gap-3">
+                    <input type="hidden" name="auto_generate_meeting" value="0">
+                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerate ? 'checked' : '' }}>
+                        توليد تلقائي عبر Jitsi
+                    </label>
+                    <button type="button"
+                            id="generateJitsiLinkBtn"
+                            data-url="{{ $generateUrl }}"
+                            class="generate-link-btn">
+                        <i class="fas fa-bolt"></i>
+                        <span>توليد رابط الآن</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="generatedMeetingInfo" class="{{ $showGeneratedInfo ? '' : 'hidden' }} meeting-info-card space-y-2">
+            @if($showGeneratedInfo)
+                <p class="font-semibold text-slate-800">تم إنشاء رابط Jitsi:</p>
+                <p class="mt-1 text-sm break-all text-slate-700">{{ $meetingLinkValue }}</p>
+                @if($jitsiPasscodeValue !== '')
+                    <p class="mt-2 text-xs text-emerald-700">
+                        رمز الدخول: <span class="font-semibold">{{ $jitsiPasscodeValue }}</span>
+                    </p>
+                @endif
+            @else
+                <p class="text-sm text-slate-600">سيظهر الرابط والمعلومات الإضافية هنا بعد توليده.</p>
+            @endif
+        </div>
+    </div>
+
+    <div id="manualMeetingField" class="space-y-2">
+        <label for="meeting_link" class="{{ $labelClass }}">رابط الاجتماع (للورش الأونلاين)</label>
+        <input
+            id="meeting_link"
+            name="meeting_link"
+            type="url"
+            value="{{ $meetingLinkValue }}"
+            class="{{ $inputClasses }}"
+            placeholder="https://meet.jit.si/wasfah-room"
+            @if($isOnline && !$autoGenerate) required @endif
+            @if($isOnline && $autoGenerate) readonly @endif
+        >
+        <p id="meeting-link-help" class="{{ $hintClass }}">
+            @if(!$isOnline)
+                هذا الحقل اختياري للورش الحضورية.
+            @elseif($autoGenerate)
+                سيتم تعيين الرابط تلقائياً بعد الحفظ أو فور الضغط على زر التوليد.
+            @else
+                يجب إضافة رابط الاجتماع، وسيظهر للمشاركين بعد تأكيد الحجز.
+            @endif
+        </p>
+        @error('meeting_link')
+            <p class="{{ $errorClass }}">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <input type="hidden" id="jitsi_room_field" name="jitsi_room" value="{{ $jitsiRoomValue }}">
+    <input type="hidden" id="jitsi_passcode_field" name="jitsi_passcode" value="{{ $jitsiPasscodeValue }}">
+</div>

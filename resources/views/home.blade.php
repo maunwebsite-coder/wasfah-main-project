@@ -1104,6 +1104,11 @@
             .hero-media {
                 max-height: 100%;
             }
+            .hero-slider-nav {
+                inset-block-start: 50%;
+                inset-block-end: auto;
+                transform: translateY(-50%);
+            }
         }
 
         @media (max-width: 1024px) {

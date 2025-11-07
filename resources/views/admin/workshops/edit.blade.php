@@ -458,72 +458,22 @@
                             @enderror
                         </div>
 
-                        <div class="md:col-span-2 space-y-4">
-                            <div id="onlineMeetingTools" class="online-meeting-tools {{ $isOnlineOld ? '' : 'hidden' }} space-y-3">
-                                <div class="meeting-generator-card">
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-800">توليد رابط الاجتماع الذكي</p>
-                                        <p class="text-xs text-slate-500">
-                                            أنشئ رابط Jitsi آمن بضغطة زر أو اترك التوليد التلقائي مفعلاً للحفظ.
-                                        </p>
-                                    </div>
-                                    <div class="generator-actions">
-                                        <span class="meeting-status" id="meetingStatusBadge" data-state="{{ $meetingStatusState }}">
-                                            {{ $meetingStatusText }}
-                                        </span>
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <input type="hidden" name="auto_generate_meeting" value="0">
-                                            <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                                                <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerateMeeting ? 'checked' : '' }}>
-                                                توليد تلقائي عبر Jitsi
-                                            </label>
-                                            <button type="button"
-                                                    id="generateJitsiLinkBtn"
-                                                    data-url="{{ route('admin.workshops.generate-link') }}"
-                                                    class="generate-link-btn">
-                                                <i class="fas fa-bolt"></i>
-                                                <span>توليد رابط الآن</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="generatedMeetingInfo" class="{{ $hasGeneratedMeeting ? '' : 'hidden' }} meeting-info-card space-y-2">
-                                    @if($hasGeneratedMeeting)
-                                        <p class="font-semibold text-slate-800">تم إنشاء رابط Jitsi:</p>
-                                        <p class="mt-1 text-sm break-all text-slate-700">{{ $storedMeetingLink }}</p>
-                                        @if($storedJitsiPasscode)
-                                            <p class="mt-2 text-xs text-emerald-700">
-                                                رمز الدخول: <span class="font-semibold">{{ $storedJitsiPasscode }}</span>
-                                            </p>
-                                        @endif
-                                    @else
-                                        <p class="text-sm text-slate-600">سيظهر الرابط والمعلومات الإضافية هنا بعد توليده.</p>
-                                    @endif
-                                </div>
-                            </div>
-                            <div id="manualMeetingField" class="space-y-2">
-                                <label for="meeting_link" class="block text-sm font-semibold text-slate-700 mb-2">رابط الاجتماع (للورش الأونلاين)</label>
-                                <input id="meeting_link" name="meeting_link" type="url" value="{{ $storedMeetingLink }}"
-                                       class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200 @error('meeting_link') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror{{ $autoGenerateMeeting && $isOnlineOld ? ' readonly-input' : '' }}"
-                                       placeholder="https://meet.jit.si/wasfah-room"
-                                       @if($isOnlineOld && !$autoGenerateMeeting) required @endif
-                                       @if($isOnlineOld && $autoGenerateMeeting) readonly @endif>
-                                <p id="meeting-link-help" class="mt-2 text-xs text-slate-500">
-                                    @if(!$isOnlineOld)
-                                        هذا الحقل اختياري للورش الحضورية.
-                                    @elseif($autoGenerateMeeting)
-                                        سيتم تعيين الرابط تلقائياً بعد الحفظ أو فور الضغط على زر التوليد.
-                                    @else
-                                        يجب إضافة رابط الاجتماع، وسيظهر للمشاركين بعد تأكيد الحجز.
-                                    @endif
-                                </p>
-                                @error('meeting_link')
-                                    <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <input type="hidden" id="jitsi_room_field" name="jitsi_room" value="{{ $storedJitsiRoom }}">
-                            <input type="hidden" id="jitsi_passcode_field" name="jitsi_passcode" value="{{ $storedJitsiPasscode }}">
-                        </div>
+                        <x-admin.online-meeting-tools
+                            :is-online="$isOnlineOld"
+                            :auto-generate="$autoGenerateMeeting"
+                            :meeting-link="$storedMeetingLink"
+                            :jitsi-room="$storedJitsiRoom"
+                            :jitsi-passcode="$storedJitsiPasscode"
+                            :has-generated-meeting="$hasGeneratedMeeting"
+                            :meeting-status-state="$meetingStatusState"
+                            :meeting-status-text="$meetingStatusText"
+                            :generate-url="route('admin.workshops.generate-link')"
+                            label-class="block text-sm font-semibold text-slate-700 mb-2"
+                            input-class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200"
+                            input-error-class="border-red-400 focus:border-red-500 focus:ring-red-200"
+                            hint-class="mt-2 text-xs text-slate-500"
+                            error-class="mt-2 text-sm font-semibold text-red-500"
+                        />
                     </div>
                 </section>
 
