@@ -11,6 +11,8 @@ const WhatsAppBooking = (() => {
             whatsappNumber: '962790553680',
             bookingEndpoint: '/bookings',
             bookingNotes: 'حجز موحد - واتساب + قاعدة بيانات',
+            loginUrl: '/login',
+            registerUrl: '/register',
             user: { ...defaultUser },
         },
         activeContext: null,
@@ -31,6 +33,14 @@ const WhatsAppBooking = (() => {
 
         if (typeof partial.bookingNotes === 'string') {
             state.config.bookingNotes = partial.bookingNotes;
+        }
+
+        if (typeof partial.loginUrl === 'string' && partial.loginUrl.trim()) {
+            state.config.loginUrl = partial.loginUrl.trim();
+        }
+
+        if (typeof partial.registerUrl === 'string' && partial.registerUrl.trim()) {
+            state.config.registerUrl = partial.registerUrl.trim();
         }
 
         if (partial.user && typeof partial.user === 'object') {
@@ -260,11 +270,11 @@ const WhatsAppBooking = (() => {
                             </div>
                         </div>
                         <div class="space-y-3">
-                            <a href="/login" class="block w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-all.duration-200 shadow-lg hover:shadow-xl" data-login-link>
+                            <a href="${state.config.loginUrl}" class="block w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-all.duration-200 shadow-lg hover:shadow-xl" data-login-link>
                                 <i class="fas fa-sign-in-alt ml-2"></i>
                                 تسجيل الدخول
                             </a>
-                            <a href="/register" class="block w-full border-2 border-amber-200 text-amber-600 font-bold py-3 rounded-xl.transition-all.duration-200 hover:bg-amber-50" data-register-link>
+                            <a href="${state.config.registerUrl}" class="block w-full border-2 border-amber-200 text-amber-600 font-bold py-3 rounded-xl.transition-all.duration-200 hover:bg-amber-50" data-register-link>
                                 <i class="fas fa-user-plus ml-2"></i>
                                 إنشاء حساب
                             </a>
@@ -288,18 +298,21 @@ const WhatsAppBooking = (() => {
             // Click on close button
             document.getElementById('login-required-modal')?.remove();
             document.removeEventListener('keydown', escCloseHandler);
+            state.activeContext = null;
             return;
         }
 
         if (event && event.target?.id === 'login-required-modal') {
             document.getElementById('login-required-modal')?.remove();
             document.removeEventListener('keydown', escCloseHandler);
+            state.activeContext = null;
             return;
         }
 
         if (!event) {
             document.getElementById('login-required-modal')?.remove();
             document.removeEventListener('keydown', escCloseHandler);
+            state.activeContext = null;
         }
     }
 
