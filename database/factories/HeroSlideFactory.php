@@ -16,6 +16,7 @@ class HeroSlideFactory extends Factory
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
             'image_alt' => $this->faker->sentence(4),
+            'image_path' => null,
             'desktop_image_path' => null,
             'mobile_image_path' => null,
             'features' => [

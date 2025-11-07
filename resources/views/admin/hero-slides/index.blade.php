@@ -29,9 +29,10 @@
 
 @section('content')
 @php
-    $schemaStatus = $schemaStatus ?? ['ready' => true, 'missing_columns' => []];
+    $schemaStatus = $schemaStatus ?? ['ready' => true, 'missing_columns' => [], 'media_mode' => 'dual'];
     $schemaReady = $schemaStatus['ready'] ?? true;
     $missingColumns = $schemaStatus['missing_columns'] ?? [];
+    $mediaMode = $schemaStatus['media_mode'] ?? 'dual';
 @endphp
 <div class="min-h-screen bg-gray-50 pb-12">
     <div class="hero-admin-card text-white py-8">
@@ -88,6 +89,12 @@
                         <li>• {{ $error }}</li>
                     @endforeach
                 </ul>
+            </div>
+        @endif
+        @if($schemaReady && $mediaMode === 'legacy')
+            <div class="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-sm leading-6">
+                <p class="font-semibold text-amber-900">وضع التوافق مفعل.</p>
+                <p>تُخزن صور سطح المكتب والجوال في نفس الحقل لذلك ستظهر نفس الصورة على كل الأجهزة. لتفعيل الرفع المزدوج شغّل أوامر التهجير بعد آخر تحديث (<code class="bg-white/80 px-2 py-0.5 rounded text-xs text-amber-900">php artisan migrate --force</code>).</p>
             </div>
         @endif
 

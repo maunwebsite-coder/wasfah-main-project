@@ -117,6 +117,7 @@ class HeroSlideController extends Controller
             return $response;
         }
 
+        $this->deleteImage($heroSlide->image_path);
         $this->deleteImage($heroSlide->desktop_image_path);
         $this->deleteImage($heroSlide->mobile_image_path);
 
@@ -180,19 +181,7 @@ class HeroSlideController extends Controller
         $payload['features'] = $this->sanitizeFeatures($request->input('features', []));
         $payload['actions'] = $this->sanitizeActions($request->input('actions', []));
 
-        $payload['desktop_image_path'] = $this->resolveImagePath(
-            $request,
-            'desktop_image',
-            $heroSlide?->desktop_image_path
-        );
-
-        $payload['mobile_image_path'] = $this->resolveImagePath(
-            $request,
-            'mobile_image',
-            $heroSlide?->mobile_image_path
-        );
-
-        return $payload;
+        return array_merge($payload, $this->prepareMediaPayload($request, $heroSlide));
     }
 
     protected function sanitizeFeatures(array $features): array
@@ -228,6 +217,28 @@ class HeroSlideController extends Controller
             ->all();
     }
 
+    protected function prepareMediaPayload(HeroSlideRequest $request, ?HeroSlide $heroSlide = null): array
+    {
+        if (HeroSlideSchemaState::usesLegacyMediaColumn()) {
+            return [
+                'image_path' => $this->resolveLegacyImagePath($request, $heroSlide),
+            ];
+        }
+
+        return [
+            'desktop_image_path' => $this->resolveImagePath(
+                $request,
+                'desktop_image',
+                $heroSlide?->desktop_image_path
+            ),
+            'mobile_image_path' => $this->resolveImagePath(
+                $request,
+                'mobile_image',
+                $heroSlide?->mobile_image_path
+            ),
+        ];
+    }
+
     protected function resolveImagePath(HeroSlideRequest $request, string $key, ?string $original): ?string
     {
         $removeKey = 'remove_' . $key;
@@ -248,6 +259,38 @@ class HeroSlideController extends Controller
                 $this->deleteImage($original);
             }
             return $request->input($urlKey);
+        }
+
+        return $original;
+    }
+
+    protected function resolveLegacyImagePath(HeroSlideRequest $request, ?HeroSlide $heroSlide = null): ?string
+    {
+        $original = $heroSlide?->image_path
+            ?? $heroSlide?->desktop_image_path
+            ?? $heroSlide?->mobile_image_path;
+
+        if ($request->boolean('remove_desktop_image') || $request->boolean('remove_mobile_image')) {
+            $this->deleteImage($original);
+            $original = null;
+        }
+
+        foreach (['desktop_image', 'mobile_image'] as $key) {
+            if ($request->hasFile($key)) {
+                $this->deleteImage($original);
+
+                return $request->file($key)->store('hero-slides', 'public');
+            }
+        }
+
+        foreach (['desktop_image_url', 'mobile_image_url'] as $key) {
+            if ($request->filled($key)) {
+                if ($original && !$this->isRemotePath($original)) {
+                    $this->deleteImage($original);
+                }
+
+                return $request->input($key);
+            }
         }
 
         return $original;
@@ -275,10 +318,10 @@ class HeroSlideController extends Controller
         try {
             DB::transaction(function () {
                 foreach ($this->defaultBlueprints() as $index => $slide) {
-                    HeroSlide::create(array_merge($slide, [
+                    HeroSlide::create($this->mapSlideToSchema(array_merge($slide, [
                         'sort_order' => ($index + 1) * 10,
                         'is_active' => true,
-                    ]));
+                    ])));
                 }
             });
         } catch (Throwable $exception) {
@@ -427,6 +470,16 @@ class HeroSlideController extends Controller
                 ],
             ],
         ];
+    }
+
+    protected function mapSlideToSchema(array $slide): array
+    {
+        if (HeroSlideSchemaState::usesLegacyMediaColumn()) {
+            $slide['image_path'] = $slide['desktop_image_path'] ?? $slide['mobile_image_path'] ?? null;
+            unset($slide['desktop_image_path'], $slide['mobile_image_path']);
+        }
+
+        return $slide;
     }
 
     protected function interruptIfSchemaMissing(): ?RedirectResponse

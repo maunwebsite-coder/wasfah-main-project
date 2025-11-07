@@ -17,6 +17,7 @@ class HeroSlide extends Model
         'title',
         'description',
         'image_alt',
+        'image_path',
         'desktop_image_path',
         'mobile_image_path',
         'features',
@@ -57,7 +58,9 @@ class HeroSlide extends Model
      */
     public function getDesktopImageUrlAttribute(): ?string
     {
-        return $this->resolveImageUrl($this->desktop_image_path);
+        $path = $this->desktop_image_path ?? $this->image_path;
+
+        return $this->resolveImageUrl($path);
     }
 
     /**
@@ -65,7 +68,9 @@ class HeroSlide extends Model
      */
     public function getMobileImageUrlAttribute(): ?string
     {
-        return $this->resolveImageUrl($this->mobile_image_path) ?: $this->getDesktopImageUrlAttribute();
+        $path = $this->mobile_image_path ?? $this->image_path;
+
+        return $this->resolveImageUrl($path) ?: $this->getDesktopImageUrlAttribute();
     }
 
     /**
