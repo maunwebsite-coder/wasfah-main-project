@@ -175,7 +175,12 @@
                                        id="image" 
                                        name="image" 
                                        accept="image/*"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                                       data-max-size="5120"
+                                       data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                                       data-error-target="#tool_image_error">
+                                <p class="text-sm text-gray-500 mt-2">الحد الأقصى لحجم الصورة هو 5 ميجابايت.</p>
+                                <p id="tool_image_error" class="text-sm text-red-600 mt-1 hidden"></p>
                                 @error('image')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
