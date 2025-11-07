@@ -119,8 +119,8 @@ sudo systemctl restart php8.2-fpm
 ويتضمنان الإعدادات التالية:
 
 ```ini
-upload_max_filesize = 25M
-post_max_size = 30M
+upload_max_filesize = 5M
+post_max_size = 6M
 max_file_uploads = 20
 max_execution_time = 60
 max_input_time = 60
@@ -130,7 +130,7 @@ memory_limit = 512M
 كما يضيف السكريبت السطر التالي داخل ملف إعداد Nginx:
 
 ```
-client_max_body_size 32M;
+client_max_body_size 5M;
 ```
 
 إذا تم إعداد الخادم قبل هذا التحديث، اجعل القيم السابقة يدوياً ثم أعد تشغيل الخدمات:

@@ -47,8 +47,8 @@ apt install -y nginx mysql-server php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbst
 
 print_status "Configuring PHP upload limits..."
 cat > /etc/php/8.2/fpm/conf.d/99-upload-limits.ini << 'EOF'
-upload_max_filesize = 25M
-post_max_size = 30M
+upload_max_filesize = 5M
+post_max_size = 6M
 max_file_uploads = 20
 max_execution_time = 60
 max_input_time = 60
@@ -56,8 +56,8 @@ memory_limit = 512M
 EOF
 
 cat > /etc/php/8.2/cli/conf.d/99-upload-limits.ini << 'EOF'
-upload_max_filesize = 25M
-post_max_size = 30M
+upload_max_filesize = 5M
+post_max_size = 6M
 max_file_uploads = 20
 max_execution_time = 60
 max_input_time = 60
@@ -131,7 +131,7 @@ server {
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
-    client_max_body_size 32M;
+    client_max_body_size 5M;
 
     index index.php;
 
