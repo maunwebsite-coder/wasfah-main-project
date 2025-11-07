@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HeroSlideRequest;
 use App\Models\HeroSlide;
 use App\Services\HeroSlideMediaService;
+use App\Services\HeroSlideImageService;
 use App\Support\HeroSlideSchemaState;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

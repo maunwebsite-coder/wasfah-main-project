@@ -33,6 +33,8 @@ class HeroSlideImageService
             return $file->store(self::DIRECTORY, 'public');
         }
 
+        $tempPath = null;
+
         try {
             $image = imagecreatefromstring(file_get_contents($file->getPathname()));
 
@@ -72,10 +74,6 @@ class HeroSlideImageService
                 $filename
             );
 
-            imagedestroy($image);
-            imagedestroy($canvas);
-            unlink($tempPath);
-
             return $storedPath;
         } catch (\Throwable $throwable) {
             Log::warning('HeroSlideImageService fallback to original image.', [
@@ -83,6 +81,18 @@ class HeroSlideImageService
             ]);
 
             return $file->store(self::DIRECTORY, 'public');
+        } finally {
+            if (isset($image) && is_resource($image)) {
+                imagedestroy($image);
+            }
+
+            if (isset($canvas) && is_resource($canvas)) {
+                imagedestroy($canvas);
+            }
+
+            if ($tempPath && file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
         }
     }
 
