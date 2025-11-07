@@ -539,6 +539,95 @@
             padding: 2rem;
         }
     }
+
+    .online-meeting-tools {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(16, 185, 129, 0.18);
+        background: rgba(236, 253, 245, 0.65);
+        padding: 1rem 1.25rem;
+    }
+
+    .meeting-generator-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(16, 185, 129, 0.12);
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 18px 32px -25px rgba(5, 150, 105, 0.6);
+    }
+
+    .generator-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: space-between;
+    }
+
+    .meeting-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 999px;
+        padding: 0.35rem 0.9rem;
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .meeting-status[data-state="ready"] {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .meeting-status[data-state="manual"] {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .meeting-status[data-state="error"] {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .generate-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 999px;
+        padding: 0.6rem 1.3rem;
+        background: linear-gradient(135deg, #10b981, #0d9488);
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 18px 32px -18px rgba(16, 185, 129, 0.8);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .generate-link-btn:not(:disabled):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 34px -20px rgba(16, 185, 129, 0.9);
+    }
+
+    .generate-link-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .meeting-info-card {
+        border-radius: 1rem;
+        border: 1px dashed rgba(16, 185, 129, 0.4);
+        background: rgba(236, 253, 245, 0.75);
+        padding: 0.95rem 1.1rem;
+    }
+
+    .readonly-input {
+        background: #f1f5f9;
+        color: #475569;
+    }
 </style>
 @endpush
 @section('content')
@@ -546,6 +635,24 @@
     <div class="container mx-auto px-4 max-w-6xl space-y-10">
         @php
             $recipesCount = $recipes->count();
+            $isOnlineOld = old('is_online', false) ? true : false;
+            $autoGenerateMeeting = (int) old('auto_generate_meeting', 1) === 1;
+            $storedJitsiRoom = old('jitsi_room');
+            $storedJitsiPasscode = old('jitsi_passcode');
+            $storedMeetingLink = old('meeting_link');
+            $hasGeneratedMeeting = $storedJitsiRoom && $storedMeetingLink;
+            $meetingStatusState = !$isOnlineOld
+                ? 'idle'
+                : ($hasGeneratedMeeting
+                    ? 'ready'
+                    : ($autoGenerateMeeting ? 'idle' : 'manual'));
+            $meetingStatusText = !$isOnlineOld
+                ? 'قم بتفعيل الورشة الأونلاين للوصول إلى توليد الروابط.'
+                : ($hasGeneratedMeeting
+                    ? 'تم إنشاء رابط Jitsi جاهز.'
+                    : ($autoGenerateMeeting
+                        ? 'سيتم توليد رابط Jitsi تلقائياً بعد الحفظ.'
+                        : 'أدخل رابط الاجتماع المخصص يدوياً.'));
         @endphp
 
         <div class="page-hero">
@@ -815,15 +922,71 @@
                                 @enderror
                             </div>
 
-                            <div class="md:col-span-2">
-                                <label for="meeting_link" class="form-label">رابط الاجتماع (للورش الأونلاين)</label>
-                                <input id="meeting_link" name="meeting_link" type="url" value="{{ old('meeting_link') }}"
-                                       class="form-input @error('meeting_link') is-invalid @enderror"
-                                       placeholder="https://meet.google.com/abc-defg-hij">
-                                <p id="meeting-link-help" class="form-hint">سيظهر الرابط للمشاركين بعد تأكيد حجزهم في الورشة الأونلاين.</p>
-                                @error('meeting_link')
-                                    <p class="error-text">{{ $message }}</p>
-                                @enderror
+                            <div class="md:col-span-2 space-y-4">
+                                <div id="onlineMeetingTools" class="online-meeting-tools {{ $isOnlineOld ? '' : 'hidden' }} space-y-3">
+                                    <div class="meeting-generator-card">
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-800">توليد رابط الاجتماع الذكي</p>
+                                            <p class="text-xs text-slate-500">
+                                                أنشئ رابط Jitsi آمن بضغطة زر أو دع النظام يقوم بذلك تلقائياً عند الحفظ.
+                                            </p>
+                                        </div>
+                                        <div class="generator-actions">
+                                            <span class="meeting-status" id="meetingStatusBadge" data-state="{{ $meetingStatusState }}">
+                                                {{ $meetingStatusText }}
+                                            </span>
+                                            <div class="flex flex-wrap items-center gap-3">
+                                                <input type="hidden" name="auto_generate_meeting" value="0">
+                                                <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                                    <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerateMeeting ? 'checked' : '' }}>
+                                                    توليد تلقائي عبر Jitsi
+                                                </label>
+                                                <button type="button"
+                                                        id="generateJitsiLinkBtn"
+                                                        data-url="{{ route('admin.workshops.generate-link') }}"
+                                                        class="generate-link-btn">
+                                                    <i class="fas fa-bolt"></i>
+                                                    <span>توليد رابط الآن</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="generatedMeetingInfo" class="{{ $hasGeneratedMeeting ? '' : 'hidden' }} meeting-info-card space-y-2">
+                                        @if($hasGeneratedMeeting)
+                                            <p class="font-semibold text-slate-800">تم إنشاء رابط Jitsi:</p>
+                                            <p class="mt-1 text-sm break-all text-slate-700">{{ $storedMeetingLink }}</p>
+                                            @if($storedJitsiPasscode)
+                                                <p class="mt-2 text-xs text-emerald-700">
+                                                    رمز الدخول: <span class="font-semibold">{{ $storedJitsiPasscode }}</span>
+                                                </p>
+                                            @endif
+                                        @else
+                                            <p class="text-sm text-slate-600">سيظهر الرابط والمعلومات الإضافية هنا بعد توليده.</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div id="manualMeetingField" class="space-y-2">
+                                    <label for="meeting_link" class="form-label">رابط الاجتماع (للورش الأونلاين)</label>
+                                    <input id="meeting_link" name="meeting_link" type="url" value="{{ old('meeting_link') }}"
+                                           class="form-input @error('meeting_link') is-invalid @enderror{{ $autoGenerateMeeting && $isOnlineOld ? ' readonly-input' : '' }}"
+                                           placeholder="https://meet.jit.si/wasfah-room"
+                                           @if($isOnlineOld && !$autoGenerateMeeting) required @endif
+                                           @if($isOnlineOld && $autoGenerateMeeting) readonly @endif>
+                                    <p id="meeting-link-help" class="form-hint">
+                                        @if(!$isOnlineOld)
+                                            هذا الحقل اختياري للورش الحضورية.
+                                        @elseif($autoGenerateMeeting)
+                                            سيتم تعيين الرابط تلقائياً بعد الحفظ أو فور الضغط على زر التوليد.
+                                        @else
+                                            يجب إضافة رابط الاجتماع، وسيظهر للمشاركين بعد تأكيد الحجز.
+                                        @endif
+                                    </p>
+                                    @error('meeting_link')
+                                        <p class="error-text">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <input type="hidden" id="jitsi_room_field" name="jitsi_room" value="{{ old('jitsi_room') }}">
+                                <input type="hidden" id="jitsi_passcode_field" name="jitsi_passcode" value="{{ old('jitsi_passcode') }}">
                             </div>
                         </div>
                     </div>
@@ -1219,6 +1382,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const meetingLinkInput = document.getElementById('meeting_link');
     const locationHelp = document.getElementById('location-help');
     const meetingLinkHelp = document.getElementById('meeting-link-help');
+    const onlineMeetingTools = document.getElementById('onlineMeetingTools');
+    const manualMeetingField = document.getElementById('manualMeetingField');
+    const autoGenerateInput = document.getElementById('auto_generate_meeting');
+    const generateBtn = document.getElementById('generateJitsiLinkBtn');
+    const generatedInfo = document.getElementById('generatedMeetingInfo');
+    const meetingStatusBadge = document.getElementById('meetingStatusBadge');
+    const jitsiRoomField = document.getElementById('jitsi_room_field');
+    const jitsiPasscodeField = document.getElementById('jitsi_passcode_field');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     if (imageUploadArea) {
         ['dragenter', 'dragover'].forEach(evt => {
@@ -1248,8 +1420,96 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function setMeetingStatus(state, text) {
+        if (!meetingStatusBadge) {
+            return;
+        }
+        meetingStatusBadge.dataset.state = state;
+        meetingStatusBadge.textContent = text;
+    }
+
+    function renderGeneratedInfo(link, passcode) {
+        if (!generatedInfo) {
+            return;
+        }
+
+        const room = (jitsiRoomField?.value || '').trim();
+        if (!link || !room) {
+            generatedInfo.classList.add('hidden');
+            generatedInfo.innerHTML = '';
+            return;
+        }
+
+        generatedInfo.classList.remove('hidden');
+        generatedInfo.innerHTML = '';
+
+        const title = document.createElement('p');
+        title.className = 'font-semibold text-slate-800';
+        title.textContent = 'تم إنشاء رابط Jitsi:';
+        generatedInfo.appendChild(title);
+
+        const linkEl = document.createElement('p');
+        linkEl.className = 'mt-1 text-sm break-all text-slate-700';
+        linkEl.textContent = link;
+        generatedInfo.appendChild(linkEl);
+
+        if (passcode) {
+            const passcodeEl = document.createElement('p');
+            passcodeEl.className = 'mt-2 text-xs text-emerald-700';
+            passcodeEl.textContent = 'رمز الدخول: ';
+            const strong = document.createElement('span');
+            strong.className = 'font-semibold';
+            strong.textContent = passcode;
+            passcodeEl.appendChild(strong);
+            generatedInfo.appendChild(passcodeEl);
+        }
+    }
+
+    function toggleMeetingInputState() {
+        if (!meetingLinkInput) {
+            return;
+        }
+
+        const isOnline = !!isOnlineCheckbox?.checked;
+        const autoGenerate = !!autoGenerateInput?.checked;
+        const hasGeneratedLink = Boolean(
+            (jitsiRoomField?.value || '').trim() && (meetingLinkInput.value || '').trim()
+        );
+
+        meetingLinkInput.placeholder = isOnline
+            ? 'https://meet.jit.si/wasfah-room'
+            : 'يمكن ترك الحقل فارغاً للورش الحضورية';
+
+        meetingLinkInput.readOnly = isOnline && autoGenerate;
+        meetingLinkInput.required = isOnline && !autoGenerate;
+        meetingLinkInput.classList.toggle('readonly-input', isOnline && autoGenerate);
+
+        if (meetingLinkHelp) {
+            if (!isOnline) {
+                meetingLinkHelp.textContent = 'هذا الحقل اختياري للورش الحضورية.';
+            } else if (autoGenerate) {
+                meetingLinkHelp.textContent = 'سيتم تعيين الرابط تلقائياً بعد الحفظ أو فور الضغط على زر التوليد.';
+            } else {
+                meetingLinkHelp.textContent = 'أدخل رابط الاجتماع، وسيظهر للمشاركين بعد تأكيد الحجز.';
+            }
+        }
+
+        if (meetingStatusBadge) {
+            if (!isOnline) {
+                setMeetingStatus('idle', 'قم بتفعيل الورشة الأونلاين للوصول إلى توليد الروابط.');
+            } else if (hasGeneratedLink) {
+                setMeetingStatus('ready', 'تم إنشاء رابط Jitsi جاهز للمشاركين.');
+            } else if (autoGenerate) {
+                setMeetingStatus('idle', 'سيتم توليد رابط Jitsi تلقائياً بعد الحفظ.');
+            } else {
+                setMeetingStatus('manual', 'يرجى لصق رابط الاجتماع المخصص يدوياً.');
+            }
+        }
+    }
+
     function toggleOnlineFields() {
         if (!isOnlineCheckbox) {
+            toggleMeetingInputState();
             return;
         }
 
@@ -1257,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (locationInput) {
             locationInput.required = !isOnline;
-            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Google Meet' : 'مثال: عمان - شارع الملكة رانيا';
+            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Jitsi أو وصف موجز' : 'مثال: عمان - شارع الملكة رانيا';
             locationInput.classList.toggle('border-emerald-400', isOnline);
             if (locationHelp) {
                 locationHelp.textContent = isOnline
@@ -1266,23 +1526,118 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (meetingLinkInput) {
-            meetingLinkInput.required = isOnline;
-            meetingLinkInput.placeholder = isOnline ? 'https://meet.google.com/abc-defg-hij' : 'يمكن ترك الحقل فارغاً للورش الحضورية';
-            meetingLinkInput.classList.toggle('ring-2', isOnline);
-            meetingLinkInput.classList.toggle('ring-amber-400', isOnline);
-            if (meetingLinkHelp) {
-                meetingLinkHelp.textContent = isOnline
-                    ? 'يجب إضافة رابط الاجتماع، وسيظهر للمشاركين بعد تأكيد الحجز.'
-                    : 'هذا الحقل اختياري للورش الحضورية.';
-            }
+        if (onlineMeetingTools) {
+            onlineMeetingTools.classList.toggle('hidden', !isOnline);
         }
+
+        if (manualMeetingField) {
+            manualMeetingField.classList.toggle('opacity-60', !isOnline);
+        }
+
+        if (generateBtn) {
+            generateBtn.disabled = !isOnline;
+        }
+
+        toggleMeetingInputState();
     }
 
     if (isOnlineCheckbox) {
         toggleOnlineFields();
         isOnlineCheckbox.addEventListener('change', toggleOnlineFields);
+    } else {
+        toggleMeetingInputState();
     }
+
+    autoGenerateInput?.addEventListener('change', () => {
+        if (!isOnlineCheckbox?.checked) {
+            autoGenerateInput.checked = false;
+        }
+        toggleMeetingInputState();
+    });
+
+    generateBtn?.addEventListener('click', async () => {
+        if (!isOnlineCheckbox?.checked) {
+            showNotification('يرجى تفعيل خيار الورشة الأونلاين قبل توليد الرابط.', 'warning');
+            return;
+        }
+
+        if (!csrfToken) {
+            showNotification('تعذر العثور على رمز الحماية. أعد تحميل الصفحة ثم حاول مجدداً.', 'error');
+            return;
+        }
+
+        const titleInput = document.getElementById('title');
+        const startDateInput = document.getElementById('start_date');
+        const title = titleInput?.value?.trim();
+        const startDate = startDateInput?.value || null;
+
+        if (!title) {
+            showNotification('يرجى إدخال عنوان الورشة قبل توليد الرابط.', 'warning');
+            titleInput?.focus();
+            return;
+        }
+
+        const originalHtml = generateBtn.innerHTML;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري التوليد...</span>';
+        setMeetingStatus('idle', 'جاري توليد رابط جديد...');
+
+        try {
+            const response = await fetch(generateBtn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    title,
+                    start_date: startDate,
+                }),
+            });
+
+            if (!response.ok) {
+                let message = 'تعذر توليد الرابط حالياً.';
+                try {
+                    const payload = await response.json();
+                    message = payload?.message
+                        ?? Object.values(payload?.errors || {})[0]?.[0]
+                        ?? message;
+                } catch (error) {
+                    // ignore parsing errors
+                }
+                throw new Error(message);
+            }
+
+            const data = await response.json();
+            if (meetingLinkInput) {
+                meetingLinkInput.value = data.meeting_link;
+            }
+            if (jitsiRoomField) {
+                jitsiRoomField.value = data.room || '';
+            }
+            if (jitsiPasscodeField) {
+                jitsiPasscodeField.value = data.passcode || '';
+            }
+            if (autoGenerateInput) {
+                autoGenerateInput.checked = true;
+            }
+
+            renderGeneratedInfo(data.meeting_link, data.passcode || '');
+            toggleMeetingInputState();
+            setMeetingStatus('ready', 'تم إنشاء رابط Jitsi جاهز للمشاركين.');
+            showNotification('تم إنشاء رابط Jitsi بنجاح.', 'success');
+        } catch (error) {
+            console.error(error);
+            setMeetingStatus('error', 'فشل توليد الرابط، أعد المحاولة.');
+            showNotification(error.message || 'تعذر توليد الرابط حالياً.', 'error');
+        } finally {
+            generateBtn.disabled = !isOnlineCheckbox?.checked;
+            generateBtn.innerHTML = originalHtml;
+        }
+    });
+
+    renderGeneratedInfo(meetingLinkInput?.value || '', jitsiPasscodeField?.value || '');
 
     if (recipeSearch) {
         recipeSearch.addEventListener('input', function() {

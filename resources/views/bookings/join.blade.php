@@ -4,6 +4,11 @@
 
 @push('styles')
 <style>
+    :root {
+        --jitsi-viewport-height: 100vh;
+        --jitsi-viewport-width: 100vw;
+    }
+
     .jitsi-shell {
         position: relative;
     }
@@ -76,11 +81,28 @@
     .mobile-fullscreen-target.mobile-fullscreen-active {
         position: fixed !important;
         inset: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: var(--jitsi-viewport-width, 100vw) !important;
+        height: var(--jitsi-viewport-height, 100vh) !important;
         border-radius: 0 !important;
         z-index: 999 !important;
         background-color: #000 !important;
+    }
+
+    .jitsi-safe-area {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        box-sizing: border-box;
+        background: inherit;
+    }
+
+    #jitsi-container {
+        width: 100%;
+        height: 100%;
     }
 
     footer {
@@ -107,7 +129,10 @@
 
         @if ($workshop->meeting_started_at)
             <div class="jitsi-shell mb-10" id="jitsi-shell">
-                <div class="jitsi-wrapper bg-black relative mobile-fullscreen-target" id="jitsi-container">
+                <div class="jitsi-wrapper bg-black relative mobile-fullscreen-target">
+                    <div class="jitsi-safe-area">
+                        <div class="jitsi-node" id="jitsi-container"></div>
+                    </div>
                     <livewire:bookings.meeting-lock-overlay
                         :booking-code="$booking->public_code"
                         :workshop-id="$workshop->id"
@@ -456,6 +481,9 @@
         let pendingSubjectUpdate = null;
         let pendingDisplayNameResolve = null;
         let apiInstance = null;
+        let onViewportChange = null;
+        let jitsiContainer = null;
+        let jitsiInitialHeight = 640;
         const statusUrl = @json($secureStatusUrl ?? $booking->secure_status_url);
         const meetingStartedAtIso = @json($meetingStartedAtIso);
         const hint = document.getElementById('pollStatusHint');
@@ -483,6 +511,47 @@
             return narrowWidth || compactTabletWidth || shortLandscapeHeight;
         };
         let shouldAutoFullscreen = computeAutoFullscreenPreference();
+
+        const viewportSizing = (() => {
+            const root = document.documentElement;
+            const update = () => {
+                const viewport = window.visualViewport;
+                const height = viewport ? viewport.height : window.innerHeight;
+                const width = viewport ? viewport.width : window.innerWidth;
+                root.style.setProperty('--jitsi-viewport-height', `${height}px`);
+                root.style.setProperty('--jitsi-viewport-width', `${width}px`);
+                if (typeof onViewportChange === 'function') {
+                    try {
+                        onViewportChange(width, height);
+                    } catch (error) {
+                        console.warn('Viewport sizing listener failed', error);
+                    }
+                }
+            };
+            const scheduleUpdate = (delay = 0) => {
+                if (delay > 0) {
+                    window.setTimeout(update, delay);
+                    return;
+                }
+                if (typeof requestAnimationFrame === 'function') {
+                    requestAnimationFrame(update);
+                } else {
+                    update();
+                }
+            };
+
+            update();
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', update);
+                window.visualViewport.addEventListener('scroll', update);
+            }
+
+            window.addEventListener('orientationchange', () => scheduleUpdate(250));
+            window.addEventListener('resize', () => scheduleUpdate(150));
+
+            return { update };
+        })();
 
         const bodyFullscreenClass = 'mobile-fullscreen-active';
         const targetFullscreenClass = 'mobile-fullscreen-active';
@@ -560,6 +629,7 @@
             };
 
             const ensure = (fromGesture = false) => {
+                viewportSizing.update();
                 if (!shouldAutoFullscreen) {
                     exit();
                     return;
@@ -663,6 +733,29 @@
 
         window.addEventListener('beforeunload', fullscreenController.exit);
         window.addEventListener('pagehide', fullscreenController.exit);
+
+        function resizeJitsi() {
+            if (!jitsiContainer) {
+                return;
+            }
+
+            const measuredWidth = jitsiContainer.offsetWidth || 0;
+            const fallbackWidth = window.visualViewport?.width ?? window.innerWidth ?? 0;
+            const width = measuredWidth || fallbackWidth || (typeof screen !== 'undefined' ? screen.width : 0);
+            const height = jitsiContainer.offsetHeight || jitsiInitialHeight;
+
+            if (apiInstance && typeof apiInstance.resize === 'function') {
+                try {
+                    apiInstance.resize(width, height);
+                } catch (error) {
+                    console.warn('Failed to resize Jitsi iframe', error);
+                }
+            }
+        }
+
+        onViewportChange = () => {
+            resizeJitsi();
+        };
 
         const redirectToBookingDetails = () => {
             if (hasRedirectedToBookingDetails || !bookingDetailsUrl) {
@@ -1064,9 +1157,9 @@
 
                 fullscreenController.ensure();
 
-                const container = document.getElementById('jitsi-container');
+                jitsiContainer = document.getElementById('jitsi-container');
 
-                if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
+                if (typeof JitsiMeetExternalAPI === 'undefined' || !jitsiContainer) {
                     alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
                     return;
                 }
@@ -1076,7 +1169,8 @@
 
                 const domain = @json($embedConfig['domain']);
                 const jaasJwt = @json($embedConfig['jwt'] ?? null);
-                const initialHeight = container.offsetHeight || 640;
+                jitsiInitialHeight = jitsiContainer.offsetHeight || jitsiInitialHeight || 640;
+                const initialHeight = jitsiInitialHeight;
 
                 const baseToolbarButtons = [
                     'microphone',
@@ -1105,7 +1199,7 @@
 
                 const options = {
                     roomName: @json($embedConfig['room']),
-                    parentNode: container,
+                    parentNode: jitsiContainer,
                     width: '100%',
                     height: initialHeight,
                     lang: 'ar',
@@ -1175,25 +1269,22 @@
 
                 apiInstance.addListener('videoConferenceJoined', () => {
                     fullscreenController.ensure();
+                    resizeJitsi();
                 });
 
                 fullscreenController.ensure();
 
                 const handleMeetingClosure = () => {
                     fullscreenController.exit();
+                    window.removeEventListener('resize', resizeJitsi);
                     redirectToBookingDetails();
                 };
 
                 apiInstance.addListener('videoConferenceLeft', handleMeetingClosure);
                 apiInstance.addListener('readyToClose', handleMeetingClosure);
 
-                const resizeJitsi = () => {
-                    const width = container.offsetWidth;
-                    const height = container.offsetHeight || initialHeight;
-                    apiInstance?.resize(width, height);
-                };
-
                 window.addEventListener('resize', resizeJitsi);
+                viewportSizing.update();
                 resizeJitsi();
 
                 if (typeof apiInstance.addListener === 'function') {

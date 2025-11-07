@@ -289,6 +289,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // إدارة الورشات
     Route::get('workshops/{workshop}/meeting', [App\Http\Controllers\Admin\WorkshopController::class, 'meeting'])->name('workshops.meeting');
+    Route::post('workshops/generate-meeting-link', [App\Http\Controllers\Admin\WorkshopController::class, 'generateMeetingLink'])->name('workshops.generate-link');
     Route::resource('workshops', App\Http\Controllers\Admin\WorkshopController::class);
     Route::post('workshops/{workshop}/toggle-status', [App\Http\Controllers\Admin\WorkshopController::class, 'toggleStatus'])->name('workshops.toggle-status');
     Route::post('workshops/{workshop}/toggle-featured', [App\Http\Controllers\Admin\WorkshopController::class, 'toggleFeatured'])->name('workshops.toggle-featured');

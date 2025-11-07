@@ -4,6 +4,11 @@
 
 @push('styles')
 <style>
+    :root {
+        --jitsi-viewport-height: 100vh;
+        --jitsi-viewport-width: 100vw;
+    }
+
     .jitsi-shell {
         position: relative;
         display: flex;
@@ -40,11 +45,28 @@
     .mobile-fullscreen-target.mobile-fullscreen-active {
         position: fixed !important;
         inset: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: var(--jitsi-viewport-width, 100vw) !important;
+        height: var(--jitsi-viewport-height, 100vh) !important;
         border-radius: 0 !important;
         z-index: 999 !important;
         background-color: #000 !important;
+    }
+
+    .jitsi-safe-area {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        box-sizing: border-box;
+        background: inherit;
+    }
+
+    #jitsi-container {
+        width: 100%;
+        height: 100%;
     }
 
     footer {
@@ -102,10 +124,14 @@
                     : 'أضف تفاصيل الموقع من صفحة تعديل الورشة لتسهيل وصول المشاركين.');
         @endphp
 
-        
+
 
         <div class="jitsi-shell mb-10" id="jitsi-shell">
-            <div class="jitsi-wrapper bg-white mobile-fullscreen-target" id="jitsi-container"></div>
+            <div class="jitsi-wrapper bg-white relative mobile-fullscreen-target">
+                <div class="jitsi-safe-area">
+                    <div class="jitsi-node" id="jitsi-container"></div>
+                </div>
+            </div>
             <div class="rounded-3xl border border-orange-100 bg-white px-6 py-5 text-slate-900 shadow-lg shadow-orange-100/60">
                 <livewire:chef.workshop-meeting-control
                     :workshop="$workshop"
@@ -342,6 +368,50 @@
         let shouldAutoFullscreen = mobileViewportQuery.matches;
         let hasRedirectedToJoinPage = false;
         let apiInstance = null;
+        let onViewportChange = null;
+        let jitsiContainer = null;
+        let jitsiInitialHeight = 640;
+
+        const viewportSizing = (() => {
+            const root = document.documentElement;
+            const update = () => {
+                const viewport = window.visualViewport;
+                const height = viewport ? viewport.height : window.innerHeight;
+                const width = viewport ? viewport.width : window.innerWidth;
+                root.style.setProperty('--jitsi-viewport-height', `${height}px`);
+                root.style.setProperty('--jitsi-viewport-width', `${width}px`);
+                if (typeof onViewportChange === 'function') {
+                    try {
+                        onViewportChange(width, height);
+                    } catch (error) {
+                        console.warn('Viewport sizing listener failed', error);
+                    }
+                }
+            };
+            const scheduleUpdate = (delay = 0) => {
+                if (delay > 0) {
+                    window.setTimeout(update, delay);
+                    return;
+                }
+                if (typeof requestAnimationFrame === 'function') {
+                    requestAnimationFrame(update);
+                } else {
+                    update();
+                }
+            };
+
+            update();
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', update);
+                window.visualViewport.addEventListener('scroll', update);
+            }
+
+            window.addEventListener('orientationchange', () => scheduleUpdate(250));
+            window.addEventListener('resize', () => scheduleUpdate(150));
+
+            return { update };
+        })();
 
         const bodyFullscreenClass = 'mobile-fullscreen-active';
         const targetFullscreenClass = 'mobile-fullscreen-active';
@@ -418,6 +488,7 @@
             };
 
             const ensure = (fromGesture = false) => {
+                viewportSizing.update();
                 if (!shouldAutoFullscreen) {
                     exit();
                     return;
@@ -500,6 +571,29 @@
 
         window.addEventListener('beforeunload', fullscreenController.exit);
         window.addEventListener('pagehide', fullscreenController.exit);
+
+        function resizeJitsi() {
+            if (!jitsiContainer) {
+                return;
+            }
+
+            const measuredWidth = jitsiContainer.offsetWidth || 0;
+            const fallbackWidth = window.visualViewport?.width ?? window.innerWidth ?? 0;
+            const width = measuredWidth || fallbackWidth || (typeof screen !== 'undefined' ? screen.width : 0);
+            const height = jitsiContainer.offsetHeight || jitsiInitialHeight;
+
+            if (apiInstance && typeof apiInstance.resize === 'function') {
+                try {
+                    apiInstance.resize(width, height);
+                } catch (error) {
+                    console.warn('Failed to resize Jitsi iframe', error);
+                }
+            }
+        }
+
+        onViewportChange = () => {
+            resizeJitsi();
+        };
 
         const redirectToJoinPage = () => {
             if (hasRedirectedToJoinPage || !joinPageUrl) {
@@ -775,16 +869,17 @@
             }
         }
 
-        const container = document.getElementById('jitsi-container');
+        jitsiContainer = document.getElementById('jitsi-container');
 
-        if (typeof JitsiMeetExternalAPI === 'undefined' || !container) {
+        if (typeof JitsiMeetExternalAPI === 'undefined' || !jitsiContainer) {
             alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
             return;
         }
 
         const domain = @json($embedConfig['domain']);
         const jaasJwt = @json($embedConfig['jwt'] ?? null);
-        const initialHeight = container.offsetHeight || 640;
+        jitsiInitialHeight = jitsiContainer.offsetHeight || jitsiInitialHeight || 640;
+        const initialHeight = jitsiInitialHeight;
 
         const baseToolbarButtons = [
             'microphone',
@@ -814,7 +909,7 @@
 
         const options = {
             roomName: @json($embedConfig['room']),
-            parentNode: container,
+            parentNode: jitsiContainer,
             width: '100%',
             height: initialHeight,
             lang: 'ar',
@@ -858,31 +953,30 @@
 
         apiInstance = new JitsiMeetExternalAPI(domain, options);
         fullscreenController.ensure();
+        viewportSizing.update();
 
         apiInstance.addListener('videoConferenceJoined', () => {
             sendPresence('online');
             fullscreenController.ensure();
+            resizeJitsi();
         });
 
         apiInstance.addListener('videoConferenceLeft', () => {
             sendPresence('offline', { force: true });
             fullscreenController.exit();
+            window.removeEventListener('resize', resizeJitsi);
             redirectToJoinPage();
         });
 
         apiInstance.addListener('readyToClose', () => {
             sendPresence('offline', { force: true });
             fullscreenController.exit();
+            window.removeEventListener('resize', resizeJitsi);
             redirectToJoinPage();
         });
 
-        function resizeJitsi() {
-            const width = container.offsetWidth;
-            const height = container.offsetHeight || initialHeight;
-            apiInstance?.resize(width, height);
-        }
-
         window.addEventListener('resize', resizeJitsi);
+        viewportSizing.update();
         resizeJitsi();
         window.addEventListener('beforeunload', () => {
             sendPresenceBeacon('offline');

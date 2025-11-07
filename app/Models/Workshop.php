@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class Workshop extends Model
 {
@@ -297,7 +298,15 @@ class Workshop extends Model
             'is_online' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'meeting_link' => ['nullable', 'url', 'max:255', 'required_if:is_online,1'],
+            'meeting_link' => [
+                'nullable',
+                'url',
+                'max:255',
+                Rule::requiredIf(function () {
+                    $request = request();
+                    return $request->boolean('is_online') && !$request->boolean('auto_generate_meeting');
+                }),
+            ],
             'meeting_provider' => ['nullable', 'string', 'max:50'],
             'jitsi_room' => ['nullable', 'string', 'max:255'],
             'jitsi_passcode' => ['nullable', 'string', 'max:20'],

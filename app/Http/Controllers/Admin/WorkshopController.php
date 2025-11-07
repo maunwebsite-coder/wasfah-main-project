@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Workshop;
 use App\Models\Recipe;
-use App\Services\ImageCompressionService;
-use App\Services\SimpleImageCompressionService;
+use App\Models\Workshop;
 use App\Services\EnhancedImageUploadService;
+use App\Services\JitsiMeetingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class WorkshopController extends Controller
 {
-    public function __construct()
+    public function __construct(protected JitsiMeetingService $jitsiMeetingService)
     {
         $this->middleware('auth');
         $this->middleware('admin');
@@ -138,24 +138,7 @@ class WorkshopController extends Controller
         $workshop->is_online = $request->boolean('is_online');
         $workshop->is_active = $request->boolean('is_active');
         $workshop->featured_description = $request->featured_description;
-        $locationValue = trim((string) ($request->location ?? ''));
-        if ($workshop->is_online) {
-            $meetingLink = trim((string) ($request->meeting_link ?? ''));
-            $workshop->meeting_link = $meetingLink !== '' ? $meetingLink : null;
-            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
-            $workshop->meeting_provider = $this->detectMeetingProvider($workshop->meeting_link);
-            if ($workshop->meeting_provider !== 'jitsi') {
-                $workshop->jitsi_room = null;
-                $workshop->jitsi_passcode = null;
-            }
-        } else {
-            $workshop->meeting_link = null;
-            $workshop->meeting_provider = 'manual';
-            $workshop->jitsi_room = null;
-            $workshop->jitsi_passcode = null;
-            $workshop->location = $locationValue;
-        }
-        
+
         // الحقول الجديدة
         $workshop->category = $request->category;
         $workshop->level = $request->level;
@@ -167,6 +150,8 @@ class WorkshopController extends Controller
         $workshop->requirements = $request->requirements ?? '';
         $workshop->materials_needed = $request->materials_needed ?? '';
         $workshop->instructor_bio = $request->instructor_bio ?? '';
+
+        $this->syncMeetingDetails($request, $workshop);
 
         // التعامل مع الورشة المميزة بعد ضبط الحقول الإلزامية
         if ($request->has('is_featured') && $request->is_featured) {
@@ -309,23 +294,6 @@ class WorkshopController extends Controller
         $workshop->is_online = $request->boolean('is_online');
         $workshop->is_active = $request->boolean('is_active');
         $workshop->featured_description = $request->featured_description;
-        $locationValue = trim((string) ($request->location ?? ''));
-        if ($workshop->is_online) {
-            $meetingLink = trim((string) ($request->meeting_link ?? ''));
-            $workshop->meeting_link = $meetingLink !== '' ? $meetingLink : null;
-            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
-            $workshop->meeting_provider = $this->detectMeetingProvider($workshop->meeting_link);
-            if ($workshop->meeting_provider !== 'jitsi') {
-                $workshop->jitsi_room = null;
-                $workshop->jitsi_passcode = null;
-            }
-        } else {
-            $workshop->meeting_link = null;
-            $workshop->meeting_provider = 'manual';
-            $workshop->jitsi_room = null;
-            $workshop->jitsi_passcode = null;
-            $workshop->location = $locationValue;
-        }
         
         // الحقول الجديدة
         $workshop->category = $request->category;
@@ -338,6 +306,8 @@ class WorkshopController extends Controller
         $workshop->requirements = $request->requirements ?? '';
         $workshop->materials_needed = $request->materials_needed ?? '';
         $workshop->instructor_bio = $request->instructor_bio ?? '';
+
+        $this->syncMeetingDetails($request, $workshop);
 
         // التعامل مع الورشة المميزة بعد ضبط الحقول الإلزامية
         if ($request->has('is_featured') && $request->is_featured) {
@@ -423,6 +393,39 @@ class WorkshopController extends Controller
             ->with('success', 'تم تحديث الورشة بنجاح!');
     }
 
+    public function generateMeetingLink(Request $request)
+    {
+        abort_unless(Auth::check() && method_exists(Auth::user(), 'isAdmin') && Auth::user()->isAdmin(), 403);
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'start_date' => ['nullable', 'date'],
+        ]);
+
+        $startsAt = null;
+        if (!empty($validated['start_date'])) {
+            try {
+                $startsAt = Carbon::parse($validated['start_date']);
+            } catch (\Throwable $exception) {
+                $startsAt = null;
+            }
+        }
+
+        $meeting = $this->jitsiMeetingService->createMeeting(
+            $validated['title'],
+            Auth::id() ?? 0,
+            $startsAt
+        );
+
+        return response()->json([
+            'success' => true,
+            'meeting_link' => $meeting['url'],
+            'room' => $meeting['room'],
+            'passcode' => $meeting['passcode'],
+            'provider' => $meeting['provider'] ?? 'jitsi',
+        ]);
+    }
+
     /**
      * حذف ورشة
      */
@@ -487,6 +490,83 @@ class WorkshopController extends Controller
         return response()->json([
             'hasFeatured' => $hasFeatured
         ]);
+    }
+
+    protected function syncMeetingDetails(Request $request, Workshop $workshop): void
+    {
+        $locationValue = trim((string) ($request->location ?? ''));
+
+        if (!$workshop->is_online) {
+            $workshop->meeting_link = null;
+            $workshop->meeting_provider = 'manual';
+            $workshop->jitsi_room = null;
+            $workshop->jitsi_passcode = null;
+            $workshop->location = $locationValue;
+            return;
+        }
+
+        $autoGenerate = $request->boolean('auto_generate_meeting');
+        $meetingLinkInput = trim((string) ($request->meeting_link ?? ''));
+        $jitsiRoomInput = trim((string) ($request->jitsi_room ?? ''));
+        $jitsiPasscodeInput = trim((string) ($request->jitsi_passcode ?? ''));
+
+        if ($jitsiRoomInput === '' && $workshop->exists && $workshop->jitsi_room) {
+            $jitsiRoomInput = $workshop->jitsi_room;
+        }
+
+        if ($jitsiPasscodeInput === '' && $workshop->exists && $workshop->jitsi_passcode) {
+            $jitsiPasscodeInput = $workshop->jitsi_passcode;
+        }
+
+        if ($autoGenerate) {
+            if ($meetingLinkInput === '' || $jitsiRoomInput === '') {
+                $meeting = $this->generateAdminJitsiMeeting($workshop);
+                $meetingLinkInput = $meeting['url'];
+                $jitsiRoomInput = $meeting['room'];
+                $jitsiPasscodeInput = $meeting['passcode'];
+            }
+
+            $workshop->meeting_link = $meetingLinkInput;
+            $workshop->meeting_provider = 'jitsi';
+            $workshop->jitsi_room = $jitsiRoomInput !== '' ? $jitsiRoomInput : null;
+            $workshop->jitsi_passcode = $jitsiPasscodeInput !== '' ? $jitsiPasscodeInput : null;
+            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين عبر Jitsi Meet';
+            return;
+        }
+
+        $workshop->meeting_link = $meetingLinkInput !== '' ? $meetingLinkInput : null;
+        $workshop->meeting_provider = $this->detectMeetingProvider($workshop->meeting_link);
+
+        if ($workshop->meeting_provider === 'jitsi') {
+            $workshop->jitsi_room = $jitsiRoomInput !== '' ? $jitsiRoomInput : null;
+            $workshop->jitsi_passcode = $jitsiPasscodeInput !== '' ? $jitsiPasscodeInput : null;
+        } else {
+            $workshop->jitsi_room = null;
+            $workshop->jitsi_passcode = null;
+        }
+
+        $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
+    }
+
+    protected function generateAdminJitsiMeeting(Workshop $workshop): array
+    {
+        $startsAt = null;
+
+        if ($workshop->start_date instanceof Carbon) {
+            $startsAt = $workshop->start_date;
+        } elseif (!empty($workshop->start_date)) {
+            try {
+                $startsAt = Carbon::parse($workshop->start_date);
+            } catch (\Throwable $exception) {
+                $startsAt = null;
+            }
+        }
+
+        return $this->jitsiMeetingService->createMeeting(
+            $workshop->title ?: 'ورشة جديدة',
+            Auth::id() ?? 0,
+            $startsAt
+        );
     }
 
     protected function buildJitsiEmbedConfig(Workshop $workshop): array
