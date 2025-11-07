@@ -639,7 +639,7 @@ class WorkshopController extends Controller
             'requirements' => ['nullable', 'string'],
             'materials_needed' => ['nullable', 'string'],
             'meeting_link' => ['nullable', 'url', 'max:255'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
             'remove_image' => ['sometimes', 'boolean'],
             'auto_generate_meeting' => ['sometimes', 'boolean'],
         ];

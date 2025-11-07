@@ -49,7 +49,7 @@ class AdminToolsController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
                 'amazon_url' => 'nullable|url',
                 'affiliate_url' => 'nullable|url',
                 'price' => 'required|numeric|min:0',
@@ -189,7 +189,7 @@ class AdminToolsController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'amazon_url' => 'nullable|url',
             'affiliate_url' => 'nullable|url',
             'price' => 'required|numeric|min:0',

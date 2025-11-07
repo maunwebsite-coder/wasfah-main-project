@@ -37,11 +37,6 @@ class HeroSlideSchemaState
     private const MODERN_MEDIA_COLUMNS = ['desktop_image_path', 'mobile_image_path'];
 
     /**
-     * Cache the inspected columns for the current request.
-     */
-    private static ?array $columnCache = null;
-
-    /**
      * Whether the hero_slides table is present and contains the columns we rely on.
      */
     public static function isReady(): bool
@@ -97,14 +92,6 @@ class HeroSlideSchemaState
     }
 
     /**
-     * Force the cached schema information to be recalculated.
-     */
-    public static function refresh(): void
-    {
-        self::$columnCache = null;
-    }
-
-    /**
      * @return array<int, string>
      */
     protected static function missingColumnsFrom(array $columns): array
@@ -127,23 +114,19 @@ class HeroSlideSchemaState
      */
     protected static function columns(): array
     {
-        if (self::$columnCache !== null) {
-            return self::$columnCache;
-        }
-
         try {
             if (!Schema::hasTable(self::TABLE)) {
-                return self::$columnCache = [];
+                return [];
             }
 
-            return self::$columnCache = Schema::getColumnListing(self::TABLE);
+            return Schema::getColumnListing(self::TABLE);
         } catch (Throwable $exception) {
             Log::warning('Unable to inspect the hero_slides schema; assuming it is not ready.', [
                 'message' => $exception->getMessage(),
                 'exception' => $exception::class,
             ]);
 
-            return self::$columnCache = [];
+            return [];
         }
     }
 

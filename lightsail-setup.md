@@ -109,6 +109,37 @@ sudo systemctl restart nginx
 sudo systemctl restart php8.2-fpm
 ```
 
+## رفع حد رفع الملفات (مهم لصور السلايدر)
+
+صور الهيرو غالباً تتجاوز الحد الافتراضي لـ PHP و Nginx (2MB فقط)، لذلك سكريبت النشر ينشئ الملفين:
+
+- `/etc/php/8.2/fpm/conf.d/99-upload-limits.ini`
+- `/etc/php/8.2/cli/conf.d/99-upload-limits.ini`
+
+ويتضمنان الإعدادات التالية:
+
+```ini
+upload_max_filesize = 25M
+post_max_size = 30M
+max_file_uploads = 20
+max_execution_time = 60
+max_input_time = 60
+memory_limit = 512M
+```
+
+كما يضيف السكريبت السطر التالي داخل ملف إعداد Nginx:
+
+```
+client_max_body_size 32M;
+```
+
+إذا تم إعداد الخادم قبل هذا التحديث، اجعل القيم السابقة يدوياً ثم أعد تشغيل الخدمات:
+
+```bash
+sudo systemctl restart php8.2-fpm
+sudo systemctl reload nginx
+```
+
 ## الخطوة 8: إعداد SSL (HTTPS)
 
 ```bash

@@ -391,7 +391,7 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20|regex:/^[0-9+\-\s\(\)]+$/',
-            'avatar' => 'nullable|image|max:2048',
+            'avatar' => 'nullable|image|max:5120',
         ]);
 
         if (ContentModerationService::containsProhibitedLanguage($request->name)) {

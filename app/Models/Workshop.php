@@ -319,7 +319,7 @@ class Workshop extends Model
             'meeting_provider' => ['nullable', 'string', 'max:50'],
             'jitsi_room' => ['nullable', 'string', 'max:255'],
             'jitsi_passcode' => ['nullable', 'string', 'max:20'],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
 
         // إضافة validation خاص للورشة المميزة
