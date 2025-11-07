@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Workshop;
 use App\Models\WorkshopView;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
 
 class WorkshopController extends Controller
@@ -222,15 +223,24 @@ class WorkshopController extends Controller
             return redirect()->route('workshops');
         }
 
-        $workshops = Workshop::search($query)
-            ->query(function ($builder) {
-                $builder->active()
-                    ->withCount(['bookings' => function ($bookingQuery) {
-                        $bookingQuery->where('status', 'confirmed');
-                    }])
-                    ->orderBy('start_date', 'asc');
-            })
-            ->get();
+        $searchQueryCallback = function (EloquentBuilder $builder) {
+            $builder->active()
+                ->withCount(['bookings' => function ($bookingQuery) {
+                    $bookingQuery->where('status', 'confirmed');
+                }])
+                ->orderBy('start_date', 'asc');
+        };
+
+        if (Workshop::hasDescriptionFullTextIndex()) {
+            $workshops = Workshop::search($query)
+                ->query($searchQueryCallback)
+                ->get();
+        } else {
+            $builder = Workshop::query();
+            $searchQueryCallback($builder);
+            $this->applyWorkshopLikeSearch($builder, $query);
+            $workshops = $builder->get();
+        }
 
         return view('workshops', compact('workshops'))->with('searchQuery', $query);
     }
@@ -313,5 +323,28 @@ class WorkshopController extends Controller
         $workshops = $query->paginate(12);
 
         return view('test-workshop-simple', compact('workshops', 'featuredWorkshop'));
+    }
+
+    private function applyWorkshopLikeSearch(EloquentBuilder $builder, string $query): void
+    {
+        $escaped = $this->escapeLikeValue($query);
+
+        $builder->where(function (EloquentBuilder $likeQuery) use ($escaped) {
+            $likeQuery->where('workshops.title', 'like', "%{$escaped}%")
+                ->orWhere('workshops.instructor', 'like', "%{$escaped}%")
+                ->orWhere('workshops.category', 'like', "%{$escaped}%")
+                ->orWhere('workshops.location', 'like', "%{$escaped}%")
+                ->orWhere('workshops.description', 'like', "%{$escaped}%")
+                ->orWhere('workshops.slug', 'like', "{$escaped}%");
+        });
+    }
+
+    private function escapeLikeValue(string $value): string
+    {
+        return str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $value
+        );
     }
 }
