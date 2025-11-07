@@ -37,6 +37,8 @@
     $mobileIsVideo = $mobilePreview
         ? \Illuminate\Support\Str::of($mobilePreview)->lower()->endsWith('.webm')
         : false;
+    $maxUploadKilobytes = \App\Services\HeroSlideImageService::MAX_FILE_SIZE_KB;
+    $maxUploadMegabytes = rtrim(rtrim(number_format($maxUploadKilobytes / 1024, 1), '0'), '.');
 @endphp
 
 <div class="space-y-8">
@@ -95,8 +97,8 @@
                            name="desktop_image"
                            accept=".jpg,.jpeg,.png,.gif,.bmp,.svg,.webp,.webm"
                            class="hidden"
-                           data-max-size="5120"
-                           data-max-size-message="لا يمكن رفع ملف أكبر من 5 ميجابايت."
+                           data-max-size="{{ $maxUploadKilobytes }}"
+                           data-max-size-message="لا يمكن رفع ملف أكبر من {{ $maxUploadMegabytes }} ميجابايت."
                            data-error-target="#desktop_image_error">
                     <label for="desktop_image_input" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-gray-300 text-gray-700 bg-gray-50 hover:bg-white hover:border-orange-300 transition cursor-pointer">
                         <i class="fas fa-upload text-orange-500"></i>
@@ -105,7 +107,8 @@
                     <p class="text-xs text-gray-500" id="desktop_file_name">لم يتم اختيار ملف بعد.</p>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">استخدم هذا القسم لرفع صورة أو فيديو من جهازك.</p>
-                <p class="text-xs text-gray-500 mt-1">الأنواع المدعومة: JPG, PNG, GIF, SVG, WEBP أو فيديو WEBM (بحد أقصى 5MB).</p>
+                <p class="text-xs text-gray-500 mt-1">الأنواع المدعومة: JPG, PNG, GIF, SVG, WEBP أو فيديو WEBM (بحد أقصى {{ $maxUploadMegabytes }}MB).</p>
+                <p class="text-xs text-orange-600 mt-1">يتم تحويل الصور تلقائياً إلى صيغة WebP بجودة 80% مع ضبط العرض الأقصى إلى 1920px للحفاظ على سرعة التحميل.</p>
                 <p id="desktop_image_error" class="text-xs text-red-600 mt-1 hidden"></p>
                 <p class="text-xs text-gray-500 mt-1">أو استخدم رابط مباشر:</p>
                 <input type="url" name="desktop_image_url" value="{{ old('desktop_image_url') }}" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-200" placeholder="https://example.com/desktop.jpg">
@@ -142,8 +145,8 @@
                            name="mobile_image"
                            accept=".jpg,.jpeg,.png,.gif,.bmp,.svg,.webp,.webm"
                            class="hidden"
-                           data-max-size="5120"
-                           data-max-size-message="لا يمكن رفع ملف أكبر من 5 ميجابايت."
+                           data-max-size="{{ $maxUploadKilobytes }}"
+                           data-max-size-message="لا يمكن رفع ملف أكبر من {{ $maxUploadMegabytes }} ميجابايت."
                            data-error-target="#mobile_image_error">
                     <label for="mobile_image_input" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-gray-300 text-gray-700 bg-gray-50 hover:bg-white hover:border-orange-300 transition cursor-pointer">
                         <i class="fas fa-upload text-orange-500"></i>
@@ -152,7 +155,8 @@
                     <p class="text-xs text-gray-500" id="mobile_file_name">لم يتم اختيار ملف بعد.</p>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">استخدم هذا القسم لرفع صورة أو فيديو عمودي من جهازك.</p>
-                <p class="text-xs text-gray-500 mt-1">الأنواع المدعومة: JPG, PNG, GIF, SVG, WEBP أو فيديو WEBM (بحد أقصى 5MB).</p>
+                <p class="text-xs text-gray-500 mt-1">الأنواع المدعومة: JPG, PNG, GIF, SVG, WEBP أو فيديو WEBM (بحد أقصى {{ $maxUploadMegabytes }}MB).</p>
+                <p class="text-xs text-orange-600 mt-1">سيتم ضغط الصورة وتحويلها إلى WebP (جودة 80%) مع حد أقصى للعرض 1920px لملاءمة الأجهزة المحمولة.</p>
                 <p id="mobile_image_error" class="text-xs text-red-600 mt-1 hidden"></p>
                 <p class="text-xs text-gray-500 mt-1">أو استخدم رابط مباشر:</p>
                 <input type="url" name="mobile_image_url" value="{{ old('mobile_image_url') }}" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-200" placeholder="https://example.com/mobile.jpg">

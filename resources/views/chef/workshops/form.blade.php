@@ -307,13 +307,20 @@
         <div class="mb-6">
             <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">صورة الورشة</p>
             <h2 class="mt-1 text-2xl font-bold text-slate-900">إبهار بصري</h2>
-            <p class="mt-1 text-sm text-slate-500">صور بدقة جيدة (حتى 2MB) لتحفيز الحجز.</p>
+            <p class="mt-1 text-sm text-slate-500">صور بدقة جيدة (حتى 5MB) لتحفيز الحجز.</p>
         </div>
         <div class="grid gap-5 lg:grid-cols-[2fr,1fr]">
             <div class="space-y-3">
                 <label for="image" class="text-sm font-semibold text-slate-700">رفع صورة رئيسية</label>
-                <input type="file" id="image" name="image" accept="image/*"
-                       class="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500 focus:border-orange-400 focus:ring-4 focus:ring-orange-100">
+                <input type="file"
+                       id="image"
+                       name="image"
+                       accept="image/*"
+                       class="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                       data-max-size="5120"
+                       data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                       data-error-target="#chef_workshop_image_error">
+                <p id="chef_workshop_image_error" class="text-sm text-red-600 mt-2 hidden"></p>
                 @error('image')
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror

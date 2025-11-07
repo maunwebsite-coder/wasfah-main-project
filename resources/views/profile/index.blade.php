@@ -515,10 +515,14 @@
                             name="avatar"
                             class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-700 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                             accept="image/*"
+                            data-max-size="5120"
+                            data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                            data-error-target="#profile_avatar_error"
                         >
                         <p class="text-xs text-gray-500">
-                            يدعم الصور حتى 2 ميجابايت. اختر صورة واضحة تمثل أسلوبك.
+                            يدعم الصور حتى 5 ميجابايت. اختر صورة واضحة تمثل أسلوبك.
                         </p>
+                        <p id="profile_avatar_error" class="text-xs text-red-600 hidden"></p>
                         @error('avatar')
                             <p class="text-sm text-red-600">{{ $message }}</p>
                         @enderror

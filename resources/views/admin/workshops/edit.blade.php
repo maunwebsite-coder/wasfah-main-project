@@ -575,7 +575,7 @@
                         <div>
                             <h2 class="text-xl font-black text-slate-900">الصورة الرئيسية</h2>
                             <p class="text-sm text-slate-500 mt-2">
-                                استخدم صورة جذابة تمثل أجواء الورشة. يدعم النظام صورًا حتى 2 ميجابايت مع ضغط تلقائي للحفاظ على الجودة.
+                                استخدم صورة جذابة تمثل أجواء الورشة. يدعم النظام صورًا حتى 5 ميجابايت مع ضغط تلقائي للحفاظ على الجودة.
                             </p>
                         </div>
                     </div>
@@ -606,7 +606,7 @@
                             <div class="flex flex-col items-center gap-3 text-slate-600">
                                 <i class="fas fa-cloud-upload-alt text-3xl text-purple-400"></i>
                                 <h3 class="text-lg font-semibold text-slate-800">اسحب وأفلت الصورة هنا</h3>
-                                <p class="text-sm text-slate-500">أو انقر للاختيار من جهازك (JPEG، PNG، GIF، WebP حتى 2MB)</p>
+                                <p class="text-sm text-slate-500">أو انقر للاختيار من جهازك (JPEG، PNG، GIF، WebP حتى 5MB)</p>
                                 <span class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-rose-500 px-4 py-2 text-sm font-semibold text-white shadow-md">
                                     <i class="fas fa-folder-open"></i>
                                     اختر صورة
@@ -614,7 +614,15 @@
                             </div>
                         </div>
 
-                        <input id="image" name="image" type="file" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                        <input id="image"
+                               name="image"
+                               type="file"
+                               accept="image/*"
+                               class="hidden"
+                               onchange="handleImageUpload(this)"
+                               data-max-size="5120"
+                               data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                               data-error-target="#admin_workshop_edit_image_error">
 
                         <div id="image-preview" class="hidden">
                             <div class="relative inline-block">
@@ -627,6 +635,8 @@
                             </div>
                             <p id="image-info" class="mt-2 text-xs text-slate-500"></p>
                         </div>
+
+                        <p id="admin_workshop_edit_image_error" class="mt-2 text-sm text-red-600 hidden"></p>
 
                         @error('image')
                             <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
@@ -827,9 +837,9 @@ function handleImageUpload(input) {
         return;
     }
 
-    const maxSize = 2 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-        showNotification('حجم الصورة يجب أن يكون أقل من 2 ميجابايت', 'error');
+        showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
         input.value = '';
         return;
     }

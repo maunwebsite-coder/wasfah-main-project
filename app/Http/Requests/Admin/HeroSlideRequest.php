@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\HeroSlideImageService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class HeroSlideRequest extends FormRequest
@@ -32,8 +33,8 @@ class HeroSlideRequest extends FormRequest
             'actions.*.behavior' => ['nullable', 'in:static,create_workshop,create_wasfah_link'],
             'actions.*.open_in_new_tab' => ['nullable', 'boolean'],
 
-            'desktop_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,bmp,svg,webp,webm', 'max:5120'],
-            'mobile_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,bmp,svg,webp,webm', 'max:5120'],
+            'desktop_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,bmp,svg,webp,webm', 'max:' . HeroSlideImageService::MAX_FILE_SIZE_KB],
+            'mobile_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,bmp,svg,webp,webm', 'max:' . HeroSlideImageService::MAX_FILE_SIZE_KB],
             'desktop_image_url' => ['nullable', 'url', 'max:2048'],
             'mobile_image_url' => ['nullable', 'url', 'max:2048'],
             'remove_desktop_image' => ['nullable', 'boolean'],

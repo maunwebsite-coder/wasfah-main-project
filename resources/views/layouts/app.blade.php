@@ -1647,6 +1647,74 @@
             }, 100);
         });
     </script>
+    <script>
+        (function () {
+            const KB_IN_BYTES = 1024;
+
+            function handleFileInput(event) {
+                const target = event.target;
+                if (!target || target.tagName !== 'INPUT' || target.type !== 'file') {
+                    return;
+                }
+
+                const maxSizeKb = parseInt(target.dataset.maxSize || '', 10);
+                if (!maxSizeKb) {
+                    return;
+                }
+
+                const files = target.files;
+                if (!files || files.length === 0) {
+                    hideMessage(target);
+                    return;
+                }
+
+                const maxBytes = maxSizeKb * KB_IN_BYTES;
+                const oversizeFile = Array.from(files).find(file => file.size > maxBytes);
+
+                if (oversizeFile) {
+                    target.value = '';
+                    const message = target.dataset.maxSizeMessage
+                        || `لا يمكن رفع ملف أكبر من ${formatMegabytes(maxSizeKb)} ميجابايت.`;
+                    showMessage(target, message);
+                    return;
+                }
+
+                hideMessage(target);
+            }
+
+            function showMessage(input, message) {
+                const selector = input.dataset.errorTarget;
+                if (selector) {
+                    document.querySelectorAll(selector).forEach(el => {
+                        el.textContent = message;
+                        el.classList.remove('hidden');
+                    });
+                } else {
+                    window.alert(message);
+                }
+            }
+
+            function hideMessage(input) {
+                const selector = input.dataset.errorTarget;
+                if (!selector) {
+                    return;
+                }
+
+                document.querySelectorAll(selector).forEach(el => {
+                    el.textContent = '';
+                    el.classList.add('hidden');
+                });
+            }
+
+            function formatMegabytes(valueKb) {
+                const value = valueKb / KB_IN_BYTES;
+                return Number.isInteger(value) ? value : value.toFixed(1);
+            }
+
+            document.addEventListener('change', handleFileInput);
+            document.addEventListener('input', handleFileInput);
+        })();
+    </script>
     @stack('scripts')
     
     <!-- CSS للعداد -->

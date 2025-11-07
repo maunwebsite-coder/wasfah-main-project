@@ -250,8 +250,15 @@
                         @endphp
                         <div class="border border-dashed border-gray-300 rounded-xl p-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ $label }}</label>
-                            <input type="file" name="{{ $field }}" accept="image/*"
-                                   class="block w-full text-sm text-gray-600 file:mr-4 file:rounded-full file:border-0 file:bg-orange-50 file:px-4 file:py-2 file:text-orange-600 hover:file:bg-orange-100">
+                            <input type="file"
+                                   name="{{ $field }}"
+                                   accept="image/*"
+                                   class="block w-full text-sm text-gray-600 file:mr-4 file:rounded-full file:border-0 file:bg-orange-50 file:px-4 file:py-2 file:text-orange-600 hover:file:bg-orange-100"
+                                   data-max-size="5120"
+                                   data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                                   data-error-target="#chef_recipe_{{ $field }}_error">
+                            <p class="mt-2 text-xs text-gray-500">الحد الأقصى لحجم الصورة هو 5 ميجابايت.</p>
+                            <p id="chef_recipe_{{ $field }}_error" class="mt-1 text-xs text-red-600 hidden"></p>
                             @error($field)
                                 <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                             @enderror

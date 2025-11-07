@@ -224,12 +224,20 @@
                                     <img src="{{ $heroPreviewDefault }}" alt="صورة الصفحة" class="h-full w-full object-cover" id="preview-hero-image" data-original="{{ $heroPreviewDefault }}" data-fallback="{{ $heroPlaceholder }}">
                                 </div>
                                 <div class="flex-1 space-y-3">
-                                    <input type="file" name="hero_image" accept="image/*" class="block w-full rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-600 focus:border-orange-400 focus:ring focus:ring-orange-100" data-preview-target="hero_image">
+                                    <input type="file"
+                                           name="hero_image"
+                                           accept="image/*"
+                                           class="block w-full rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-600 focus:border-orange-400 focus:ring focus:ring-orange-100"
+                                           data-preview-target="hero_image"
+                                           data-max-size="5120"
+                                           data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                                           data-error-target="#hero_image_error">
                                     <label class="flex items-center gap-2 text-sm text-gray-600">
                                         <input type="checkbox" name="remove_hero_image" value="1" class="rounded border-gray-300 text-orange-500 focus:ring-orange-400" data-preview-target="remove_hero_image">
                                         إزالة الصورة الحالية
                                     </label>
-                                    <p class="text-xs text-gray-500">الحد الأقصى لحجم الصورة 3MB. يفضّل استخدام صورة مربعة عالية الدقة.</p>
+                                    <p class="text-xs text-gray-500">الحد الأقصى لحجم الصورة 5MB. يفضّل استخدام صورة مربعة عالية الدقة.</p>
+                                    <p id="hero_image_error" class="text-xs text-red-600 hidden"></p>
                                 </div>
                             </div>
                         </div>
