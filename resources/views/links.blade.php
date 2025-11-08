@@ -627,7 +627,7 @@
         <section class="core-grid" aria-label="روابط Wasfah الأساسية">
             <article class="core-card">
                 <h3>ورش الطهي التفاعلية</h3>
-                <p>حجوزات مباشرة مع جدول واضح، وصفات PDF، وروابط بث Google Meet جاهزة.</p>
+                <p>حجوزات مباشرة مع جدول واضح، وصفات PDF، وروابط بث أونلاين جاهزة.</p>
                 <a href="{{ url('/workshops') }}">انضم للورشة القادمة</a>
             </article>
             <article class="core-card">

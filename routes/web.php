@@ -31,15 +31,15 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 Route::get('/wasfah-links', function () {
     $fallbackSelections = collect([
         [
-            'title' => 'صندوق وصفة الموسمي',
-            'image' => asset('image/tnl.png'),
-            'alt' => 'صندوق وصفة الموسمي',
+            'title' => 'صندوق الوصفات',
+            'image' => asset('image/works.png'),
+            'alt' => 'صندوق الوصفات',
             'url' => url('/recipes'),
         ],
         [
-            'title' => 'ورش عمل مباشرة عبر Google Meet',
+            'title' => 'ورش عمل Wasfah المباشرة',
             'image' => asset('image/wterm.png'),
-            'alt' => 'ورش عمل مباشرة عبر Google Meet',
+            'alt' => 'ورش عمل Wasfah المباشرة',
             'url' => url('/workshops'),
         ],
         [
@@ -89,7 +89,7 @@ Route::get('/wasfah-links', function () {
             'instructor' => $nextWorkshop->instructor,
             'start_date' => $nextWorkshop->start_date?->locale('ar')->translatedFormat('d F Y • h:i a'),
             'mode' => $nextWorkshop->is_online
-                ? 'أونلاين عبر Google Meet'
+                ? 'أونلاين مباشر'
                 : ($nextWorkshop->location ?? 'حضوري'),
             'image' => $nextWorkshop->image
                 ? \Storage::disk('public')->url($nextWorkshop->image)
