@@ -2029,9 +2029,6 @@
                     </div>
                     <h3 class="text-2xl font-bold text-gray-700 mb-3">لا توجد ورشات متاحة حالياً</h3>
                     <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">نحن نعمل على تحضير ورشات جديدة ومميزة. تحقق مرة أخرى قريباً!</p>
-                    <button class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
-                        اشترك في التنبيهات
-                    </button>
                 </div>
             @endif
         </div>

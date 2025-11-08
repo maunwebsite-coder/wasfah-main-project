@@ -7,16 +7,22 @@
     <div class="container mx-auto px-4">
         <!-- Hero Section -->
         <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl text-white p-12 mb-12 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-6">اتصل بنا</h1>
-            <p class="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto">
-                نحن هنا لمساعدتك! تواصل معنا لأي استفسار أو اقتراح
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">يسعدنا سماعك</h1>
+            <p class="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed">
+                فريق وصفة موجود لدعمك في كل ما يخص الوصفات، الورش، والشراكات. أرسل رسالتك وسنعود إليك خلال يوم عمل واحد.
             </p>
+            <div class="flex flex-wrap justify-center gap-3 text-sm md:text-base mt-6">
+                <span class="px-4 py-2 border border-white/40 bg-white/10 rounded-full">الورش والتدريب</span>
+                <span class="px-4 py-2 border border-white/40 bg-white/10 rounded-full">طلبات التعاون</span>
+                <span class="px-4 py-2 border border-white/40 bg-white/10 rounded-full">الدعم الفني</span>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <!-- Contact Form -->
             <div class="bg-white rounded-2xl shadow-lg p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">أرسل لنا رسالة</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">أخبرنا كيف يمكننا مساعدتك</h2>
+                <p class="text-gray-500 mb-6 leading-relaxed">املأ التفاصيل التالية لتصل رسالتك إلى الفريق المختص مباشرة. عادةً ما نرد خلال يوم عمل واحد.</p>
                 
                 @if(session('success'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
@@ -60,8 +66,8 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
-                        <input type="tel" name="phone" value="{{ old('phone') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('phone') border-red-500 @enderror" placeholder="+962 7X XXX XXXX">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف (اختياري)</label>
+                        <input type="tel" name="phone" value="{{ old('phone') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('phone') border-red-500 @enderror" placeholder="اكتب رقم هاتفك للتواصل (اختياري)">
                         @error('phone')
                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                         @enderror
@@ -101,7 +107,8 @@
             <div class="space-y-8">
                 <!-- Contact Details -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">معلومات الاتصال</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">معلومات الاتصال</h2>
+                    <p class="text-gray-500 mb-6 leading-relaxed">اختر الطريقة الأنسب لك، وسيتابع فريق وصفة رسالتك بعناية لضمان حصولك على الدعم المناسب.</p>
                     
                     <div class="space-y-6">
                         <div class="flex items-start space-x-4 rtl:space-x-reverse">
@@ -115,12 +122,22 @@
                         </div>
                         
                         <div class="flex items-start space-x-4 rtl:space-x-reverse">
-                            <div class="bg-green-100 p-3 rounded-full">
-                                <i class="fas fa-phone text-green-600"></i>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <i class="fas fa-headset text-purple-600"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-800 mb-1">الهاتف</h3>
-                                <p class="text-gray-600">+962 6 123 4567</p>
+                                <h3 class="font-bold text-gray-800 mb-1">فريق الدعم</h3>
+                                <p class="text-gray-600">نراجع الرسائل مرتين يوميًا خلال أيام العمل لضمان استجابة سريعة وواضحة.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4 rtl:space-x-reverse">
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-comments text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 mb-1">قنوات التواصل</h3>
+                                <p class="text-gray-600">راسلنا عبر البريد أو الرسائل المباشرة على إنستغرام وسيتم تحويل طلبك للفريق المعني.</p>
                             </div>
                         </div>
                         
@@ -139,7 +156,8 @@
 
                 <!-- Social Media -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">تابعنا</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-3">تابعنا</h2>
+                    <p class="text-gray-500 mb-6 leading-relaxed">اكتشف أحدث الوصفات، تنبيهات الورش، ولقطات من خلف الكواليس على قنوات وصفة الاجتماعية.</p>
                     
                     <div class="space-y-4">
                         <a href="https://www.instagram.com/wasfah.jo/" target="_blank" class="flex items-center space-x-4 rtl:space-x-reverse p-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-shadow">
@@ -168,13 +186,18 @@
                     <div class="space-y-4">
                         
                         <div class="border-b border-gray-200 pb-4">
-                            <h3 class="font-bold text-gray-800 mb-2">كيف أحجز ورشة عمل؟</h3>
-                            <p class="text-gray-600 text-sm">اذهب إلى صفحة "ورشات العمل" واختر الورشة التي تريدها ثم اضغط "احجز الآن" والذي سينقلك مباشرة إلى الواتساب لملء البيانات المطلوبة.</p>
+                            <h3 class="font-bold text-gray-800 mb-2">متى يصلني الرد على رسالتي؟</h3>
+                            <p class="text-gray-600 text-sm">نقوم بمراجعة البريد مرتين يوميًا، وستحصل على رد مبدئي خلال يوم عمل واحد كحد أقصى.</p>
                         </div>
                         
                         <div class="border-b border-gray-200 pb-4">
-                            <h3 class="font-bold text-gray-800 mb-2">هل يمكنني تعديل معلومات حسابي؟</h3>
-                            <p class="text-gray-600 text-sm">نعم، يمكنك تعديل جميع معلوماتك من صفحة الملف الشخصي</p>
+                            <h3 class="font-bold text-gray-800 mb-2">هل أستطيع طلب ورشة خاصة أو تعاون؟</h3>
+                            <p class="text-gray-600 text-sm">بالطبع! شاركنا نوع التعاون أو الورشة التي تبحث عنها، وسننسق مع الفريق المتخصص ثم نعود إليك بالتفاصيل.</p>
+                        </div>
+                        
+                        <div class="border-b border-gray-200 pb-4">
+                            <h3 class="font-bold text-gray-800 mb-2">ماذا أفعل عند مواجهة مشكلة تقنية؟</h3>
+                            <p class="text-gray-600 text-sm">أخبرنا بالصفحة التي ظهر فيها العطل والخطوات التي سبقت المشكلة، وسنرسل لك الحل أو نرتب جلسة مساعدة قصيرة إذا لزم الأمر.</p>
                         </div>
                         
                     </div>
@@ -185,4 +208,3 @@
     </div>
 </div>
 @endsection
-
