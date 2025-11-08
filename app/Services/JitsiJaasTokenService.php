@@ -77,6 +77,9 @@ class JitsiJaasTokenService
             'iat' => $now->getTimestamp(),
             'context' => [
                 'user' => $userDetails,
+                'features' => [
+                    'recording' => true,
+                ],
             ],
         ];
 

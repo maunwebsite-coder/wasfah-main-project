@@ -142,6 +142,8 @@
 
         function initializeJitsi() {
             const domain = @json($embedConfig['domain']);
+            const jaasJwt = @json($embedConfig['jwt'] ?? null);
+            const embedProvider = @json($embedConfig['provider'] ?? null);
             const toolbarButtons = [
                 'camera',
                 'microphone',
@@ -182,6 +184,10 @@
                     DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
                 },
             };
+
+            if (embedProvider === 'jaas') {
+                options.jwt = jaasJwt ? jaasJwt : 'your_token_here';
+            }
 
             const api = new JitsiMeetExternalAPI(domain, options);
 

@@ -888,6 +888,7 @@
 
         const domain = @json($embedConfig['domain']);
         const jaasJwt = @json($embedConfig['jwt'] ?? null);
+        const embedProvider = @json($embedConfig['provider'] ?? null);
         jitsiInitialHeight = jitsiContainer.offsetHeight || jitsiInitialHeight || 640;
         const initialHeight = jitsiInitialHeight;
 
@@ -957,8 +958,8 @@
             },
         };
 
-        if (jaasJwt) {
-            options.jwt = jaasJwt;
+        if (embedProvider === 'jaas') {
+            options.jwt = jaasJwt ? jaasJwt : 'your_token_here';
         }
 
         apiInstance = new JitsiMeetExternalAPI(domain, options);

@@ -571,6 +571,45 @@ class WorkshopController extends Controller
 
     protected function buildJitsiEmbedConfig(Workshop $workshop): array
     {
+        $provider = $workshop->meeting_provider ?: config('services.jitsi.provider', 'meet');
+
+        if ($provider === 'jaas') {
+            $jaasConfig = config('services.jitsi.jaas', []);
+            $baseUrl = $jaasConfig['base_url'] ?? 'https://8x8.vc';
+            $parsedBase = parse_url($baseUrl);
+            $domain = $parsedBase['host'] ?? '8x8.vc';
+            $scheme = $parsedBase['scheme'] ?? 'https';
+            $appId = $jaasConfig['app_id'] ?? null;
+
+            if (!$appId) {
+                throw new \RuntimeException('JaaS app ID is not configured. Please set JITSI_JAAS_APP_ID.');
+            }
+
+            $roomSlug = trim($workshop->jitsi_room ?? '');
+            if ($roomSlug === '') {
+                $roomSlug = Str::slug($workshop->title . '-' . $workshop->id, '-');
+            }
+            $roomSlug = trim(str_replace(' ', '-', $roomSlug), '/');
+
+            $roomPath = "{$appId}/{$roomSlug}";
+            $tokenService = app(\App\Services\JitsiJaasTokenService::class);
+            $user = Auth::user();
+            $userContext = [
+                'name' => $user?->name,
+                'email' => $user?->email,
+            ];
+            $jwt = $tokenService->createModeratorToken($roomSlug, $userContext, $workshop->start_date);
+
+            return [
+                'provider' => 'jaas',
+                'domain' => $domain,
+                'room' => $roomPath,
+                'jwt' => $jwt,
+                'passcode' => $workshop->jitsi_passcode,
+                'external_api_url' => "{$scheme}://{$domain}/external_api.js",
+            ];
+        }
+
         $meetingUrl = $workshop->meeting_link;
         $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
         $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));
