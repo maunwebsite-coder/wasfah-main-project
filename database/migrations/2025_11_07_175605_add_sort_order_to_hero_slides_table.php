@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('hero_slides')) {
+            return;
+        }
+
         if (!Schema::hasColumn('hero_slides', 'sort_order')) {
             Schema::table('hero_slides', function (Blueprint $table) {
                 $table->unsignedInteger('sort_order')->default(0)->after('is_active');
@@ -28,6 +32,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasTable('hero_slides')) {
+            return;
+        }
+
         if (Schema::hasColumn('hero_slides', 'sort_order')) {
             Schema::table('hero_slides', function (Blueprint $table) {
                 $table->dropColumn('sort_order');

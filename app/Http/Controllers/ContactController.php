@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactMessageSubmitted;
+use App\Models\ContactMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,13 +18,14 @@ class ContactController extends Controller
 
     public function sendMessage(Request $request)
     {
-        // التحقق من صحة البيانات
+        $subjectKeys = implode(',', array_keys(ContactMessage::SUBJECT_LABELS));
+
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'subject' => 'required|string|max:255',
+            'subject' => "required|string|in:{$subjectKeys}",
             'message' => 'required|string|max:2000',
         ], [
             'first_name.required' => 'الاسم الأول مطلوب',
@@ -29,6 +33,7 @@ class ContactController extends Controller
             'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'البريد الإلكتروني غير صحيح',
             'subject.required' => 'الموضوع مطلوب',
+            'subject.in' => 'الرجاء اختيار موضوع صالح من القائمة.',
             'message.required' => 'الرسالة مطلوبة',
             'message.max' => 'الرسالة طويلة جداً (الحد الأقصى 2000 حرف)',
         ]);
@@ -37,51 +42,63 @@ class ContactController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $data = $validator->validated();
+
+        $contactMessage = ContactMessage::create([
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'subject' => $data['subject'],
+            'subject_label' => ContactMessage::SUBJECT_LABELS[$data['subject']] ?? $data['subject'],
+            'message' => $data['message'],
+            'status' => ContactMessage::STATUS_PENDING,
+            'meta' => [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ],
+        ]);
+
+        $this->notifyTeam($contactMessage);
+
+        return back()->with('success', 'تم تسجيل رسالتك بنجاح وسيتواصل فريق وصفة معك فور مراجعتها.');
+    }
+
+    /**
+     * Attempt to email the support team; log failures without interrupting the user.
+     */
+    protected function notifyTeam(ContactMessage $contactMessage): void
+    {
+        $recipient = config('contact.recipient', config('mail.from.address'));
+
+        if (empty($recipient)) {
+            Log::warning('Contact form recipient is not configured.', [
+                'contact_message_id' => $contactMessage->id,
+            ]);
+
+            return;
+        }
+
         try {
-            // إرسال الإيميل
-            Mail::raw($this->formatMessage($request->all()), function ($message) use ($request) {
-                $message->to('wasfah99@gmail.com')
-                        ->subject('رسالة جديدة من موقع وصفة - ' . $request->subject)
-                        ->from($request->email, $request->first_name . ' ' . $request->last_name);
-            });
+            Mail::mailer('failover')
+                ->to($recipient)
+                ->send(
+                    (new ContactMessageSubmitted($contactMessage))
+                        ->replyTo($contactMessage->email, $contactMessage->full_name)
+                );
 
-            return back()->with('success', 'تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.');
+            $contactMessage->update(['status' => ContactMessage::STATUS_NOTIFIED]);
+        } catch (\Throwable $th) {
+            Log::error('Failed to deliver contact form submission via email.', [
+                'contact_message_id' => $contactMessage->id,
+                'error' => $th->getMessage(),
+            ]);
 
-        } catch (\Exception $e) {
-            return back()->with('error', 'حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+            $contactMessage->update([
+                'meta' => array_merge($contactMessage->meta ?? [], [
+                    'mail_error' => $th->getMessage(),
+                ]),
+            ]);
         }
-    }
-
-    private function formatMessage($data)
-    {
-        $message = "رسالة جديدة من موقع وصفة\n\n";
-        $message .= "الاسم: " . $data['first_name'] . " " . $data['last_name'] . "\n";
-        $message .= "البريد الإلكتروني: " . $data['email'] . "\n";
-        
-        if (!empty($data['phone'])) {
-            $message .= "رقم الهاتف: " . $data['phone'] . "\n";
-        }
-        
-        $message .= "الموضوع: " . $this->getSubjectText($data['subject']) . "\n\n";
-        $message .= "الرسالة:\n" . $data['message'] . "\n\n";
-        $message .= "---\n";
-        $message .= "تم الإرسال في: " . now()->format('Y-m-d H:i:s');
-        
-        return $message;
-    }
-
-    private function getSubjectText($subject)
-    {
-        $subjects = [
-            'general' => 'استفسار عام',
-            'recipe' => 'مشكلة في وصفة',
-            'workshop' => 'استفسار عن ورشة عمل',
-            'technical' => 'مشكلة تقنية',
-            'suggestion' => 'اقتراح',
-            'other' => 'أخرى'
-        ];
-
-        return $subjects[$subject] ?? $subject;
     }
 }
-
