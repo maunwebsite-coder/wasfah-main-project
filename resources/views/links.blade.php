@@ -3,619 +3,662 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>روابط وصفة | Wasfah Links</title>
-    <meta name="description" content="اكتشف أهم الروابط لخدمة Wasfah من مكان واحد؛ دورات، وصفات، متجر الهدايا.">
-    <meta property="og:title" content="روابط وصفة | Wasfah Links">
-    <meta property="og:description" content="كل ما تحتاجه من Wasfah في صفحة واحدة.">
+    <title>وصفة الآن | Wasfah Now</title>
+    <meta name="description" content="مركز Wasfah Now يجمع أحدث الورش والوصفات والأدوات والتواصل مع فريق وصفة في مساحة واحدة أنيقة.">
+    <meta property="og:title" content="وصفة الآن | Wasfah Now">
+    <meta property="og:description" content="كل الروابط المهمة لتجربة وصفة في صفحة واحدة متجددة.">
     <meta property="og:image" content="{{ asset('image/logo.png') }}">
-    <meta name="theme-color" content="#0f212d">
+    <meta name="theme-color" content="#030711">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            color-scheme: light;
-            --bg: linear-gradient(180deg, #fff7ed 0%, #fef3c7 45%, #ffffff 100%);
-            --panel: linear-gradient(160deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 250, 245, 0.92) 100%);
-            --panel-border: rgba(249, 115, 22, 0.16);
-            --accent: #f97316;
-            --accent-soft: rgba(249, 115, 22, 0.12);
-            --heading: #1f2937;
-            --muted: #6b7280;
-            --card: rgba(255, 255, 255, 0.86);
-            --card-border: rgba(249, 115, 22, 0.1);
-            --shadow: 0 32px 70px rgba(249, 115, 22, 0.15);
+            color-scheme: dark;
+            --bg: #030711;
+            --bg-alt: #101828;
+            --panel: rgba(6, 12, 24, 0.92);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent: #ff914d;
+            --accent-strong: #ffb76b;
+            --accent-soft: rgba(255, 145, 77, 0.22);
+            --muted: #9baec6;
+            --text: #f5f7ff;
+            --card: rgba(13, 19, 35, 0.92);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --success: #4ade80;
+            --radius-xl: 36px;
+            --radius-lg: 24px;
+            --radius-md: 18px;
+            --shadow-lg: 0 30px 90px rgba(1, 5, 16, 0.7);
+            --shadow-card: 0 20px 45px rgba(2, 6, 23, 0.55);
         }
 
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: var(--bg);
+            background: radial-gradient(circle at 20% 20%, rgba(255, 145, 77, 0.28), transparent 55%),
+                radial-gradient(circle at 80% 0%, rgba(37, 99, 235, 0.35), transparent 45%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
             font-family: 'Tajawal', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: var(--heading);
-            padding: 32px 12px 24px;
+            color: var(--text);
+            padding: 48px 16px 40px;
+            position: relative;
         }
 
-        .page-frame {
-            width: min(420px, 100%);
-            border-radius: 36px;
-            padding: 28px 26px 30px;
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        body::before {
+            background: radial-gradient(circle at 10% 50%, rgba(255, 255, 255, 0.08), transparent 55%);
+            opacity: 0.4;
+        }
+
+        body::after {
+            background: radial-gradient(circle at 85% 30%, rgba(255, 145, 77, 0.25), transparent 60%);
+            opacity: 0.3;
+        }
+
+        .glow {
+            position: fixed;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.55;
+            z-index: 0;
+        }
+
+        .glow-a {
+            background: #ff914d;
+            top: 12vh;
+            right: 10vw;
+        }
+
+        .glow-b {
+            background: #60a5fa;
+            bottom: 6vh;
+            left: 12vw;
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .shell {
+            width: min(960px, 100%);
+            margin: 0 auto;
+            border-radius: var(--radius-xl);
+            padding: 42px clamp(20px, 4vw, 64px) 48px;
             background: var(--panel);
             border: 1px solid var(--panel-border);
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(16px);
         }
 
-        .page-frame::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(120% 160% at 50% -20%, rgba(249, 115, 22, 0.16) 0%, transparent 65%);
-            pointer-events: none;
-        }
-
-        .header {
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
             text-align: center;
-            margin-bottom: 22px;
-            position: relative;
-            z-index: 2;
+            margin-bottom: 40px;
         }
 
-        .wordmark {
-            display: inline-block;
-            padding: 6px 18px;
+        .eyebrow {
+            align-self: center;
+            padding: 8px 24px;
             border-radius: 999px;
             border: 1px solid var(--accent-soft);
-            background: rgba(255, 247, 237, 0.85);
+            background: rgba(255, 145, 77, 0.08);
             color: var(--accent);
-            letter-spacing: 0.18em;
-            font-weight: 600;
-            font-size: 0.75rem;
+            letter-spacing: 0.22em;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            margin-bottom: 12px;
         }
 
-        .hero-image {
-            width: 148px;
-            height: 148px;
-            border-radius: 32px;
+        .hero h1 {
+            font-size: clamp(2.1rem, 4vw, 3rem);
+            margin: 0;
+            letter-spacing: 0.06em;
+        }
+
+        .hero p {
+            margin: 0 auto;
+            max-width: 520px;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 1.02rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 14px 28px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn.primary {
+            background: linear-gradient(130deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: #0f172a;
+            box-shadow: 0 18px 40px rgba(255, 145, 77, 0.35);
+        }
+
+        .btn.secondary {
+            border: 1px solid var(--accent-soft);
+            color: var(--text);
+            background: transparent;
+        }
+
+        .btn.tertiary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            border-radius: var(--radius-md);
+            padding-inline: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .hero-stats {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .hero-stats li {
+            background: var(--card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--card-border);
+            padding: 16px 18px;
+            text-align: center;
+        }
+
+        .hero-stats span {
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .stat-sub {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .feature-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 26px;
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, rgba(255, 145, 77, 0.15), rgba(15, 23, 42, 0.8));
+            border: 1px solid rgba(255, 145, 77, 0.25);
+            box-shadow: var(--shadow-card);
+            margin-bottom: 42px;
+            align-items: center;
+        }
+
+        .feature-meta h2 {
+            margin: 8px 0 14px;
+            font-size: 1.5rem;
+        }
+
+        .feature-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+        }
+
+        .feature-tag::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 999px;
+        }
+
+        .feature-meta p {
+            margin: 0 0 16px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .feature-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .feature-details span {
+            color: var(--muted);
+        }
+
+        .feature-media {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+            max-height: 260px;
+        }
+
+        .feature-media img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             display: block;
-            margin: 0 auto 18px;
-            border: 4px solid rgba(249, 115, 22, 0.15);
-            box-shadow: 0 22px 40px rgba(249, 115, 22, 0.18);
         }
 
-        .upcoming-banner {
+        .section-head {
             display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .section-kicker {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--accent-strong);
+            letter-spacing: 0.1em;
+        }
+
+        .section-head h2 {
+            margin: 6px 0 0;
+            font-size: 1.8rem;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .monthly {
+            margin-bottom: 44px;
+        }
+
+        .monthly-rail {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 18px;
-            align-items: center;
-            padding: 22px 24px;
-            border-radius: 28px;
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0.04) 100%);
-            border: 1px solid rgba(249, 115, 22, 0.18);
-            margin: 20px 0 24px;
-            position: relative;
+        }
+
+        .monthly-card {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--card-border);
+            background: var(--card);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .monthly-media {
+            border-radius: var(--radius-md);
             overflow: hidden;
+            aspect-ratio: 4 / 3;
+            background: rgba(255, 255, 255, 0.04);
         }
 
-        .upcoming-banner::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(90% 120% at 0% 0%, rgba(249, 115, 22, 0.18) 0%, transparent 60%);
-            pointer-events: none;
-        }
-
-        .upcoming-banner .banner-content {
-            position: relative;
-            z-index: 2;
-            flex: 1;
-            text-align: start;
-        }
-
-        .upcoming-banner .banner-image {
-            width: 120px;
-            height: 120px;
-            border-radius: 24px;
-            overflow: hidden;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 2;
-            box-shadow: 0 18px 36px rgba(249, 115, 22, 0.2);
-        }
-
-        .upcoming-banner .banner-image img {
+        .monthly-media img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .upcoming-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 999px;
-            background: rgba(249, 115, 22, 0.16);
-            color: #9a3412;
-            font-size: 0.78rem;
-            letter-spacing: 0.06em;
+        .monthly-body h3 {
+            margin: 0 0 12px;
+            font-size: 1.1rem;
+        }
+
+        .monthly-body a {
             font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .upcoming-banner h2 {
-            margin: 0 0 8px;
-            font-size: 1.35rem;
-            color: var(--heading);
-        }
-
-        .upcoming-meta {
-            margin: 0 0 16px;
-            color: var(--muted);
-            font-size: 0.92rem;
-        }
-
-        .upcoming-meta span {
-            color: var(--heading);
-            font-weight: 500;
-        }
-
-        .upcoming-cta {
+            color: var(--accent-strong);
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 18px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
-            color: #fff;
-            font-weight: 600;
-            text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 14px 28px rgba(249, 115, 22, 0.25);
         }
 
-        .upcoming-cta:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 18px 34px rgba(249, 115, 22, 0.3);
+        .monthly-body svg {
+            width: 16px;
+            height: 16px;
         }
 
-        .upcoming-cta svg {
-            width: 18px;
-            height: 18px;
+        .core-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
         }
 
-        .title {
-            font-size: clamp(1.95rem, 4vw, 2.5rem);
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            margin: 0 0 10px;
-        }
-
-        .subtitle {
-            margin: 0 auto;
-            max-width: 260px;
-            line-height: 1.6;
-            color: var(--muted);
-            font-size: 0.95rem;
-        }
-
-        .socials {
-            display: flex;
-            justify-content: center;
-            gap: 14px;
-            margin: 24px 0 28px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .socials a {
-            width: 42px;
-            height: 42px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 14px;
-            border: 1px solid var(--accent-soft);
-            background: rgba(255, 255, 255, 0.9);
-            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-        }
-
-        .socials a:hover {
-            transform: translateY(-4px);
-            border-color: rgba(249, 115, 22, 0.35);
-            background: rgba(255, 255, 255, 1);
-        }
-
-        .socials svg {
-            width: 20px;
-            height: 20px;
-            fill: var(--accent);
-        }
-
-        .section-title {
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin: 0 0 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            color: var(--heading);
-        }
-
-        .section-title span {
-            color: var(--muted);
-            font-size: 0.78rem;
-            font-weight: 400;
-        }
-
-        .carousel {
-            display: flex;
-            gap: 14px;
-            overflow-x: auto;
-            padding-bottom: 6px;
-            scrollbar-width: thin;
-        }
-
-        .carousel::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .carousel::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 999px;
-        }
-
-        .carousel-card {
-            min-width: 132px;
-            border-radius: 20px;
-            padding: 14px;
-            background: var(--card);
+        .core-card {
+            border-radius: var(--radius-lg);
+            padding: 22px;
             border: 1px solid var(--card-border);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(15, 23, 42, 0.7));
             display: flex;
             flex-direction: column;
             gap: 12px;
-            text-decoration: none;
-            color: inherit;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: var(--shadow-card);
         }
 
-        .carousel-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(249, 115, 22, 0.24);
-            box-shadow: 0 18px 36px rgba(249, 115, 22, 0.18);
-        }
-
-        .carousel-photo {
-            height: 92px;
-            border-radius: 16px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.6);
-        }
-
-        .carousel-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .carousel-caption {
-            font-size: 0.88rem;
-            font-weight: 500;
-        }
-
-        .links-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin: 28px 0;
-            position: relative;
-            z-index: 2;
-        }
-
-        .link-card {
-            padding: 20px;
-            border-radius: 22px;
-            border: 1px solid var(--card-border);
-            background: rgba(255, 255, 255, 0.94);
-            display: grid;
-            gap: 14px;
-            box-shadow: 0 20px 40px rgba(249, 115, 22, 0.12);
-        }
-
-        .link-card h3 {
+        .core-card h3 {
             margin: 0;
-            font-weight: 600;
-            font-size: 1.04rem;
+            font-size: 1.2rem;
         }
 
-        .link-card p {
+        .core-card p {
+            margin: 0 0 8px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .core-card a {
+            align-self: flex-start;
+            text-decoration: none;
+            color: var(--accent-strong);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .social-panel {
+            margin-top: 44px;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(96, 165, 250, 0.25);
+            background: linear-gradient(125deg, rgba(37, 99, 235, 0.25), rgba(15, 23, 42, 0.85));
+            padding: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .panel-copy {
+            flex: 1 1 280px;
+        }
+
+        .panel-copy h2 {
+            margin: 10px 0;
+            font-size: 1.6rem;
+        }
+
+        .panel-copy p {
             margin: 0;
             color: var(--muted);
             line-height: 1.6;
-            font-size: 0.91rem;
         }
 
-        .link-card .cta {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 0;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 0.95rem;
-            text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .link-card .cta:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 18px 32px rgba(249, 115, 22, 0.35);
-        }
-
-        .link-card .cta svg {
-            width: 18px;
-            height: 18px;
-            fill: #ffffff;
-        }
-
-        .page-footer {
-            margin-top: 32px;
+        .social-icons {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-            color: var(--heading);
-        }
-
-        .footer-inner {
-            padding: 20px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid var(--card-border);
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            box-shadow: 0 24px 48px rgba(249, 115, 22, 0.1);
-        }
-
-        .footer-brand {
-            display: flex;
-            align-items: center;
             gap: 14px;
         }
 
-        .footer-brand img {
+        .social-icon {
             width: 54px;
             height: 54px;
             border-radius: 18px;
-            background: #fff;
-            box-shadow: 0 12px 24px rgba(249, 115, 22, 0.18);
-            padding: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(15, 23, 42, 0.7);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
 
-        .footer-brand strong {
-            display: block;
-            font-size: 1.12rem;
-            letter-spacing: 0.04em;
+        .social-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--accent-strong);
         }
 
-        .footer-brand span {
-            display: block;
+        .social-icon:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        footer {
+            margin-top: 36px;
+            text-align: center;
             color: var(--muted);
             font-size: 0.85rem;
-            margin-top: 2px;
         }
 
-        .footer-links {
-            display: flex;
+        .footer-brand {
+            display: inline-flex;
+            align-items: center;
             gap: 12px;
+            margin-bottom: 10px;
         }
 
-        .footer-links a {
-            flex: 1;
-            text-align: center;
-            padding: 12px 0;
+        .footer-brand img {
+            width: 46px;
+            height: 46px;
             border-radius: 16px;
-            background: rgba(249, 115, 22, 0.08);
-            color: var(--heading);
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            padding: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .footer-links a:hover {
-            background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
-            color: #ffffff;
-            transform: translateY(-3px);
-        }
-
-        .footer-meta {
-            text-align: center;
-            font-size: 0.78rem;
-            color: rgba(107, 114, 128, 0.85);
-            letter-spacing: 0.05em;
-        }
-
-        @media (max-width: 480px) {
+        @media (max-width: 720px) {
             body {
-                padding: 22px 10px;
+                padding: 32px 12px 28px;
             }
 
-            .page-frame {
-                border-radius: 32px;
-                padding: 24px;
+            .shell {
+                border-radius: 24px;
+                padding: 32px 20px;
             }
 
-            .upcoming-banner {
+            .feature-card {
+                padding: 22px;
+            }
+
+            .social-icons {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
                 flex-direction: column;
-                text-align: center;
-                padding: 24px 20px;
             }
 
-            .upcoming-banner .banner-image {
+            .btn {
                 width: 100%;
-                max-width: 180px;
-                height: auto;
-            }
-
-            .upcoming-banner .banner-image img {
-                aspect-ratio: 1;
-            }
-
-            .upcoming-cta {
                 justify-content: center;
-                width: 100%;
             }
 
-            .hero-image {
-                width: 132px;
-                height: 132px;
+            .monthly-rail,
+            .core-grid {
+                grid-template-columns: 1fr;
             }
+        }
 
-            .socials {
-                gap: 12px;
-            }
-
-            .carousel-card {
-                min-width: 120px;
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
             }
         }
     </style>
 </head>
 <body>
-    <main class="page-frame">
-        <header class="header">
-            <span class="wordmark">Wasfah Links</span>
-            @if ($upcomingWorkshop)
-                <div class="upcoming-banner" role="region" aria-label="الورشة القادمة">
-                    <div class="banner-content">
-                        <span class="upcoming-badge">الورشة القادمة</span>
-                        <h2>{{ $upcomingWorkshop['title'] }}</h2>
-                        <p class="upcoming-meta">
-                            @if (!empty($upcomingWorkshop['start_date']))
-                                <span>{{ $upcomingWorkshop['start_date'] }}</span>
-                            @endif
-                            @if (!empty($upcomingWorkshop['mode']))
-                                <span> · {{ $upcomingWorkshop['mode'] }}</span>
-                            @endif
-                            @if (!empty($upcomingWorkshop['instructor']))
-                                <span> · بإشراف {{ $upcomingWorkshop['instructor'] }}</span>
-                            @endif
-                        </p>
-                        <a class="upcoming-cta" href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop['slug']]) }}">
-                            احجز مقعدك الآن
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z"></path>
-                            </svg>
-                        </a>
-                    </div>
-                    <div class="banner-image">
-                        <img src="{{ $upcomingWorkshop['image'] }}" alt="صورة الورشة القادمة">
-                    </div>
-                </div>
-            @endif
-            <img class="hero-image" src="{{ asset('image/Brownies.png') }}" alt="صورة من وصفات وصفة">
-            <h1 class="title">WASFAH</h1>
-            <p class="subtitle">كل الروابط التي تحتاجها لتجربة وصفة: ورش عمل، أدوات.</p>
+    <div class="glow glow-a" aria-hidden="true"></div>
+    <div class="glow glow-b" aria-hidden="true"></div>
+    <main class="shell">
+        <header class="hero">
+            <span class="eyebrow">Wasfah Now</span>
+            <h1>مركز وصفة الحي</h1>
+            <p>كل ما تحتاجه من ورش وصفة المباشرة، وصفاتنا المجربة، وأدواتنا المفضلة في مكان واحد بتصميم حديث يجدد تجربتك
+                في كل زيارة.</p>
+            <div class="hero-actions">
+                <a class="btn primary" href="{{ url('/workshops') }}">ورش مباشرة</a>
+                <a class="btn secondary" href="{{ url('/recipes') }}">متصفح الوصفات</a>
+            </div>
+            <ul class="hero-stats">
+                <li>
+                    <span class="stat-label">+300 وصفة</span>
+                    <span class="stat-sub">متاحة للبحث والتجربة</span>
+                </li>
+                <li>
+                    <span class="stat-label">جلسات أسبوعية</span>
+                    <span class="stat-sub">ورش تفاعلية أونلاين</span>
+                </li>
+                <li>
+                    <span class="stat-label">مختارات الفريق</span>
+                    <span class="stat-sub">أدوات وتجهيزات جاهزة</span>
+                </li>
+            </ul>
         </header>
 
-        <nav class="socials" aria-label="روابط التواصل الاجتماعي">
-            <a href="https://www.instagram.com/wasfah.jo/" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-                    <path d="M12 7.3A4.7 4.7 0 1 0 16.7 12 4.7 4.7 0 0 0 12 7.3zm0 7.7A3 3 0 1 1 15 12a3 3 0 0 1-3 3zm6-7.9a1.1 1.1 0 1 1-1.1-1.1 1.1 1.1 0 0 1 1.1 1.1zM12 2c3.2 0 3.6 0 4.8.1a6 6 0 0 1 2.1.4 4.4 4.4 0 0 1 2.4 2.4 6 6 0 0 1 .4 2.1C21.8 8.2 22 8.6 22 12s0 3.6-.1 4.8a6 6 0 0 1-.4 2.1 4.4 4.4 0 0 1-2.4 2.4 6 6 0 0 1-2.1.4c-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1a6 6 0 0 1-2.1-.4 4.4 4.4 0 0 1-2.4-2.4 6 6 0 0 1-.4-2.1C2.2 15.8 2 15.4 2 12s0-3.6.1-4.8a6 6 0 0 1 .4-2.1 4.4 4.4 0 0 1 2.4-2.4 6 6 0 0 1 2.1-.4C8.2 2.2 8.6 2 12 2z"></path>
-                </svg>
-            </a>
-            <a href="https://www.youtube.com/@wasfah.jordan" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-                    <path d="M21.6 7.2a2.6 2.6 0 0 0-1.8-1.8C18 5 12 5 12 5s-6 0-7.8.4A2.6 2.6 0 0 0 2.4 7.2 27 27 0 0 0 2 12a27 27 0 0 0 .4 4.8 2.6 2.6 0 0 0 1.8 1.8C6 19 12 19 12 19s6 0 7.8-.4a2.6 2.6 0 0 0 1.8-1.8A27 27 0 0 0 22 12a27 27 0 0 0-.4-4.8zM10 15.2V8.8l5.6 3.2z"></path>
-                </svg>
-            </a>
-        </nav>
+        @if ($upcomingWorkshop)
+            <section class="feature-card" role="region" aria-label="الورشة القادمة">
+                <div class="feature-meta">
+                    <p class="feature-tag">حدث مميز</p>
+                    <h2>{{ $upcomingWorkshop['title'] }}</h2>
+                    <p>جاهزين لجلسة جديدة مع {{ $upcomingWorkshop['instructor'] ?? 'فريق Wasfah' }}. كل ما تحتاجه من وقت،
+                        طريقة التواصل، وتجربة الطهي في بطاقة واحدة.</p>
+                    <div class="feature-details">
+                        @if (!empty($upcomingWorkshop['start_date']))
+                            <div>الوقت: <span>{{ $upcomingWorkshop['start_date'] }}</span></div>
+                        @endif
+                        @if (!empty($upcomingWorkshop['mode']))
+                            <div>النمط: <span>{{ $upcomingWorkshop['mode'] }}</span></div>
+                        @endif
+                    </div>
+                    <a class="btn tertiary" href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop['slug']]) }}">
+                        تفاصيل الورشة
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="currentColor" d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="feature-media">
+                    <img src="{{ $upcomingWorkshop['image'] }}" alt="صورة الورشة القادمة">
+                </div>
+            </section>
+        @endif
 
-        <section aria-labelledby="monthly-selections" style="position: relative; z-index: 2;">
-            <div class="section-title">
-                <span id="monthly-selections">مختارات هذا الشهر</span>
-                <span>وصفات مختارة تتجدد مع كل زيارة</span>
+        <section class="monthly" aria-labelledby="monthly-title">
+            <div class="section-head">
+                <div>
+                    <p class="section-kicker" id="monthly-title">مختارات متجددة</p>
+                    <h2>قائمة التوصيات السريعة</h2>
+                </div>
+                <span class="hint">تتغير مع كل زيارة بناءً على وصفات مفعلة</span>
             </div>
-            <div class="carousel" role="list">
+            <div class="monthly-rail" role="list">
                 @foreach ($monthlySelections as $selection)
-                    <a class="carousel-card" role="listitem" href="{{ $selection['url'] }}">
-                        <div class="carousel-photo">
+                    <article class="monthly-card" role="listitem">
+                        <div class="monthly-media">
                             <img src="{{ $selection['image'] }}" alt="{{ $selection['alt'] }}">
                         </div>
-                        <div class="carousel-caption">{{ $selection['title'] }}</div>
-                    </a>
+                        <div class="monthly-body">
+                            <h3>{{ $selection['title'] }}</h3>
+                            <a href="{{ $selection['url'] }}">
+                                جرب الآن
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path fill="currentColor" d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z" />
+                                </svg>
+                            </a>
+                        </div>
+                    </article>
                 @endforeach
             </div>
         </section>
 
-        <section class="links-stack" aria-label="روابط رئيسية">
-            <article class="link-card">
-                <div>
-                    <h3>ورش عمل الطهي المباشرة</h3>
-                    <p>حجز مقعدك في الجلسات القادمة مع أمهر الشيفات، بث مباشر ودليل مكونات جاهز للطباعة.</p>
-                </div>
-                <a class="cta" href="{{ url('/workshops') }}">
-                    انضم الآن
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z"></path>
-                    </svg>
-                </a>
+        <section class="core-grid" aria-label="روابط Wasfah الأساسية">
+            <article class="core-card">
+                <h3>ورش الطهي التفاعلية</h3>
+                <p>حجوزات مباشرة مع جدول واضح، وصفات PDF، وروابط بث Google Meet جاهزة.</p>
+                <a href="{{ url('/workshops') }}">انضم للورشة القادمة</a>
             </article>
-            <article class="link-card">
-                <div>
-                    <h3>جرّب وصفات Wasfah</h3>
-                    <p>أكثر من 300 وصفة مصنفة حسب الوقت، المناسبة الغذائية، والمستوى. تصفح وابحث بسهولة.</p>
-                </div>
-                <a class="cta" href="{{ url('/recipes') }}">
-                    تصفح الوصفات
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z"></path>
-                    </svg>
-                </a>
+            <article class="core-card">
+                <h3>دليل الوصفات المتكامل</h3>
+                <p>بحث ذكي، فلاتر حسب الوقت والنظام الغذائي، وقوائم تسوق قابلة للطباعة.</p>
+                <a href="{{ url('/recipes') }}">استكشف قاعدة الوصفات</a>
             </article>
-            <article class="link-card">
-                <div>
-                    <h3>مكتبة الأدوات المفضلة لدينا</h3>
-                    <p>اختيارات فريق وصفة من الأدوات التي نستخدمها يوميًا في المطبخ، مع روابط شراء موثوقة.</p>
-                </div>
-                <a class="cta" href="{{ url('/tools') }}">
-                    اكتشف الأدوات
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z"></path>
-                    </svg>
-                </a>
+            <article class="core-card">
+                <h3>أدوات المطبخ المختارة</h3>
+                <p>منتجات موصى بها مع روابط شراء موثوقة وتجارب فريق Wasfah اليومية.</p>
+                <a href="{{ url('/tools') }}">اكتشف الأدوات</a>
             </article>
         </section>
-    </main>
-    <footer class="page-footer">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة">
-                <div>
-                    <strong>Wasfah</strong>
-                    <span>وصفات، ورش، وأدوات تلهم مطبخك اليومي.</span>
-                </div>
+
+        <section class="social-panel" aria-label="قنوات Wasfah على الشبكات الاجتماعية">
+            <div class="panel-copy">
+                <p class="section-kicker">تواصل مباشر</p>
+                <h2>انضم إلى مجتمع Wasfah</h2>
+                <p>لقطات خلف الكواليس، مقاطع تعليمية سريعة، وإعلانات الورش تنشر أولاً على قنواتنا.</p>
             </div>
-            <div class="footer-links">
-                <a href="{{ url('/') }}">الرئيسية</a>
-                <a href="{{ url('/workshops') }}">ورش العمل</a>
-                <a href="{{ url('/recipes') }}">الوصفات</a>
+            <div class="social-icons">
+                <a class="social-icon" href="https://www.instagram.com/wasfah.jo/" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                        <path d="M12 7.3A4.7 4.7 0 1 0 16.7 12 4.7 4.7 0 0 0 12 7.3zm0 7.7A3 3 0 1 1 15 12a3 3 0 0 1-3 3zm6-7.9a1.1 1.1 0 1 1-1.1-1.1 1.1 1.1 0 0 1 1.1 1.1zM12 2c3.2 0 3.6 0 4.8.1a6 6 0 0 1 2.1.4 4.4 4.4 0 0 1 2.4 2.4 6 6 0 0 1 .4 2.1C21.8 8.2 22 8.6 22 12s0 3.6-.1 4.8a6 6 0 0 1-.4 2.1 4.4 4.4 0 0 1-2.4 2.4 6 6 0 0 1-2.1.4c-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1a6 6 0 0 1-2.1-.4 4.4 4.4 0 0 1-2.4-2.4 6 6 0 0 1-.4-2.1C2.2 15.8 2 15.4 2 12s0-3.6.1-4.8a6 6 0 0 1 .4-2.1 4.4 4.4 0 0 1 2.4-2.4 6 6 0 0 1 2.1-.4C8.2 2.2 8.6 2 12 2z" />
+                    </svg>
+                </a>
+                <a class="social-icon" href="https://www.youtube.com/@wasfah.jordan" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                        <path d="M21.6 7.2a2.6 2.6 0 0 0-1.8-1.8C18 5 12 5 12 5s-6 0-7.8.4A2.6 2.6 0 0 0 2.4 7.2 27 27 0 0 0 2 12a27 27 0 0 0 .4 4.8 2.6 2.6 0 0 0 1.8 1.8C6 19 12 19 12 19s6 0 7.8-.4a2.6 2.6 0 0 0 1.8-1.8A27 27 0 0 0 22 12a27 27 0 0 0-.4-4.8zM10 15.2V8.8l5.6 3.2z" />
+                    </svg>
+                </a>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="footer-brand">
+            <img src="{{ asset('image/logo.png') }}" alt="شعار Wasfah">
+            <div>
+                <strong>Wasfah Now</strong>
+                <div>الاسم الجديد لصفحة الروابط الموحّدة.</div>
             </div>
         </div>
-        <div class="footer-meta">© {{ now()->year }} Wasfah · جميع الحقوق محفوظة</div>
+        <div>© {{ now()->year }} Wasfah · جميع الحقوق محفوظة</div>
     </footer>
 </body>
 </html>
