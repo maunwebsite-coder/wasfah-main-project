@@ -137,7 +137,7 @@
                             </div>
                             <div>
                                 <h3 class="font-bold text-gray-800 mb-1">قنوات التواصل</h3>
-                                <p class="text-gray-600">راسلنا عبر البريد أو الرسائل المباشرة على إنستغرام وسيتم تحويل طلبك للفريق المعني.</p>
+                                <p class="text-gray-600">راسلنا عبر الرسائل المباشرة على إنستغرام أو أرسل طلبك عبر النموذج وسيتم تحويله للفريق المعني.</p>
                             </div>
                         </div>
                         
@@ -146,8 +146,8 @@
                                 <i class="fas fa-envelope text-blue-600"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-800 mb-1">البريد الإلكتروني</h3>
-                                <p class="text-gray-600">wasfah99@gmail.com</p>
+                                <h3 class="font-bold text-gray-800 mb-1">مركز الرسائل</h3>
+                                <p class="text-gray-600">كل الطلبات تُدار عبر نموذج التواصل لضمان متابعة مخصصة من فريق الدعم.</p>
                             </div>
                         </div>
                         

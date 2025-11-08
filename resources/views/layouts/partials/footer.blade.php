@@ -4,7 +4,6 @@
         <div class="grid grid-cols-1 gap-10 pb-10 border-b border-gray-200 footer-content sm:grid-cols-2 lg:grid-cols-12">
             <!-- Brand -->
             <div class="space-y-4 text-center sm:text-right lg:col-span-3">
-                <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">شعار وصفة</h3>
                 <div class="flex items-center justify-center sm:justify-end space-x-3 rtl:space-x-reverse">
                     <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-12 w-auto">
                 </div>
@@ -54,7 +53,7 @@
                 <div class="space-y-3 text-gray-600">
                     <div class="flex items-center justify-center space-x-2 rtl:space-x-reverse sm:justify-end">
                         <i class="fas fa-envelope text-orange-500"></i>
-                        <span>wasfah99@gmail.com</span>
+                        <span>فريق الدعم يرد خلال يوم عمل عند إرسال الطلب عبر نموذج التواصل.</span>
                     </div>
                     <div class="pt-2">
                         <a href="{{ route('contact') }}" class="inline-block hover:text-orange-500 transition-colors">اتصل بنا</a>
