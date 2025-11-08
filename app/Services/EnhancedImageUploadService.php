@@ -114,7 +114,7 @@ class EnhancedImageUploadService
         $extension = self::guessExtension($file);
         $mimeType = $file->getMimeType();
 
-        if (!extension_loaded('gd')) {
+        if (!extension_loaded('gd') || !function_exists('imagewebp')) {
             if ($file->getSize() > $maxBytes) {
                 return [
                     'success' => false,
@@ -122,17 +122,6 @@ class EnhancedImageUploadService
                 ];
             }
 
-            return [
-                'success' => true,
-                'file' => $file,
-                'size' => $file->getSize(),
-                'extension' => $extension,
-                'mime' => $mimeType,
-                'was_compressed' => false,
-            ];
-        }
-
-        if ($file->getSize() <= $maxBytes) {
             return [
                 'success' => true,
                 'file' => $file,
