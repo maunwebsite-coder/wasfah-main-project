@@ -4,10 +4,8 @@
         <div class="grid grid-cols-1 gap-10 pb-10 border-b border-gray-200 footer-content sm:grid-cols-2 lg:grid-cols-12">
             <!-- Brand -->
             <div class="space-y-4 text-center sm:text-right lg:col-span-3">
-                <div class="flex items-center justify-center sm:justify-end space-x-3 rtl:space-x-reverse">
                     <img src="{{ asset('image/logo.png') }}" alt="شعار وصفة" class="h-12 w-auto">
-                </div>
-                <p class="text-gray-600 leading-relaxed">
+                               <p class="text-gray-600 leading-relaxed">
                     منصّة وصفة للحلويات الفاخرة والراقية، نرافقك في كل خطوة لتقديم أطيب الحلويات.
                 </p>
             </div>
