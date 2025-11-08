@@ -8,30 +8,29 @@
     <meta property="og:title" content="وصفة الآن | Wasfah Now">
     <meta property="og:description" content="كل الروابط المهمة لتجربة وصفة في صفحة واحدة متجددة.">
     <meta property="og:image" content="{{ asset('image/logo.png') }}">
-    <meta name="theme-color" content="#030711">
+    <meta name="theme-color" content="#f97316">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            color-scheme: dark;
-            --bg: #030711;
-            --bg-alt: #101828;
-            --panel: rgba(6, 12, 24, 0.92);
-            --panel-border: rgba(255, 255, 255, 0.08);
-            --accent: #ff914d;
-            --accent-strong: #ffb76b;
-            --accent-soft: rgba(255, 145, 77, 0.22);
-            --muted: #9baec6;
-            --text: #f5f7ff;
-            --card: rgba(13, 19, 35, 0.92);
-            --card-border: rgba(255, 255, 255, 0.06);
-            --success: #4ade80;
+            color-scheme: light;
+            --bg: linear-gradient(180deg, #fff7ed 0%, #fef9f2 45%, #ffffff 100%);
+            --bg-alt: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 245, 0.9));
+            --panel: rgba(255, 255, 255, 0.96);
+            --panel-border: rgba(249, 115, 22, 0.18);
+            --accent: #f97316;
+            --accent-strong: #ea580c;
+            --accent-soft: rgba(249, 115, 22, 0.14);
+            --muted: #6b7280;
+            --text: #1f2937;
+            --card: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(249, 115, 22, 0.12);
+            --shadow-lg: 0 28px 70px rgba(249, 115, 22, 0.18);
+            --shadow-card: 0 20px 45px rgba(249, 115, 22, 0.12);
             --radius-xl: 36px;
             --radius-lg: 24px;
             --radius-md: 18px;
-            --shadow-lg: 0 30px 90px rgba(1, 5, 16, 0.7);
-            --shadow-card: 0 20px 45px rgba(2, 6, 23, 0.55);
         }
 
         *, *::before, *::after {
@@ -41,12 +40,10 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: radial-gradient(circle at 20% 20%, rgba(255, 145, 77, 0.28), transparent 55%),
-                radial-gradient(circle at 80% 0%, rgba(37, 99, 235, 0.35), transparent 45%),
-                linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
             font-family: 'Tajawal', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
             color: var(--text);
-            padding: 48px 16px 40px;
+            padding: 48px 18px 40px;
             position: relative;
         }
 
@@ -56,17 +53,16 @@
             position: fixed;
             inset: 0;
             pointer-events: none;
-            mix-blend-mode: screen;
         }
 
         body::before {
-            background: radial-gradient(circle at 10% 50%, rgba(255, 255, 255, 0.08), transparent 55%);
-            opacity: 0.4;
+            background: radial-gradient(circle at 12% 35%, rgba(249, 115, 22, 0.18), transparent 60%);
+            opacity: 0.6;
         }
 
         body::after {
-            background: radial-gradient(circle at 85% 30%, rgba(255, 145, 77, 0.25), transparent 60%);
-            opacity: 0.3;
+            background: radial-gradient(circle at 85% 10%, rgba(249, 186, 117, 0.35), transparent 55%);
+            opacity: 0.55;
         }
 
         .glow {
@@ -74,21 +70,21 @@
             width: 260px;
             height: 260px;
             border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.55;
+            filter: blur(140px);
+            opacity: 0.75;
             z-index: 0;
         }
 
         .glow-a {
-            background: #ff914d;
+            background: #fed7aa;
             top: 12vh;
-            right: 10vw;
+            right: 12vw;
         }
 
         .glow-b {
-            background: #60a5fa;
-            bottom: 6vh;
-            left: 12vw;
+            background: #fde68a;
+            bottom: 8vh;
+            left: 10vw;
         }
 
         main {
@@ -104,7 +100,7 @@
             background: var(--panel);
             border: 1px solid var(--panel-border);
             box-shadow: var(--shadow-lg);
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
         }
 
         .hero {
@@ -120,8 +116,8 @@
             padding: 8px 24px;
             border-radius: 999px;
             border: 1px solid var(--accent-soft);
-            background: rgba(255, 145, 77, 0.08);
-            color: var(--accent);
+            background: rgba(249, 115, 22, 0.08);
+            color: var(--accent-strong);
             letter-spacing: 0.22em;
             font-size: 0.8rem;
             text-transform: uppercase;
@@ -130,7 +126,8 @@
         .hero h1 {
             font-size: clamp(2.1rem, 4vw, 3rem);
             margin: 0;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
+            color: var(--text);
         }
 
         .hero p {
@@ -138,7 +135,7 @@
             max-width: 520px;
             color: var(--muted);
             line-height: 1.7;
-            font-size: 1.02rem;
+            font-size: 1.05rem;
         }
 
         .hero-actions {
@@ -149,35 +146,36 @@
         }
 
         .btn {
-            border: none;
             border-radius: 999px;
             padding: 14px 28px;
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 10px;
         }
 
         .btn.primary {
-            background: linear-gradient(130deg, var(--accent) 0%, var(--accent-strong) 100%);
-            color: #0f172a;
-            box-shadow: 0 18px 40px rgba(255, 145, 77, 0.35);
+            border: none;
+            background: linear-gradient(130deg, #f97316 0%, #f59e0b 100%);
+            color: #ffffff;
+            box-shadow: 0 18px 38px rgba(249, 115, 22, 0.35);
         }
 
         .btn.secondary {
             border: 1px solid var(--accent-soft);
-            color: var(--text);
-            background: transparent;
+            color: var(--accent-strong);
+            background: #ffffff;
         }
 
         .btn.tertiary {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text);
+            border: none;
             border-radius: var(--radius-md);
+            background: rgba(249, 115, 22, 0.12);
+            color: var(--accent-strong);
             padding-inline: 20px;
         }
 
@@ -191,7 +189,7 @@
             padding: 0;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
+            gap: 14px;
         }
 
         .hero-stats li {
@@ -200,6 +198,7 @@
             border: 1px solid var(--card-border);
             padding: 16px 18px;
             text-align: center;
+            box-shadow: var(--shadow-card);
         }
 
         .hero-stats span {
@@ -218,12 +217,12 @@
 
         .feature-card {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 26px;
             padding: 28px;
             border-radius: var(--radius-lg);
-            background: linear-gradient(135deg, rgba(255, 145, 77, 0.15), rgba(15, 23, 42, 0.8));
-            border: 1px solid rgba(255, 145, 77, 0.25);
+            background: linear-gradient(135deg, rgba(255, 247, 237, 0.95), rgba(255, 255, 255, 0.9));
+            border: 1px solid rgba(249, 115, 22, 0.25);
             box-shadow: var(--shadow-card);
             margin-bottom: 42px;
             align-items: center;
@@ -232,6 +231,7 @@
         .feature-meta h2 {
             margin: 8px 0 14px;
             font-size: 1.5rem;
+            color: var(--text);
         }
 
         .feature-tag {
@@ -239,7 +239,7 @@
             align-items: center;
             gap: 6px;
             font-size: 0.85rem;
-            color: var(--accent);
+            color: var(--accent-strong);
             letter-spacing: 0.08em;
         }
 
@@ -272,8 +272,8 @@
         .feature-media {
             border-radius: var(--radius-lg);
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            box-shadow: 0 20px 40px rgba(249, 115, 22, 0.18);
             max-height: 260px;
         }
 
@@ -302,7 +302,8 @@
 
         .section-head h2 {
             margin: 6px 0 0;
-            font-size: 1.8rem;
+            font-size: 1.85rem;
+            color: var(--text);
         }
 
         .hint {
@@ -329,13 +330,19 @@
             flex-direction: column;
             gap: 16px;
             box-shadow: var(--shadow-card);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .monthly-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(249, 115, 22, 0.3);
         }
 
         .monthly-media {
             border-radius: var(--radius-md);
             overflow: hidden;
             aspect-ratio: 4 / 3;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(249, 115, 22, 0.05);
         }
 
         .monthly-media img {
@@ -347,6 +354,7 @@
         .monthly-body h3 {
             margin: 0 0 12px;
             font-size: 1.1rem;
+            color: var(--text);
         }
 
         .monthly-body a {
@@ -373,7 +381,7 @@
             border-radius: var(--radius-lg);
             padding: 22px;
             border: 1px solid var(--card-border);
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(15, 23, 42, 0.7));
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 247, 237, 0.8));
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -383,6 +391,7 @@
         .core-card h3 {
             margin: 0;
             font-size: 1.2rem;
+            color: var(--text);
         }
 
         .core-card p {
@@ -402,10 +411,10 @@
         }
 
         .social-panel {
-            margin-top: 44px;
+            margin-top: 48px;
             border-radius: var(--radius-lg);
-            border: 1px solid rgba(96, 165, 250, 0.25);
-            background: linear-gradient(125deg, rgba(37, 99, 235, 0.25), rgba(15, 23, 42, 0.85));
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            background: linear-gradient(125deg, rgba(224, 242, 254, 0.9), rgba(255, 255, 255, 0.95));
             padding: 28px;
             display: flex;
             flex-wrap: wrap;
@@ -420,6 +429,7 @@
         .panel-copy h2 {
             margin: 10px 0;
             font-size: 1.6rem;
+            color: var(--text);
         }
 
         .panel-copy p {
@@ -437,13 +447,14 @@
             width: 54px;
             height: 54px;
             border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            background: #ffffff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: var(--shadow-card);
         }
 
         .social-icon svg {
@@ -476,8 +487,9 @@
             height: 46px;
             border-radius: 16px;
             padding: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(249, 115, 22, 0.18);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 14px 25px rgba(249, 115, 22, 0.18);
         }
 
         @media (max-width: 720px) {
