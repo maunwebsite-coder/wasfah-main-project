@@ -5,6 +5,12 @@
         ['route' => 'workshops', 'icon' => 'fas fa-graduation-cap', 'label' => 'ورشات العمل'],
         ['route' => 'tools', 'icon' => 'fas fa-kitchen-set', 'label' => 'أدوات الشيف'],
     ];
+    $mobileLinkDescriptions = [
+        'home' => 'اكتشف أبرز القصص والوصفات المختارة اليوم',
+        'recipes' => 'فلترة ذكية لأحدث الوصفات الموسمية',
+        'workshops' => 'ورش مباشرة ومسجلة لتحسين مهاراتك',
+        'tools' => 'أدوات الشيف الموصى بها لتسريع عملك',
+    ];
     $authUser = Auth::user();
     $chefLinkData = null;
     if ($authUser) {
@@ -120,6 +126,11 @@
                         <span id="saved-count" class="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px]">0</span>
                     </a>
 
+                    <a href="{{ route('partnership') }}" class="hidden lg:inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-600 transition-all duration-200 hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                        <i class="fas fa-handshake-angle text-base"></i>
+                        <span>شراكات الشركات</span>
+                    </a>
+
                     @auth
                         <div class="relative notification-container" id="notification-container">
                             <button id="notification-bell" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200" onclick="toggleNotificationDropdown()" aria-expanded="false" aria-haspopup="true">
@@ -215,73 +226,196 @@
     </div>
 
     <div id="mobileMenu" class="mobile-menu hidden border-t border-orange-100 bg-white/95 shadow-lg backdrop-blur md:hidden" style="display: none;">
-        <nav class="flex flex-col gap-2 p-4 text-slate-700">
-            <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-xl bg-orange-50/60 p-3 font-semibold text-orange-600 transition hover:bg-orange-100">
-                <i class="fas fa-house text-orange-500"></i>
-                <span>الرئيسية</span>
-            </a>
-            <a href="{{ route('recipes') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                <i class="fas fa-utensils text-orange-500"></i>
-                <span>الوصفات</span>
-            </a>
-            <a href="{{ route('tools') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                <i class="fas fa-kitchen-set text-orange-500"></i>
-                <span>أدوات الشيف</span>
-            </a>
-            <a href="{{ route('workshops') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                <i class="fas fa-graduation-cap text-orange-500"></i>
-                <span>ورشات العمل</span>
-            </a>
-            <a href="{{ route('saved.index') }}" class="relative flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                <i class="fas fa-bookmark text-orange-500"></i>
-                <span>الأدوات المحفوظة</span>
-                <span id="saved-count-mobile" class="absolute left-3 top-3 bg-orange-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px]">0</span>
-            </a>
+        <nav class="flex flex-col gap-6 p-5 text-slate-800" aria-label="التصفح في الجوال">
+            <div class="rounded-3xl bg-gradient-to-l from-orange-500 via-rose-500 to-amber-400 p-4 text-white shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 shadow-inner">
+                        <i class="fas fa-hat-chef text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-white/80">مرحباً، {{ $authUser?->name ?? 'ضيفنا العزيز' }}</p>
+                        <p class="text-lg font-black leading-snug">جاهز لتجربة نكهات جديدة؟</p>
+                    </div>
+                </div>
+                <p class="mt-3 text-sm text-white/90">تصفح كل ما يهمك من وصفات، أدوات وورش في ثوانٍ.</p>
+            </div>
+
+            <section class="space-y-3">
+                <div class="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    <span>التصفح السريع</span>
+                    <span class="h-px flex-1 bg-slate-200"></span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    @foreach ($primaryLinks as $link)
+                        @php $active = request()->routeIs($link['route'] . '*'); @endphp
+                        <a href="{{ route($link['route']) }}"
+                           class="group flex h-full flex-col justify-between rounded-2xl border p-4 text-sm transition-all duration-200 {{ $active ? 'border-orange-300 bg-orange-50/80 shadow-sm' : 'border-slate-100 bg-white hover:border-orange-200 hover:shadow-md' }}">
+                            <div class="flex items-center gap-3">
+                                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 shadow-inner">
+                                    <i class="{{ $link['icon'] }}"></i>
+                                </span>
+                                <span class="font-semibold text-slate-900">{{ $link['label'] }}</span>
+                            </div>
+                            <p class="mt-3 text-xs leading-5 text-slate-500">
+                                {{ $mobileLinkDescriptions[$link['route']] ?? 'وصول فوري لأبرز أقسام وصْفة' }}
+                            </p>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-orange-100 bg-orange-50/60 p-4 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
+                        <i class="fas fa-handshake-angle"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm font-semibold text-orange-600">حلول الشركاء</p>
+                        <p class="text-xs text-slate-500">عرض متكامل للتعاون مع وصفة.</p>
+                    </div>
+                </div>
+                <p class="mt-3 text-sm text-slate-600">اطلع على الأرقام، النماذج، وخطوات الشراكة في ملف واحد.</p>
+                <a href="{{ route('partnership') }}" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-orange-600">
+                    اكتشف ملف الشراكات
+                    <i class="fas fa-arrow-left ml-2 text-xs"></i>
+                </a>
+            </section>
+
+            <section class="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-base font-semibold text-slate-900">مركز أدواتك</p>
+                    <span class="text-xs font-medium text-slate-400">تابع نشاطك بسرعة</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <a href="{{ route('saved.index') }}" class="relative flex h-full flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-orange-200 hover:bg-orange-50">
+                        <div class="flex items-center gap-2 text-slate-900">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
+                                <i class="fas fa-bookmark"></i>
+                            </span>
+                            <div>
+                                <p class="font-semibold">الأدوات المحفوظة</p>
+                                <p class="text-xs text-slate-500">الوصفات والأدوات التي أحببتها</p>
+                            </div>
+                        </div>
+                        <span id="saved-count-mobile" class="absolute left-3 top-3 hidden h-5 min-w-[20px] rounded-full bg-orange-500 px-2 text-center text-[10px] font-bold leading-5 text-white">0</span>
+                        <span class="mt-auto text-[11px] font-semibold text-orange-500">عرض الكل</span>
+                    </a>
+                    <a href="{{ route('notifications.index') }}" class="relative flex h-full flex-col gap-2 rounded-2xl border border-slate-100 p-4 transition hover:border-orange-200 hover:bg-orange-50">
+                        <div class="flex items-center gap-2 text-slate-900">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 shadow-inner">
+                                <i class="fas fa-bell"></i>
+                            </span>
+                            <div>
+                                <p class="font-semibold">الإشعارات</p>
+                                <p class="text-xs text-slate-500">تنبيهات الورش والوصفات</p>
+                            </div>
+                        </div>
+                        <span id="mobile-notification-count-menu" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute left-3 top-3 hidden h-5 min-w-[20px] rounded-full bg-red-500 px-2 text-center text-[10px] font-bold leading-5 text-white" aria-hidden="true">0</span>
+                        <span class="mt-auto text-[11px] font-semibold text-orange-500">عرض السجل</span>
+                    </a>
+                </div>
+            </section>
+
             @auth
-                <a href="{{ route('notifications.index') }}" class="relative flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                    <i class="fas fa-bell text-orange-500"></i>
-                    <span>الإشعارات</span>
-                    <span id="mobile-notification-count-menu" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute left-3 top-3 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px]" aria-hidden="true">0</span>
-                </a>
-                <a href="{{ route('profile') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                    <i class="fas fa-user text-orange-500"></i>
-                    <span>ملفي الشخصي</span>
-                </a>
-                @if($chefLinkData)
-                    <a href="{{ $chefLinkData['route'] }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                        <i class="{{ $chefLinkData['icon'] }} text-orange-500"></i>
-                        <span>{{ $chefLinkData['label'] }}</span>
-                    </a>
-                @endif
-                @if($authUser?->isAdmin())
-                    <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                        <i class="fas fa-crown text-orange-500"></i>
-                        <span>منطقة الإدمن</span>
-                    </a>
-                @endif
-                @if($authUser?->isReferralPartner())
-                    <a href="{{ route('referrals.dashboard') }}" class="flex items-center gap-3 rounded-xl p-3 transition hover:bg-orange-50">
-                        <i class="fas fa-link text-emerald-500"></i>
-                        <span>برنامج الشركاء</span>
-                    </a>
-                @endif
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button id="logout-btn-mobile" type="submit" class="flex items-center gap-3 rounded-xl p-3 text-left transition hover:bg-orange-50">
-                        <i class="fas fa-sign-out-alt text-orange-500"></i>
-                        <span>تسجيل الخروج</span>
-                    </button>
-                </form>
+                <section class="space-y-3">
+                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        <span>ملفي</span>
+                        <span class="h-px flex-1 bg-slate-200"></span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <a href="{{ route('profile') }}" class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white/90 p-4 text-sm font-semibold text-slate-800 transition hover:border-orange-200 hover:bg-orange-50">
+                            <div class="flex items-center gap-3">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <div>
+                                    <p>ملفي الشخصي</p>
+                                    <p class="text-xs font-normal text-slate-500">إدارة بيانات الحساب والعنوان</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-left text-slate-300"></i>
+                        </a>
+                        @if($chefLinkData)
+                            <a href="{{ $chefLinkData['route'] }}" class="flex items-center justify-between rounded-2xl border border-orange-200 bg-orange-50/80 p-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
+                                        <i class="{{ $chefLinkData['icon'] }}"></i>
+                                    </span>
+                                    <div>
+                                        <p>{{ $chefLinkData['label'] }}</p>
+                                        <p class="text-xs font-normal text-orange-600/80">تابع الأداء وجداول الورش</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-left text-orange-400"></i>
+                            </a>
+                        @endif
+                        @if($authUser?->isAdmin())
+                            <a href="{{ route('admin.admin-area') }}" class="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-amber-500 shadow-sm">
+                                        <i class="fas fa-crown"></i>
+                                    </span>
+                                    <div>
+                                        <p>منطقة الإدمن</p>
+                                        <p class="text-xs font-normal text-amber-700/80">إدارة المحتوى والمنصة</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-left text-amber-400"></i>
+                            </a>
+                        @endif
+                        @if($authUser?->isReferralPartner())
+                            <a href="{{ route('referrals.dashboard') }}" class="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-emerald-500 shadow-sm">
+                                        <i class="fas fa-link"></i>
+                                    </span>
+                                    <div>
+                                        <p>برنامج الشركاء</p>
+                                        <p class="text-xs font-normal text-emerald-700/80">تتبع النقرات والعمولات</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-left text-emerald-400"></i>
+                            </a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button id="logout-btn-mobile" type="submit" class="flex w-full items-center justify-between rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-600 transition hover:bg-rose-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-rose-500 shadow-sm">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                    </span>
+                                    <span>تسجيل الخروج</span>
+                                </div>
+                                <i class="fas fa-chevron-left text-rose-400"></i>
+                            </button>
+                        </form>
+                    </div>
+                </section>
             @endauth
+
             @guest
-                <a href="{{ route('login') }}" class="flex items-center gap-3 rounded-xl bg-orange-500 p-3 font-semibold text-white transition hover:bg-orange-600">
-                    <i class="fas fa-right-to-bracket"></i>
-                    <span>تسجيل الدخول</span>
-                </a>
-                <a href="{{ route('register') }}" class="flex items-center gap-3 rounded-xl border border-orange-200 p-3 font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50">
-                    <i class="fas fa-user-plus"></i>
-                    <span>إنشاء حساب</span>
-                </a>
+                <section class="space-y-3">
+                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        <span>الانضمام</span>
+                        <span class="h-px flex-1 bg-slate-200"></span>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <a href="{{ route('login') }}" class="flex items-center justify-between rounded-2xl bg-gradient-to-l from-orange-500 to-rose-500 p-4 text-white shadow-lg transition hover:opacity-95">
+                            <div>
+                                <p class="text-base font-semibold">تسجيل الدخول</p>
+                                <p class="text-sm text-white/80">تابع أدواتك وحجوزاتك بسهولة</p>
+                            </div>
+                            <i class="fas fa-arrow-left text-white/80"></i>
+                        </a>
+                        <a href="{{ route('register') }}" class="flex items-center justify-between rounded-2xl border border-orange-200 bg-white/90 p-4 text-sm font-semibold text-orange-600 transition hover:bg-orange-50">
+                            <div>
+                                <p>إنشاء حساب</p>
+                                <p class="text-xs font-normal text-orange-500">ابدأ رحلتك مع مجتمع وصْفة</p>
+                            </div>
+                            <i class="fas fa-chevron-left text-orange-400"></i>
+                        </a>
+                    </div>
+                </section>
             @endguest
         </nav>
     </div>

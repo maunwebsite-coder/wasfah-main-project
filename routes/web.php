@@ -352,6 +352,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::get('/about', [App\Http\Controllers\PageController::class, 'about'])->name('about');
 Route::get('/baking-tips', [App\Http\Controllers\PageController::class, 'bakingTips'])->name('baking-tips');
 Route::get('/advertising', [App\Http\Controllers\PageController::class, 'advertising'])->name('advertising');
+Route::get('/partnership', [App\Http\Controllers\PageController::class, 'partnership'])->name('partnership');
 Route::get('/contact', [App\Http\Controllers\PageController::class, 'contact'])->name('contact');
 
 // Admin Routes - محمية بـ middleware الإدارة

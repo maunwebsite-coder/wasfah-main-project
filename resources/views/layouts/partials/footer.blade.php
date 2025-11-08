@@ -42,6 +42,9 @@
                     <li>
                         <a href="{{ route('about') }}" class="hover:text-orange-500 transition-colors">من نحن</a>
                     </li>
+                    <li>
+                        <a href="{{ route('partnership') }}" class="hover:text-orange-500 transition-colors">شراكات الشركات</a>
+                    </li>
                 </ul>
             </div>
 

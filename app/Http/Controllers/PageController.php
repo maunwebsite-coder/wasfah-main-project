@@ -31,6 +31,14 @@ class PageController extends Controller
     {
         return view('pages.advertising');
     }
+
+    /**
+     * صفحة الشراكات مع الشركات
+     */
+    public function partnership()
+    {
+        return view('pages.partnership');
+    }
     
     /**
      * صفحة اتصل بنا
