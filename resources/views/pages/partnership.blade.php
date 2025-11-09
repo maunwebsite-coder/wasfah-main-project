@@ -285,25 +285,6 @@
                 ],
                 [
                     'ar' => 'تقارير قابلة للمشاركة مع فريقك أو شركائك التسويقيين.',
-                    'en' => 'Shareable reports for your team أو marketing partners?'
-                'ar' => 'ستظهر قصص النجاح ومؤشرات الأداء هنا فور بدء التجارب الأولى، مع تحديثات مستمرة لضمان الشفافية مع جميع الشركاء.',
-                'en' => 'Success stories and performance indicators will show up here once the first pilots go live, with continuous updates to keep every partner informed.',
-            ],
-            'list_title' => [
-                'ar' => 'ماذا سيصل إليك قريباً؟',
-                'en' => 'What’s landing in your inbox soon?',
-            ],
-            'bullets' => [
-                [
-                    'ar' => 'تنبيهات فورية عند تفعيل النظام وإطلاق الدعوات.',
-                    'en' => 'Instant alerts when the system activates and invitations roll out.',
-                ],
-                [
-                    'ar' => 'لوحة تحكم مباشرة تعرض كل عملية بيع وعمولتك المستحقة.',
-                    'en' => 'A live dashboard that shows every sale and the commission you earned.',
-                ],
-                [
-                    'ar' => 'تقارير قابلة للمشاركة مع فريقك أو شركائك التسويقيين.',
                     'en' => 'Shareable reports for your team or marketing partners.',
                 ],
             ],
