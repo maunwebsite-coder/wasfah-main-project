@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'اتصل بنا - موقع وصفة')
 
@@ -20,7 +20,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <!-- Contact Form -->
-            <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div id="form" class="bg-white rounded-2xl shadow-lg p-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">أخبرنا كيف يمكننا مساعدتك</h2>
                 <p class="text-gray-500 mb-6 leading-relaxed">املأ التفاصيل التالية لتصل رسالتك إلى الفريق المختص مباشرة. عادةً ما نرد خلال يوم عمل واحد.</p>
                 
@@ -38,68 +38,12 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('contact.send') }}" class="space-y-6">
+                <form id="contact-form" method="POST" action="{{ route('contact.send') }}" class="space-y-6">
                     @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">الاسم الأول</label>
-                            <input type="text" name="first_name" value="{{ old('first_name') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('first_name') border-red-500 @enderror" placeholder="أدخل اسمك الأول" required>
-                            @error('first_name')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">الاسم الأخير</label>
-                            <input type="text" name="last_name" value="{{ old('last_name') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('last_name') border-red-500 @enderror" placeholder="أدخل اسمك الأخير" required>
-                            @error('last_name')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
-                        <input type="email" name="email" value="{{ old('email') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('email') border-red-500 @enderror" placeholder="example@email.com" required>
-                        @error('email')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف (اختياري)</label>
-                        <input type="tel" name="phone" value="{{ old('phone') }}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('phone') border-red-500 @enderror" placeholder="اكتب رقم هاتفك للتواصل (اختياري)">
-                        @error('phone')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الموضوع</label>
-                        <select name="subject" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('subject') border-red-500 @enderror" required>
-                            <option value="">اختر الموضوع</option>
-                            <option value="general" {{ old('subject') == 'general' ? 'selected' : '' }}>استفسار عام</option>
-                            <option value="recipe" {{ old('subject') == 'recipe' ? 'selected' : '' }}>مشكلة في وصفة</option>
-                            <option value="workshop" {{ old('subject') == 'workshop' ? 'selected' : '' }}>استفسار عن ورشة عمل</option>
-                            <option value="technical" {{ old('subject') == 'technical' ? 'selected' : '' }}>مشكلة تقنية</option>
-                            <option value="suggestion" {{ old('subject') == 'suggestion' ? 'selected' : '' }}>اقتراح</option>
-                            <option value="other" {{ old('subject') == 'other' ? 'selected' : '' }}>أخرى</option>
-                        </select>
-                        @error('subject')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الرسالة</label>
-                        <textarea name="message" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent @error('message') border-red-500 @enderror" placeholder="اكتب رسالتك هنا..." required>{{ old('message') }}</textarea>
-                        @error('message')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-lg font-bold text-lg transition-colors">
-                        إرسال الرسالة
-                    </button>
+                    @include('pages.partials.contact-form-fields', [
+                        'defaultSubject' => 'general',
+                        'source' => 'contact-page',
+                    ])
                 </form>
             </div>
 

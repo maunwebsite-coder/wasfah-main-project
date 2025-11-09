@@ -19,6 +19,7 @@ class ContactMessage extends Model
      */
     public const SUBJECT_LABELS = [
         'general' => 'استفسار عام',
+        'partnership' => 'طلب شراكة أو تعاون',
         'recipe' => 'مشكلة في وصفة',
         'workshop' => 'استفسار عن ورشة عمل',
         'technical' => 'مشكلة تقنية',

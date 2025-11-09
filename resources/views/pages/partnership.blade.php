@@ -95,24 +95,22 @@
                     </div>
                 </div>
                 <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-10 lg:p-12 flex flex-col justify-center">
-                    <div class="space-y-8">
-                        <div>
-                            <p class="text-sm text-orange-300 mb-2">قصص أرباح حقيقية</p>
-                            <p class="text-3xl font-bold leading-snug">متوسط العمولة للشركاء النشطين خلال آخر 30 يوماً بلغ <span class="text-orange-400">12.4%</span></p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-6 text-sm">
-                            <div class="bg-white/5 rounded-2xl p-5">
-                                <p class="text-3xl font-bold text-orange-300 mb-1">+230</p>
-                                <p class="text-slate-200">تذكرة ورشة بيعت عبر روابط الشركاء</p>
-                            </div>
-                            <div class="bg-white/5 rounded-2xl p-5">
-                                <p class="text-3xl font-bold text-orange-300 mb-1">3.2X</p>
-                                <p class="text-slate-200">متوسط نمو الزيارات عبر Wasfa Links</p>
-                            </div>
-                        </div>
-                        <p class="text-slate-300 text-sm leading-relaxed">
-                            الأرقام يتم تحديثها تلقائياً من نظام التحليلات الداخلي لضمان الشفافية مع كل شركائنا.
+                    <div class="space-y-6">
+                        <p class="text-sm text-orange-300 mb-2">تحديثات الشركاء</p>
+                        <p class="text-3xl font-bold leading-snug">
+                            نجهز حالياً لإطلاق بيانات الأداء بعد تشغيل برنامج الشركاء رسمياً، لتكون كل الأرقام موثقة ودقيقة.
                         </p>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            ستظهر قصص النجاح ومؤشرات الأداء هنا فور بدء التجارب الأولى، مع تحديثات مستمرة لضمان الشفافية مع جميع الشركاء.
+                        </p>
+                        <div class="bg-white/5 rounded-2xl p-5 text-sm text-slate-200 leading-relaxed">
+                            <p class="font-semibold text-orange-200 mb-2">ماذا سيصل إليك قريباً؟</p>
+                            <ul class="list-disc list-inside space-y-1 text-slate-100/90">
+                                <li>تنبيهات فورية عند تفعيل النظام وإطلاق الدعوات.</li>
+                                <li>لوحة تحكم مباشرة تعرض كل عملية بيع وعمولتك المستحقة.</li>
+                                <li>تقارير قابلة للمشاركة مع فريقك أو شركائك التسويقيين.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,7 +126,7 @@
                     1. رابط الشريك والعمولات
                 </div>
                 <p class="text-gray-600 leading-relaxed mb-6">
-                    كل شريك يحصل على رابط فريد داخل موقع وصفة يمكن مشاركته مع الشيفات أو عبر قنوات التسويق الخاصة به. كل مرة يُحجز فيها مقعد أو ورشة عبر هذا الرابط، تُضاف العمولة مباشرة إلى حسابك دون أي تدخل يدوي.
+                    كل شريك يحصل على رابط فريد داخل موقع وصفة يمكن مشاركته مع الشيفات أو عبر قنوات التسويق الخاصة به، وأي شيف ينشئ حساباً عبر هذا الرابط ويطلق ورشاته من خلال الموقع يُحتسب له كعميل تابع لك، وأي حجز يتم على تلك الورشات تضيف العمولة مباشرة إلى حسابك دون أي تدخل يدوي.
                 </p>
                 <h4 class="font-bold text-gray-900 mb-4">مميزات نظام الشركاء:</h4>
                 <ul class="space-y-3 text-gray-600 text-sm">
@@ -213,9 +211,66 @@
                 <a href="{{ route('contact') }}" class="px-8 py-3 bg-white text-slate-900 rounded-full font-semibold shadow-lg hover:-translate-y-0.5 transition">
                     انضم الآن إلى شبكة وصفة
                 </a>
-                <a href="{{ route('contact') }}#form" class="px-8 py-3 border border-white/40 rounded-full hover:bg-white/10 transition">
-                    تحدث مع مسؤول الشراكات
-                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partner Contact -->
+    <section id="partner-contact" class="container mx-auto px-4 pb-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div class="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-3xl p-10 shadow-lg">
+                <p class="text-sm font-semibold text-orange-600 mb-3">جاهز للانضمام؟</p>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">أخبرنا كيف يمكننا مساعدتك</h2>
+                <p class="text-lg text-gray-600 leading-relaxed mb-6">
+                    املأ التفاصيل التالية لتصل رسالتك إلى الفريق المختص مباشرة. عادةً ما نرد خلال يوم عمل واحد ونزوّدك بخطوات
+                    تفعيل الحساب ولوحة الشريك.
+                </p>
+                <ul class="space-y-4 text-gray-700">
+                    <li class="flex items-start gap-3">
+                        <span class="text-orange-500 mt-0.5">•</span>
+                        اختَر نوع التعاون أو الشراكة التي تناسبك وأخبرنا عن الجمهور الذي تستهدفه.
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-orange-500 mt-0.5">•</span>
+                        بعد استلام الطلب ستظهر بياناتك في لوحة الإدمن لمتابعة الحالة وخطوات الربط التالية.
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-orange-500 mt-0.5">•</span>
+                        يصلك إشعار عبر البريد عند مراجعة الطلب أو طلب أي مستندات إضافية من فريق الشراكات.
+                    </li>
+                </ul>
+                <div class="mt-8 p-4 bg-white border border-dashed border-orange-200 rounded-2xl text-sm text-gray-600">
+                    <p>💡 نراجع الطلبات مرتين يومياً، وتظهر حالة كل طلب مباشرة في منطقة الإدمن.</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8">
+                <div class="mb-6">
+                    <p class="text-sm font-semibold text-orange-500 mb-1">نموذج طلب الشراكة</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">ارسل بياناتك ليصلك رابط الإدمن ولوحة المتابعة</h3>
+                    <p class="text-gray-500">سنقوم بإشعارك فور تسجيل الطلب داخل لوحة التحكم الخاصة بفريق الشراكات.</p>
+                </div>
+
+                @if(session('success'))
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+                        <i class="fas fa-check-circle ml-2"></i>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                        <i class="fas fa-exclamation-triangle ml-2"></i>
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('contact.send') }}" class="space-y-6">
+                    @csrf
+                    @include('pages.partials.contact-form-fields', [
+                        'defaultSubject' => 'partnership',
+                        'source' => 'partnership-page',
+                    ])
+                </form>
             </div>
         </div>
     </section>

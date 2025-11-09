@@ -27,6 +27,7 @@ class ContactController extends Controller
             'phone' => 'nullable|string|max:20',
             'subject' => "required|string|in:{$subjectKeys}",
             'message' => 'required|string|max:2000',
+            'source' => 'nullable|string|max:100',
         ], [
             'first_name.required' => 'الاسم الأول مطلوب',
             'last_name.required' => 'الاسم الأخير مطلوب',
@@ -43,6 +44,7 @@ class ContactController extends Controller
         }
 
         $data = $validator->validated();
+        $submissionSource = $data['source'] ?? $request->route()?->getName() ?? 'contact.page';
 
         $contactMessage = ContactMessage::create([
             'first_name' => $data['first_name'],
@@ -53,10 +55,11 @@ class ContactController extends Controller
             'subject_label' => ContactMessage::SUBJECT_LABELS[$data['subject']] ?? $data['subject'],
             'message' => $data['message'],
             'status' => ContactMessage::STATUS_PENDING,
-            'meta' => [
+            'meta' => array_filter([
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-            ],
+                'source' => $submissionSource,
+            ]),
         ]);
 
         $this->notifyTeam($contactMessage);
