@@ -254,6 +254,21 @@
                             </p>
                         </div>
 
+                        <div class="flex flex-col items-center gap-4 rounded-3xl border border-orange-100 bg-white/90 px-6 py-8 text-center shadow">
+                            <span class="relative inline-flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.9),_rgba(251,146,60,0.18)_75%)]">
+                                <span class="absolute inset-2 rounded-full border-[6px] border-dotted border-orange-500/80 opacity-90"></span>
+                                <span class="h-3 w-3 rounded-full bg-orange-500 shadow-[0_0_18px_rgba(249,115,22,0.6)]"></span>
+                            </span>
+                            <p class="text-sm font-semibold text-orange-600">انتظر الشيف ليدخل الاجتماع</p>
+                            <a
+                                href="https://wasfah.ae/bookings/1"
+                                class="inline-flex items-center justify-center gap-2 rounded-full border border-orange-200 px-5 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
+                            >
+                                <i class="fas fa-arrow-right"></i>
+                                العودة إلى صفحة الحجز
+                            </a>
+                        </div>
+
                         <div class="rounded-3xl border border-orange-100 bg-white/95 p-6 shadow">
                             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>

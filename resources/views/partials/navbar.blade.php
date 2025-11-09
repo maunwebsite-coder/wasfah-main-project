@@ -1,4 +1,5 @@
 @php
+    $showNavbarSearch = $showNavbarSearch ?? true;
     $primaryLinks = [
         ['route' => 'home', 'icon' => 'fas fa-house', 'label' => 'الرئيسية'],
         ['route' => 'recipes', 'icon' => 'fas fa-utensils', 'label' => 'الوصفات'],
@@ -67,12 +68,14 @@
             </div>
 
             <div class="flex items-center gap-2 md:hidden mobile-menu-btn">
-                <button id="mobileSearchBtn" class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <span class="sr-only">فتح البحث</span>
-                </button>
+                @if($showNavbarSearch)
+                    <button id="mobileSearchBtn" class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span class="sr-only">فتح البحث</span>
+                    </button>
+                @endif
 
                 <a href="{{ route('saved.index') }}" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -102,22 +105,24 @@
             </div>
 
             <div class="hidden md:flex flex-1 items-center justify-end gap-5 text-slate-600 header-nav">
-                <div class="relative flex-1 max-w-xl group" id="search-container">
-                    <input id="search-input"
-                           dir="rtl"
-                           type="text"
-                           placeholder="ابحث عن وصفة، أداة، أو ورشة..."
-                           value="{{ old('q', request('q')) }}"
-                           autocomplete="off"
-                           spellcheck="false"
-                           class="w-full rounded-full border border-slate-200 bg-slate-50 pr-12 pl-5 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 shadow-inner transition-all duration-200 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 group-hover:bg-white">
-                    <button id="search-submit" type="button" class="absolute left-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition-colors duration-200 hover:text-orange-500 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <span class="sr-only">بدء البحث</span>
-                    </button>
-                </div>
+                @if($showNavbarSearch)
+                    <div class="relative flex-1 max-w-xl group" id="search-container">
+                        <input id="search-input"
+                               dir="rtl"
+                               type="text"
+                               placeholder="ابحث عن وصفة، أداة، أو ورشة..."
+                               value="{{ old('q', request('q')) }}"
+                               autocomplete="off"
+                               spellcheck="false"
+                               class="w-full rounded-full border border-slate-200 bg-slate-50 pr-12 pl-5 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 shadow-inner transition-all duration-200 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 group-hover:bg-white">
+                        <button id="search-submit" type="button" class="absolute left-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition-colors duration-200 hover:text-orange-500 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <span class="sr-only">بدء البحث</span>
+                        </button>
+                    </div>
+                @endif
 
                 <nav class="flex items-center gap-2 text-sm font-medium text-slate-600" aria-label="روابط الحساب">
                     <a href="{{ route('saved.index') }}" class="relative flex items-center gap-2 rounded-full border border-transparent bg-white px-3 py-2 text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
@@ -420,30 +425,32 @@
         </nav>
     </div>
 
-    <div id="mobileSearchModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-md rounded-2xl bg-white/95 p-6 shadow-2xl backdrop-blur">
-            <div class="mb-6 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-slate-900">البحث</h3>
-                <button id="closeMobileSearchModal" class="text-slate-400 transition hover:text-slate-600">
-                    <i class="fas fa-times text-xl"></i>
-                    <span class="sr-only">إغلاق</span>
-                </button>
-            </div>
-            <div class="relative" id="mobile-search-container">
-                <input id="mobile-search-input"
-                       dir="rtl"
-                       type="text"
-                       placeholder="ابحث عن وصفة، أداة، أو ورشة..."
-                       autocomplete="off"
-                       spellcheck="false"
-                       class="w-full rounded-2xl border border-slate-200 bg-slate-50 pr-12 pl-5 py-3 text-lg text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
-                <button id="mobile-search-submit" class="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition hover:text-orange-500 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <span class="sr-only">بدء البحث</span>
-                </button>
+    @if($showNavbarSearch)
+        <div id="mobileSearchModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-md rounded-2xl bg-white/95 p-6 shadow-2xl backdrop-blur">
+                <div class="mb-6 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-slate-900">البحث</h3>
+                    <button id="closeMobileSearchModal" class="text-slate-400 transition hover:text-slate-600">
+                        <i class="fas fa-times text-xl"></i>
+                        <span class="sr-only">إغلاق</span>
+                    </button>
+                </div>
+                <div class="relative" id="mobile-search-container">
+                    <input id="mobile-search-input"
+                           dir="rtl"
+                           type="text"
+                           placeholder="ابحث عن وصفة، أداة، أو ورشة..."
+                           autocomplete="off"
+                           spellcheck="false"
+                           class="w-full rounded-2xl border border-slate-200 bg-slate-50 pr-12 pl-5 py-3 text-lg text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
+                    <button id="mobile-search-submit" class="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition hover:text-orange-500 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span class="sr-only">بدء البحث</span>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 </header>
