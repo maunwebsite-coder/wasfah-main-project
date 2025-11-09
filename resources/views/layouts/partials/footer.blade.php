@@ -5,7 +5,7 @@
             'en' => 'English',
         ];
 
-        $footerLocale = request()->query('lang', 'ar');
+        $footerLocale = app()->getLocale();
         if (! array_key_exists($footerLocale, $footerLocales)) {
             $footerLocale = 'ar';
         }

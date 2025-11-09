@@ -1,5 +1,9 @@
+@php
+    $appLocale = app()->getLocale();
+    $appDirection = $appLocale === 'ar' ? 'rtl' : 'ltr';
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}">
 <head>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta charset="UTF-8">

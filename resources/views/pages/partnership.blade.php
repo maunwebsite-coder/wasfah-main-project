@@ -14,7 +14,7 @@
         ],
     ];
 
-    $locale = request()->query('lang', 'ar');
+    $locale = app()->getLocale();
     if (! array_key_exists($locale, $supportedLocales)) {
         $locale = 'ar';
     }
@@ -784,6 +784,7 @@
                     @include('pages.partials.contact-form-fields', [
                         'defaultSubject' => 'partnership',
                         'source' => 'partnership-page',
+                        'locale' => $locale,
                     ])
                 </form>
             </div>

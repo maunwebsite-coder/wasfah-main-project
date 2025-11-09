@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 		$middleware->web(
 			prepend: [
 				\App\Http\Middleware\EnforceContentModeration::class,
+				\App\Http\Middleware\SetLocaleFromRequest::class,
 			],
 			append: [
 				\App\Http\Middleware\CaptureReferralFromRequest::class,
