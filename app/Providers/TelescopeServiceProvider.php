@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
@@ -52,21 +54,36 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function telescopeEntriesTableExists(): bool
     {
-        static $hasTable;
+        static $isUsable;
 
-        if ($hasTable !== null) {
-            return $hasTable;
+        if ($isUsable !== null) {
+            return $isUsable;
         }
 
         $connection = config('telescope.storage.database.connection', config('database.default'));
 
         try {
-            $hasTable = Schema::connection($connection)->hasTable('telescope_entries');
-        } catch (\Throwable $exception) {
-            $hasTable = false;
-        }
+            $schema = Schema::connection($connection);
 
-        return $hasTable;
+            if (! $schema->hasTable('telescope_entries')) {
+                return $isUsable = false;
+            }
+
+            // Ensure the table is actually readable; otherwise Telescope will crash on inserts.
+            DB::connection($connection)
+                ->table('telescope_entries')
+                ->selectRaw('1')
+                ->limit(1)
+                ->get();
+
+            return $isUsable = true;
+        } catch (\Throwable $exception) {
+            if (app()->bound('log')) {
+                Log::warning('Telescope disabled because the telescope_entries table is not accessible: '.$exception->getMessage());
+            }
+
+            return $isUsable = false;
+        }
     }
 
     /**
