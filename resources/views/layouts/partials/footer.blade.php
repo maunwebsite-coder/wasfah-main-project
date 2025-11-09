@@ -1,4 +1,19 @@
 <footer class="bg-orange-50 pt-12 pb-6">
+    @php
+        $footerLocales = [
+            'ar' => 'العربية',
+            'en' => 'English',
+        ];
+
+        $footerLocale = request()->query('lang', 'ar');
+        if (! array_key_exists($footerLocale, $footerLocales)) {
+            $footerLocale = 'ar';
+        }
+
+        $footerLocaleUrl = function ($locale) {
+            return request()->fullUrlWithQuery(['lang' => $locale]);
+        };
+    @endphp
     <div class="container mx-auto px-4">
         <!-- Main Footer Content -->
         <div class="grid grid-cols-1 gap-10 pb-10 border-b border-gray-200 footer-content sm:grid-cols-2 lg:grid-cols-12">
@@ -71,6 +86,17 @@
                 <span>موقع وصفة هو جزء من شركة وصفة الأردن.</span>
                 <span class="hidden text-gray-300 md:inline-block">|</span>
                 <span>نهتم بجودة تفاصيل كل وصفة.</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 text-center md:flex-row md:gap-3">
+                <span class="text-gray-500">اختر اللغة</span>
+                <div class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-1 py-1 bg-white">
+                    @foreach($footerLocales as $code => $label)
+                        <a href="{{ $footerLocaleUrl($code) }}"
+                           class="px-3 py-1 text-xs rounded-full transition {{ $footerLocale === $code ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:text-gray-900' }}">
+                            {{ $label }}
+                        </a>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
