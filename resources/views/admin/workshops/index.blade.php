@@ -434,18 +434,18 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.workshops.show', $workshop->id) }}"
+                                    <a href="{{ route('admin.workshops.show', $workshop) }}"
                                        class="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600 transition transform hover:-translate-y-0.5 hover:bg-blue-100"
                                        title="عرض التفاصيل">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.workshops.edit', $workshop->id) }}"
+                                    <a href="{{ route('admin.workshops.edit', $workshop) }}"
                                        class="flex h-9 w-9 items-center justify-center rounded-lg border border-orange-100 bg-orange-50 text-orange-600 transition transform hover:-translate-y-0.5 hover:bg-orange-100"
                                        title="تعديل">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @if(!$workshop->is_featured)
-                                    <form action="{{ route('admin.workshops.toggle-featured', $workshop->id) }}"
+                                    <form action="{{ route('admin.workshops.toggle-featured', $workshop) }}"
                                           method="POST" class="inline-block"
                                           onsubmit="return confirmFeaturedWorkshop('{{ $workshop->title }}')">
                                         @csrf
@@ -462,7 +462,7 @@
                                             <i class="fas fa-crown"></i>
                                             <span class="text-sm font-bold">مميزة</span>
                                         </div>
-                                        <form action="{{ route('admin.workshops.toggle-featured', $workshop->id) }}"
+                                        <form action="{{ route('admin.workshops.toggle-featured', $workshop) }}"
                                               method="POST" class="inline-block"
                                               onsubmit="return confirmRemoveFeatured('{{ $workshop->title }}')">
                                             @csrf
@@ -474,7 +474,7 @@
                                         </form>
                                     </div>
                                     @endif
-                                    <form action="{{ route('admin.workshops.toggle-status', $workshop->id) }}"
+                                    <form action="{{ route('admin.workshops.toggle-status', $workshop) }}"
                                           method="POST" class="inline">
                                         @csrf
                                         <button type="submit"
@@ -483,7 +483,7 @@
                                             <i class="fas {{ $workshop->is_active ? 'fa-pause' : 'fa-play' }}"></i>
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.workshops.destroy', $workshop->id) }}"
+                                    <form action="{{ route('admin.workshops.destroy', $workshop) }}"
                                           method="POST" class="inline delete-workshop-form"
                                           data-workshop-title="{{ $workshop->title }}">
                                         @csrf

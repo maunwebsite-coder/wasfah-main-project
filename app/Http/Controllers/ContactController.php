@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactMessageSubmitted;
 use App\Models\ContactMessage;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ContactController extends Controller
 {
@@ -63,6 +66,7 @@ class ContactController extends Controller
         ]);
 
         $this->notifyTeam($contactMessage);
+        $this->notifyAdmins($contactMessage);
 
         return back()->with('success', 'تم تسجيل رسالتك بنجاح وسيتواصل فريق وصفة معك فور مراجعتها.');
     }
@@ -90,7 +94,12 @@ class ContactController extends Controller
                         ->replyTo($contactMessage->email, $contactMessage->full_name)
                 );
 
-            $contactMessage->update(['status' => ContactMessage::STATUS_NOTIFIED]);
+            $contactMessage->update([
+                'status' => ContactMessage::STATUS_NOTIFIED,
+                'meta' => array_merge($contactMessage->meta ?? [], [
+                    'notified_at' => now()->toDateTimeString(),
+                ]),
+            ]);
         } catch (\Throwable $th) {
             Log::error('Failed to deliver contact form submission via email.', [
                 'contact_message_id' => $contactMessage->id,
@@ -101,6 +110,47 @@ class ContactController extends Controller
                 'meta' => array_merge($contactMessage->meta ?? [], [
                     'mail_error' => $th->getMessage(),
                 ]),
+            ]);
+        }
+    }
+
+    /**
+     * Dispatch in-app notifications to all admin users.
+     */
+    protected function notifyAdmins(ContactMessage $contactMessage): void
+    {
+        $admins = User::query()
+            ->where(function ($query) {
+                $query->where('is_admin', true)
+                    ->orWhere('role', 'admin');
+            })
+            ->get(['id', 'name']);
+
+        if ($admins->isEmpty()) {
+            return;
+        }
+
+        $title = $contactMessage->subject === 'partnership'
+            ? 'طلب شراكة جديد'
+            : 'رسالة جديدة من نموذج الاتصال';
+
+        $preview = Str::limit(trim($contactMessage->message), 120);
+
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'type' => 'contact_message',
+                'title' => $title,
+                'message' => sprintf('%s (%s) — %s', $contactMessage->full_name, $contactMessage->email, $preview),
+                'data' => [
+                    'contact_message_id' => $contactMessage->id,
+                    'subject' => $contactMessage->subject,
+                    'subject_label' => $contactMessage->subject_label,
+                    'source' => data_get($contactMessage->meta, 'source'),
+                    'action_url' => route('admin.contact-messages.index', [
+                        'message' => $contactMessage->id,
+                    ]),
+                ],
             ]);
         }
     }

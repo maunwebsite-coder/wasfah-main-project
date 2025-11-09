@@ -266,7 +266,7 @@
             </div>
         </div>
         <div class="rounded-[34px] border border-slate-100 bg-white/90 shadow-2xl backdrop-blur p-6 md:p-10 space-y-12">
-            <form id="workshop-form" action="{{ route('admin.workshops.update', $workshop->id) }}" method="POST" enctype="multipart/form-data" class="space-y-12">
+            <form id="workshop-form" action="{{ route('admin.workshops.update', $workshop) }}" method="POST" enctype="multipart/form-data" class="space-y-12">
                 @csrf
                 @method('PUT')
 

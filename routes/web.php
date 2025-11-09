@@ -12,6 +12,7 @@ use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
 use App\Http\Controllers\ReferralDashboardController;
 use App\Http\Controllers\UserMeetingController;
+use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 use App\Http\Controllers\Admin\UserManagementController as AdminUserManagementController;
@@ -336,6 +337,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('hero-slides/{heroSlide}/toggle', [HeroSlideController::class, 'toggleStatus'])->name('hero-slides.toggle');
     Route::post('hero-slides/reorder', [HeroSlideController::class, 'reorder'])->name('hero-slides.reorder');
     Route::post('hero-slides/initialize-defaults', [HeroSlideController::class, 'initializeDefaults'])->name('hero-slides.initialize-defaults');
+
+    // طلبات التواصل والشراكات
+    Route::get('contact-messages', [AdminContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::patch('contact-messages/{contactMessage}/status', [AdminContactMessageController::class, 'updateStatus'])->name('contact-messages.update-status');
 
     // إدارة المستخدمين
     Route::get('users', [AdminUserManagementController::class, 'index'])->name('users.index');

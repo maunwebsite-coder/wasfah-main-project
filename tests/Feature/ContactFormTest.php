@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Mail\ContactMessageSubmitted;
 use App\Models\ContactMessage;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -12,8 +14,15 @@ class ContactFormTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['broadcasting.default' => 'log']);
+    }
+
     public function test_user_can_submit_contact_form(): void
     {
+        $admin = User::factory()->create(['is_admin' => true]);
         config(['contact.recipient' => 'team@example.com']);
 
         Mail::fake();
@@ -44,10 +53,17 @@ class ContactFormTest extends TestCase
 
         $message = ContactMessage::first();
         $this->assertSame('contact-page', data_get($message->meta, 'source'));
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $admin->id,
+            'type' => 'contact_message',
+            'data->contact_message_id' => $message->id,
+        ]);
     }
 
     public function test_partnership_submission_is_tracked_in_admin_meta(): void
     {
+        $admin = User::factory()->create(['is_admin' => true]);
         config(['contact.recipient' => 'team@example.com']);
 
         Mail::fake();
@@ -73,5 +89,11 @@ class ContactFormTest extends TestCase
 
         $message = ContactMessage::where('email', 'omar@example.com')->firstOrFail();
         $this->assertSame('partnership-page', data_get($message->meta, 'source'));
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $admin->id,
+            'type' => 'contact_message',
+            'data->contact_message_id' => $message->id,
+        ]);
     }
 }

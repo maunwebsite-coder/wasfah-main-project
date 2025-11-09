@@ -11,6 +11,29 @@ class ContactMessage extends Model
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_NOTIFIED = 'notified';
+    public const STATUS_REVIEWED = 'reviewed';
+
+    /**
+     * Status labels used inside the admin area.
+     *
+     * @var array<string, string>
+     */
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING => 'بانتظار المراجعة',
+        self::STATUS_NOTIFIED => 'تم إشعار الفريق',
+        self::STATUS_REVIEWED => 'تمت المراجعة',
+    ];
+
+    /**
+     * Allowed statuses for validation.
+     *
+     * @var string[]
+     */
+    public const STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_NOTIFIED,
+        self::STATUS_REVIEWED,
+    ];
 
     /**
      * Mapped labels for subject dropdown selections.
@@ -57,5 +80,25 @@ class ContactMessage extends Model
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    /**
+     * Resolve a human readable status label.
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    /**
+     * Badge classes for admin UI pills.
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_PENDING => 'panel__badge panel__badge--pending',
+            self::STATUS_REVIEWED => 'panel__badge panel__badge--approved',
+            default => 'panel__badge panel__badge--default',
+        };
     }
 }

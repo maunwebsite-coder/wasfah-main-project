@@ -511,6 +511,72 @@
         </div>
     </section>
 
+    <section class="space-y-4">
+        <div class="admin-section-title">
+            <i class="fas fa-inbox"></i>
+            صندوق رسائل الشركاء
+        </div>
+        <div class="panel">
+            <div class="panel__header">
+                <div>
+                    <div class="panel__title">
+                        أحدث الطلبات
+                    </div>
+                    <div class="panel__subtitle">اطلع بسرعة على آخر رسائل الشراكات والدعم، وحدد ما يحتاج متابعة.</div>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 text-orange-600">
+                        <i class="fas fa-clock"></i>
+                        بانتظار المراجعة: {{ number_format($contactMessageStats['pending'] ?? 0) }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600">
+                        <i class="fas fa-handshake"></i>
+                        طلبات الشراكة: {{ number_format($contactMessageStats['partnership'] ?? 0) }}
+                    </span>
+                </div>
+            </div>
+            <div class="panel__list">
+                @forelse($latestContactMessages as $contactMessage)
+                    <div class="panel__item">
+                        <div>
+                            <a href="{{ route('admin.contact-messages.index', ['message' => $contactMessage->id]) }}" class="panel__item-title">
+                                {{ $contactMessage->full_name }}
+                            </a>
+                            <div class="panel__item-meta">
+                                <i class="fas fa-tag"></i>
+                                {{ $contactMessage->subject_label }}
+                                <span class="mx-2 text-slate-400">•</span>
+                                <i class="fas fa-clock"></i>
+                                {{ $contactMessage->created_at?->diffForHumans() }}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if ($contactMessage->subject === 'partnership')
+                                <span class="panel__badge panel__badge--pending">شراكة</span>
+                            @endif
+                            <span class="{{ $contactMessage->status_badge_class }}">
+                                {{ $contactMessage->status_label }}
+                            </span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="panel__empty">
+                        لا توجد رسائل جديدة حالياً. سيتم عرض أحدث الطلبات هنا فور وصولها.
+                    </div>
+                @endforelse
+            </div>
+            <div class="p-5 border-t border-slate-100 flex justify-between items-center flex-wrap gap-3">
+                <p class="text-sm text-slate-500">
+                    جميع الرسائل محفوظة ويمكن مراجعتها في أي وقت.
+                </p>
+                <a href="{{ route('admin.contact-messages.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold text-slate-700 hover:text-orange-600 hover:border-orange-300 transition">
+                    إدارة جميع الطلبات
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
     <section class="space-y-6">
         <div class="admin-section-title">
             <i class="fas fa-layer-group"></i>

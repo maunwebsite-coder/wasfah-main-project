@@ -207,13 +207,15 @@ class WorkshopController extends Controller
     /**
      * عرض تفاصيل ورشة
      */
-    public function show($id)
+    public function show(Workshop $workshop)
     {
-        $workshop = Workshop::withCount(['bookings' => function ($query) {
-            $query->where('status', 'confirmed');
-        }])
-        ->withCount('bookings as total_bookings')
-        ->findOrFail($id);
+        $workshop->loadCount([
+            'bookings as bookings_count' => function ($query) {
+                $query->where('status', 'confirmed');
+            },
+            'bookings as total_bookings',
+        ]);
+
         return view('admin.workshops.show', compact('workshop'));
     }
 
@@ -247,9 +249,9 @@ class WorkshopController extends Controller
     /**
      * عرض نموذج تعديل ورشة
      */
-    public function edit($id)
+    public function edit(Workshop $workshop)
     {
-        $workshop = Workshop::with('recipes')->findOrFail($id);
+        $workshop->loadMissing('recipes');
         $recipes = Recipe::approved()->public()->orderBy('title')->get();
         return view('admin.workshops.edit', compact('workshop', 'recipes'));
     }
@@ -257,13 +259,13 @@ class WorkshopController extends Controller
     /**
      * تحديث ورشة
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Workshop $workshop)
     {
-        $workshop = Workshop::findOrFail($id);
+        $workshopId = $workshop->id;
 
         // Log the request data for debugging
         \Log::info('Workshop update request', [
-            'workshop_id' => $id,
+            'workshop_id' => $workshopId,
             'has_image' => $request->hasFile('image'),
             'image_size' => $request->hasFile('image') ? $request->file('image')->getSize() : null,
             'image_mime' => $request->hasFile('image') ? $request->file('image')->getMimeType() : null,
@@ -273,11 +275,11 @@ class WorkshopController extends Controller
         ]);
 
         try {
-            $request->validate(Workshop::validationRules($id));
-            \Log::info('Validation passed for workshop update', ['workshop_id' => $id]);
+            $request->validate(Workshop::validationRules($workshopId));
+            \Log::info('Validation passed for workshop update', ['workshop_id' => $workshopId]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed for workshop update', [
-                'workshop_id' => $id,
+                'workshop_id' => $workshopId,
                 'errors' => $e->errors()
             ]);
             throw $e;
@@ -319,7 +321,7 @@ class WorkshopController extends Controller
         // تحديث الصورة
         if ($request->hasFile('image')) {
             \Log::info('Processing image upload for workshop', [
-                'workshop_id' => $id,
+                'workshop_id' => $workshopId,
                 'old_image' => $workshop->image,
                 'new_image_size' => $request->file('image')->getSize(),
                 'new_image_mime' => $request->file('image')->getMimeType(),
@@ -342,7 +344,7 @@ class WorkshopController extends Controller
             if ($uploadResult['success']) {
                 $workshop->image = $uploadResult['path'];
                 \Log::info('Image uploaded successfully for workshop', [
-                    'workshop_id' => $id,
+                    'workshop_id' => $workshopId,
                     'image_path' => $uploadResult['path'],
                     'compressed' => $uploadResult['compressed'] ?? false,
                     'original_size' => $uploadResult['original_size'] ?? null,
@@ -350,7 +352,7 @@ class WorkshopController extends Controller
                 ]);
             } else {
                 \Log::error('Failed to upload image for workshop', [
-                    'workshop_id' => $id,
+                    'workshop_id' => $workshopId,
                     'error' => $uploadResult['error'],
                     'file_name' => $request->file('image')->getClientOriginalName(),
                     'file_size' => $request->file('image')->getSize()
@@ -364,7 +366,7 @@ class WorkshopController extends Controller
                 EnhancedImageUploadService::deleteImage($workshop->image);
                 $workshop->image = null;
                 \Log::info('Image removed for workshop', [
-                    'workshop_id' => $id
+                    'workshop_id' => $workshopId
                 ]);
             }
         }
@@ -372,7 +374,7 @@ class WorkshopController extends Controller
         $workshop->save();
         
         \Log::info('Workshop updated successfully', [
-            'workshop_id' => $id,
+            'workshop_id' => $workshopId,
             'new_image' => $workshop->image,
             'title' => $workshop->title
         ]);
@@ -429,9 +431,8 @@ class WorkshopController extends Controller
     /**
      * حذف ورشة
      */
-    public function destroy($id)
+    public function destroy(Workshop $workshop)
     {
-        $workshop = Workshop::findOrFail($id);
         
         // حذف الصورة
         if ($workshop->image) {
@@ -447,9 +448,8 @@ class WorkshopController extends Controller
     /**
      * تفعيل/إلغاء تفعيل ورشة
      */
-    public function toggleStatus($id)
+    public function toggleStatus(Workshop $workshop)
     {
-        $workshop = Workshop::findOrFail($id);
         $workshop->is_active = !$workshop->is_active;
         $workshop->save();
 
@@ -461,9 +461,8 @@ class WorkshopController extends Controller
     /**
      * جعل ورشة هي الورشة القادمة (المميزة)
      */
-    public function toggleFeatured($id)
+    public function toggleFeatured(Workshop $workshop)
     {
-        $workshop = Workshop::findOrFail($id);
         
         // استخدام الـ method الجديد من الـ model
         $workshop->makeFeatured();

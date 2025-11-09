@@ -275,7 +275,7 @@
                             تحديث حالة الدفع
                         </button>
 
-                        <a href="{{ route('admin.workshops.show', $booking->workshop->id) }}" class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <a href="{{ route('admin.workshops.show', $booking->workshop) }}" class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-eye ml-2"></i>
                             عرض الورشة
                         </a>

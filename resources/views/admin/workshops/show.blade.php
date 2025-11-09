@@ -523,13 +523,13 @@
 
                 <div class="admin-card p-6 space-y-4">
                     <h3 class="text-lg font-bold text-slate-900">الإجراءات</h3>
-                    <a href="{{ route('admin.workshops.edit', $workshop->id) }}"
+                    <a href="{{ route('admin.workshops.edit', $workshop) }}"
                        class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5">
                         <i class="fas fa-edit"></i>
                         تعديل الورشة
                     </a>
 
-                    <form action="{{ route('admin.workshops.toggle-status', $workshop->id) }}" method="POST">
+                    <form action="{{ route('admin.workshops.toggle-status', $workshop) }}" method="POST">
                         @csrf
                         <button type="submit"
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 {{ $workshop->is_active ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-emerald-500 hover:bg-emerald-600' }}">
@@ -538,7 +538,7 @@
                         </button>
                     </form>
 
-                    <form action="{{ route('admin.workshops.destroy', $workshop->id) }}" method="POST"
+                    <form action="{{ route('admin.workshops.destroy', $workshop) }}" method="POST"
                           class="delete-workshop-form"
                           data-workshop-title="{{ $workshop->title }}">
                         @csrf

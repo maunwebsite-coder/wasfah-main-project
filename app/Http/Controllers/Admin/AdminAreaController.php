@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ContactMessage;
 use App\Models\Recipe;
 use App\Models\ReferralCommission;
 use App\Models\User;
@@ -238,6 +239,23 @@ class AdminAreaController extends Controller
             ],
         ];
 
+        $latestContactMessages = ContactMessage::query()
+            ->latest()
+            ->take(5)
+            ->get(['id', 'first_name', 'last_name', 'email', 'subject', 'status', 'created_at']);
+
+        $contactMessageStats = [
+            'pending' => ContactMessage::whereIn('status', [
+                ContactMessage::STATUS_PENDING,
+                ContactMessage::STATUS_NOTIFIED,
+            ])->count(),
+            'partnership' => ContactMessage::where('subject', 'partnership')
+                ->whereIn('status', [
+                    ContactMessage::STATUS_PENDING,
+                    ContactMessage::STATUS_NOTIFIED,
+                ])->count(),
+        ];
+
         $recipeStatusLabels = [
             Recipe::STATUS_APPROVED => 'منشورة',
             Recipe::STATUS_PENDING => 'بانتظار المراجعة',
@@ -252,7 +270,9 @@ class AdminAreaController extends Controller
             'upcomingWorkshops',
             'quickActions',
             'managementSections',
-            'recipeStatusLabels'
+            'recipeStatusLabels',
+            'latestContactMessages',
+            'contactMessageStats'
         ));
     }
 }
