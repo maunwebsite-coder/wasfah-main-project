@@ -944,7 +944,8 @@
 <body class="bg-gray-100 font-sans" data-user-id="@auth{{ Auth::id() }}@endauth">
 
     <!-- Header -->
-    @include('partials.navbar')
+    @php($showNavbarSearch = !($hideNavbarSearch ?? false))
+    @include('partials.navbar', ['showNavbarSearch' => $showNavbarSearch])
 
     <!-- Main Navigation Bar -->
     <!-- <nav class="bg-white border-t border-gray-200 shadow-sm ">
