@@ -64,7 +64,7 @@ class ContactController extends Controller
 
         $this->notifyTeam($contactMessage);
 
-        return back()->with('success', 'تم تسجيل رسالتك بنجاح وسيتواصل فريق وصفة معك فور مراجعتها.');
+        return back()->with('success', __('flash.success.contact.message_submitted'));
     }
 
     /**

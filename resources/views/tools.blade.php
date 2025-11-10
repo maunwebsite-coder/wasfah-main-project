@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'أدوات الشيف الاحترافية - موقع وصفة')
+@section('title', __('tools.meta.title'))
 
 @push('styles')
 <style>
@@ -378,16 +378,16 @@
         <div class="container mx-auto px-4 relative z-10">
             <div class="tools-hero-inner">
                 <div class="tools-hero-intro">
-                    <h1>أدوات الشيف الاحترافية</h1>
-                    <p>تعرف على أبرز أدوات الحلويات التي نعتمد عليها في وصفة، مع روابط شراء موثوقة تلائم العمل المنزلي والمشاريع الصغيرة.</p>
+                    <h1>{{ __('tools.hero.title') }}</h1>
+                    <p>{{ __('tools.hero.subtitle') }}</p>
                 </div>
                 <div class="tools-hero-actions">
                     <a href="#tools-grid" class="intro-primary">
-                        <span>تصفح الأدوات الآن</span>
+                        <span>{{ __('tools.hero.cta.browse') }}</span>
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <a href="{{ route('saved.index') }}" class="intro-secondary">
-                        <span>الأدوات التي قمت بحفظها</span>
+                        <span>{{ __('tools.hero.cta.saved') }}</span>
                         <i class="fas fa-bookmark"></i>
                     </a>
                 </div>
@@ -404,19 +404,19 @@
                         <a href="{{ route('saved.index') }}" 
                            class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all text-sm sm:text-base">
                             <i class="fas fa-bookmark text-base"></i>
-                            <span>عرض الأدوات المحفوظة</span>
+                            <span>{{ __('tools.saved.banner_cta') }}</span>
                             <span id="saved-count-badge" class="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full hidden">0</span>
                         </a>
                         <div class="flex items-center gap-2 text-sm text-gray-500">
                             <i class="fas fa-info-circle text-orange-500"></i>
-                            <span>احفظ الأدوات التي تعجبك للرجوع إليها لاحقاً.</span>
+                            <span>{{ __('tools.saved.banner_hint') }}</span>
                         </div>
                     </div>
                     
                     <!-- Category Filters -->
                     <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
                         <button class="category-filter-btn px-4 sm:px-6 py-2.5 sm:py-3 bg-orange-500 text-white rounded-xl font-semibold transition-all active text-xs sm:text-sm" data-category="all">
-                            جميع الفئات
+                            {{ __('tools.categories.all') }}
                         </button>
                         @foreach($categories as $categoryName => $categoryTools)
                             <button class="category-filter-btn px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-orange-500 hover:text-white transition-all text-xs sm:text-sm" data-category="{{ $categoryName }}">
@@ -453,7 +453,7 @@
                                                 <img src="{{ $image }}"
                                                      alt="{{ $tool->name }}"
                                                      class="tool-card__image"
-                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ __('tools.cards.image_fallback_alt') }}';">
                                             </div>
                                         @endforeach
                                     </div>
@@ -489,7 +489,7 @@
 
                                 <!-- Price -->
                                 <div class="tool-card__price text-sm sm:text-lg">
-                                    {{ number_format($tool->price, 2) }} درهم إماراتي
+                                    {{ number_format($tool->price, 2) }} {{ __('tools.cards.currency') }}
                                 </div>
 
 
@@ -498,14 +498,14 @@
                                     <a href="{{ route('tools.show', $tool) }}"
                                        class="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 text-xs sm:text-sm font-semibold text-orange-600 border border-orange-200 hover:bg-orange-50 rounded-xl transition-colors duration-300">
                                         <i class="fas fa-info-circle text-base"></i>
-                                        <span>عرض التفاصيل الكاملة</span>
+                                        <span>{{ __('tools.cards.buttons.details') }}</span>
                                     </a>
                                     @if($tool->amazon_url)
                                     <a href="{{ $tool->amazon_url }}" 
                                        target="_blank"
                                        class="amazon-btn w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 text-xs sm:text-sm">
                                         <i class="fab fa-amazon text-base"></i>
-                                        <span>متابعة الشراء من Amazon</span>
+                                        <span>{{ __('tools.cards.buttons.amazon') }}</span>
                                         <i class="fas fa-external-link-alt text-xs"></i>
                                     </a>
                                     @endif
@@ -516,13 +516,13 @@
                                             data-tool-name="{{ $tool->name }}"
                                             data-tool-price="{{ $tool->price }}">
                                         <i class="fas fa-bookmark text-base"></i>
-                                        <span class="btn-text">حفظ للشراء لاحقاً</span>
+                                        <span class="btn-text">{{ __('tools.cards.buttons.save') }}</span>
                                         <i class="fas fa-spinner fa-spin hidden loading-icon text-sm"></i>
                                     </button>
                                     @else
                                     <div class="w-full bg-slate-100 text-slate-500 font-semibold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2">
                                         <i class="fas fa-exclamation-circle text-base"></i>
-                                        غير متوفر
+                                        {{ __('tools.cards.unavailable') }}
                                     </div>
                                     @endif
                                 </div>
@@ -537,32 +537,32 @@
         $whyFeatures = [
             [
                 'icon' => 'fas fa-check-circle',
-                'title' => 'ترشيحات موثوقة',
-                'description' => 'نراجع تقييمات وآراء العملاء على أمازون لنرشح المنتجات الأعلى جودة.'
+                'title' => __('tools.why.features.reviews.title'),
+                'description' => __('tools.why.features.reviews.description'),
             ],
             [
                 'icon' => 'fas fa-book-reader',
-                'title' => 'معلومات واضحة',
-                'description' => 'نلخّص أهم المواصفات لتتخذ قرار الشراء بثقة وفي وقت قصير.'
+                'title' => __('tools.why.features.info.title'),
+                'description' => __('tools.why.features.info.description'),
             ],
             [
                 'icon' => 'fas fa-sync',
-                'title' => 'تحديثات مستمرة',
-                'description' => 'نحدّث القوائم باستمرار بحسب توفر المنتجات وأفضل العروض.'
+                'title' => __('tools.why.features.updates.title'),
+                'description' => __('tools.why.features.updates.description'),
             ],
             [
                 'icon' => 'fas fa-shopping-bag',
-                'title' => 'شراء مباشر من أمازون',
-                'description' => 'إتمام الطلب يتم على موقع أمازون. نحن لا نوفر البيع أو الشحن بأنفسنا.'
+                'title' => __('tools.why.features.amazon.title'),
+                'description' => __('tools.why.features.amazon.description'),
             ],
         ];
     @endphp
     <!-- Why Choose Our Tools Section -->
     <section class="why-section py-16 bg-gradient-to-br from-amber-50 via-orange-50/70 to-white">
         <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-4">لماذا نعرض أدوات الشيف الموصى بها؟</h2>
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ __('tools.why.title') }}</h2>
             <p class="text-gray-600 mb-12 max-w-3xl mx-auto">
-                نعمل كمسوّقين بالعمولة مع أمازون، ونختار بعناية أدوات الحلويات الأعلى تقييماً لمساعدتك في العثور على المنتجات المناسبة دون عناء.
+                {{ __('tools.why.description') }}
             </p>
             <div class="md:hidden mb-10">
                 <div class="why-slider swiper">
@@ -599,7 +599,27 @@
 @endsection
 
 @push('scripts')
+@php
+    $toolsTranslations = array(
+        'buttons' => array(
+            'save' => __('tools.cards.buttons.save'),
+            'saved' => __('tools.cards.buttons.saved'),
+            'saving' => __('tools.cards.buttons.saving'),
+            'save_error' => __('tools.cards.buttons.save_error'),
+            'removing' => __('tools.cards.buttons.removing'),
+        ),
+        'notifications' => array(
+            'saved' => __('tools.notifications.saved'),
+            'save_error' => __('tools.notifications.save_error'),
+            'removed' => __('tools.notifications.removed'),
+            'remove_error' => __('tools.notifications.remove_error'),
+            'remove_detailed_error' => __('tools.notifications.remove_detailed_error'),
+        ),
+    );
+@endphp
 <script>
+const toolsTranslations = @json($toolsTranslations);
+
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Swiper !== 'undefined') {
         document.querySelectorAll('.tool-swiper').forEach(function (el) {
@@ -724,7 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const isSaved = data.saved_tools.includes(parseInt(toolId));
                         
                         if (isSaved) {
-                            btn.querySelector('.btn-text').textContent = 'محفوظ';
+                            btn.querySelector('.btn-text').textContent = toolsTranslations.buttons.saved;
                             applySavedButtonState(btn);
                         }
                     });
@@ -824,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show loading state
             this.disabled = true;
-            this.querySelector('.btn-text').textContent = 'جاري الحفظ...';
+            this.querySelector('.btn-text').textContent = toolsTranslations.buttons.saving;
             this.querySelector('.loading-icon').classList.remove('hidden');
             
             // Save for later
@@ -842,7 +862,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     // Show success state - Item is now saved
-                    this.querySelector('.btn-text').textContent = 'محفوظ';
+                    this.querySelector('.btn-text').textContent = toolsTranslations.buttons.saved;
                     applySavedButtonState(this);
                     this.disabled = false;
                     
@@ -880,22 +900,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 200);
                     
                     // Show toast notification
-                    showToast('تم حفظ المنتج للشراء لاحقاً!', 'success');
+                    showToast(toolsTranslations.notifications.saved, 'success');
                     
                     // Hide loading icon
                     this.querySelector('.loading-icon').classList.add('hidden');
                 } else {
                     // Show error state
-                    this.querySelector('.btn-text').textContent = 'خطأ في الحفظ';
+                    this.querySelector('.btn-text').textContent = toolsTranslations.buttons.save_error;
                     this.classList.remove(...defaultSaveClasses, ...savedStateClasses);
                     this.classList.add('bg-red-500');
                     
-                    showToast(data.message || 'حدث خطأ أثناء حفظ المنتج', 'error');
+                    showToast(data.message || toolsTranslations.notifications.save_error, 'error');
                     
                     // Reset button after 2 seconds
                     setTimeout(() => {
                         this.disabled = false;
-                        this.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                        this.querySelector('.btn-text').textContent = toolsTranslations.buttons.save;
                         this.querySelector('.loading-icon').classList.add('hidden');
                         this.classList.remove('bg-red-500');
                         applyDefaultButtonState(this);
@@ -905,9 +925,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 this.disabled = false;
-                this.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                this.querySelector('.btn-text').textContent = toolsTranslations.buttons.save;
                 this.querySelector('.loading-icon').classList.add('hidden');
-                showToast('حدث خطأ أثناء حفظ المنتج', 'error');
+                showToast(toolsTranslations.notifications.save_error, 'error');
             });
         });
     });
@@ -916,7 +936,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function removeFromSaved(button, toolId) {
         // Show loading state
         button.disabled = true;
-        button.querySelector('.btn-text').textContent = 'جاري الحذف...';
+        button.querySelector('.btn-text').textContent = toolsTranslations.buttons.removing;
         button.querySelector('.loading-icon').classList.remove('hidden');
         
         // Remove from saved
@@ -934,7 +954,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Show success state - Item removed
-                button.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                button.querySelector('.btn-text').textContent = toolsTranslations.buttons.save;
                 applyDefaultButtonState(button);
                 button.disabled = false;
                 
@@ -982,20 +1002,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 200);
                 
                 // Show success message
-                showToast('تم حذف المنتج من المحفوظات!', 'success');
+                showToast(toolsTranslations.notifications.removed, 'success');
                 
                 // Hide loading icon
                 button.querySelector('.loading-icon').classList.add('hidden');
             } else {
-                throw new Error(data.message || 'حدث خطأ أثناء حذف المنتج');
+                throw new Error(data.message || toolsTranslations.notifications.remove_error);
             }
         })
         .catch(error => {
             console.error('Error removing from saved:', error);
             button.disabled = false;
-            button.querySelector('.btn-text').textContent = 'محفوظ';
+            button.querySelector('.btn-text').textContent = toolsTranslations.buttons.saved;
             button.querySelector('.loading-icon').classList.add('hidden');
-            showToast('حدث خطأ أثناء حذف المنتج من المحفوظات', 'error');
+            showToast(toolsTranslations.notifications.remove_detailed_error, 'error');
         });
     }
 

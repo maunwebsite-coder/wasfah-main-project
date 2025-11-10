@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الإشعارات')
+@section('title', __('notifications.page.title'))
 
 @section('content')
 <div class="min-h-screen bg-gray-50">
@@ -11,22 +11,22 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                            الإشعارات
+                            {{ __('notifications.page.title') }}
                             <span id="unread-count" data-notification-badge aria-live="polite" aria-atomic="true" class="unread-count bg-red-500 text-white text-sm font-bold rounded-full px-2 py-1 ml-2 {{ $unreadCount > 0 ? '' : 'hidden' }}" aria-hidden="{{ $unreadCount > 0 ? 'false' : 'true' }}">{{ $unreadCount }}</span>
                         </h1>
                         <p class="text-gray-600">
-                            جميع إشعاراتك في مكان واحد
+                            {{ __('notifications.page.description') }}
                         </p>
                     </div>
                     
                     <div class="flex space-x-2 rtl:space-x-reverse">
                         <button id="mark-all-read" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors">
                             <i class="fas fa-check-double ml-2"></i>
-                            تحديد الكل كمقروء
+                            {{ __('notifications.buttons.mark_all_read') }}
                         </button>
                         <button id="clear-read" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors">
                             <i class="fas fa-trash ml-2"></i>
-                            حذف المقروء
+                            {{ __('notifications.buttons.clear_read') }}
                         </button>
                     </div>
                 </div>
@@ -78,14 +78,14 @@
                                                         @if(!$notification->is_read)
                                                             <button class="mark-read-btn p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors" 
                                                                     data-id="{{ $notification->id }}"
-                                                                    title="تحديد كمقروء">
+                                                                    title="{{ __('notifications.tooltips.mark_as_read') }}">
                                                                 <i class="fas fa-check"></i>
                                                             </button>
                                                         @endif
                                                         
                                                         <button class="delete-notification-btn p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
                                                                 data-id="{{ $notification->id }}"
-                                                                title="حذف الإشعار">
+                                                                title="{{ __('notifications.tooltips.delete') }}">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>
@@ -108,8 +108,8 @@
                         <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                             <i class="fas fa-bell-slash text-4xl text-gray-400"></i>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد إشعارات</h3>
-                        <p class="text-gray-600">ستظهر إشعاراتك هنا عند توفرها</p>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('notifications.page.empty_title') }}</h3>
+                        <p class="text-gray-600">{{ __('notifications.page.empty_description') }}</p>
                     </div>
                 @endif
             </div>
@@ -135,9 +135,49 @@
 @endpush
 
 @push('scripts')
+@php
+    $notificationI18n = [
+        'buttons' => [
+            'cancel' => __('notifications.buttons.cancel'),
+        ],
+        'modals' => [
+            'delete_single' => [
+                'title' => __('notifications.modals.delete_single.title'),
+                'message' => __('notifications.modals.delete_single.message'),
+                'note' => __('notifications.modals.delete_single.note'),
+                'confirm' => __('notifications.modals.delete_single.confirm'),
+            ],
+            'mark_all' => [
+                'title' => __('notifications.modals.mark_all.title'),
+                'message' => __('notifications.modals.mark_all.message'),
+                'note' => __('notifications.modals.mark_all.note'),
+                'confirm' => __('notifications.modals.mark_all.confirm'),
+            ],
+            'clear_read' => [
+                'title' => __('notifications.modals.clear_read.title'),
+                'message' => __('notifications.modals.clear_read.message'),
+                'note' => __('notifications.modals.clear_read.note'),
+                'confirm' => __('notifications.modals.clear_read.confirm'),
+            ],
+        ],
+        'status' => [
+            'deleting' => __('notifications.status.deleting'),
+            'updating' => __('notifications.status.updating'),
+        ],
+        'messages' => [
+            'delete_success' => __('notifications.messages.delete_success'),
+            'delete_error' => __('notifications.messages.delete_error'),
+            'mark_all_success' => __('notifications.messages.mark_all_success'),
+            'mark_all_error' => __('notifications.messages.mark_all_error'),
+            'clear_read_success' => __('notifications.messages.clear_read_success'),
+            'clear_read_error' => __('notifications.messages.clear_read_error'),
+        ],
+    ];
+@endphp
 <script>
 const NOTIFICATION_BADGE_SELECTOR = '[data-notification-badge]';
 const FALLBACK_BADGE_ANIMATION_DURATION = 2000;
+const NOTIFICATIONS_I18N = @js($notificationI18n);
 
 function updateUnreadBadge(unreadCount) {
     if (window.NotificationManager && typeof window.NotificationManager.updateBadgeElements === 'function') {
@@ -325,13 +365,13 @@ function deleteNotification(notificationId) {
                     </div>
                     
                     <!-- العنوان -->
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">حذف الإشعار</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">${NOTIFICATIONS_I18N.modals.delete_single.title}</h3>
                     
                     <!-- الرسالة -->
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        هل أنت متأكد من حذف هذا الإشعار؟<br>
+                        ${NOTIFICATIONS_I18N.modals.delete_single.message}<br>
                         <span class="text-sm text-gray-500 mt-2 block">
-                            لا يمكن التراجع عن هذا الإجراء.
+                            ${NOTIFICATIONS_I18N.modals.delete_single.note}
                         </span>
                     </p>
                     
@@ -339,11 +379,11 @@ function deleteNotification(notificationId) {
                     <div class="flex space-x-4 rtl:space-x-reverse">
                         <button id="cancel-delete-notification" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors">
                             <i class="fas fa-times ml-2"></i>
-                            إلغاء
+                            ${NOTIFICATIONS_I18N.buttons.cancel}
                         </button>
                         <button id="confirm-delete-notification" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">
                             <i class="fas fa-trash ml-2"></i>
-                            حذف
+                            ${NOTIFICATIONS_I18N.modals.delete_single.confirm}
                         </button>
                     </div>
                 </div>
@@ -362,7 +402,7 @@ function deleteNotification(notificationId) {
     document.getElementById('confirm-delete-notification').addEventListener('click', function() {
         // إظهار حالة التحميل
         this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الحذف...';
+        this.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i>${NOTIFICATIONS_I18N.status.deleting}`;
         
         fetch(`/notifications/${notificationId}`, {
             method: 'DELETE',
@@ -375,7 +415,7 @@ function deleteNotification(notificationId) {
         .then(data => {
             if (data.success) {
                 // إظهار رسالة نجاح
-                showSuccessMessage('تم حذف الإشعار بنجاح!');
+                showSuccessMessage(NOTIFICATIONS_I18N.messages.delete_success);
                 
                 // حذف العنصر من الصفحة
                 const notificationItem = document.querySelector(`[data-id="${notificationId}"]`);
@@ -393,13 +433,13 @@ function deleteNotification(notificationId) {
 
                 refreshNotificationCounts(true);
             } else {
-                showErrorMessage('حدث خطأ أثناء حذف الإشعار');
+                showErrorMessage(NOTIFICATIONS_I18N.messages.delete_error);
                 document.getElementById('delete-notification-modal').remove();
             }
         })
         .catch(error => {
             console.error('Error deleting notification:', error);
-            showErrorMessage('حدث خطأ أثناء حذف الإشعار');
+            showErrorMessage(NOTIFICATIONS_I18N.messages.delete_error);
             document.getElementById('delete-notification-modal').remove();
         });
     });
@@ -424,13 +464,13 @@ function markAllAsRead() {
                     </div>
                     
                     <!-- العنوان -->
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">تحديد الكل كمقروء</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">${NOTIFICATIONS_I18N.modals.mark_all.title}</h3>
                     
                     <!-- الرسالة -->
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        هل تريد تحديد جميع الإشعارات كمقروءة؟<br>
+                        ${NOTIFICATIONS_I18N.modals.mark_all.message}<br>
                         <span class="text-sm text-gray-500 mt-2 block">
-                            سيتم تحديد جميع الإشعارات غير المقروءة كمقروءة.
+                            ${NOTIFICATIONS_I18N.modals.mark_all.note}
                         </span>
                     </p>
                     
@@ -438,11 +478,11 @@ function markAllAsRead() {
                     <div class="flex space-x-4 rtl:space-x-reverse">
                         <button id="cancel-mark-all-read" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors">
                             <i class="fas fa-times ml-2"></i>
-                            إلغاء
+                            ${NOTIFICATIONS_I18N.buttons.cancel}
                         </button>
                         <button id="confirm-mark-all-read" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">
                             <i class="fas fa-check-double ml-2"></i>
-                            تحديد الكل
+                            ${NOTIFICATIONS_I18N.modals.mark_all.confirm}
                         </button>
                     </div>
                 </div>
@@ -461,7 +501,7 @@ function markAllAsRead() {
     document.getElementById('confirm-mark-all-read').addEventListener('click', function() {
         // إظهار حالة التحميل
         this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري التحديث...';
+        this.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i>${NOTIFICATIONS_I18N.status.updating}`;
         
         fetch('/notifications/mark-all-read', {
             method: 'POST',
@@ -474,19 +514,19 @@ function markAllAsRead() {
         .then(data => {
             if (data.success) {
                 // إظهار رسالة نجاح
-                showSuccessMessage('تم تحديد جميع الإشعارات كمقروءة!');
+                showSuccessMessage(NOTIFICATIONS_I18N.messages.mark_all_success);
                 refreshNotificationCounts(true);
                 setTimeout(() => {
                     location.reload();
                 }, 1500);
             } else {
-                showErrorMessage('حدث خطأ أثناء تحديث الإشعارات');
+                showErrorMessage(NOTIFICATIONS_I18N.messages.mark_all_error);
                 document.getElementById('mark-all-read-modal').remove();
             }
         })
         .catch(error => {
             console.error('Error marking all as read:', error);
-            showErrorMessage('حدث خطأ أثناء تحديث الإشعارات');
+            showErrorMessage(NOTIFICATIONS_I18N.messages.mark_all_error);
             document.getElementById('mark-all-read-modal').remove();
         });
     });
@@ -511,13 +551,13 @@ function clearReadNotifications() {
                     </div>
                     
                     <!-- العنوان -->
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">حذف الإشعارات المقروءة</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">${NOTIFICATIONS_I18N.modals.clear_read.title}</h3>
                     
                     <!-- الرسالة -->
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        هل أنت متأكد من حذف جميع الإشعارات المقروءة؟<br>
+                        ${NOTIFICATIONS_I18N.modals.clear_read.message}<br>
                         <span class="text-sm text-gray-500 mt-2 block">
-                            سيتم حذف جميع الإشعارات التي تم قراءتها مسبقاً ولا يمكن التراجع عن هذا الإجراء.
+                            ${NOTIFICATIONS_I18N.modals.clear_read.note}
                         </span>
                     </p>
                     
@@ -525,11 +565,11 @@ function clearReadNotifications() {
                     <div class="flex space-x-4 rtl:space-x-reverse">
                         <button id="cancel-clear-read" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors">
                             <i class="fas fa-times ml-2"></i>
-                            إلغاء
+                            ${NOTIFICATIONS_I18N.buttons.cancel}
                         </button>
                         <button id="confirm-clear-read" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">
                             <i class="fas fa-trash ml-2"></i>
-                            حذف المقروء
+                            ${NOTIFICATIONS_I18N.modals.clear_read.confirm}
                         </button>
                     </div>
                 </div>
@@ -548,7 +588,7 @@ function clearReadNotifications() {
     document.getElementById('confirm-clear-read').addEventListener('click', function() {
         // إظهار حالة التحميل
         this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الحذف...';
+        this.innerHTML = `<i class="fas fa-spinner fa-spin ml-2"></i>${NOTIFICATIONS_I18N.status.deleting}`;
         
         fetch('/notifications/clear-read', {
             method: 'POST',
@@ -561,19 +601,19 @@ function clearReadNotifications() {
         .then(data => {
             if (data.success) {
                 // إظهار رسالة نجاح
-                showSuccessMessage('تم حذف الإشعارات المقروءة بنجاح!');
+                showSuccessMessage(NOTIFICATIONS_I18N.messages.clear_read_success);
                 refreshNotificationCounts(true);
                 setTimeout(() => {
                     location.reload();
                 }, 1500);
             } else {
-                showErrorMessage('حدث خطأ أثناء حذف الإشعارات');
+                showErrorMessage(NOTIFICATIONS_I18N.messages.clear_read_error);
                 document.getElementById('clear-read-modal').remove();
             }
         })
         .catch(error => {
             console.error('Error clearing read notifications:', error);
-            showErrorMessage('حدث خطأ أثناء حذف الإشعارات');
+            showErrorMessage(NOTIFICATIONS_I18N.messages.clear_read_error);
             document.getElementById('clear-read-modal').remove();
         });
     });

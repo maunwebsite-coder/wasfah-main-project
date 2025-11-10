@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OnboardingController;
+use App\Http\Controllers\Auth\PolicyConsentController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Chef\LinkItemController as ChefLinkItemController;
@@ -10,43 +11,81 @@ use App\Http\Controllers\Chef\RecipeController as ChefRecipeController;
 use App\Http\Controllers\Chef\WorkshopController as ChefWorkshopController;
 use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ReferralDashboardController;
 use App\Http\Controllers\UserMeetingController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 use App\Http\Controllers\Admin\UserManagementController as AdminUserManagementController;
 use App\Models\Recipe;
 use App\Models\Workshop;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 
 // مسارات المصادقة عبر Google
 Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->name('google.callback');
 
 // المسار الرئيسي لعرض الصفحة الرئيسية
-Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+$renderLocalizedHome = static function (Request $request, string $locale) {
+    $supportedLocales = ['ar', 'en'];
+
+    if (! in_array($locale, $supportedLocales, true)) {
+        abort(404);
+    }
+
+    $request->session()->put('app_locale', $locale);
+    app()->setLocale($locale);
+
+    $isRtl = $locale === 'ar';
+    View::share('currentLocale', $locale);
+    View::share('isRtl', $isRtl);
+
+    return app(HomeController::class)->index();
+};
+
+Route::get('/ar', function (Request $request) use ($renderLocalizedHome) {
+    return $renderLocalizedHome($request, 'ar');
+})->name('home.ar');
+
+Route::get('/en', function (Request $request) use ($renderLocalizedHome) {
+    return $renderLocalizedHome($request, 'en');
+})->name('home.en');
+
+// صفحات السياسات القانونية
+Route::view('/terms', 'pages.legal.terms')->name('legal.terms');
+Route::view('/privacy', 'pages.legal.privacy')->name('legal.privacy');
+
+// تبديل اللغة
+Route::post('/locale', [LanguageController::class, 'switch'])->name('locale.switch');
 
 // صفحة روابط Wasfah للمنصات الاجتماعية
 Route::get('/wasfah-links', function () {
+    $locale = app()->getLocale();
+
     $fallbackSelections = collect([
         [
-            'title' => 'صندوق الوصفات',
+            'title' => __('links.fallback.recipe_box.title'),
             'image' => asset('image/works.png'),
-            'alt' => 'صندوق الوصفات',
+            'alt' => __('links.fallback.recipe_box.alt'),
             'url' => url('/recipes'),
         ],
         [
-            'title' => 'ورش عمل Wasfah المباشرة',
+            'title' => __('links.fallback.workshops.title'),
             'image' => asset('image/wterm.png'),
-            'alt' => 'ورش عمل Wasfah المباشرة',
+            'alt' => __('links.fallback.workshops.alt'),
             'url' => url('/workshops'),
         ],
         [
-            'title' => 'أدوات المطبخ المختارة',
+            'title' => __('links.fallback.tools.title'),
             'image' => asset('image/term.png'),
-            'alt' => 'أدوات المطبخ المختارة',
+            'alt' => __('links.fallback.tools.alt'),
             'url' => url('/tools'),
         ],
     ]);
@@ -87,11 +126,11 @@ Route::get('/wasfah-links', function () {
         $upcomingWorkshop = [
             'title' => $nextWorkshop->title,
             'slug' => $nextWorkshop->slug,
-            'instructor' => $nextWorkshop->instructor,
-            'start_date' => $nextWorkshop->start_date?->locale('ar')->translatedFormat('d F Y • h:i a'),
+            'instructor' => $nextWorkshop->instructor ?? __('links.upcoming.default_instructor'),
+            'start_date' => $nextWorkshop->start_date?->locale($locale)->translatedFormat('d F Y • h:i a'),
             'mode' => $nextWorkshop->is_online
-                ? 'أونلاين مباشر'
-                : ($nextWorkshop->location ?? 'حضوري'),
+                ? __('links.upcoming.mode.online')
+                : ($nextWorkshop->location ?? __('links.upcoming.mode.offline')),
             'image' => $nextWorkshop->image
                 ? \Storage::disk('public')->url($nextWorkshop->image)
                 : asset('image/wterm.png'),
@@ -208,6 +247,9 @@ Route::post('/register/verify/resend', [RegisterController::class, 'resendCode']
 Route::middleware(['auth'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+
+    Route::get('/welcome/policy-consent', [PolicyConsentController::class, 'show'])->name('policy-consent.show');
+    Route::post('/welcome/policy-consent', [PolicyConsentController::class, 'store'])->name('policy-consent.store');
 });
 
 // منطقة الشيف - إدارة الوصفات الخاصة

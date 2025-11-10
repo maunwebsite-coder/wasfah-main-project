@@ -41,7 +41,10 @@
     <div class="text-center md:text-left text-sm text-gray-500">
         @switch($activeTab)
             @case('statistics')
-                آخر تحديث: {{ now()->format('d/m/Y h:i a') }}
+                <span class="flex flex-wrap items-center justify-center gap-1 md:justify-start">
+                    <span>آخر تحديث:</span>
+                    <span>{{ now()->format('d/m/Y h:i a') }}</span>
+                </span>
                 @break
             @case('activity')
                 يتم تحديث الأنشطة عند حدوثها مباشرة

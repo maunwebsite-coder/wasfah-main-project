@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
 			'moderate.content' => \App\Http\Middleware\EnforceContentModeration::class,
 			'capture.referral' => \App\Http\Middleware\CaptureReferralFromRequest::class,
 			'referral.partner' => \App\Http\Middleware\EnsureReferralPartner::class,
+			'set.locale' => \App\Http\Middleware\SetLocale::class,
+			'policy.consent' => \App\Http\Middleware\EnsurePoliciesAccepted::class,
 		]);
 		
 		// إضافة middleware لتحديث آخر تسجيل دخول لجميع الطلبات المصادق عليها
@@ -32,8 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
 				\App\Http\Middleware\EnforceContentModeration::class,
 			],
 			append: [
+				\App\Http\Middleware\SetLocale::class,
 				\App\Http\Middleware\CaptureReferralFromRequest::class,
 				\App\Http\Middleware\UpdateLastLogin::class,
+				\App\Http\Middleware\EnsurePoliciesAccepted::class,
 				\App\Http\Middleware\ApplyXssProtection::class,
 			]
 		);

@@ -1,5 +1,9 @@
+@php
+    $currentLocale = $currentLocale ?? app()->getLocale();
+    $isRtl = $isRtl ?? ($currentLocale === 'ar');
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $currentLocale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta charset="UTF-8">
@@ -72,6 +76,10 @@
     }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script>
+        window.__APP_LOCALE = "{{ $currentLocale }}";
+        window.__CONTENT_TRANSLATIONS = @json($globalContentTranslations ?? []);
+    </script>
     @stack('styles')
 </head>
 <body class="bg-gray-100 font-sans" data-user-id="@auth{{ Auth::id() }}@endauth">

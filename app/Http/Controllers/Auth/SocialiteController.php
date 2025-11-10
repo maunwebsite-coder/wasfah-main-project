@@ -162,17 +162,29 @@ class SocialiteController extends Controller
             $stage = 'login-user:' . $flow;
             Auth::login($user);
 
+            $successMessage = $this->successMessageFor($flow, $isNewUser);
+            $onboardingMessage = 'مرحباً بك! نحتاج لبعض التفاصيل الإضافية لاعتمادك كشيف في وصفة.';
+            $requiresOnboarding = $this->shouldRedirectToOnboarding($user);
+
+            if ($user->requiresPolicyConsent()) {
+                session([
+                    'pending_policy_success_message' => $requiresOnboarding ? $onboardingMessage : $successMessage,
+                    'pending_policy_requires_onboarding' => $requiresOnboarding,
+                ]);
+
+                return redirect()->route('policy-consent.show');
+            }
+
             // Redirect to onboarding if profile incomplete
             $stage = 'redirect-onboarding-check:' . $flow;
-            if ($this->shouldRedirectToOnboarding($user)) {
+            if ($requiresOnboarding) {
                 return redirect()
                     ->route('onboarding.show')
-                    ->with('success', 'مرحباً بك! نحتاج لبعض التفاصيل الإضافية لاعتمادك كشيف في وصفة.');
+                    ->with('success', $onboardingMessage);
             }
 
             // التحقق من وجود معرف ورشة محفوظ في session
             $stage = 'pending-workshop-check:' . $flow;
-            $successMessage = $this->successMessageFor($flow, $isNewUser);
             $pendingWorkshopId = session('pending_workshop_booking');
             if ($pendingWorkshopId) {
                 // مسح معرف الورشة من session

@@ -39,6 +39,9 @@ class UserFactory extends Factory
             'referrer_id' => null,
             'referral_partner_since_at' => null,
             'referral_admin_notes' => null,
+            'policies_accepted_at' => now(),
+            'policies_accepted_ip' => '127.0.0.1',
+            'policies_version' => config('legal.policies_version'),
         ];
     }
 

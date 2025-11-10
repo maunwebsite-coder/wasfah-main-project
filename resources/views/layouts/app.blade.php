@@ -1,5 +1,9 @@
+@php
+    $currentLocale = $currentLocale ?? app()->getLocale();
+    $isRtl = $isRtl ?? ($currentLocale === 'ar');
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $currentLocale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta charset="UTF-8">
@@ -12,6 +16,34 @@
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
     <title>@yield('title', 'موقع وصفة')</title>
+    @if (!session()->has('app_locale'))
+        <script>
+            (function () {
+                if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+                    return;
+                }
+
+                var path = window.location.pathname || '/';
+                if (path && path !== '/' && path !== '') {
+                    return;
+                }
+
+                var userLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+                if (!userLang) {
+                    return;
+                }
+
+                var targetLocale = userLang.indexOf('ar') === 0 ? 'ar' : 'en';
+                var destination = targetLocale === 'ar' ? '/ar' : '/en';
+
+                if (path === destination) {
+                    return;
+                }
+
+                window.location.replace(destination);
+            })();
+        </script>
+    @endif
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Swiper.js for slider -->
@@ -938,6 +970,11 @@
         window.toggleUserMenu = toggleUserMenu;
     </script>
     
+    <script>
+        window.__APP_LOCALE = "{{ $currentLocale }}";
+        window.__CONTENT_TRANSLATIONS = @json($globalContentTranslations ?? []);
+    </script>
+
     @stack('styles')
     <link rel="stylesheet" href="{{ asset('css/search-enhancements.css') }}">
 </head>

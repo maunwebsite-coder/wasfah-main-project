@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'جميع الوصفات - موقع وصفة')
+@section('title', __('recipes.meta.title'))
 
 @push('styles')
 <style>
@@ -796,14 +796,14 @@
 @section('content')
 @php
     $sortOptions = [
-        'created_at' => 'الأحدث',
-        'rating' => 'الأعلى تقييماً',
-        'saved' => 'الأكثر حفظاً',
+        'created_at' => __('recipes.sort.created_at'),
+        'rating' => __('recipes.sort.rating'),
+        'saved' => __('recipes.sort.saved'),
     ];
     $difficultyLabels = [
-        'easy' => 'سهل',
-        'medium' => 'متوسط',
-        'hard' => 'صعب',
+        'easy' => __('recipes.difficulty.easy'),
+        'medium' => __('recipes.difficulty.medium'),
+        'hard' => __('recipes.difficulty.hard'),
     ];
 
     $activeFilters = collect([
@@ -821,50 +821,58 @@
         $activeFilters->put('sort', $currentSort);
     }
 
-    $heroBadge = 'مختارات وصفة';
+    $limitedSearchTerm = request('search')
+        ? \Illuminate\Support\Str::limit(request('search'), 18)
+        : null;
+
+    $heroBadge = __('recipes.hero.badge.default');
     if ($selectedCategory = $categories->firstWhere('category_id', (int) request('category'))) {
-        $heroBadge = 'تصنيف ' . $selectedCategory->name;
+        $heroBadge = __('recipes.hero.badge.category', ['category' => $selectedCategory->name]);
     } elseif (request('search')) {
-        $heroBadge = 'بحث: "' . request('search') . '"';
+        $heroBadge = __('recipes.hero.badge.search', ['term' => request('search')]);
     }
 
-    $heroSubtitle = 'اكتشف وصفات الحلويات الراقية المختارة من فريق وصفة.';
+    $heroSubtitle = __('recipes.hero.subtitle.default');
     if ($selectedCategory) {
-        $heroSubtitle = 'كل ما يتعلق بوصفات ' . $selectedCategory->name . ' في مكان واحد.';
+        $heroSubtitle = __('recipes.hero.subtitle.category', ['category' => $selectedCategory->name]);
     } elseif (request('search')) {
-        $heroSubtitle = 'عرض النتائج المطابقة لعبارة "' . request('search') . '".';
+        $heroSubtitle = __('recipes.hero.subtitle.search', ['term' => request('search')]);
     }
 
     $locale = app()->getLocale() ?? 'ar';
+    $isRtl = isset($isRtl) ? $isRtl : $locale === 'ar';
     $latestRecipe = $recipes->first();
     $latestUpdated = $latestRecipe && $latestRecipe->created_at
         ? $latestRecipe->created_at->locale($locale)->diffForHumans(null, null, false, 2)
-        : 'غير متوفر';
+        : __('recipes.hero.latest_unavailable');
 
     $heroStats = [
         [
             'icon' => 'fa-book-open',
-            'label' => 'إجمالي الوصفات',
+            'label' => __('recipes.stats.total.label'),
             'value' => number_format($recipes->total()),
-            'hint' => 'في مكتبة وصفة',
+            'hint' => __('recipes.stats.total.hint'),
         ],
         [
             'icon' => 'fa-layer-group',
-            'label' => 'المعروضة حالياً',
+            'label' => __('recipes.stats.current.label'),
             'value' => $recipes->count(),
-            'hint' => 'من ' . ($firstItem ?? 0) . ' إلى ' . ($lastItem ?? 0),
+            'hint' => __('recipes.stats.current.hint', [
+                'first' => $firstItem ?? 0,
+                'last' => $lastItem ?? 0,
+            ]),
         ],
         [
             'icon' => 'fa-sliders-h',
-            'label' => 'عوامل التصفية',
+            'label' => __('recipes.stats.filters.label'),
             'value' => $filterCount,
-            'hint' => $filterCount ? 'إعدادات مفعّلة' : 'عرض افتراضي',
+            'hint' => __('recipes.stats.filters.hint.' . ($filterCount ? 'active' : 'default')),
         ],
         [
             'icon' => 'fa-history',
-            'label' => 'أحدث إضافة',
+            'label' => __('recipes.stats.latest.label'),
             'value' => $latestUpdated,
-            'hint' => 'لأقرب وصفة منشورة',
+            'hint' => __('recipes.stats.latest.hint'),
         ],
     ];
 @endphp
@@ -877,13 +885,13 @@
                         <i class="fas fa-crown"></i>
                         {{ $heroBadge }}
                     </span>
-                    <h1 class="recipes-hero__title">كل وصفات الحلويات في تجربة عرض واحدة</h1>
+                    <h1 class="recipes-hero__title">{{ __('recipes.hero.title') }}</h1>
                     <p class="recipes-hero__subtitle">{{ $heroSubtitle }}</p>
                 @if(request('search'))
                 <div class="recipes-hero__meta">
                         <span>
                             <i class="fas fa-search"></i>
-                            بحث: "{{ \Illuminate\Support\Str::limit(request('search'), 18) }}"
+                            {{ __('recipes.hero.meta_search', ['term' => $limitedSearchTerm ?? request('search')]) }}
                         </span>
                 </div>
                 @endif
@@ -912,23 +920,23 @@
                 <form method="GET" action="{{ route('recipes') }}" class="recipes-filter-form" id="recipes-filter-form" autocomplete="off">
                     <div class="recipes-filter-grid">
                         <label class="recipes-field recipes-field--search">
-                            <span class="recipes-field__label">بحث عن وصفة</span>
+                            <span class="recipes-field__label">{{ __('recipes.filters.search_label') }}</span>
                             <div class="recipes-search">
                                 <input
                                     type="text"
                                     name="search"
                                     value="{{ request('search') }}"
                                     class="recipes-input"
-                                    placeholder="مثال: تارت الفواكه الموسمية"
-                                    dir="rtl"
+                                    placeholder="{{ __('recipes.filters.search_placeholder') }}"
+                                    dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
                                 >
                                 <i class="fas fa-search"></i>
                             </div>
                         </label>
                         <label class="recipes-field recipes-field--select">
-                            <span class="recipes-field__label">التصنيفات</span>
+                            <span class="recipes-field__label">{{ __('recipes.filters.category_label') }}</span>
                             <select name="category" class="recipes-select" onchange="this.form.submit()">
-                                <option value="">كل التصنيفات</option>
+                                <option value="">{{ __('recipes.filters.all_categories') }}</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->category_id }}" {{ (string) request('category') === (string) $category->category_id ? 'selected' : '' }}>
                                         {{ $category->name }}
@@ -937,7 +945,7 @@
                             </select>
                         </label>
                         <label class="recipes-field recipes-field--select">
-                            <span class="recipes-field__label">ترتيب النتائج</span>
+                            <span class="recipes-field__label">{{ __('recipes.filters.sort_label') }}</span>
                             <select name="sort" class="recipes-select" onchange="this.form.submit()">
                                 @foreach($sortOptions as $value => $label)
                                     <option value="{{ $value }}" {{ $currentSort === $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -947,12 +955,12 @@
                         <div class="recipes-actions">
                             <button type="submit" class="recipes-submit">
                                 <i class="fas fa-filter ml-1"></i>
-                                عرض النتائج
+                                {{ __('recipes.filters.submit') }}
                             </button>
                             @if($filterCount > 0)
                                 <a href="{{ route('recipes') }}" class="recipes-reset">
                                     <i class="fas fa-rotate-right"></i>
-                                    إعادة الضبط
+                                    {{ __('recipes.filters.reset') }}
                                 </a>
                             @endif
                         </div>
@@ -962,24 +970,24 @@
                     <div class="recipes-chips">
                         <span class="font-semibold text-slate-600">
                             <i class="fas fa-sliders-h text-orange-500 ml-1"></i>
-                            عوامل فعّالة:
+                            {{ __('recipes.filters.active_label') }}
                         </span>
                         @if(request('search'))
                             <span class="recipes-chip">
                                 <i class="fas fa-search text-xs"></i>
-                                بحث: "{{ \Illuminate\Support\Str::limit(request('search'), 18) }}"
+                                {{ __('recipes.filters.chip_search', ['term' => $limitedSearchTerm ?? request('search')]) }}
                             </span>
                         @endif
                         @if($selectedCategory)
                             <span class="recipes-chip">
                                 <i class="fas fa-layer-group text-xs"></i>
-                                تصنيف: {{ $selectedCategory->name }}
+                                {{ __('recipes.filters.chip_category', ['category' => $selectedCategory->name]) }}
                             </span>
                         @endif
                         @if($currentSort !== 'created_at')
                             <span class="recipes-chip">
                                 <i class="fas fa-sort-amount-down text-xs"></i>
-                            ترتيب: {{ $sortOptions[$currentSort] ?? $currentSort }}
+                            {{ __('recipes.filters.chip_sort', ['label' => $sortOptions[$currentSort] ?? $currentSort]) }}
                             </span>
                         @endif
                     </div>
@@ -1016,26 +1024,26 @@
                                         src="{{ $imageSource }}"
                                         alt="{{ $recipe->title }}"
                                         loading="lazy"
-                                        onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة بديلة';"
+                                        onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ __('recipes.cards.image_fallback_alt') }}';"
                                     >
-                                    <span class="recipe-card__badge">{{ $recipe->category->name ?? 'وصفة' }}</span>
+                                    <span class="recipe-card__badge">{{ $recipe->category->name ?? __('recipes.cards.category_fallback') }}</span>
                                 </div>
                                 <div class="recipe-card__content">
                                     <h3 class="recipe-card__title">{{ $recipe->title }}</h3>
                                     <p class="recipe-card__excerpt">
-                                        {{ $recipe->description ? \Illuminate\Support\Str::limit(strip_tags($recipe->description), 110) : 'تعرّف على خطوات إعداد هذه الوصفة الفاخرة بأسلوب مبسّط وواضح.' }}
+                                        {{ $recipe->description ? \Illuminate\Support\Str::limit(strip_tags($recipe->description), 110) : __('recipes.cards.fallback_excerpt') }}
                                     </p>
                                     <div class="recipe-card__meta">
                                         @if($recipe->prep_time)
                                             <span>
                                                 <i class="fas fa-clock text-orange-400"></i>
-                                                {{ $recipe->prep_time }} دقيقة
+                                                {{ __('recipes.cards.prep_time', ['minutes' => $recipe->prep_time]) }}
                                             </span>
                                         @endif
                                         @if($recipe->servings)
                                             <span>
                                                 <i class="fas fa-user-friends text-orange-400"></i>
-                                                تكفي {{ $recipe->servings }} {{ $recipe->servings > 1 ? 'أشخاص' : 'شخص' }}
+                                                {{ trans_choice('recipes.cards.servings', $recipe->servings, ['count' => $recipe->servings]) }}
                                             </span>
                                         @endif
                                         @if($difficultyLabel)
@@ -1063,12 +1071,12 @@
                                         @if($recipe->is_registration_closed)
                                             <span class="recipe-card__btn recipe-card__btn--disabled">
                                                 <i class="fas fa-clock"></i>
-                                                انتهت مهلة الحجز
+                                                {{ __('recipes.cards.booking_closed') }}
                                             </span>
                                         @else
                                             <a href="{{ route('recipe.show', $recipe->slug) }}" class="recipe-card__btn recipe-card__btn--primary">
                                                 <i class="fas fa-utensils"></i>
-                                                عرض الوصفة
+                                                {{ __('recipes.cards.view_recipe') }}
                                             </a>
                                         @endif
                                     </div>
@@ -1079,7 +1087,11 @@
 
                     <div class="flex flex-col items-center gap-3 mt-12">
                         <div class="text-sm text-slate-500 font-semibold">
-                            {{ $firstItem ?? 0 }} - {{ $lastItem ?? 0 }} من {{ number_format($recipes->total()) }} وصفة
+                            {{ __('recipes.pagination.summary', [
+                                'first' => $firstItem ?? 0,
+                                'last' => $lastItem ?? 0,
+                                'total' => number_format($recipes->total()),
+                            ]) }}
                         </div>
                         {{ $recipes->links('pagination.custom') }}
                     </div>
@@ -1088,13 +1100,13 @@
                         <div class="recipe-empty__icon">
                             <i class="fas fa-ice-cream"></i>
                         </div>
-                        <h3 class="recipe-empty__title">لم نعثر على نتائج مطابقة</h3>
+                        <h3 class="recipe-empty__title">{{ __('recipes.empty.title') }}</h3>
                         <p class="recipe-empty__subtitle">
-                            جرّب تعديل كلمات البحث أو اختيار تصنيف مختلف للحصول على المزيد من الوصفات الملهمة. يتم تحديث مكتبتنا باستمرار بوصفات جديدة.
+                            {{ __('recipes.empty.subtitle') }}
                         </p>
                         <a href="{{ route('recipes') }}" class="recipes-empty-btn">
                             <i class="fas fa-rotate-right"></i>
-                            عرض كل الوصفات
+                            {{ __('recipes.empty.cta') }}
                         </a>
                     </div>
                 @endif

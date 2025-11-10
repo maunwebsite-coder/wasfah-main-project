@@ -67,7 +67,8 @@
                         </div>
                         <span class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600">
                             <i class="fas fa-balance-scale-left"></i>
-                            معدل التحويل {{ $madePercent }}%
+                            <span>معدل التحويل</span>
+                            <span>{{ $madePercent }}%</span>
                         </span>
                     </header>
 
@@ -108,7 +109,8 @@
                         </div>
                         <span class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600">
                             <i class="fas fa-business-time"></i>
-                            {{ number_format($stats['booked_workshops_count']) }} حجز
+                            <span>{{ number_format($stats['booked_workshops_count']) }}</span>
+                            <span>حجز</span>
                         </span>
                     </header>
 
@@ -160,7 +162,8 @@
                     </div>
                     <span class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600">
                         <i class="fas fa-history"></i>
-                        آخر نشاط {{ $stats['last_activity_at'] ? Carbon::parse($stats['last_activity_at'])->diffForHumans() : 'لم يتم تسجيل نشاط بعد' }}
+                        <span>آخر نشاط</span>
+                        <span>{{ $stats['last_activity_at'] ? Carbon::parse($stats['last_activity_at'])->diffForHumans() : 'لم يتم تسجيل نشاط بعد' }}</span>
                     </span>
                 </header>
 
@@ -172,8 +175,9 @@
                             <li><i class="fas fa-check text-xs text-orange-500 ml-2"></i> +3 نقاط لكل وصفة مجربة</li>
                             <li><i class="fas fa-check text-xs text-orange-500 ml-2"></i> +4 نقاط لكل ورشة محجوزة</li>
                         </ul>
-                        <p class="mt-4 text-sm font-medium text-gray-700">
-                            نقاطك الحالية: {{ number_format($stats['engagement_score']) }}
+                        <p class="mt-4 text-sm font-medium text-gray-700 flex flex-wrap items-center gap-1">
+                            <span>نقاطك الحالية:</span>
+                            <span>{{ number_format($stats['engagement_score']) }}</span>
                         </p>
                     </article>
                     <article class="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
@@ -355,8 +359,16 @@
                                     <article class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                                         <h4 class="font-semibold text-gray-800">{{ $recipe->title }}</h4>
                                         <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-600">
-                                            <span><i class="fas fa-bookmark ml-1 text-orange-500"></i>{{ number_format($recipe->saved_count) }} حفظ</span>
-                                            <span><i class="fas fa-utensils ml-1 text-orange-500"></i>{{ number_format($recipe->made_count) }} تجربة</span>
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-bookmark ml-1 text-orange-500"></i>
+                                                <span>{{ number_format($recipe->saved_count) }}</span>
+                                                <span>حفظ</span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-utensils ml-1 text-orange-500"></i>
+                                                <span>{{ number_format($recipe->made_count) }}</span>
+                                                <span>تجربة</span>
+                                            </span>
                                             <span><i class="fas fa-star ml-1 text-orange-500"></i>{{ number_format($recipe->interactions_avg_rating ?? 0, 1) }} ({{ number_format($recipe->rating_count ?? 0) }})</span>
                                         </div>
                                     </article>

@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Route;
 class Breadcrumbs
 {
     /**
+     * Routes that should not render breadcrumbs.
+     *
+     * @var list<string>
+     */
+    private const HOME_ROUTE_NAMES = ['home', 'home.ar', 'home.en'];
+
+    /**
      * Build breadcrumb trail for the current route.
      *
      * @return array<int, array{label: string, url: string|null}>
@@ -22,13 +29,13 @@ class Breadcrumbs
 
         $routeName = $route->getName();
 
-        if (!$routeName || in_array($routeName, ['home'], true)) {
+        if (!$routeName || in_array($routeName, self::HOME_ROUTE_NAMES, true)) {
             return [];
         }
 
         $breadcrumbs = [
             [
-                'label' => 'الرئيسية',
+                'label' => self::translateLabel('breadcrumbs.home', 'الرئيسية'),
                 'url' => route('home'),
             ],
         ];
@@ -44,106 +51,10 @@ class Breadcrumbs
                 self::chefTrail($routeName)
             );
         } else {
-            switch ($routeName) {
-                case 'recipes':
-                    $breadcrumbs = array_merge(
-                        $breadcrumbs,
-                        self::recipesTrail()
-                    );
-                    break;
-
-                case 'recipe.show':
-                    $breadcrumbs = array_merge(
-                        $breadcrumbs,
-                        self::recipeTrail()
-                    );
-                    break;
-
-                case 'tools':
-                    $breadcrumbs = array_merge(
-                        $breadcrumbs,
-                        self::toolsTrail()
-                    );
-                    break;
-
-                case 'tools.show':
-                    $breadcrumbs = array_merge(
-                        $breadcrumbs,
-                        self::toolDetailsTrail()
-                    );
-                    break;
-
-                case 'workshops':
-                case 'workshops.search':
-                    $breadcrumbs = array_merge(
-                        $breadcrumbs,
-                        self::workshopsTrail($routeName === 'workshops.search')
-                    );
-                    break;
-
-                case 'workshop.show':
-                    $breadcrumbs = array_merge(
-                        $breadcrumbs,
-                        self::workshopTrail()
-                    );
-                    break;
-
-                case 'search':
-                    $breadcrumbs[] = [
-                        'label' => 'نتائج البحث',
-                        'url' => null,
-                    ];
-                    break;
-
-                case 'saved.index':
-                    $breadcrumbs[] = [
-                        'label' => 'الأدوات المحفوظة',
-                        'url' => null,
-                    ];
-                    break;
-
-                case 'profile':
-                    $breadcrumbs[] = [
-                        'label' => 'الملف الشخصي',
-                        'url' => null,
-                    ];
-                    break;
-
-                case 'about':
-                    $breadcrumbs[] = [
-                        'label' => 'عن وصفة',
-                        'url' => null,
-                    ];
-                    break;
-
-                case 'contact':
-                    $breadcrumbs[] = [
-                        'label' => 'اتصل بنا',
-                        'url' => null,
-                    ];
-                    break;
-
-                case 'advertising':
-                    $breadcrumbs[] = [
-                        'label' => 'الإعلان',
-                        'url' => null,
-                    ];
-                    break;
-
-                case 'baking-tips':
-                    $breadcrumbs[] = [
-                        'label' => 'نصائح الخَبز',
-                        'url' => null,
-                    ];
-                    break;
-
-                default:
-                    $breadcrumbs[] = [
-                        'label' => self::titleCaseLastSegment($routeName),
-                        'url' => null,
-                    ];
-                    break;
-            }
+            $breadcrumbs = array_merge(
+                $breadcrumbs,
+                self::siteTrail($routeName)
+            );
         }
 
         $breadcrumbs = self::collapseConsecutiveDuplicates($breadcrumbs);
@@ -162,6 +73,245 @@ class Breadcrumbs
         unset($breadcrumb);
 
         return $breadcrumbs;
+    }
+
+    /**
+     * Resolve breadcrumbs for public site routes.
+     *
+     * @return array<int, array{label: string, url: string|null}>
+     */
+    protected static function siteTrail(string $routeName): array
+    {
+        $definitions = self::siteRouteDefinitions();
+
+        if (array_key_exists($routeName, $definitions)) {
+            return self::buildTrailFromDefinition($definitions[$routeName]);
+        }
+
+        return [
+            [
+                'label' => self::titleCaseLastSegment($routeName),
+                'url' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Map public routes to breadcrumb builders.
+     *
+     * @return array<string, callable|array<int, array<string, mixed>>>
+     */
+    protected static function siteRouteDefinitions(): array
+    {
+        return [
+            'recipes' => [self::class, 'recipesTrail'],
+            'recipe.show' => [self::class, 'recipeTrail'],
+            'tools' => [self::class, 'toolsTrail'],
+            'tools.show' => [self::class, 'toolDetailsTrail'],
+            'workshops' => [self::class, 'workshopsTrail'],
+            'workshops.search' => static fn (): array => self::workshopsTrail(true),
+            'workshop.show' => [self::class, 'workshopTrail'],
+            'search' => self::singleCrumbTrail(self::translateLabel('breadcrumbs.search', 'نتائج البحث')),
+            'saved.index' => self::singleCrumbTrail('الأدوات المحفوظة'),
+            'profile' => self::singleCrumbTrail('الملف الشخصي'),
+            'profile.statistics' => [
+                self::crumb('الملف الشخصي', 'profile'),
+                self::crumb('إحصائيات الحساب'),
+            ],
+            'profile.activity' => [
+                self::crumb('الملف الشخصي', 'profile'),
+                self::crumb('سجل النشاط'),
+            ],
+            'meetings.index' => self::singleCrumbTrail('اجتماعاتي'),
+            'bookings.index' => self::singleCrumbTrail('حجوزاتي'),
+            'bookings.show' => [
+                self::crumb('حجوزاتي', 'bookings.index'),
+                [
+                    'label' => static function () {
+                        $booking = request()->route('booking');
+                        if (!$booking) {
+                            return 'تفاصيل الحجز';
+                        }
+
+                        $code = $booking->public_code ?? $booking->id ?? null;
+
+                        return $code ? "تفاصيل الحجز #{$code}" : 'تفاصيل الحجز';
+                    },
+                ],
+            ],
+            'bookings.join' => [
+                self::crumb('حجوزاتي', 'bookings.index'),
+                [
+                    'label' => static function () {
+                        $booking = request()->route('booking');
+                        $title = $booking?->workshop?->title;
+
+                        return $title
+                            ? 'غرفة ورشة: ' . $title
+                            : 'غرفة الورشة';
+                    },
+                ],
+            ],
+            'links' => self::singleCrumbTrail('روابط Wasfah'),
+            'links.chef' => [
+                self::crumb('روابط Wasfah', 'links'),
+                [
+                    'label' => static function () {
+                        $page = request()->route('chefLinkPage');
+
+                        if (!$page) {
+                            return 'صفحة روابط الشيف';
+                        }
+
+                        $name = $page->user?->name;
+                        $headline = $page->headline ?? null;
+                        $display = $name ?: $headline ?: ($page->slug ?? null);
+
+                        return $display
+                            ? 'روابط الشيف ' . $display
+                            : 'صفحة روابط الشيف';
+                    },
+                ],
+            ],
+            'chefs.show' => [
+                [
+                    'label' => static function () {
+                        $chef = request()->route('chef');
+                        $name = $chef?->name;
+
+                        return $name
+                            ? 'بروفايل الشيف ' . $name
+                            : 'بروفايل الشيف';
+                    },
+                ],
+            ],
+            'notifications.index' => self::singleCrumbTrail('مركز الإشعارات'),
+            'referrals.dashboard' => self::singleCrumbTrail('برنامج الشركاء'),
+            'legal.terms' => self::singleCrumbTrail('الشروط والأحكام'),
+            'legal.privacy' => self::singleCrumbTrail('سياسة الخصوصية'),
+            'about' => self::singleCrumbTrail('عن وصفة'),
+            'baking-tips' => self::singleCrumbTrail('نصائح الخَبز'),
+            'advertising' => self::singleCrumbTrail('الإعلان مع وصفة'),
+            'partnership' => self::singleCrumbTrail('شركاء وصفة'),
+            'contact' => self::singleCrumbTrail('اتصل بنا'),
+            'login' => self::singleCrumbTrail('تسجيل الدخول'),
+            'register' => self::singleCrumbTrail('إنشاء حساب'),
+            'register.verify.show' => [
+                self::crumb('إنشاء حساب', 'register'),
+                self::crumb('تأكيد البريد الإلكتروني'),
+            ],
+            'onboarding.show' => self::singleCrumbTrail('إكمال بيانات الشيف'),
+            'policy-consent.show' => self::singleCrumbTrail('الموافقة على السياسات'),
+        ];
+    }
+
+    /**
+     * Build a simple breadcrumb trail with one entry.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected static function singleCrumbTrail(string $label, ?string $routeName = null): array
+    {
+        return [
+            self::crumb($label, $routeName),
+        ];
+    }
+
+    /**
+     * Define a breadcrumb entry.
+     *
+     * @param string|callable $label
+     * @return array<string, mixed>
+     */
+    protected static function crumb($label, ?string $routeName = null, array $parameters = []): array
+    {
+        $route = null;
+
+        if ($routeName) {
+            $route = [
+                'name' => $routeName,
+                'parameters' => $parameters,
+            ];
+        }
+
+        return [
+            'label' => $label,
+            'route' => $route,
+        ];
+    }
+
+    /**
+     * Turn a route definition into breadcrumb entries.
+     *
+     * @param callable|array<int, array<string, mixed>> $definition
+     * @return array<int, array{label: string, url: string|null}>
+     */
+    protected static function buildTrailFromDefinition($definition): array
+    {
+        if (is_callable($definition)) {
+            $definition = $definition();
+        }
+
+        if (!is_array($definition)) {
+            return [];
+        }
+
+        $trail = [];
+
+        foreach ($definition as $crumb) {
+            if (!is_array($crumb)) {
+                continue;
+            }
+
+            $normalized = self::normalizeCrumbDefinition($crumb);
+
+            if ($normalized) {
+                $trail[] = $normalized;
+            }
+        }
+
+        return $trail;
+    }
+
+    /**
+     * Normalize a crumb definition to the required shape.
+     *
+     * @param array<string, mixed> $crumb
+     */
+    protected static function normalizeCrumbDefinition(array $crumb): ?array
+    {
+        if (!array_key_exists('label', $crumb)) {
+            return null;
+        }
+
+        try {
+            $label = is_callable($crumb['label'])
+                ? $crumb['label']()
+                : $crumb['label'];
+        } catch (\Throwable $th) {
+            return null;
+        }
+
+        if ($label === null || $label === '') {
+            return null;
+        }
+
+        $label = is_string($label) ? trim($label) : (string) $label;
+
+        if ($label === '') {
+            return null;
+        }
+
+        $url = $crumb['url'] ?? null;
+
+        if ($url === null && array_key_exists('route', $crumb)) {
+            $url = self::routeUrl($crumb['route']);
+        }
+
+        return [
+            'label' => $label,
+            'url' => $url,
+        ];
     }
 
     /**
@@ -493,6 +643,10 @@ class Breadcrumbs
                 'label' => 'سلايدر الهيرو',
                 'route' => 'admin.hero-slides.index',
             ],
+            'contact-messages' => [
+                'label' => 'رسائل التواصل',
+                'route' => 'admin.contact-messages.index',
+            ],
             'chefs' => [
                 'label' => 'طلبات الشيفات',
                 'route' => 'admin.chefs.requests',
@@ -601,6 +755,24 @@ class Breadcrumbs
                     return [
                         [
                             'label' => 'تصدير الحجوزات',
+                            'url' => null,
+                        ],
+                    ];
+                }
+
+                if ($action === 'manual') {
+                    return [
+                        [
+                            'label' => 'إضافة حجز يدوي',
+                            'url' => null,
+                        ],
+                    ];
+                }
+
+                if ($action === 'quick-add') {
+                    return [
+                        [
+                            'label' => 'إضافة حجز سريع',
                             'url' => null,
                         ],
                     ];
@@ -736,16 +908,40 @@ class Breadcrumbs
     }
 
     /**
-     * Resolve a route name to URL if it exists.
+     * Translate a breadcrumb label with graceful fallback.
      */
-    protected static function routeUrl(?string $routeName): ?string
+    protected static function translateLabel(string $key, string $fallback): string
     {
-        if (!$routeName || !Route::has($routeName)) {
+        $translated = trans($key);
+
+        return $translated !== $key ? $translated : $fallback;
+    }
+
+    /**
+     * Resolve a route reference to URL if it exists.
+     *
+     * @param string|array{name?: string, parameters?: array<string, mixed>}|null $route
+     */
+    protected static function routeUrl($route): ?string
+    {
+        if (!$route) {
+            return null;
+        }
+
+        $name = $route;
+        $parameters = [];
+
+        if (is_array($route)) {
+            $name = $route['name'] ?? ($route[0] ?? null);
+            $parameters = $route['parameters'] ?? ($route[1] ?? []);
+        }
+
+        if (!$name || !Route::has($name)) {
             return null;
         }
 
         try {
-            return route($routeName);
+            return route($name, $parameters);
         } catch (\Throwable $th) {
             return null;
         }

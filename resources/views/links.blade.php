@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>وصفة الآن | Wasfah Now</title>
-    <meta name="description" content="مركز Wasfah Now يجمع أحدث الورش والوصفات والأدوات والتواصل مع فريق وصفة في مساحة واحدة أنيقة.">
-    <meta property="og:title" content="وصفة الآن | Wasfah Now">
-    <meta property="og:description" content="كل الروابط المهمة لتجربة وصفة في صفحة واحدة متجددة.">
+    <title>{{ __('links.meta.title') }}</title>
+    <meta name="description" content="{{ __('links.meta.description') }}">
+    <meta property="og:title" content="{{ __('links.meta.og_title') }}">
+    <meta property="og:description" content="{{ __('links.meta.og_description') }}">
     <meta property="og:image" content="{{ asset('image/logo.png') }}">
     <meta name="theme-color" content="#f97316">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -543,55 +543,57 @@
     <div class="glow glow-a" aria-hidden="true"></div>
     <div class="glow glow-b" aria-hidden="true"></div>
     <main class="shell">
+        @php
+            $heroStats = __('links.hero.stats');
+            $coreCards = __('links.core.cards');
+            $coreCardOrder = ['workshops', 'recipes', 'tools'];
+            $coreCardRoutes = [
+                'workshops' => '/workshops',
+                'recipes' => '/recipes',
+                'tools' => '/tools',
+            ];
+        @endphp
         <header class="hero">
-            <span class="eyebrow">Wasfah Now</span>
-            <h1>مركز وصفة الحي</h1>
-            <p>كل ما تحتاجه من ورش وصفة المباشرة، وصفاتنا المجربة، وأدواتنا المفضلة في مكان واحد بتصميم حديث يجدد تجربتك
-                في كل زيارة.</p>
+            <span class="eyebrow">{{ __('links.hero.eyebrow') }}</span>
+            <h1>{{ __('links.hero.title') }}</h1>
+            <p>{{ __('links.hero.description') }}</p>
             <div class="hero-actions">
-                <a class="btn primary" href="{{ url('/workshops') }}">ورش مباشرة</a>
-                <a class="btn secondary" href="{{ url('/recipes') }}">متصفح الوصفات</a>
+                <a class="btn primary" href="{{ url('/workshops') }}">{{ __('links.hero.primary_cta') }}</a>
+                <a class="btn secondary" href="{{ url('/recipes') }}">{{ __('links.hero.secondary_cta') }}</a>
             </div>
             <ul class="hero-stats">
-                <li>
-                    <span class="stat-label">+300 وصفة</span>
-                    <span class="stat-sub">متاحة للبحث والتجربة</span>
-                </li>
-                <li>
-                    <span class="stat-label">جلسات أسبوعية</span>
-                    <span class="stat-sub">ورش تفاعلية أونلاين</span>
-                </li>
-                <li>
-                    <span class="stat-label">مختارات الفريق</span>
-                    <span class="stat-sub">أدوات وتجهيزات جاهزة</span>
-                </li>
+                @foreach ($heroStats as $stat)
+                    <li>
+                        <span class="stat-label">{{ $stat['label'] }}</span>
+                        <span class="stat-sub">{{ $stat['sub'] }}</span>
+                    </li>
+                @endforeach
             </ul>
         </header>
 
         @if ($upcomingWorkshop)
-            <section class="feature-card" role="region" aria-label="الورشة القادمة">
+            <section class="feature-card" role="region" aria-label="{{ __('links.upcoming.aria_label') }}">
                 <div class="feature-meta">
-                    <p class="feature-tag">حدث مميز</p>
+                    <p class="feature-tag">{{ __('links.upcoming.tag') }}</p>
                     <h2>{{ $upcomingWorkshop['title'] }}</h2>
-                    <p>جاهزين لجلسة جديدة مع {{ $upcomingWorkshop['instructor'] ?? 'فريق Wasfah' }}. كل ما تحتاجه من وقت،
-                        طريقة التواصل، وتجربة الطهي في بطاقة واحدة.</p>
+                    <p>{{ __('links.upcoming.body', ['instructor' => $upcomingWorkshop['instructor'] ?? __('links.upcoming.default_instructor')]) }}</p>
                     <div class="feature-details">
                         @if (!empty($upcomingWorkshop['start_date']))
-                            <div>الوقت: <span>{{ $upcomingWorkshop['start_date'] }}</span></div>
+                            <div>{{ __('links.upcoming.time_label') }}: <span>{{ $upcomingWorkshop['start_date'] }}</span></div>
                         @endif
                         @if (!empty($upcomingWorkshop['mode']))
-                            <div>النمط: <span>{{ $upcomingWorkshop['mode'] }}</span></div>
+                            <div>{{ __('links.upcoming.mode_label') }}: <span>{{ $upcomingWorkshop['mode'] }}</span></div>
                         @endif
                     </div>
                     <a class="btn tertiary" href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop['slug']]) }}">
-                        تفاصيل الورشة
+                        {{ __('links.upcoming.cta') }}
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path fill="currentColor" d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z" />
                         </svg>
                     </a>
                 </div>
                 <div class="feature-media">
-                    <img src="{{ $upcomingWorkshop['image'] }}" alt="صورة الورشة القادمة">
+                    <img src="{{ $upcomingWorkshop['image'] }}" alt="{{ __('links.upcoming.image_alt') }}">
                 </div>
             </section>
         @endif
@@ -599,10 +601,10 @@
         <section class="monthly" aria-labelledby="monthly-title">
             <div class="section-head">
                 <div>
-                    <p class="section-kicker" id="monthly-title">مختارات متجددة</p>
-                    <h2>قائمة التوصيات السريعة</h2>
+                    <p class="section-kicker" id="monthly-title">{{ __('links.monthly.kicker') }}</p>
+                    <h2>{{ __('links.monthly.title') }}</h2>
                 </div>
-                <span class="hint">تتغير مع كل زيارة بناءً على وصفات مفعلة</span>
+                <span class="hint">{{ __('links.monthly.hint') }}</span>
             </div>
             <div class="monthly-rail" role="list">
                 @foreach ($monthlySelections as $selection)
@@ -613,7 +615,7 @@
                         <div class="monthly-body">
                             <h3>{{ $selection['title'] }}</h3>
                             <a href="{{ $selection['url'] }}">
-                                جرب الآن
+                                {{ __('links.monthly.cta') }}
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path fill="currentColor" d="M13.2 5.3 12 6.5l4.6 4.5H4v1.9h12.6L12 17.5l1.2 1.2L20 12z" />
                                 </svg>
@@ -624,29 +626,24 @@
             </div>
         </section>
 
-        <section class="core-grid" aria-label="روابط Wasfah الأساسية">
-            <article class="core-card">
-                <h3>ورش الطهي التفاعلية</h3>
-                <p>حجوزات مباشرة مع جدول واضح، وصفات PDF، وروابط بث أونلاين جاهزة.</p>
-                <a href="{{ url('/workshops') }}">انضم للورشة القادمة</a>
-            </article>
-            <article class="core-card">
-                <h3>دليل الوصفات المتكامل</h3>
-                <p>بحث ذكي، فلاتر حسب الوقت والنظام الغذائي، وقوائم تسوق قابلة للطباعة.</p>
-                <a href="{{ url('/recipes') }}">استكشف قاعدة الوصفات</a>
-            </article>
-            <article class="core-card">
-                <h3>أدوات المطبخ المختارة</h3>
-                <p>منتجات موصى بها مع روابط شراء موثوقة وتجارب فريق Wasfah اليومية.</p>
-                <a href="{{ url('/tools') }}">اكتشف الأدوات</a>
-            </article>
+        <section class="core-grid" aria-label="{{ __('links.core.aria_label') }}">
+            @foreach ($coreCardOrder as $cardKey)
+                @php
+                    $card = $coreCards[$cardKey];
+                @endphp
+                <article class="core-card">
+                    <h3>{{ $card['title'] }}</h3>
+                    <p>{{ $card['body'] }}</p>
+                    <a href="{{ url($coreCardRoutes[$cardKey]) }}">{{ $card['cta'] }}</a>
+                </article>
+            @endforeach
         </section>
 
-        <section class="social-panel" aria-label="قنوات Wasfah على الشبكات الاجتماعية">
+        <section class="social-panel" aria-label="{{ __('links.social.aria_label') }}">
             <div class="panel-copy">
-                <p class="section-kicker">تواصل مباشر</p>
-                <h2>انضم إلى مجتمع Wasfah</h2>
-                <p>لقطات خلف الكواليس، مقاطع تعليمية سريعة، وإعلانات الورش تنشر أولاً على قنواتنا.</p>
+                <p class="section-kicker">{{ __('links.social.kicker') }}</p>
+                <h2>{{ __('links.social.title') }}</h2>
+                <p>{{ __('links.social.body') }}</p>
             </div>
             <div class="social-icons">
                 <a class="social-icon" href="https://www.instagram.com/wasfah.jo/" target="_blank" rel="noopener">
@@ -664,13 +661,13 @@
     </main>
     <footer>
         <div class="footer-brand">
-            <img src="{{ asset('image/logo.png') }}" alt="شعار Wasfah">
+            <img src="{{ asset('image/logo.png') }}" alt="{{ __('links.footer.logo_alt') }}">
             <div>
-                <strong>Wasfah Now</strong>
-                <div>الاسم الجديد لصفحة الروابط الموحّدة.</div>
+                <strong>{{ __('links.footer.tagline_title') }}</strong>
+                <div>{{ __('links.footer.tagline_subtitle') }}</div>
             </div>
         </div>
-        <div>© {{ now()->year }} Wasfah · جميع الحقوق محفوظة</div>
+        <div>{{ __('links.footer.rights', ['year' => now()->year]) }}</div>
     </footer>
 </body>
 </html>

@@ -233,7 +233,8 @@ class ProfileController extends Controller
             array_merge([
                 'key' => 'collector',
                 'title' => 'هاوي الوصفات',
-                'description' => 'حفظت ' . $stats['saved_recipes_count'] . ' وصفات في مكتبتك.',
+                'description_prefix' => 'حفظت',
+                'description_suffix' => 'وصفات في مكتبتك.',
                 'count' => $stats['saved_recipes_count'],
                 'icon' => 'bookmark',
             ], $computeAchievement($stats['saved_recipes_count'], [
@@ -245,7 +246,8 @@ class ProfileController extends Controller
             array_merge([
                 'key' => 'chef',
                 'title' => 'الشيف المنزلي',
-                'description' => 'جربت ' . $stats['made_recipes_count'] . ' وصفات بنفسك.',
+                'description_prefix' => 'جربت',
+                'description_suffix' => 'وصفات بنفسك.',
                 'count' => $stats['made_recipes_count'],
                 'icon' => 'utensils',
             ], $computeAchievement($stats['made_recipes_count'], [
@@ -257,7 +259,8 @@ class ProfileController extends Controller
             array_merge([
                 'key' => 'learner',
                 'title' => 'عاشق التعلّم',
-                'description' => 'حجزت ' . $stats['booked_workshops_count'] . ' ورشات حتى الآن.',
+                'description_prefix' => 'حجزت',
+                'description_suffix' => 'ورشات حتى الآن.',
                 'count' => $stats['booked_workshops_count'],
                 'icon' => 'graduation-cap',
             ], $computeAchievement($stats['booked_workshops_count'], [

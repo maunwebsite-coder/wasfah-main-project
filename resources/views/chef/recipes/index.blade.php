@@ -1,33 +1,58 @@
 @extends('layouts.app')
 
-@section('title', 'منطقة الشيف - إدارة وصفاتي')
+@section('title', __('chef.title'))
 
 @section('content')
 @php
     use App\Models\Recipe;
     use Illuminate\Support\Facades\Storage;
 
+    $locale = app()->getLocale();
+    $dateTimeFormat = __('chef.formats.date_time');
+    $tableDateTimeFormat = __('chef.formats.table_date_time');
+    $dateFormat = __('chef.formats.date');
+
     $statusMeta = [
-        Recipe::STATUS_DRAFT => ['label' => 'مسودة', 'bg' => 'bg-gray-100', 'text' => 'text-gray-700'],
-        Recipe::STATUS_PENDING => ['label' => 'قيد المراجعة', 'bg' => 'bg-orange-100', 'text' => 'text-orange-700'],
-        Recipe::STATUS_APPROVED => ['label' => 'معتمدة', 'bg' => 'bg-emerald-100', 'text' => 'text-emerald-700'],
-        Recipe::STATUS_REJECTED => ['label' => 'مرفوضة', 'bg' => 'bg-red-100', 'text' => 'text-red-700'],
+        Recipe::STATUS_DRAFT => [
+            'label' => __('chef.status.labels.draft'),
+            'description' => __('chef.status.descriptions.draft'),
+            'bg' => 'bg-gray-100',
+            'text' => 'text-gray-700',
+        ],
+        Recipe::STATUS_PENDING => [
+            'label' => __('chef.status.labels.pending'),
+            'description' => __('chef.status.descriptions.pending'),
+            'bg' => 'bg-orange-100',
+            'text' => 'text-orange-700',
+        ],
+        Recipe::STATUS_APPROVED => [
+            'label' => __('chef.status.labels.approved'),
+            'description' => __('chef.status.descriptions.approved'),
+            'bg' => 'bg-emerald-100',
+            'text' => 'text-emerald-700',
+        ],
+        Recipe::STATUS_REJECTED => [
+            'label' => __('chef.status.labels.rejected'),
+            'description' => __('chef.status.descriptions.rejected'),
+            'bg' => 'bg-red-100',
+            'text' => 'text-red-700',
+        ],
     ];
 
     $visibilityMeta = [
         Recipe::VISIBILITY_PUBLIC => [
-            'label' => 'عام',
+            'label' => __('chef.visibility.public.label'),
             'bg' => 'bg-emerald-50',
             'text' => 'text-emerald-700',
             'icon' => 'fa-earth-americas',
-            'hint' => 'مرئية لكل الزوار بعد الموافقة',
+            'hint' => __('chef.visibility.public.hint'),
         ],
         Recipe::VISIBILITY_PRIVATE => [
-            'label' => 'خاص',
+            'label' => __('chef.visibility.private.label'),
             'bg' => 'bg-slate-100',
             'text' => 'text-slate-700',
             'icon' => 'fa-lock',
-            'hint' => 'مخفية عن الزوار حتى وإن كانت معتمدة',
+            'hint' => __('chef.visibility.private.hint'),
         ],
     ];
 
@@ -36,6 +61,7 @@
         : null;
 
     $currentUser = auth()->user();
+    $chefName = $currentUser?->name ?? __('navbar.mobile_banner.guest');
     $canViewRawMeetingLink = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
 @endphp
 
@@ -43,28 +69,28 @@
     <div class="container mx-auto px-4">
         <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
             <div>
-                <p class="text-sm uppercase tracking-wider text-orange-500 font-semibold mb-2">منطقة الشيف</p>
-                <h1 class="text-3xl font-bold text-gray-900">لوحة التحكم بالوصفات</h1>
-                <p class="text-gray-600 mt-1">أضف وصفات جديدة، تابع حالة المراجعة، وحدث محتواك بسهولة.</p>
+                <p class="text-sm uppercase tracking-wider text-orange-500 font-semibold mb-2">{{ __('chef.hero.badge') }}</p>
+                <h1 class="text-3xl font-bold text-gray-900">{{ __('chef.hero.heading', ['name' => $chefName]) }}</h1>
+                <p class="text-gray-600 mt-1">{{ __('chef.hero.description') }}</p>
             </div>
             <div class="flex flex-col sm:flex-row items-stretch justify-end gap-3">
                 @if ($publicProfileUrl)
                     <a href="{{ $publicProfileUrl }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-orange-600 font-semibold shadow-sm hover:bg-orange-50 hover:border-orange-300 transition">
                         <i class="fas fa-eye"></i>
-                        عرض صفحتي العامة
+                        {{ __('chef.hero.actions.public_profile') }}
                     </a>
                 @endif
                 <a href="{{ route('chef.workshops.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-5 py-3 text-indigo-600 font-semibold shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition">
                     <i class="fas fa-video"></i>
-                    ورش العمل
+                    {{ __('chef.hero.actions.workshops') }}
                 </a>
                 <a href="{{ route('chef.workshops.earnings') }}" class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-emerald-600 font-semibold shadow-sm hover:border-emerald-300 hover:bg-emerald-50 transition">
                     <i class="fas fa-wallet"></i>
-                    عوائد الورش
+                    {{ __('chef.hero.actions.earnings') }}
                 </a>
                 <a href="{{ route('chef.recipes.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
                     <i class="fas fa-plus"></i>
-                    إضافة وصفة جديدة
+                    {{ __('chef.hero.actions.new_recipe') }}
                 </a>
             </div>
         </div>
@@ -78,22 +104,7 @@
                             {{ $statusCounts[$status] ?? 0 }}
                         </span>
                     </div>
-                    <p class="mt-3 text-sm text-gray-500">
-                        @switch($status)
-                            @case(Recipe::STATUS_DRAFT)
-                                وصفاتك المحفوظة قبل الإرسال للمراجعة.
-                                @break
-                            @case(Recipe::STATUS_PENDING)
-                                بانتظار موافقة فريق الإدارة.
-                                @break
-                            @case(Recipe::STATUS_APPROVED)
-                                ظاهرة الآن على المنصة للمستخدمين.
-                                @break
-                            @case(Recipe::STATUS_REJECTED)
-                                تحتاج لتعديلات ثم إعادة الإرسال.
-                                @break
-                        @endswitch
-                    </p>
+                    <p class="mt-3 text-sm text-gray-500">{{ $meta['description'] }}</p>
                 </div>
             @endforeach
         </div>
@@ -105,47 +116,49 @@
                 <div class="relative flex flex-col gap-8 p-6 sm:p-8 lg:grid lg:grid-cols-[1.1fr,0.9fr]">
                     <div class="space-y-6">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">ورش Wasfah</p>
-                            <h2 class="mt-2 text-2xl font-bold leading-snug md:text-3xl">اجعل جلساتك التعليمية نابضة بالحياة</h2>
+                            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">{{ __('chef.workshops.eyebrow') }}</p>
+                            <h2 class="mt-2 text-2xl font-bold leading-snug md:text-3xl">{{ __('chef.workshops.title') }}</h2>
                             <p class="mt-3 text-sm text-white/80">
-                                راقب أداء الورش الأونلاين واللقاءات الحضورية في لمحة واحدة، وشجع جمهورك على الحجز عبر بطاقات جذابة وروابط مخصصة.
+                                {{ __('chef.workshops.description', ['name' => $chefName]) }}
                                 @if ($latestWorkshop)
-                                    <span class="mt-2 block text-xs text-white/70">أحدث ورشة أنشأتها: {{ \Illuminate\Support\Str::limit($latestWorkshop->title, 40) }}</span>
+                                    <span class="mt-2 block text-xs text-white/70">
+                                        {{ __('chef.workshops.latest_workshop', ['title' => \Illuminate\Support\Str::limit($latestWorkshop->title, 40)]) }}
+                                    </span>
                                 @endif
                             </p>
                         </div>
                         <div class="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 sm:grid sm:gap-3 sm:grid-cols-2 sm:overflow-visible sm:pb-0 sm:snap-none xl:grid-cols-4">
                             <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
-                                <p class="text-xs font-semibold text-white/70">إجمالي الورش</p>
+                                <p class="text-xs font-semibold text-white/70">{{ __('chef.workshops.stats.total.title') }}</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['total'] ?? 0 }}</p>
-                                <p class="text-xs text-white/70">كل ما أنشأته من جلسات.</p>
+                                <p class="text-xs text-white/70">{{ __('chef.workshops.stats.total.hint') }}</p>
                             </div>
                             <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
-                                <p class="text-xs font-semibold text-white/70">ورش منشورة</p>
+                                <p class="text-xs font-semibold text-white/70">{{ __('chef.workshops.stats.active.title') }}</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['active'] ?? 0 }}</p>
-                                <p class="text-xs text-white/70">مرئية الآن لجمهورك.</p>
+                                <p class="text-xs text-white/70">{{ __('chef.workshops.stats.active.hint') }}</p>
                             </div>
                             <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
-                                <p class="text-xs font-semibold text-white/70">جلسات أونلاين</p>
+                                <p class="text-xs font-semibold text-white/70">{{ __('chef.workshops.stats.online.title') }}</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['online'] ?? 0 }}</p>
-                                <p class="text-xs text-white/70">مجهزة بروابط بث مباشر.</p>
+                                <p class="text-xs text-white/70">{{ __('chef.workshops.stats.online.hint') }}</p>
                             </div>
                             <div class="min-w-[220px] flex-shrink-0 snap-center rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:min-w-0">
-                                <p class="text-xs font-semibold text-white/70">ورش قادمة</p>
+                                <p class="text-xs font-semibold text-white/70">{{ __('chef.workshops.stats.upcoming.title') }}</p>
                                 <p class="mt-2 text-3xl font-bold">{{ $workshopStats['upcoming'] ?? 0 }}</p>
-                                <p class="text-xs text-white/70">استعد لها من الآن.</p>
+                                <p class="text-xs text-white/70">{{ __('chef.workshops.stats.upcoming.hint') }}</p>
                             </div>
                         </div>
                         <div class="flex flex-col gap-3 sm:flex-row">
                             <a href="{{ route('chef.workshops.create') }}"
                                class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-indigo-600 shadow hover:bg-indigo-50 sm:w-auto sm:justify-start">
                                 <i class="fas fa-wand-magic-sparkles"></i>
-                                أنشئ ورشة جديدة
+                                {{ __('chef.workshops.buttons.create') }}
                             </a>
                             <a href="{{ route('chef.workshops.index') }}"
                                class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/30 px-5 py-3 text-sm font-semibold text-white hover:border-white/60 sm:w-auto sm:justify-start">
                                 <i class="fas fa-chalkboard-teacher"></i>
-                                إدارة الورش الحالية
+                                {{ __('chef.workshops.buttons.manage') }}
                             </a>
                         </div>
                     </div>
@@ -155,33 +168,33 @@
                                 <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
                                     <i class="fas fa-calendar-star"></i>
                                 </span>
-                                أقرب الورش القادمة
+                                {{ __('chef.workshops.next.heading') }}
                             </div>
-                            <span class="text-xs text-white/70 sm:text-right">حتى ٣ ورش</span>
+                            <span class="text-xs text-white/70 sm:text-right">{{ __('chef.workshops.next.limit', ['count' => 3]) }}</span>
                         </div>
                         @php
                             $nextHostWorkshop = $upcomingWorkshops->first();
                         @endphp
                         @if ($nextHostWorkshop)
                             @php
-                                $nextStart = optional($nextHostWorkshop->start_date)?->locale('ar')->translatedFormat('d F Y • h:i a');
+                                $nextStart = optional($nextHostWorkshop->start_date)?->locale($locale)->translatedFormat($dateTimeFormat);
                             @endphp
                             <div class="rounded-2xl border border-white/25 bg-white/95 p-4 text-slate-900 shadow-sm ring-1 ring-white/20">
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-500">دخول سريع</p>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-500">{{ __('chef.workshops.next.quick_join') }}</p>
                                         <p class="mt-1 text-sm font-semibold text-slate-900">
                                             {{ \Illuminate\Support\Str::limit($nextHostWorkshop->title, 50) }}
                                         </p>
                                         <p class="text-xs text-slate-500">
                                             <i class="fas fa-clock ml-1"></i>
-                                            {{ $nextStart ?? 'موعد لاحق' }}
+                                            {{ $nextStart ?? __('chef.workshops.next.fallback_time') }}
                                         </p>
                                     </div>
                                     <a href="{{ route('chef.workshops.join', $nextHostWorkshop) }}"
                                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
                                         <i class="fas fa-video"></i>
-                                        فتح غرفة البث
+                                        {{ __('chef.workshops.next.open_room') }}
                                     </a>
                                 </div>
                             </div>
@@ -193,24 +206,35 @@
                                 $fillPercent = $capacity > 0 ? (int) min(100, round(($confirmed / $capacity) * 100)) : 0;
                                 $isLive = !is_null($workshop->meeting_started_at);
                                 $hostStatusLabel = $isLive
-                                    ? 'البث مباشر الآن'
-                                    : ($workshop->is_online ? 'استعد لبدء الجلسة' : 'جلسة حضورية');
+                                    ? __('chef.workshops.host_status.live')
+                                    : ($workshop->is_online
+                                        ? __('chef.workshops.host_status.online_upcoming')
+                                        : __('chef.workshops.host_status.onsite'));
                                 $participantStatusLabel = $workshop->is_online
-                                    ? ($isLive ? 'يمكن للمشتركين الانضمام الآن' : 'ينتظر المشتركون بدء الجلسة')
-                                    : 'سينضم المشتركون في الموقع المحدد';
+                                    ? ($isLive
+                                        ? __('chef.workshops.participant_status.online_live')
+                                        : __('chef.workshops.participant_status.online_waiting'))
+                                    : __('chef.workshops.participant_status.onsite');
                                 $participantHint = $workshop->is_online
-                                    ? ($isLive ? 'تم تفعيل رابط البث للمشاركين تلقائياً.' : 'سيتم تفعيل رابط الدخول عندما تبدأ البث.')
-                                    : 'ذكّر المشاركين بتفاصيل الموقع قبل موعد الورشة.';
+                                    ? ($isLive
+                                        ? __('chef.workshops.participant_hints.online_live')
+                                        : __('chef.workshops.participant_hints.online_waiting'))
+                                    : __('chef.workshops.participant_hints.onsite');
+                                $startDisplay = optional($workshop->start_date)?->locale($locale)->translatedFormat($dateTimeFormat);
+                                $participantsLabel = trans_choice('chef.workshops.items.participants_count', $confirmed, ['count' => $confirmed]);
+                                $capacityLabel = $capacity > 0
+                                    ? trans_choice('chef.workshops.items.capacity_count', $capacity, ['count' => $capacity])
+                                    : __('chef.workshops.items.capacity_unlimited');
                             @endphp
                             <div class="rounded-2xl bg-white/90 p-4 text-slate-800 shadow-sm transition hover:shadow-md">
                                 <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500">
                                     <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 {{ $workshop->is_online ? 'bg-indigo-100 text-indigo-600' : 'bg-orange-100 text-orange-600' }}">
                                         <i class="fas {{ $workshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }}"></i>
-                                        {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                        {{ $workshop->is_online ? __('chef.workshops.labels.online') : __('chef.workshops.labels.onsite') }}
                                     </span>
                                     <span class="flex items-center gap-1 text-slate-400">
                                         <i class="fas fa-clock"></i>
-                                        {{ optional($workshop->start_date)?->locale('ar')->translatedFormat('d F Y • h:i a') ?? 'موعد لاحق' }}
+                                        {{ $startDisplay ?? __('chef.workshops.next.fallback_time') }}
                                     </span>
                                 </div>
                                 <div class="mt-3 flex flex-col gap-4">
@@ -224,25 +248,25 @@
                                         <div class="rounded-2xl border border-indigo-100 bg-white px-4 py-3 shadow-sm">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                                 <div>
-                                                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-500">المضيف</p>
+                                                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-500">{{ __('chef.workshops.sections.host') }}</p>
                                                     <p class="mt-1 text-sm font-medium text-slate-700">{{ $hostStatusLabel }}</p>
                                                     @if ($isLive && $workshop->meeting_started_at)
                                                         <p class="text-xs text-indigo-500">
-                                                            بدأ البث قبل {{ $workshop->meeting_started_at?->locale('ar')->diffForHumans(null, true) }}
+                                                            {{ __('chef.workshops.host_status.live_since', ['time' => $workshop->meeting_started_at?->locale($locale)->diffForHumans(null, true)]) }}
                                                         </p>
                                                     @endif
                                                 </div>
                                                 <a href="{{ route('chef.workshops.join', $workshop) }}"
                                                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
                                                     <i class="fas fa-door-open"></i>
-                                                    دخول المضيف
+                                                    {{ __('chef.workshops.next.open_room') }}
                                                 </a>
                                             </div>
                                         </div>
                                         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                                 <div>
-                                                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">المشتركون</p>
+                                                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">{{ __('chef.workshops.sections.participants') }}</p>
                                                     <p class="mt-1 text-sm font-medium text-slate-700">{{ $participantStatusLabel }}</p>
                                                     <p class="text-xs text-slate-500">{{ $participantHint }}</p>
                                                 </div>
@@ -252,12 +276,12 @@
                                                        rel="noopener"
                                                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-slate-700">
                                                         <i class="fas fa-link"></i>
-                                                        رابط المشاركين
+                                                        {{ __('chef.workshops.items.participant_link') }}
                                                     </a>
                                                 @elseif ($workshop->is_online)
                                                     <span class="inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2 text-xs font-semibold text-slate-500">
                                                         <i class="fas fa-lock"></i>
-                                                        الرابط متاح للإدارة فقط
+                                                        {{ __('chef.workshops.items.participant_link_restricted') }}
                                                     </span>
                                                 @endif
                                             </div>
@@ -268,15 +292,15 @@
                                             @endif
                                             @unless ($workshop->is_online)
                                                 <p class="mt-2 text-xs text-slate-500">
-                                                    {{ $workshop->location ? 'العنوان: ' . $workshop->location : 'أضف عنوان الورشة لتسهيل وصول المشاركين.' }}
+                                                    {{ $workshop->location ? __('chef.workshops.items.location_value', ['location' => $workshop->location]) : __('chef.workshops.items.location_missing') }}
                                                 </p>
                                             @endunless
                                         </div>
                                     </div>
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
-                                            <span><i class="fas fa-users text-slate-400"></i> {{ $confirmed }} مشارك</span>
-                                            <span>{{ $capacity > 0 ? $capacity : 'بدون حد' }} مقعد</span>
+                                            <span><i class="fas fa-users text-slate-400"></i> {{ $participantsLabel }}</span>
+                                            <span>{{ $capacityLabel }}</span>
                                         </div>
                                         <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                                             <div class="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300" style="width: {{ $fillPercent }}%;"></div>
@@ -287,17 +311,17 @@
                                     <a href="{{ route('chef.workshops.edit', $workshop) }}"
                                        class="inline-flex w-full items-center justify-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 sm:w-auto sm:justify-start">
                                         <i class="fas fa-pen"></i>
-                                        تعديل التفاصيل
+                                        {{ __('chef.workshops.items.edit_details') }}
                                     </a>
                                 </div>
                             </div>
                         @empty
                             <div class="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/40 px-6 py-10 text-center text-white/80">
                                 <i class="fas fa-sparkles text-3xl"></i>
-                                <p class="text-sm">لا توجد ورش مجدولة في الأيام القادمة.</p>
+                                <p class="text-sm">{{ __('chef.workshops.items.no_upcoming') }}</p>
                                 <a href="{{ route('chef.workshops.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-indigo-600 shadow">
                                     <i class="fas fa-plus"></i>
-                                    جهز ورشتك القادمة الآن
+                                    {{ __('chef.workshops.items.plan_next') }}
                                 </a>
                             </div>
                         @endforelse
@@ -318,34 +342,34 @@
                         <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100">
                             <i class="fas fa-link text-lg"></i>
                         </span>
-                        <h2 class="text-xl font-semibold text-gray-900">صفحة روابط Wasfah الموحدة</h2>
+                        <h2 class="text-xl font-semibold text-gray-900">{{ __('chef.link_page.title') }}</h2>
                     </div>
                     <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                        صمم صفحة روابط احترافية وشاركها مع متابعيك في البايو. أضف روابط الورشات، المحتوى الاجتماعي، وأبرز أعمالك مع إمكانية التحكم الكامل بالتصميم.
+                        {{ __('chef.link_page.description') }}
                     </p>
                     <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500">
                         <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-orange-600 font-medium">
                             <i class="fas fa-palette"></i>
-                            تخصيص كامل
+                            {{ __('chef.link_page.features.customize') }}
                         </div>
                         <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-orange-600 font-medium">
                             <i class="fas fa-bolt"></i>
-                            تحديثات فورية
+                            {{ __('chef.link_page.features.instant_updates') }}
                         </div>
                         <div class="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-orange-600 font-medium">
                             <i class="fas fa-share-alt"></i>
-                            رابط جاهز للمشاركة
+                            {{ __('chef.link_page.features.shareable') }}
                         </div>
                     </div>
                 </div>
                 <div class="flex flex-col items-start gap-3 bg-gradient-to-bl from-orange-50 to-orange-100 px-6 py-6 md:px-8 md:py-7">
                     <a href="{{ route('chef.links.edit') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
                         <i class="fas fa-pen"></i>
-                        إدارة الصفحة
+                        {{ __('chef.link_page.actions.manage') }}
                     </a>
                     <a href="{{ $publicLinkUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-orange-600 font-semibold hover:bg-orange-50 transition">
                         <i class="fas fa-external-link-alt"></i>
-                        عرض الرابط
+                        {{ __('chef.link_page.actions.view') }}
                     </a>
                     <div class="text-xs text-gray-500 break-all max-w-sm ltr:text-left rtl:text-right">
                         {{ $publicLinkUrl }}
@@ -373,11 +397,11 @@
                             <i class="fas fa-utensils text-2xl"></i>
                         </div>
                     </div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2">لم تقم بإضافة أي وصفة بعد</h2>
-                    <p class="text-sm text-gray-500 mb-6">ابدأ الآن بمشاركة وصفاتك مع مجتمع وصفة.</p>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ __('chef.empty_state.title') }}</h2>
+                    <p class="text-sm text-gray-500 mb-6">{{ __('chef.empty_state.description') }}</p>
                     <a href="{{ route('chef.recipes.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition">
                         <i class="fas fa-plus"></i>
-                        إضافة أول وصفة
+                        {{ __('chef.empty_state.cta') }}
                     </a>
                 </div>
             @else
@@ -385,12 +409,12 @@
                     <table class="min-w-full divide-y divide-gray-100">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">الوصفة</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">الحالة</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">الظهور</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">آخر تحديث</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">التصنيف</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 w-56">الإجراءات</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ __('chef.table.headers.recipe') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ __('chef.table.headers.status') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ __('chef.table.headers.visibility') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ __('chef.table.headers.updated_at') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{{ __('chef.table.headers.category') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 w-56">{{ __('chef.table.headers.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white">
@@ -422,7 +446,9 @@
                                             {{ $meta['label'] }}
                                         </span>
                                         @if ($recipe->status === Recipe::STATUS_APPROVED && $recipe->approved_at)
-                                            <p class="mt-1 text-xs text-emerald-600">تاريخ الموافقة: {{ $recipe->approved_at->locale('ar')->translatedFormat('d F Y') }}</p>
+                                            <p class="mt-1 text-xs text-emerald-600">
+                                                {{ __('chef.table.approved_on', ['date' => $recipe->approved_at->locale($locale)->translatedFormat($dateFormat)]) }}
+                                            </p>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
@@ -436,16 +462,16 @@
                                         <p class="mt-1 text-xs text-gray-500">{{ $visibilityInfo['hint'] }}</p>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600">
-                                        {{ $recipe->updated_at?->locale('ar')->translatedFormat('d F Y - h:i a') }}
+                                        {{ $recipe->updated_at?->locale($locale)->translatedFormat($tableDateTimeFormat) }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600">
-                                        {{ $recipe->category->name ?? 'غير محدد' }}
+                                        {{ $recipe->category->name ?? __('chef.table.no_category') }}
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap items-center gap-2">
                                             <a href="{{ route('chef.recipes.edit', $recipe) }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">
                                                 <i class="fas fa-pen"></i>
-                                                تعديل
+                                                {{ __('chef.table.actions.edit') }}
                                             </a>
 
                                             @if (in_array($recipe->status, [Recipe::STATUS_DRAFT, Recipe::STATUS_REJECTED], true))
@@ -453,18 +479,18 @@
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center gap-1 rounded-full border border-orange-200 px-3 py-1.5 text-sm text-orange-600 hover:bg-orange-50">
                                                         <i class="fas fa-paper-plane"></i>
-                                                        إرسال للمراجعة
+                                                        {{ __('chef.table.actions.submit_for_review') }}
                                                     </button>
                                                 </form>
                                             @endif
 
                                             @if (in_array($recipe->status, [Recipe::STATUS_DRAFT, Recipe::STATUS_REJECTED], true))
-                                                <form method="POST" action="{{ route('chef.recipes.destroy', $recipe) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوصفة؟');">
+                                                <form method="POST" action="{{ route('chef.recipes.destroy', $recipe) }}" onsubmit="return confirm('{{ __('chef.table.actions.delete_confirm') }}');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50">
                                                         <i class="fas fa-trash"></i>
-                                                        حذف
+                                                        {{ __('chef.table.actions.delete') }}
                                                     </button>
                                                 </form>
                                             @endif

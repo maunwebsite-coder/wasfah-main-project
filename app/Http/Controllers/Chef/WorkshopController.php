@@ -157,7 +157,7 @@ class WorkshopController extends Controller
 
         return redirect()
             ->route('chef.workshops.index')
-            ->with('success', 'تم تحديث الورشة بنجاح!');
+            ->with('success', __('workshops.flash.updated'));
     }
 
     public function destroy(Workshop $workshop): RedirectResponse

@@ -24,5 +24,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.app', function ($view) {
             $view->with('breadcrumbs', Breadcrumbs::generate());
         });
+
+        View::share('globalContentTranslations', config('content-translations.locales', []));
     }
 }

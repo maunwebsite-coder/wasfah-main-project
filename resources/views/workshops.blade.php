@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'ورشات العمل - موقع وصفة')
+@section('title', __('workshops.meta.title'))
 
 @push('styles')
 <style>
@@ -96,6 +96,24 @@
 @section('content')
 @php
     $showAdminMetrics = auth()->check() && auth()->user()->isAdmin();
+    $faqItems = \Illuminate\Support\Facades\Lang::get('workshops.faq.items');
+    $whyItems = \Illuminate\Support\Facades\Lang::get('workshops.why.items');
+    $faqItems = is_array($faqItems) ? $faqItems : [];
+    $whyItems = is_array($whyItems) ? $whyItems : [];
+    $whyIcons = [
+        'chefs' => 'fas fa-user-tie',
+        'hands_on' => 'fas fa-hands-helping',
+        'ingredients' => 'fas fa-star',
+        'certificate' => 'fas fa-certificate',
+    ];
+    $cardPlaceholderUrl = sprintf(
+        'https://placehold.co/600x400/f87171/FFFFFF?text=%s',
+        urlencode(__('workshops.labels.card_placeholder_text'))
+    );
+    $featuredPlaceholderUrl = sprintf(
+        'https://placehold.co/800x600/f87171/FFFFFF?text=%s',
+        urlencode(__('workshops.labels.featured_placeholder_text'))
+    );
 @endphp
 <div class="min-h-screen bg-gray-50">
 
@@ -105,18 +123,23 @@
         $featuredIsFull = $featuredWorkshop->bookings_count >= $featuredWorkshop->max_participants; 
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
         $featuredIsCompleted = $featuredWorkshop->is_completed;
-        $featuredLocationLabel = $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية');
-        $featuredDeadlineLabel = $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : 'غير محدد';
+        $featuredLocationLabel = $featuredWorkshop->is_online
+            ? __('workshops.labels.online_workshop')
+            : ($featuredWorkshop->location ?? __('workshops.labels.offline_workshop'));
+        $featuredDeadlineLabel = $featuredWorkshop->registration_deadline
+            ? $featuredWorkshop->registration_deadline->format('d/m/Y')
+            : __('workshops.labels.unspecified');
+        $featuredInstructor = $featuredWorkshop->instructor ?? __('workshops.labels.unspecified');
         $featuredIsBooked = !empty($bookedWorkshopIds) && in_array($featuredWorkshop->id, $bookedWorkshopIds, true);
     @endphp
     <section class="container mx-auto px-4 pt-10 md:pt-16 relative z-20">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                <!-- المحتوى النصي -->
+                <!-- Text content -->
                 <div class="p-5 sm:p-8 lg:p-12 text-white flex flex-col justify-center">
                     <div class="mb-5 sm:mb-6">
                         <span class="bg-white/20 text-white text-sm font-semibold px-3.5 py-1.5 rounded-full inline-block mb-3.5 sm:mb-4">
-                            الورشة القادمة
+                            {{ __('workshops.featured.badge') }}
                         </span>
                         <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight">
                             {{ $featuredWorkshop->title }}
@@ -126,7 +149,7 @@
                         </p>
                     </div>
                     
-                    <!-- تفاصيل الورشة -->
+                    <!-- Workshop details -->
                     <div class="space-y-1.5 sm:space-y-3 mb-6 sm:mb-8">
                         <div class="flex items-center text-amber-100">
                             <i class="fas fa-calendar-alt w-5 text-center ml-3"></i>
@@ -134,41 +157,41 @@
                         </div>
                         <div class="flex items-center text-amber-100">
                             <i class="fas {{ $featuredWorkshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }} w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}</span>
+                            <span class="font-medium">{{ $featuredLocationLabel }}</span>
                         </div>
                         <div class="flex items-center text-amber-100">
                             <i class="fas fa-user w-5 text-center ml-3"></i>
-                            <span class="font-medium">مع {{ $featuredWorkshop->instructor }}</span>
+                            <span class="font-medium">{{ __('workshops.labels.with') }} {{ $featuredInstructor }}</span>
                         </div>
                         @if($showAdminMetrics)
                             <div class="flex items-center text-amber-100">
                                 <i class="fas fa-users w-5 text-center ml-3"></i>
-                                <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} مشارك</span>
+                                <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} {{ __('workshops.labels.participants') }}</span>
                             </div>
                         @endif
                     </div>
                     
-                    <!-- أزرار الإجراءات -->
+                    <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         @if($featuredIsCompleted)
                             <button type="button" class="bg-gray-400 text-gray-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-check-circle ml-2 text-xl"></i>
-                                الورشة مكتملة
+                                {{ __('workshops.featured.completed') }}
                             </button>
                         @elseif($featuredIsBooked)
                             <button type="button" class="bg-green-500 text-white font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg" disabled>
                                 <i class="fas fa-check ml-2 text-xl booking-button-icon"></i>
-                                <span class="booking-button-label">تم الحجز بالفعل</span>
+                                <span class="booking-button-label">{{ __('workshops.featured.booked') }}</span>
                             </button>
                         @elseif($featuredIsFull)
                             <button type="button" class="bg-gray-400 text-gray-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-lock ml-2 text-xl"></i>
-                                الورشة مكتملة
+                                {{ __('workshops.featured.full') }}
                             </button>
                         @elseif($featuredIsRegistrationClosed)
                             <button type="button" class="bg-yellow-400 text-yellow-800 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
                                 <i class="fas fa-clock ml-2 text-xl"></i>
-                                انتهى التسجيل
+                                {{ __('workshops.featured.closed') }}
                             </button>
                         @else
                             <button type="button"
@@ -177,25 +200,25 @@
                                     data-title="{{ e($featuredWorkshop->title) }}"
                                     data-price="{{ e($featuredWorkshop->formatted_price) }}"
                                     data-date="{{ e($featuredWorkshop->start_date->format('d/m/Y')) }}"
-                                    data-instructor="{{ e($featuredWorkshop->instructor ?? 'غير محدد') }}"
+                                    data-instructor="{{ e($featuredInstructor) }}"
                                     data-location="{{ e($featuredLocationLabel) }}"
                                     data-deadline="{{ e($featuredDeadlineLabel) }}"
                                     data-is-booked="false">
                                 <i class="fab fa-whatsapp ml-2 text-xl booking-button-icon"></i>
-                                <span class="booking-button-label">التسجيل في الورشة</span>
+                                <span class="booking-button-label">{{ __('workshops.featured.primary_cta') }}</span>
                             </button>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-info-circle ml-2"></i>
-                            تفاصيل أكثر
+                            {{ __('workshops.featured.secondary_cta') }}
                         </a>
                     </div>
                 </div>
                 
-                <!-- الصورة -->
+                <!-- Hero image -->
                 <div class="relative h-48 sm:h-64 lg:h-auto">
-                    <img src="{{ $featuredWorkshop->image ? asset('storage/' . $featuredWorkshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=ورشة+فاخرة' }}" 
+                    <img src="{{ $featuredWorkshop->image ? asset('storage/' . $featuredWorkshop->image) : $featuredPlaceholderUrl }}" 
                          alt="{{ $featuredWorkshop->title }}" 
                          class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
@@ -204,40 +227,40 @@
         </div>
     </section>
     @else
-    <!-- رسالة عدم وجود ورشات قادمة -->
+    <!-- No upcoming workshop message -->
     <section class="container mx-auto px-4 pt-10 md:pt-16 relative z-20">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                <!-- المحتوى النصي -->
+                <!-- Text content -->
                 <div class="p-5 sm:p-8 lg:p-12 text-white flex flex-col justify-center">
                     <div class="mb-5 sm:mb-6">
                         <span class="bg-white/20 text-white text-sm font-semibold px-3.5 py-1.5 rounded-full inline-block mb-3.5 sm:mb-4">
-                            الورشة القادمة
+                            {{ __('workshops.featured.badge') }}
                         </span>
                         <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight">
-                            لا توجد ورشات قادمة الآن
+                            {{ __('workshops.featured.no_upcoming_title') }}
                         </h2>
                         <p class="text-base sm:text-lg text-amber-100 mb-6 sm:mb-8 leading-relaxed">
-                            نحن نعمل على إعداد ورشات جديدة ومميزة لك. انتظرونا في الورشة القادمة!
+                            {{ __('workshops.featured.no_upcoming_description') }}
                         </p>
                     </div>
                     
-                    <!-- أزرار الإجراءات -->
+                    <!-- Actions -->
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <a href="{{ route('workshops') }}" 
                            class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
                             <i class="fas fa-list ml-2 text-xl"></i>
-                            تصفح جميع الورشات
+                            {{ __('workshops.featured.no_upcoming_primary') }}
                         </a>
                         <a href="{{ route('recipes') }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-utensils ml-2"></i>
-                            اكتشف الوصفات
+                            {{ __('workshops.featured.no_upcoming_secondary') }}
                         </a>
                     </div>
                 </div>
                 
-                <!-- الصورة/الأيقونة -->
+                <!-- Illustration -->
                 <div class="relative h-48 sm:h-64 lg:h-auto overflow-hidden flex items-center justify-center">
                     <div class="w-full h-full flex items-center justify-center">
                         <div class="w-36 h-36 sm:w-48 sm:h-48 bg-white/20 rounded-full flex items-center justify-center">
@@ -255,22 +278,22 @@
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div id="filter-buttons" class="flex flex-wrap justify-center items-center gap-3">
-                <button class="filter-btn active font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="all">الكل</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="online">أونلاين</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="offline">حضور شخصي</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="beginner">مبتدئ</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="advanced">متقدم</button>
+                <button class="filter-btn active font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="all">{{ __('workshops.filters.all') }}</button>
+                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="online">{{ __('workshops.filters.online') }}</button>
+                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="offline">{{ __('workshops.filters.offline') }}</button>
+                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="beginner">{{ __('workshops.filters.beginner') }}</button>
+                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="advanced">{{ __('workshops.filters.advanced') }}</button>
             </div>
         </div>
     </section>
 
-    <!-- قسم الورشات المحسن -->
+    <!-- Workshops section -->
     <section class="py-5 bg-gradient-to-br from-gray-50 to-white">
         <div class="container mx-auto px-4">
             <!-- Header Section -->
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">ورشات الحلويات الفاخرة</h2>
-                <p class="text-gray-600 text-lg max-w-3xl mx-auto mb-6">انضم إلى ورشاتنا الاحترافية الحصرية وتعلم أسرار صنع أرقى الحلويات العالمية</p>
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">{{ __('workshops.premium.title') }}</h2>
+                <p class="text-gray-600 text-lg max-w-3xl mx-auto mb-6">{{ __('workshops.premium.subtitle') }}</p>
             </div>
             
             @if($workshops->count() > 0)
@@ -282,9 +305,13 @@
                             $isRegistrationClosed = !$workshop->is_registration_open;
                             $isCompleted = $workshop->is_completed;
                             $isBooked = !empty($bookedWorkshopIds) && in_array($workshop->id, $bookedWorkshopIds, true);
-                            $bookingLocationLabel = $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية');
-                            $bookingDeadlineLabel = $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد';
-                            $bookingInstructor = $workshop->instructor ?? 'غير محدد';
+                            $bookingLocationLabel = $workshop->is_online
+                                ? __('workshops.labels.online_workshop')
+                                : ($workshop->location ?? __('workshops.labels.offline_workshop'));
+                            $bookingDeadlineLabel = $workshop->registration_deadline
+                                ? $workshop->registration_deadline->format('d/m/Y')
+                                : __('workshops.labels.unspecified');
+                            $bookingInstructor = $workshop->instructor ?? __('workshops.labels.unspecified');
                             $bookingButtonStateClasses = $isBooked
                                 ? 'bg-green-500 text-white cursor-not-allowed'
                                 : 'bg-green-500 hover:bg-green-600 text-white';
@@ -295,18 +322,18 @@
                              data-category="{{ $workshop->category }}"
                              data-workshop-id="{{ $workshop->id }}">
                             <div class="relative">
-                                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
+                                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : $cardPlaceholderUrl }}" 
                                      alt="{{ $workshop->title }}"
-                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ addslashes(__('workshops.labels.fallback_image_alt')) }}';">
                                 @if($isFull)
                                 <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                    <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">اكتمل العدد</span>
+                                    <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">{{ __('workshops.cards.overlay_full') }}</span>
                                 </div>
                                 @elseif($isRegistrationClosed)
                                 <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                                     <span class="text-white font-bold text-lg bg-yellow-500 px-4 py-2 rounded-full">
                                         <i class="fas fa-clock ml-2"></i>
-                                        انتهى التسجيل
+                                        {{ __('workshops.cards.overlay_closed') }}
                                     </span>
                                 </div>
                                 @endif
@@ -316,45 +343,45 @@
                             <div class="p-6 flex flex-col flex-grow">
                                 <div class="mb-2">
                                     <span class="text-sm font-semibold {{ $workshop->is_online ? 'text-blue-600' : 'text-green-600' }}">
-                                        {{ $workshop->is_online ? 'اونلاين' : 'حضوري' }}
+                                        {{ $workshop->is_online ? __('workshops.cards.online_badge') : __('workshops.cards.onsite_badge') }}
                                     </span>
                                 </div>
                                 <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $workshop->title }}</h3>
-                                <p class="text-gray-600 mb-4">مع {{ $workshop->instructor }}</p>
+                                <p class="text-gray-600 mb-4">{{ __('workshops.labels.with') }} {{ $bookingInstructor }}</p>
                                 <div class="flex items-center text-gray-500 text-sm mb-4">
                                     <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $workshop->start_date->format('d/m/Y') }}
                                 </div>
                                 <div class="flex items-center text-gray-500 text-sm mb-4">
-                                    <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
+                                    <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? __('workshops.labels.online_live') : ($workshop->location ?? __('workshops.labels.unspecified')) }}
                                 </div>
                                 @if($showAdminMetrics)
                                     <div class="flex items-center text-gray-500 text-sm mb-4">
-                                        <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
+                                        <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} {{ __('workshops.labels.participants') }}
                                     </div>
                                 @endif
                                 
-                                <!-- الأزرار المثبتة في الأسفل -->
+                                <!-- Fixed footer actions -->
                                 <div class="mt-auto pt-4 border-t border-gray-100">
                                     <div class="flex gap-3 items-center">
                                         @if($isCompleted)
                                         <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                             <i class="fas fa-check-circle ml-2"></i>
-                                            الورشة مكتملة
+                                            {{ __('workshops.featured.completed') }}
                                         </button>
                                         @elseif($isBooked)
                                         <button type="button" class="flex-1 bg-green-500 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm" disabled>
                                             <i class="fas fa-check ml-2 booking-button-icon"></i>
-                                            <span class="booking-button-label">تم الحجز بالفعل</span>
+                                            <span class="booking-button-label">{{ __('workshops.featured.booked') }}</span>
                                         </button>
                                         @elseif($isFull)
                                         <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                             <i class="fas fa-lock ml-2"></i>
-                                            الورشة مكتملة
+                                            {{ __('workshops.featured.full') }}
                                         </button>
                                         @elseif($isRegistrationClosed)
                                             <button type="button" class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                                 <i class="fas fa-clock ml-2"></i>
-                                                انتهى التسجيل
+                                                {{ __('workshops.featured.closed') }}
                                             </button>
                                         @else
                                                         <button type="button"
@@ -368,12 +395,12 @@
                                                     data-deadline="{{ e($bookingDeadlineLabel) }}"
                                                     data-is-booked="false">
                                                 <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
-                                                <span class="booking-button-label">احجز الآن</span>
+                                                <span class="booking-button-label">{{ __('workshops.cards.button_book') }}</span>
                                             </button>
                                         @endif
                                         <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
                                             <i class="fas fa-info-circle text-sm ml-2 group-hover:text-orange-500 transition-colors"></i>
-                                            <span class="text-sm">تفاصيل</span>
+                                            <span class="text-sm">{{ __('workshops.cards.button_details') }}</span>
                                         </a>
                                     </div>
                                 </div>
@@ -387,8 +414,8 @@
                     <div class="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="fas fa-coffee text-4xl text-amber-500"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-700 mb-3">لا توجد ورشات متاحة حالياً</h3>
-                    <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">نحن نعمل على تحضير ورشات جديدة ومميزة. تحقق مرة أخرى قريباً!</p>
+                    <h3 class="text-2xl font-bold text-gray-700 mb-3">{{ __('workshops.empty.title') }}</h3>
+                    <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">{{ __('workshops.empty.description') }}</p>
                 </div>
             @endif
         </div>
@@ -400,28 +427,17 @@
     <!-- Why Choose Us? Section -->
     <section class="py-16 bg-white">
         <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-10">لماذا تختار ورشاتنا؟</h2>
+            <h2 class="text-3xl font-bold text-gray-800 mb-10">{{ __('workshops.why.title') }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="flex flex-col items-center">
-                    <div class="bg-orange-100 text-orange-500 rounded-full h-16 w-16 flex items-center justify-center mb-4"><i class="fas fa-user-tie text-3xl"></i></div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">طهاة خبراء</h3>
-                    <p class="text-gray-600">تعلم من أفضل الطهاة والمختصين في مجالهم.</p>
-                </div>
-                <div class="flex flex-col items-center">
-                    <div class="bg-orange-100 text-orange-500 rounded-full h-16 w-16 flex items-center justify-center mb-4"><i class="fas fa-hands-helping text-3xl"></i></div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">تطبيق عملي</h3>
-                    <p class="text-gray-600">ورشاتنا تفاعلية وتركز على التطبيق العملي المباشر.</p>
-                </div>
-                <div class="flex flex-col items-center">
-                    <div class="bg-orange-100 text-orange-500 rounded-full h-16 w-16 flex items-center justify-center mb-4"><i class="fas fa-star text-3xl"></i></div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">مكونات عالية الجودة</h3>
-                    <p class="text-gray-600">نوفر لك أفضل المكونات الطازجة لضمان أفضل النتائج.</p>
-                </div>
-                <div class="flex flex-col items-center">
-                    <div class="bg-orange-100 text-orange-500 rounded-full h-16 w-16 flex items-center justify-center mb-4"><i class="fas fa-certificate text-3xl"></i></div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">شهادة إتمام</h3>
-                    <p class="text-gray-600">احصل على شهادة تقديرية بعد إتمام كل ورشة عمل.</p>
-                </div>
+                @foreach($whyItems as $key => $item)
+                    <div class="flex flex-col items-center">
+                        <div class="bg-orange-100 text-orange-500 rounded-full h-16 w-16 flex items-center justify-center mb-4">
+                            <i class="{{ $whyIcons[$key] ?? 'fas fa-star' }} text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $item['title'] ?? '' }}</h3>
+                        <p class="text-gray-600">{{ $item['description'] ?? '' }}</p>
+                    </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -429,20 +445,16 @@
     <!-- FAQ Section -->
     <section class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">أسئلة شائعة</h2>
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">{{ __('workshops.faq.title') }}</h2>
             <div id="faq-container" class="max-w-4xl mx-auto space-y-4">
-                @foreach([
-                    ['question' => 'كيف يمكنني التسجيل في ورشة عمل؟', 'answer' => 'يمكنك التسجيل بسهولة عبر النقر على زر "احجز الآن" في بطاقة الورشة والذي سينقلك مباشرة إلى الواتساب لملء البيانات المطلوبة.'],
-                    ['question' => 'هل أحتاج إلى خبرة سابقة في الطبخ؟', 'answer' => 'لا، معظم ورشاتنا مصممة للمبتدئين. نحن نقدم ورشات لجميع المستويات، من المبتدئ إلى المتقدم. ستجد مستوى مناسب لك في كل ورشة.'],
-                    ['question' => 'ما هي الأدوات المطلوبة للورشات الأونلاين؟', 'answer' => 'للورشات الأونلاين، ستحتاج إلى جهاز كمبيوتر أو هاتف ذكي مع كاميرا، واتصال إنترنت مستقر، والأدوات الأساسية للطبخ في مطبخك. سيتم إرسال قائمة بالمكونات المطلوبة مسبقاً.'],
-                ] as $faq)
+                @foreach($faqItems as $faq)
                 <div class="faq-item border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:border-orange-300">
                     <button class="faq-question w-full text-right p-6 bg-white hover:bg-orange-50 flex items-center justify-between focus:outline-none">
-                        <span class="font-semibold text-lg text-gray-800">{{ $faq['question'] }}</span>
+                        <span class="font-semibold text-lg text-gray-800">{{ $faq['question'] ?? '' }}</span>
                         <i class="fas fa-chevron-down faq-icon text-orange-500"></i>
                     </button>
                     <div class="faq-answer px-6 bg-white text-gray-600">
-                        <p>{{ $faq['answer'] }}</p>
+                        <p>{{ $faq['answer'] ?? '' }}</p>
                     </div>
                 </div>
                 @endforeach
@@ -464,9 +476,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loginUrl: @json(route('login')),
         registerUrl: @json(route('register')),
         user: {
-            name: @json(optional(auth()->user())->name ?? 'مستخدم'),
-            phone: @json(optional(auth()->user())->phone ?? 'غير محدد'),
-            email: @json(optional(auth()->user())->email ?? 'غير محدد'),
+            name: @json(optional(auth()->user())->name ?? __('workshops.whatsapp.fallback_name')),
+            phone: @json(optional(auth()->user())->phone ?? __('workshops.labels.unspecified')),
+            email: @json(optional(auth()->user())->email ?? __('workshops.labels.unspecified')),
         },
     });
     WhatsAppBooking.initButtons();
@@ -476,14 +488,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const workshopsContainer = document.getElementById('workshops-container');
     const workshops = document.querySelectorAll('.workshop-card');
     const noResults = document.getElementById('no-results');
+    const noResultsTitle = @json(__('workshops.no_results.title'));
+    const noResultsDescription = @json(__('workshops.no_results.description'));
 
     // Initialize no results message if it doesn't exist
     if (!noResults) {
         const noResultsHTML = `
             <div id="no-results" class="col-span-full text-center py-16 hidden">
                 <i class="fas fa-search text-7xl text-gray-300 mb-6"></i>
-                <h3 class="text-2xl font-semibold text-gray-700 mb-2">لا توجد نتائج تطابق الفلتر</h3>
-                <p class="text-gray-500 max-w-md mx-auto">يرجى تجربة فلتر مختلف.</p>
+                <h3 class="text-2xl font-semibold text-gray-700 mb-2">${noResultsTitle}</h3>
+                <p class="text-gray-500 max-w-md mx-auto">${noResultsDescription}</p>
             </div>
         `;
         workshopsContainer.insertAdjacentHTML('afterend', noResultsHTML);

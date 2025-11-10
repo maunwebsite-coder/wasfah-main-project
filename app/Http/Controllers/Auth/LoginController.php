@@ -16,14 +16,17 @@ class LoginController extends Controller
      */
     public function store(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ], [
-            'email.required' => 'يرجى إدخال البريد الإلكتروني.',
-            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة.',
-            'password.required' => 'يرجى إدخال كلمة المرور.',
-        ]);
+        $credentials = $request->validate(
+            [
+                'email' => ['required', 'string', 'email'],
+                'password' => ['required', 'string'],
+            ],
+            [
+                'email.required' => __('auth.validation.email_required'),
+                'email.email' => __('auth.validation.email_email'),
+                'password.required' => __('auth.validation.password_required'),
+            ]
+        );
 
         $remember = $request->boolean('remember');
 
@@ -33,7 +36,7 @@ class LoginController extends Controller
 
         if (!Auth::attempt($credentials, $remember)) {
             throw ValidationException::withMessages([
-                'email' => 'بيانات الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني أو كلمة المرور.',
+                'email' => __('auth.validation.credentials'),
             ]);
         }
 
@@ -58,12 +61,12 @@ class LoginController extends Controller
             if ($workshop) {
                 return redirect()
                     ->route('workshop.show', $workshop->slug)
-                    ->with('success', 'تم تسجيل الدخول بنجاح! يمكنك الآن استكمال حجز الورشة.');
+                    ->with('success', __('auth.flash.workshop_success'));
             }
         }
 
         return redirect()->intended('/')
-            ->with('success', 'تم تسجيل الدخول بنجاح! مرحباً بك مرة أخرى في وصفة 👋');
+            ->with('success', __('auth.flash.login_success'));
     }
 
     /**

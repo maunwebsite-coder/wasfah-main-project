@@ -54,7 +54,12 @@
                     </div>
                     <div class="flex flex-col items-start gap-2 text-sm text-gray-500 md:items-end">
                         @if ($totalBookings > 0)
-                            <span>العرض الحالي 1 - {{ $limitedBookings->count() }} من إجمالي {{ $totalBookings }}</span>
+                            <span class="flex flex-wrap gap-1 whitespace-nowrap">
+                                <span>العرض الحالي</span>
+                                <span>1 - {{ $limitedBookings->count() }}</span>
+                                <span>من إجمالي</span>
+                                <span>{{ $totalBookings }}</span>
+                            </span>
                         @endif
                         <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-1 font-semibold text-orange-600 hover:border-orange-300 hover:text-orange-700">
                             <i class="fas fa-arrow-left text-xs"></i>
@@ -254,8 +259,9 @@
                                     {{ $activity['title'] }}
                                 </div>
                                 @if (!empty($activity['meta']['category']))
-                                    <span class="text-xs text-gray-500">
-                                        التصنيف: {{ $activity['meta']['category'] }}
+                                    <span class="text-xs text-gray-500 flex flex-wrap items-center gap-1">
+                                        <span>التصنيف:</span>
+                                        <span>{{ $activity['meta']['category'] }}</span>
                                     </span>
                                 @endif
                             </div>
@@ -335,9 +341,10 @@
                                             {{ $recipe->category->name }}
                                         </span>
                                     @endif
-                                    <p class="text-xs text-gray-500">
-                                        تمت الإضافة في {{ optional($recipe->userInteraction->updated_at ?? $recipe->userInteraction->created_at)->diffForHumans() }}
-                                    </p>
+                                        <p class="text-xs text-gray-500 flex flex-wrap items-center gap-1">
+                                            <span>تمت الإضافة في</span>
+                                            <span>{{ optional($recipe->userInteraction->updated_at ?? $recipe->userInteraction->created_at)->diffForHumans() }}</span>
+                                        </p>
                                 </div>
                             </a>
                         </article>
@@ -369,14 +376,27 @@
                                     {{ $achievement['current_level'] }}
                                 </span>
                             </div>
-                            <p class="mt-3 text-sm text-gray-600">
-                                {{ $achievement['description'] }}
+                            <p class="mt-3 text-sm text-gray-600 flex flex-wrap gap-1">
+                                @if (!empty($achievement['description_prefix']) || !empty($achievement['description_suffix']))
+                                    @if (!empty($achievement['description_prefix']))
+                                        <span>{{ $achievement['description_prefix'] }}</span>
+                                    @endif
+                                    <span>{{ number_format($achievement['count']) }}</span>
+                                    @if (!empty($achievement['description_suffix']))
+                                        <span>{{ $achievement['description_suffix'] }}</span>
+                                    @endif
+                                @elseif (!empty($achievement['description']))
+                                    <span>{{ $achievement['description'] }}</span>
+                                @endif
                             </p>
                             <div class="mt-4">
                                 <div class="flex items-center justify-between text-xs text-gray-500">
                                     <span>التقدم</span>
                                     @if (!empty($achievement['next_goal']))
-                                        <span>الهدف التالي: {{ $achievement['next_goal'] }}</span>
+                                        <span class="flex flex-wrap items-center gap-1">
+                                            <span>الهدف التالي:</span>
+                                            <span>{{ number_format($achievement['next_goal']) }}</span>
+                                        </span>
                                     @else
                                         <span>أعلى مستوى</span>
                                     @endif
@@ -447,8 +467,16 @@
                                     <article class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                                         <h4 class="text-md font-semibold text-gray-800">{{ $recipe->title }}</h4>
                                         <div class="mt-3 flex flex-wrap gap-3 text-sm text-gray-600">
-                                            <span><i class="fas fa-bookmark ml-1 text-orange-500"></i> {{ number_format($recipe->saved_count) }} حفظ</span>
-                                            <span><i class="fas fa-utensils ml-1 text-orange-500"></i> {{ number_format($recipe->made_count) }} تجربة</span>
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-bookmark ml-1 text-orange-500"></i>
+                                                <span>{{ number_format($recipe->saved_count) }}</span>
+                                                <span>حفظ</span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-utensils ml-1 text-orange-500"></i>
+                                                <span>{{ number_format($recipe->made_count) }}</span>
+                                                <span>تجربة</span>
+                                            </span>
                                             <span><i class="fas fa-star ml-1 text-orange-500"></i> {{ number_format($recipe->interactions_avg_rating ?? 0, 1) }} ({{ number_format($recipe->rating_count ?? 0) }})</span>
                                         </div>
                                         <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-orange-600 hover:text-orange-700">

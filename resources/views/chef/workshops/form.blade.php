@@ -5,12 +5,12 @@
     /** @var \App\Models\Workshop|null $workshop */
     $workshop = $workshop ?? null;
     $levels = [
-        'beginner' => 'مبتدئ',
-        'intermediate' => 'متوسط',
-        'advanced' => 'متقدم',
+        'beginner' => __('chef.workshops.levels.beginner'),
+        'intermediate' => __('chef.workshops.levels.intermediate'),
+        'advanced' => __('chef.workshops.levels.advanced'),
     ];
     $currencies = [
-        'JOD' => 'دينار أردني',
+        'JOD' => __('chef.workshop_form.currencies.jod'),
     ];
     $isOnline = old('is_online', $workshop->is_online ?? true);
     $autoGenerateMeeting = old(
@@ -40,13 +40,13 @@
 <div class="space-y-10">
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="mb-6">
-            <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">المعلومات الأساسية</p>
-            <h2 class="mt-1 text-2xl font-bold text-slate-900">تفاصيل الورشة</h2>
-            <p class="mt-2 text-sm text-slate-500">عرّف المتعلمين على مضمون الورشة وسبب تميزها.</p>
+            <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.basics.eyebrow') }}</p>
+            <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.basics.title') }}</h2>
+            <p class="mt-2 text-sm text-slate-500">{{ __('chef.workshop_form.sections.basics.description') }}</p>
         </div>
         <div class="grid gap-5 lg:grid-cols-2">
             <div class="space-y-3">
-                <label for="title" class="text-sm font-semibold text-slate-700">عنوان الورشة *</label>
+                <label for="title" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.title.label') }}</label>
                 <input type="text" id="title" name="title" required
                        value="{{ old('title', $workshop->title ?? '') }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('title') border-red-400 focus:ring-red-200 @enderror">
@@ -55,8 +55,8 @@
                 @enderror
             </div>
             <div class="space-y-3">
-                <label for="category" class="text-sm font-semibold text-slate-700">فئة الورشة *</label>
-                <input type="text" id="category" name="category" required placeholder="مثل: مخبوزات، أطباق رئيسية، حلويات..."
+                <label for="category" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.category.label') }}</label>
+                <input type="text" id="category" name="category" required placeholder="{{ __('chef.workshop_form.placeholders.category') }}"
                        value="{{ old('category', $workshop->category ?? '') }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('category') border-red-400 focus:ring-red-200 @enderror">
                 @error('category')
@@ -64,7 +64,7 @@
                 @enderror
             </div>
             <div class="space-y-3">
-                <label for="level" class="text-sm font-semibold text-slate-700">المستوى *</label>
+                <label for="level" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.level.label') }}</label>
                 <select id="level" name="level" required
                         class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:ring-4 focus:ring-orange-100 @error('level') border-red-400 focus:ring-red-200 @enderror">
                     @foreach ($levels as $value => $label)
@@ -76,7 +76,7 @@
                 @enderror
             </div>
             <div class="space-y-3">
-                <label for="duration" class="text-sm font-semibold text-slate-700">المدة (بالدقائق) *</label>
+                <label for="duration" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.duration.label') }}</label>
                 <input type="number" id="duration" name="duration" required min="30" max="600" step="15"
                        value="{{ old('duration', $workshop->duration ?? 90) }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('duration') border-red-400 focus:ring-red-200 @enderror">
@@ -86,28 +86,28 @@
             </div>
         </div>
         <div class="mt-5 space-y-3">
-            <label for="description" class="text-sm font-semibold text-slate-700">وصف ملهم *</label>
+            <label for="description" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.description.label') }}</label>
             <textarea id="description" name="description" rows="4" required
                       class="w-full rounded-3xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('description') border-red-400 focus:ring-red-200 @enderror"
-                      placeholder="حدثنا عن أهداف الورشة، أسلوبك في الشرح، والقيمة التي سيخرج بها المشاركون.">{{ old('description', $workshop->description ?? '') }}</textarea>
+                      placeholder="{{ __('chef.workshop_form.placeholders.description') }}">{{ old('description', $workshop->description ?? '') }}</textarea>
             @error('description')
                 <p class="text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
         <div class="mt-5 grid gap-5 lg:grid-cols-2">
             <div class="space-y-3">
-                <label for="content" class="text-sm font-semibold text-slate-700">تفاصيل المحتوى (اختياري)</label>
+                <label for="content" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.content.label') }}</label>
                 <textarea id="content" name="content" rows="4"
                           class="w-full rounded-3xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">{{ old('content', $workshop->content ?? '') }}</textarea>
             </div>
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-3">
-                    <label for="what_you_will_learn" class="text-sm font-semibold text-slate-700">ماذا سيتعلم المشاركون؟</label>
+                    <label for="what_you_will_learn" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.learning_points.label') }}</label>
                     <textarea id="what_you_will_learn" name="what_you_will_learn" rows="3"
                               class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">{{ old('what_you_will_learn', $workshop->what_you_will_learn ?? '') }}</textarea>
                 </div>
                 <div class="space-y-3">
-                    <label for="requirements" class="text-sm font-semibold text-slate-700">متطلبات مسبقة</label>
+                    <label for="requirements" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.requirements.label') }}</label>
                     <textarea id="requirements" name="requirements" rows="3"
                               class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">{{ old('requirements', $workshop->requirements ?? '') }}</textarea>
                 </div>
@@ -118,16 +118,16 @@
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">التسعير والقدرة الاستيعابية</p>
-                <h2 class="mt-1 text-2xl font-bold text-slate-900">الإعدادات المالية</h2>
+                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.pricing.eyebrow') }}</p>
+                <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.pricing.title') }}</h2>
             </div>
             <div class="rounded-full bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600">
-                أخبر المشاركين بعدد المقاعد المتاحة لتشجيع التسجيل المبكر.
+                {{ __('chef.workshop_form.sections.pricing.description') }}
             </div>
         </div>
         <div class="grid gap-5 md:grid-cols-3">
             <div class="space-y-3">
-                <label for="price" class="text-sm font-semibold text-slate-700">سعر الورشة *</label>
+                <label for="price" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.price.label') }}</label>
                 <input type="number" id="price" name="price" min="0" step="0.5" required
                        value="{{ old('price', $workshop->price ?? 0) }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('price') border-red-400 focus:ring-red-200 @enderror">
@@ -136,7 +136,7 @@
                 @enderror
             </div>
             <div class="space-y-3">
-                <label for="currency" class="text-sm font-semibold text-slate-700">العملة *</label>
+                <label for="currency" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.currency.label') }}</label>
                 <select id="currency" name="currency" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:ring-4 focus:ring-orange-100">
                     @foreach ($currencies as $value => $label)
                         <option value="{{ $value }}" @selected(old('currency', $workshop->currency ?? 'JOD') === $value)>{{ $label }}</option>
@@ -144,7 +144,7 @@
                 </select>
             </div>
             <div class="space-y-3">
-                <label for="max_participants" class="text-sm font-semibold text-slate-700">الحد الأقصى للمشاركين *</label>
+                <label for="max_participants" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.max_participants.label') }}</label>
                 <input type="number" id="max_participants" name="max_participants" min="1" max="500" required
                        value="{{ old('max_participants', $workshop->max_participants ?? 15) }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('max_participants') border-red-400 focus:ring-red-200 @enderror">
@@ -155,10 +155,11 @@
                         <i class="fas fa-info-circle"></i>
                     </div>
                     <div class="space-y-1">
-                        <p class="font-semibold text-amber-900">هام:</p>
+                        <p class="font-semibold text-amber-900">{{ __('chef.workshop_form.messages.pricing_notice_title') }}</p>
                         <p class="leading-relaxed">
-                            يتم اقتطاع نسبة تتراوح بين <strong>25% – 30%</strong> لصالح منصّة وصفة عند إنشاء الورشة لتغطية بوابات الدفع، الدعم التقني والتسويق.
-                            بعد خصم هذه النسبة يتم تحويل الصافي إليك خلال 7 أيام عمل من انتهاء الورشة.
+                            {!! __('chef.workshop_form.messages.pricing_notice_body', ['fee_range' => '<strong>25% – 30%</strong>']) !!}
+                            <br>
+                            {{ __('chef.workshop_form.messages.pricing_notice_followup') }}
                         </p>
                     </div>
                 </div>
@@ -169,26 +170,26 @@
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">الجدولة</p>
-                <h2 class="mt-1 text-2xl font-bold text-slate-900">المواعيد</h2>
+                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.schedule.eyebrow') }}</p>
+                <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.schedule.title') }}</h2>
             </div>
-            <p class="text-sm text-slate-500">تظهر هذه المواعيد للمتدربين فور نشر الورشة.</p>
+            <p class="text-sm text-slate-500">{{ __('chef.workshop_form.sections.schedule.description') }}</p>
         </div>
         <div class="grid gap-5 md:grid-cols-3">
             <div class="space-y-3">
-                <label for="start_date" class="text-sm font-semibold text-slate-700">تاريخ البداية *</label>
+                <label for="start_date" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.start_date.label') }}</label>
                 <input type="datetime-local" id="start_date" name="start_date" required
                        value="{{ $startDateValue }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('start_date') border-red-400 focus:ring-red-200 @enderror">
             </div>
             <div class="space-y-3">
-                <label for="end_date" class="text-sm font-semibold text-slate-700">تاريخ النهاية *</label>
+                <label for="end_date" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.end_date.label') }}</label>
                 <input type="datetime-local" id="end_date" name="end_date" required
                        value="{{ $endDateValue }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('end_date') border-red-400 focus:ring-red-200 @enderror">
             </div>
             <div class="space-y-3">
-                <label for="registration_deadline" class="text-sm font-semibold text-slate-700">آخر موعد للتسجيل</label>
+                <label for="registration_deadline" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.registration_deadline.label') }}</label>
                 <input type="datetime-local" id="registration_deadline" name="registration_deadline"
                        value="{{ $deadlineValue }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('registration_deadline') border-red-400 focus:ring-red-200 @enderror">
@@ -199,12 +200,12 @@
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">طريقة التقديم</p>
-                <h2 class="mt-1 text-2xl font-bold text-slate-900">أونلاين عبر Jitsi</h2>
+                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.delivery.eyebrow') }}</p>
+                <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.delivery.title') }}</h2>
             </div>
             <div class="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-2 text-emerald-700">
                 <i class="fas fa-video text-lg"></i>
-                <span class="text-sm font-medium">نوفر لك توليد رابط اجتماع Jitsi تلقائياً</span>
+                <span class="text-sm font-medium">{{ __('chef.workshop_form.sections.delivery.highlight') }}</span>
             </div>
         </div>
         <div class="space-y-6">
@@ -212,9 +213,9 @@
                 <input type="hidden" name="is_online" value="0">
                 <label class="inline-flex items-center gap-3">
                     <input type="checkbox" name="is_online" id="is_online" value="1" class="toggle-input" @checked($isOnline)>
-                    <span class="font-semibold text-slate-800">هذه الورشة أونلاين</span>
+                    <span class="font-semibold text-slate-800">{{ __('chef.workshop_form.options.online_label') }}</span>
                 </label>
-                <span class="text-sm text-slate-500">يمكنك تبديلها لورشة حضورية في أي وقت.</span>
+                <span class="text-sm text-slate-500">{{ __('chef.workshop_form.options.online_hint') }}</span>
             </div>
 
             <div id="onlineFields" class="{{ $isOnline ? '' : 'hidden' }} space-y-5 rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
@@ -223,23 +224,23 @@
                         <input type="hidden" name="auto_generate_meeting" value="0">
                         <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" @checked($autoGenerateMeeting)>
-                            توليد رابط Jitsi تلقائياً عند الحفظ
+                            {{ __('chef.workshop_form.options.auto_generate_label') }}
                         </label>
                         <button type="button" id="generateJitsiLinkBtn"
                                 data-url="{{ route('chef.workshops.generate-link') }}"
                                 class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300">
                             <i class="fas fa-bolt"></i>
-                            توليد رابط الآن
+                            {{ __('chef.workshop_form.buttons.generate_link') }}
                         </button>
                     </div>
                     <div class="space-y-2">
-                        <label for="meeting_link" class="text-sm font-semibold text-slate-700">رابط الاجتماع</label>
+                        <label for="meeting_link" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.meeting_link.label') }}</label>
                         <input type="url" id="meeting_link" name="meeting_link"
                                value="{{ $canManageMeetingLinks ? old('meeting_link', $workshop->meeting_link ?? '') : '' }}"
                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 @error('meeting_link') border-red-400 focus:ring-red-200 @enderror"
                                placeholder="https://meet.jit.si/wasfah-room" {{ $autoGenerateMeeting ? 'disabled' : '' }}>
                         <p id="meetingLinkHint" class="text-xs text-slate-500">
-                            {{ $autoGenerateMeeting ? 'سيتم تعيين الرابط تلقائياً بعد الحفظ.' : 'يمكنك لصق رابط اجتماع جاهز إن رغبت.' }}
+                            {{ $autoGenerateMeeting ? __('chef.workshop_form.messages.meeting_hint_auto') : __('chef.workshop_form.messages.meeting_hint_manual') }}
                         </p>
                         @error('meeting_link')
                             <p class="text-sm text-red-600">{{ $message }}</p>
@@ -248,10 +249,10 @@
                     <div id="generatedMeetingInfo" class="space-y-2 text-sm text-emerald-700">
                         @if (($workshop->meeting_provider ?? null) === 'jitsi' && $workshop->meeting_link)
                             <div class="rounded-2xl bg-white/70 p-3 text-emerald-700 shadow-inner">
-                                <p class="font-semibold">تم تهيئة رابط Jitsi:</p>
+                                <p class="font-semibold">{{ __('chef.workshop_form.messages.jitsi_ready') }}</p>
                                 <p class="truncate text-sm">{{ $workshop->meeting_link }}</p>
                                 @if ($workshop->jitsi_passcode)
-                                    <p class="mt-1 text-xs text-slate-500">رمز الدخول: {{ $workshop->jitsi_passcode }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">{{ __('chef.workshop_form.fields.passcode.label') }} {{ $workshop->jitsi_passcode }}</p>
                                 @endif
                             </div>
                         @endif
@@ -259,9 +260,9 @@
                 @else
                     <input type="hidden" name="auto_generate_meeting" id="auto_generate_meeting" value="1">
                     <div class="rounded-2xl border border-white/40 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-inner">
-                        <p class="font-semibold text-slate-800">الرابط يُدار من فريق وصفة</p>
+                        <p class="font-semibold text-slate-800">{{ __('chef.workshop_form.messages.managed_link_title') }}</p>
                         <p class="mt-1 text-xs text-slate-500">
-                            سنقوم بتوليد رابط الاجتماع وتأمينه تلقائياً بعد حفظ الورشة، ولن يظهر الرابط الخام في لوحة الشيف حفاظاً على السرية.
+                            {{ __('chef.workshop_form.messages.managed_link_description') }}
                         </p>
                     </div>
                 @endif
@@ -269,13 +270,13 @@
 
             <div id="offlineFields" class="{{ $isOnline ? 'hidden' : '' }} space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <div class="space-y-2">
-                    <label for="location" class="text-sm font-semibold text-slate-700">الموقع *</label>
+                    <label for="location" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.location.label') }}</label>
                     <input type="text" name="location" id="location"
                            value="{{ old('location', $workshop->location ?? '') }}"
                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-slate-400 focus:ring-4 focus:ring-slate-100">
                 </div>
                 <div class="space-y-2">
-                    <label for="address" class="text-sm font-semibold text-slate-700">العنوان التفصيلي</label>
+                    <label for="address" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.address.label') }}</label>
                     <textarea id="address" name="address" rows="2"
                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-slate-400 focus:ring-4 focus:ring-slate-100">{{ old('address', $workshop->address ?? '') }}</textarea>
                 </div>
@@ -285,18 +286,18 @@
 
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="mb-6">
-            <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">معلوماتك</p>
-            <h2 class="mt-1 text-2xl font-bold text-slate-900">تعريف بالمدرب</h2>
+            <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.host.eyebrow') }}</p>
+            <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.host.title') }}</h2>
         </div>
         <div class="grid gap-5 md:grid-cols-2">
             <div class="space-y-3">
-                <label for="instructor" class="text-sm font-semibold text-slate-700">اسم المدرب</label>
+                <label for="instructor" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.instructor.label') }}</label>
                 <input type="text" id="instructor" name="instructor"
                        value="{{ old('instructor', $workshop->instructor ?? auth()->user()->name) }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
             </div>
             <div class="space-y-3">
-                <label for="instructor_bio" class="text-sm font-semibold text-slate-700">نبذة قصيرة</label>
+                <label for="instructor_bio" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.instructor_bio.label') }}</label>
                 <textarea id="instructor_bio" name="instructor_bio" rows="3"
                           class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">{{ old('instructor_bio', $workshop->instructor_bio ?? auth()->user()->chef_specialty_description) }}</textarea>
             </div>
@@ -305,20 +306,20 @@
 
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="mb-6">
-            <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">صورة الورشة</p>
-            <h2 class="mt-1 text-2xl font-bold text-slate-900">إبهار بصري</h2>
-            <p class="mt-1 text-sm text-slate-500">صور بدقة جيدة (حتى 5MB) لتحفيز الحجز.</p>
+            <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.image.eyebrow') }}</p>
+            <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.image.title') }}</h2>
+            <p class="mt-1 text-sm text-slate-500">{{ __('chef.workshop_form.sections.image.description') }}</p>
         </div>
         <div class="grid gap-5 lg:grid-cols-[2fr,1fr]">
             <div class="space-y-3">
-                <label for="image" class="text-sm font-semibold text-slate-700">رفع صورة رئيسية</label>
+                <label for="image" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.image.label') }}</label>
                 <input type="file"
                        id="image"
                        name="image"
                        accept="image/*"
                        class="w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-500 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                        data-max-size="5120"
-                       data-max-size-message="لا يمكن رفع صورة أكبر من 5 ميجابايت."
+                       data-max-size-message="{{ __('chef.workshop_form.messages.image_max_size') }}"
                        data-error-target="#chef_workshop_image_error">
                 <p id="chef_workshop_image_error" class="text-sm text-red-600 mt-2 hidden"></p>
                 @error('image')
@@ -327,17 +328,17 @@
                 @if ($workshop && $workshop->image)
                     <label class="inline-flex items-center gap-2 text-sm text-slate-600">
                         <input type="checkbox" name="remove_image" value="1">
-                        حذف الصورة الحالية
+                        {{ __('chef.workshop_form.buttons.remove_image') }}
                     </label>
                 @endif
             </div>
             <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-center">
                 @if ($coverImageUrl)
-                    <img src="{{ $coverImageUrl }}" alt="Workshop cover" class="mx-auto h-40 w-full rounded-2xl object-cover">
+                    <img src="{{ $coverImageUrl }}" alt="{{ __('chef.workshop_form.sections.image.preview_alt') }}" class="mx-auto h-40 w-full rounded-2xl object-cover">
                 @else
                     <div class="flex h-40 flex-col items-center justify-center text-slate-400">
                         <i class="fas fa-image text-3xl"></i>
-                        <p class="mt-2 text-sm">ستظهر المعاينة هنا بعد رفع الصورة.</p>
+                        <p class="mt-2 text-sm">{{ __('chef.workshop_form.sections.image.preview_placeholder') }}</p>
                     </div>
                 @endif
             </div>
@@ -347,13 +348,13 @@
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">نشر الورشة</p>
-                <h2 class="mt-1 text-2xl font-bold text-slate-900">جاهزة للظهور؟</h2>
+                <p class="text-sm font-semibold uppercase tracking-wider text-orange-500">{{ __('chef.workshop_form.sections.publish.eyebrow') }}</p>
+                <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.publish.title') }}</h2>
             </div>
             <label class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600">
                 <input type="hidden" name="is_active" value="0">
                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $workshop->is_active ?? false))>
-                تفعيل الورشة فوراً بعد الحفظ
+                {{ __('chef.workshop_form.sections.publish.auto_activate') }}
             </label>
         </div>
     </section>
@@ -371,6 +372,17 @@
         const generateBtn = document.getElementById('generateJitsiLinkBtn');
         const generatedInfo = document.getElementById('generatedMeetingInfo');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const meetingHints = {
+            auto: @json(__('chef.workshop_form.messages.meeting_hint_auto')),
+            manual: @json(__('chef.workshop_form.messages.meeting_hint_manual')),
+        };
+        const jsTranslations = {
+            titleRequired: @json(__('chef.workshop_form.js.title_required')),
+            generateFailed: @json(__('chef.workshop_form.js.generate_failed')),
+            genericError: @json(__('chef.workshop_form.js.generic_error')),
+            jitsiReady: @json(__('chef.workshop_form.messages.jitsi_ready')),
+            passcodeLabel: @json(__('chef.workshop_form.fields.passcode.label')),
+        };
 
         function toggleModeFields() {
             const isOnline = !!isOnlineInput?.checked;
@@ -390,8 +402,8 @@
             meetingLinkInput.disabled = shouldDisable;
             if (meetingHint) {
                 meetingHint.textContent = shouldDisable
-                    ? 'سيتم تعيين الرابط تلقائياً بعد الحفظ.'
-                    : 'يمكنك لصق رابط اجتماع جاهز إن رغبت.';
+                    ? meetingHints.auto
+                    : meetingHints.manual;
             }
         }
 
@@ -406,7 +418,7 @@
             const startDate = document.getElementById('start_date')?.value;
 
             if (!title) {
-                alert('يرجى إدخال عنوان الورشة أولاً.');
+                alert(jsTranslations.titleRequired);
                 return;
             }
 
@@ -427,7 +439,7 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('تعذر توليد الرابط حالياً.');
+                    throw new Error(jsTranslations.generateFailed);
                 }
 
                 const data = await response.json();
@@ -438,9 +450,9 @@
                 if (generatedInfo) {
                     generatedInfo.innerHTML = `
                         <div class="rounded-2xl bg-white/70 p-3 text-emerald-700 shadow-inner">
-                            <p class="font-semibold">تم إنشاء رابط Jitsi جاهز:</p>
+                            <p class="font-semibold">${jsTranslations.jitsiReady}</p>
                             <p class="mt-1 truncate text-sm">${data.meeting_link}</p>
-                            ${data.passcode ? `<p class="mt-1 text-xs text-slate-500">رمز الدخول: ${data.passcode}</p>` : ''}
+                            ${data.passcode ? `<p class="mt-1 text-xs text-slate-500">${jsTranslations.passcodeLabel} ${data.passcode}</p>` : ''}
                         </div>
                     `;
                 }
@@ -450,7 +462,7 @@
                 }
                 toggleMeetingInputState();
             } catch (error) {
-                alert(error.message || 'حدث خطأ غير متوقع.');
+                alert(error.message || jsTranslations.genericError);
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.classList.remove('opacity-70');
@@ -459,3 +471,7 @@
     });
 </script>
 @endpush
+
+
+
+

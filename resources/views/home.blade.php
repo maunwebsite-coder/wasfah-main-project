@@ -1,6 +1,6 @@
 ﻿@extends('layouts.app')
 
-@section('title', 'موقع وصفه - دليلك لعالم الحلويات')
+@section('title', __('home.meta.title'))
 
 @push('styles')
     <style>
@@ -1457,7 +1457,7 @@
                                                         <source src="{{ $mobileMedia }}" media="(max-width: 640px)" type="video/webm">
                                                     @endif
                                                     <source src="{{ $desktopMedia }}" type="video/webm">
-                                                    {{ __('متصفحك لا يدعم تشغيل الفيديو.') }}
+                                                    {{ __('home.hero.video_fallback') }}
                                                 </video>
                                             @else
                                                 <picture>
@@ -1514,9 +1514,9 @@
                 <!-- قسم أحدث الوصفات -->
                 <aside class="hero-latest-card">
                     <div class="hero-latest-header">
-                        <h2>أحدث الوصفات</h2>
+                        <h2>{{ __('home.latest_recipes.title') }}</h2>
                         <a href="{{ route('recipes') }}" class="hero-latest-link">
-                            عرض الكل
+                            {{ __('home.latest_recipes.cta') }}
                             <i class="fas fa-arrow-left text-xs"></i>
                         </a>
                     </div>
@@ -1528,7 +1528,7 @@
                                 <div class="hero-latest-empty-icon">
                                     <i class="fas fa-utensils"></i>
                                 </div>
-                                <p>لا توجد وصفات متاحة حالياً</p>
+                                <p>{{ __('home.latest_recipes.empty_title') }}</p>
                             </li>
                         @endforelse
                     </ul>
@@ -1543,10 +1543,12 @@
         $featuredIsFull = $featuredWorkshop->bookings_count >= $featuredWorkshop->max_participants; 
         $featuredIsRegistrationClosed = !$featuredWorkshop->is_registration_open;
         $featuredIsCompleted = $featuredWorkshop->is_completed;
-        $featuredStartDateLabel = $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d/m/Y') : 'غير محدد';
-        $featuredLocationLabel = $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية');
-        $featuredDeadlineLabel = $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : 'غير محدد';
-        $featuredInstructorLabel = $featuredWorkshop->instructor ?? 'غير محدد';
+        $featuredStartDateLabel = $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d/m/Y') : __('home.labels.unspecified');
+        $featuredLocationLabel = $featuredWorkshop->is_online
+            ? __('home.labels.online_workshop')
+            : ($featuredWorkshop->location ?? __('home.labels.offline_workshop'));
+        $featuredDeadlineLabel = $featuredWorkshop->registration_deadline ? $featuredWorkshop->registration_deadline->format('d/m/Y') : __('home.labels.unspecified');
+        $featuredInstructorLabel = $featuredWorkshop->instructor ?? __('home.labels.unspecified');
         $featuredIsBooked = !empty($bookedWorkshopIds) && in_array($featuredWorkshop->id, $bookedWorkshopIds, true);
     @endphp
     <section class="container mx-auto px-4 py-12 featured-workshop-section">
@@ -1556,7 +1558,7 @@
                 <div class="p-6 lg:p-9 text-white flex flex-col justify-center">
                     <div class="mb-5">
                         <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-block mb-4">
-                            الورشة القادمة
+                            {{ __('home.featured_workshop.title') }}
                         </span>
                         <h2 class="text-2xl lg:text-3xl font-bold mb-3 leading-tight">
                             {{ $featuredWorkshop->title }}
@@ -1570,20 +1572,20 @@
                     <div class="space-y-3 mb-5">
                         <div class="flex items-center text-amber-100">
                             <i class="fas fa-calendar-alt w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $featuredWorkshop->start_date ? $featuredWorkshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
+                            <span class="font-medium">{{ $featuredStartDateLabel }}</span>
                         </div>
                         <div class="flex items-center text-amber-100">
                             <i class="fas {{ $featuredWorkshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }} w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $featuredWorkshop->is_online ? 'ورشة أونلاين' : ($featuredWorkshop->location ?? 'ورشة حضورية') }}</span>
+                            <span class="font-medium">{{ $featuredLocationLabel }}</span>
                         </div>
                         <div class="flex items-center text-amber-100">
                             <i class="fas fa-user w-5 text-center ml-3"></i>
-                            <span class="font-medium">مع {{ $featuredWorkshop->instructor }}</span>
+                            <span class="font-medium">{{ __('home.labels.with') }} {{ $featuredInstructorLabel }}</span>
                         </div>
                         @if($showAdminMetrics)
                             <div class="flex items-center text-amber-100">
                                 <i class="fas fa-users w-5 text-center ml-3"></i>
-                                <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} مشارك</span>
+                                <span class="font-medium">{{ $featuredWorkshop->bookings_count }}/{{ $featuredWorkshop->max_participants }} {{ __('home.featured_workshop.participant_label') }}</span>
                             </div>
                         @endif
                     </div>
@@ -1593,22 +1595,22 @@
                         @if($featuredIsCompleted)
                             <button type="button" class="bg-gray-400 text-gray-600 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-check-circle ml-2 text-xl"></i>
-                                الورشة مكتملة
+                                {{ __('home.featured_workshop.status_full') }}
                             </button>
                         @elseif($featuredIsBooked)
                             <button type="button" class="bg-green-500 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto" disabled>
                                 <i class="fas fa-check ml-2 text-xl booking-button-icon"></i>
-                                <span class="booking-button-label">تم الحجز بالفعل</span>
+                                <span class="booking-button-label">{{ __('home.featured_workshop.status_booked') }}</span>
                             </button>
                         @elseif($featuredIsFull)
                             <button type="button" class="bg-gray-400 text-gray-600 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-lock ml-2 text-xl"></i>
-                                الورشة مكتملة
+                                {{ __('home.featured_workshop.status_full') }}
                             </button>
                         @elseif($featuredIsRegistrationClosed)
                             <button type="button" class="bg-yellow-400 text-yellow-800 font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg w-full sm:w-auto">
                                 <i class="fas fa-clock ml-2 text-xl"></i>
-                                انتهى التسجيل
+                                {{ __('home.featured_workshop.status_closed') }}
                             </button>
                         @else
                             <button type="button"
@@ -1622,13 +1624,13 @@
                                     data-deadline="{{ e($featuredDeadlineLabel) }}"
                                     data-is-booked="false">
                                 <i class="fab fa-whatsapp ml-2 text-xl booking-button-icon"></i>
-                                <span class="booking-button-label">احجز مقعدك الآن</span>
+                                <span class="booking-button-label">{{ __('home.featured_workshop.primary_cta') }}</span>
                             </button>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center w-full sm:w-auto">
                             <i class="fas fa-info-circle ml-2"></i>
-                            تفاصيل أكثر
+                            {{ __('home.featured_workshop.secondary_cta') }}
                         </a>
                     </div>
                 </div>
@@ -1653,13 +1655,13 @@
                 <div class="p-6 lg:p-9 text-white flex flex-col justify-center">
                     <div class="mb-5">
                         <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-block mb-4">
-                            الورشة القادمة
+                            {{ __('home.featured_workshop.title') }}
                         </span>
                         <h2 class="text-2xl lg:text-3xl font-bold mb-3 leading-tight">
-                            لا توجد ورشات قادمة الآن
+                            {{ __('home.featured_workshop.empty_title') }}
                         </h2>
                         <p class="text-base text-amber-100 mb-6 leading-relaxed">
-                            نحن نعمل على إعداد ورشات جديدة ومميزة لك. انتظرونا في الورشة القادمة!
+                            {{ __('home.featured_workshop.empty_description') }}
                         </p>
                     </div>
                     
@@ -1668,12 +1670,12 @@
                         <a href="{{ route('workshops') }}" 
                            class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
                             <i class="fas fa-list ml-2 text-xl"></i>
-                            تصفح جميع الورشات
+                            {{ __('home.featured_workshop.empty_primary') }}
                         </a>
                         <a href="{{ route('recipes') }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center">
                             <i class="fas fa-utensils ml-2"></i>
-                            اكتشف الوصفات
+                            {{ __('home.featured_workshop.empty_secondary') }}
                         </a>
                     </div>
                 </div>
@@ -1698,22 +1700,22 @@
     <section class="container mx-auto px-4 py-10 lg:py-14">
         <div class="home-tools-section p-6 lg:p-10">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8 lg:mb-10">
-                <div class="text-center lg:text-right max-w-2xl mx-auto lg:mx-0">
+                <div class="text-left rtl:text-right max-w-2xl mx-auto lg:mx-0">
                     <span class="inline-flex items-center gap-2 text-sm font-semibold text-amber-600 bg-amber-100/70 px-4 py-2 rounded-full mb-3">
                         <i class="fas fa-toolbox text-sm"></i>
-                        مختارات الأدوات
+                        {{ __('home.tools.eyebrow') }}
                     </span>
-                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">أدوات الشيف الموصى بها</h2>
+                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">{{ __('home.tools.title') }}</h2>
                     <p class="text-gray-600 text-base lg:text-lg">
-                        أدوات مختارة بعناية تساعدك على تنفيذ وصفاتك باحترافية، مع تقييمات المستخدمين وخيارات شراء مباشرة.
+                        {{ __('home.tools.subtitle') }}
                     </p>
                 </div>
                 @if($homeTools->count() > 0)
                     <div class="home-tools-nav hidden lg:flex">
-                        <button type="button" class="home-tools-prev" aria-label="الأداة السابقة">
+                        <button type="button" class="home-tools-prev" aria-label="{{ __('home.tools.prev') }}">
                             <i class="fas fa-chevron-right"></i>
                         </button>
-                        <button type="button" class="home-tools-next" aria-label="الأداة التالية">
+                        <button type="button" class="home-tools-next" aria-label="{{ __('home.tools.next') }}">
                             <i class="fas fa-chevron-left"></i>
                         </button>
                     </div>
@@ -1740,21 +1742,21 @@
                                             <span class="text-gray-400 text-sm">/ 5</span>
                                         </div>
                                         @if(!is_null($tool->price))
-                                            <div class="home-tool-card__price">{{ number_format($tool->price, 2) }} د.إ</div>
+                                            <div class="home-tool-card__price">{{ number_format($tool->price, 2) }} {{ __('home.labels.currency_suffix') }}</div>
                                         @endif
                                         <div class="home-tool-card__actions">
                                             <a href="{{ route('tools.show', $tool->id) }}" class="hero-action secondary-action text-center text-sm">
-                                                <span>تفاصيل الأداة</span>
+                                                <span>{{ __('home.tools.details') }}</span>
                                                 <i class="fas fa-info-circle"></i>
                                             </a>
                                             @if($tool->amazon_url)
                                                 <a href="{{ $tool->amazon_url }}" target="_blank" rel="nofollow noopener" class="hero-action primary-action text-center text-sm">
-                                                    <span>شراء الآن</span>
+                                                    <span>{{ __('home.tools.buy_now') }}</span>
                                                     <i class="fas fa-shopping-cart"></i>
                                                 </a>
                                             @else
                                                 <a href="{{ route('tools') }}" class="hero-action primary-action text-center text-sm">
-                                                    <span>استعرض المزيد</span>
+                                                    <span>{{ __('home.tools.see_more') }}</span>
                                                     <i class="fas fa-arrow-left"></i>
                                                 </a>
                                             @endif
@@ -1770,12 +1772,12 @@
                     <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-500">
                         <i class="fas fa-toolbox text-3xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-3">لا توجد أدوات مميزة حالياً</h3>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">{{ __('home.tools.empty_title') }}</h3>
                     <p class="text-gray-600 max-w-lg mx-auto mb-6">
-                        نعمل على تحديث قائمة أدوات الشيف المختارة بشكل مستمر. عد لاحقاً للاطلاع على أحدث التوصيات.
+                        {{ __('home.tools.empty_description') }}
                     </p>
                     <a href="{{ route('tools') }}" class="hero-action primary-action">
-                        <span>تصفح جميع الأدوات</span>
+                        <span>{{ __('home.tools.empty_cta') }}</span>
                         <i class="fas fa-toolbox"></i>
                     </a>
                 </div>
@@ -1786,8 +1788,8 @@
     <!-- قسم الوصفات المميزة -->
     <section class="container mx-auto px-4 py-6">
         <div class="text-center mb-6">
-            <h2 class="text-3xl font-bold text-gray-800">ابدأ بحفظ هذه الوصفات</h2>
-            <p class="text-gray-600 mt-2">اكتشف وصفات حلويات فاخرة من أفضل الشيفات العالميين</p>
+            <h2 class="text-3xl font-bold text-gray-800">{{ __('home.featured_recipes.title') }}</h2>
+            <p class="text-gray-600 mt-2">{{ __('home.featured_recipes.subtitle') }}</p>
         </div>
         
         @if($featuredRecipes->count() > 0)
@@ -1807,10 +1809,10 @@
                 <div class="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <i class="fas fa-utensils text-4xl text-amber-500"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-700 mb-3">لا توجد وصفات متاحة حالياً</h3>
-                <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">نحن نعمل على إضافة وصفات جديدة ومميزة. تحقق مرة أخرى قريباً!</p>
+                <h3 class="text-2xl font-bold text-gray-700 mb-3">{{ __('home.featured_recipes.empty_title') }}</h3>
+                <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">{{ __('home.featured_recipes.empty_description') }}</p>
                 <a href="{{ route('recipes') }}" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
-                    تصفح جميع الوصفات
+                    {{ __('home.featured_recipes.empty_cta') }}
                 </a>
             </div>
         @endif
@@ -1821,32 +1823,32 @@
         $whyChooseItems = [
             [
                 'icon' => 'fas fa-crown',
-                'title' => 'وصفات متنوعة',
-                'description' => 'نخبة وصفات عالمية فاخرة.',
+                'title' => __('home.why.items.variety.title'),
+                'description' => __('home.why.items.variety.description'),
                 'card_gradient' => 'from-amber-50 via-white to-orange-50',
                 'card_border' => 'border-amber-200/70',
                 'icon_gradient' => 'from-amber-400 to-orange-500',
             ],
             [
                 'icon' => 'fas fa-gem',
-                'title' => 'تقنيات احترافية',
-                'description' => 'مهارات شيفات بخبرة عالمية.',
+                'title' => __('home.why.items.techniques.title'),
+                'description' => __('home.why.items.techniques.description'),
                 'card_gradient' => 'from-amber-50 via-white to-orange-50',
                 'card_border' => 'border-amber-200/70',
                 'icon_gradient' => 'from-amber-400 to-orange-500',
             ],
             [
                 'icon' => 'fas fa-award',
-                'title' => 'مواد أولية فاخرة',
-                'description' => 'مكونات بلجيكية وإيطالية مميزة.',
+                'title' => __('home.why.items.ingredients.title'),
+                'description' => __('home.why.items.ingredients.description'),
                 'card_gradient' => 'from-amber-50 via-white to-orange-50',
                 'card_border' => 'border-amber-200/70',
                 'icon_gradient' => 'from-amber-400 to-orange-500',
             ],
             [
-                'icon' => 'fas fa-magic',
-                'title' => 'ورشات متخصصة',
-                'description' => 'ورشات حصرية مع خبراء.',
+                'icon' => 'fas fa-graduation-cap',
+                'title' => __('home.why.items.workshops.title'),
+                'description' => __('home.why.items.workshops.description'),
                 'card_gradient' => 'from-amber-50 via-white to-orange-50',
                 'card_border' => 'border-amber-200/70',
                 'icon_gradient' => 'from-amber-400 to-orange-500',
@@ -1855,8 +1857,8 @@
     @endphp
     <section class="pt-4 pb-4 md:pt-6 md:pb-8 bg-gradient-to-br from-amber-50 to-orange-50">
         <div class="container mx-auto px-3 md:px-6 text-center">
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1 md:mb-3">لماذا تختار منصّة وصفة ؟</h2>
-            <p class="text-gray-600 text-sm md:text-base mb-0 md:mb-2 max-w-2xl mx-auto">نحن نقدم لك تجربة فريدة في عالم الحلويات مع وصفات حصرية وتقنيات احترافية</p>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-1 md:mb-3">{{ __('home.why.title') }}</h2>
+            <p class="text-gray-600 text-sm md:text-base mb-0 md:mb-2 max-w-2xl mx-auto">{{ __('home.why.description') }}</p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-4xl mx-auto mt-4 md:mt-6">
                 @foreach($whyChooseItems as $item)
                     @php
@@ -1887,10 +1889,10 @@
         <div class="container mx-auto px-4">
             <!-- Header Section -->
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">ورشات الحلويات الفاخرة</h2>
-                <p class="text-gray-600 text-lg max-w-3xl mx-auto mb-6">انضم إلى ورشاتنا الاحترافية الحصرية وتعلم أسرار صنع أرقى الحلويات العالمية</p>
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">{{ __('home.premium_workshops.title') }}</h2>
+                <p class="text-gray-600 text-lg max-w-3xl mx-auto mb-6">{{ __('home.premium_workshops.subtitle') }}</p>
                 <a href="{{ route('workshops') }}" class="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 font-semibold text-lg transition-colors">
-                    عرض جميع الورشات
+                    {{ __('home.premium_workshops.cta') }}
                     <i class="fas fa-arrow-left text-sm"></i>
                 </a>
             </div>
@@ -1903,10 +1905,12 @@
                             $isRegistrationClosed = !$workshop->is_registration_open;
                             $isCompleted = $workshop->is_completed;
                             $isBooked = !empty($bookedWorkshopIds) && in_array($workshop->id, $bookedWorkshopIds, true);
-                            $startDateLabel = $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد';
-                            $bookingLocationLabel = $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية');
-                            $bookingDeadlineLabel = $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد';
-                            $bookingInstructor = $workshop->instructor ?? 'غير محدد';
+                            $startDateLabel = $workshop->start_date ? $workshop->start_date->format('d/m/Y') : __('home.labels.unspecified');
+                            $bookingLocationLabel = $workshop->is_online
+                                ? __('home.labels.online_workshop')
+                                : ($workshop->location ?? __('home.labels.offline_workshop'));
+                            $bookingDeadlineLabel = $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : __('home.labels.unspecified');
+                            $bookingInstructor = $workshop->instructor ?? __('home.labels.unspecified');
                             $bookingButtonStateClasses = $isBooked
                                 ? 'bg-green-500 text-white cursor-not-allowed'
                                 : 'bg-green-500 hover:bg-green-600 text-white';
@@ -1936,16 +1940,16 @@
                                         <div class="relative">
                                             <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
                                                  alt="{{ $workshop->title }}"
-                                                 onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                                 onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ __('home.premium_workshops.placeholder_image_alt') }}';">
                                             @if($isFull)
                                             <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">اكتمل العدد</span>
+                                                <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">{{ __('home.premium_workshops.status_full') }}</span>
                                             </div>
                                             @elseif($isRegistrationClosed)
                                             <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                                                 <span class="text-white font-bold text-lg bg-yellow-500 px-4 py-2 rounded-full">
                                                     <i class="fas fa-clock ml-2"></i>
-                                                    انتهى التسجيل
+                                                    {{ __('home.premium_workshops.status_closed') }}
                                                 </span>
                                             </div>
                                             @endif
@@ -1955,20 +1959,20 @@
                                         <div class="p-6 flex flex-col flex-grow">
                                             <div class="mb-2">
                                                 <span class="text-sm font-semibold {{ $workshop->is_online ? 'text-blue-600' : 'text-green-600' }}">
-                                                    {{ $workshop->is_online ? 'اونلاين' : 'حضوري' }}
+                                                    {{ $workshop->is_online ? __('home.labels.online_short') : __('home.labels.onsite_short') }}
                                                 </span>
                                             </div>
                                             <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $workshop->title }}</h3>
-                                            <p class="text-gray-600 mb-4">مع {{ $workshop->instructor }}</p>
+                                            <p class="text-gray-600 mb-4">{{ __('home.labels.with') }} {{ $bookingInstructor }}</p>
                                             <div class="flex items-center text-gray-500 text-sm mb-4">
-                                                <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}
+                                                <i class="fas fa-calendar-alt mr-2 rtl:ml-2"></i> {{ $startDateLabel }}
                                             </div>
                                             <div class="flex items-center text-gray-500 text-sm mb-4">
-                                                <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? 'اونلاين (مباشر)' : ($workshop->location ?? 'غير محدد') }}
+                                                <i class="fas fa-map-marker-alt mr-2 rtl:ml-2"></i> {{ $workshop->is_online ? __('home.labels.live_online') : ($workshop->location ?? __('home.labels.unspecified')) }}
                                             </div>
                                             @if($showAdminMetrics)
                                                 <div class="flex items-center text-gray-500 text-sm mb-4">
-                                                    <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك
+                                                    <i class="fas fa-users mr-2 rtl:ml-2"></i> {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} {{ __('home.premium_workshops.participants_label') }}
                                                 </div>
                                             @endif
                                             
@@ -1978,22 +1982,22 @@
                                                     @if($isCompleted)
                                                     <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                                         <i class="fas fa-check-circle ml-2"></i>
-                                                        الورشة مكتملة
+                                                        {{ __('home.featured_workshop.status_full') }}
                                                     </button>
                                                     @elseif($isBooked)
                                                     <button type="button" class="flex-1 bg-green-500 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm" disabled>
                                                         <i class="fas fa-check ml-2 booking-button-icon"></i>
-                                                        <span class="booking-button-label">تم الحجز بالفعل</span>
+                                                        <span class="booking-button-label">{{ __('home.featured_workshop.status_booked') }}</span>
                                                     </button>
                                                     @elseif($isFull)
                                                     <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                                         <i class="fas fa-lock ml-2"></i>
-                                                        الورشة مكتملة
+                                                        {{ __('home.featured_workshop.status_full') }}
                                                     </button>
                                                     @elseif($isRegistrationClosed)
                                                         <button type="button" class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
                                                             <i class="fas fa-clock ml-2"></i>
-                                                            انتهى التسجيل
+                                                            {{ __('home.featured_workshop.status_closed') }}
                                                         </button>
                                                     @else
                                                         <button type="button"
@@ -2007,12 +2011,12 @@
                                                                 data-deadline="{{ e($bookingDeadlineLabel) }}"
                                                                 data-is-booked="false">
                                                             <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
-                                                            <span class="booking-button-label">احجز الآن</span>
+                                                            <span class="booking-button-label">{{ __('home.premium_workshops.card_primary_cta') }}</span>
                                                         </button>
                                                     @endif
                                                     <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
                                                         <i class="fas fa-info-circle text-sm ml-2 group-hover:text-orange-500 transition-colors"></i>
-                                                        <span class="text-sm">تفاصيل</span>
+                                                        <span class="text-sm">{{ __('home.buttons.view_details') }}</span>
                                                     </a>
                                                 </div>
                                             </div>
@@ -2027,8 +2031,8 @@
                     <div class="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="fas fa-coffee text-4xl text-amber-500"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-700 mb-3">لا توجد ورشات متاحة حالياً</h3>
-                    <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">نحن نعمل على تحضير ورشات جديدة ومميزة. تحقق مرة أخرى قريباً!</p>
+                    <h3 class="text-2xl font-bold text-gray-700 mb-3">{{ __('home.premium_workshops.empty_title') }}</h3>
+                    <p class="text-gray-500 text-lg max-w-md mx-auto mb-6">{{ __('home.premium_workshops.empty_description') }}</p>
                 </div>
             @endif
         </div>
@@ -2040,6 +2044,16 @@
 @push('scripts')
 @vite(['resources/js/whatsapp-booking.js'])
 <script>
+const homeTranslations = {
+    save: @json(__('home.saved.save')),
+    saved: @json(__('home.saved.saved')),
+    alerts: {
+        removed: @json(__('home.alerts.save_removed')),
+        success: @json(__('home.alerts.save_success')),
+        error: @json(__('home.alerts.save_error')),
+    },
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     WhatsAppBooking.configure({
         isLoggedIn: @json(auth()->check()),
@@ -2048,9 +2062,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loginUrl: @json(route('login')),
         registerUrl: @json(route('register')),
         user: {
-            name: @json(optional(auth()->user())->name ?? 'مستخدم'),
-            phone: @json(optional(auth()->user())->phone ?? 'غير محدد'),
-            email: @json(optional(auth()->user())->email ?? 'غير محدد'),
+            name: @json(optional(auth()->user())->name ?? __('home.labels.user_placeholder')),
+            phone: @json(optional(auth()->user())->phone ?? __('home.labels.unspecified')),
+            email: @json(optional(auth()->user())->email ?? __('home.labels.unspecified')),
         },
     });
     WhatsAppBooking.initButtons();
@@ -2178,13 +2192,13 @@ function initializeSaveButtonsFallback() {
                 // Change from saved (green) to not saved (orange)
                 this.classList.remove('bg-green-500', 'hover:bg-green-600');
                 this.classList.add('bg-orange-500', 'hover:bg-orange-600');
-                this.querySelector('span').textContent = 'حفظ';
+                this.querySelector('span').textContent = homeTranslations.save;
                 this.dataset.saved = 'false';
             } else {
                 // Change from not saved (orange) to saved (green)
                 this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                 this.classList.add('bg-green-500', 'hover:bg-green-600');
-                this.querySelector('span').textContent = 'محفوظة';
+                this.querySelector('span').textContent = homeTranslations.saved;
                 this.dataset.saved = 'true';
             }
             
@@ -2213,7 +2227,7 @@ function initializeSaveButtonsFallback() {
                 if (data.success) {
                     // Show notification
                     showNotification(
-                        isCurrentlySaved ? 'تم إلغاء حفظ الوصفة' : 'تم حفظ الوصفة بنجاح',
+                        isCurrentlySaved ? homeTranslations.alerts.removed : homeTranslations.alerts.success,
                         'success'
                     );
                     
@@ -2227,17 +2241,17 @@ function initializeSaveButtonsFallback() {
                         // Revert back to saved (green)
                         this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                         this.classList.add('bg-green-500', 'hover:bg-green-600');
-                        this.querySelector('span').textContent = 'محفوظة';
+                        this.querySelector('span').textContent = homeTranslations.saved;
                         this.dataset.saved = 'true';
                     } else {
                         // Revert back to not saved (orange)
                         this.classList.remove('bg-green-500', 'hover:bg-green-600');
                         this.classList.add('bg-orange-500', 'hover:bg-orange-600');
-                        this.querySelector('span').textContent = 'حفظ';
+                        this.querySelector('span').textContent = homeTranslations.save;
                         this.dataset.saved = 'false';
                     }
                     
-                    showNotification('حدث خطأ أثناء حفظ الوصفة', 'error');
+                    showNotification(homeTranslations.alerts.error, 'error');
                 }
             })
             .catch(error => {
@@ -2246,17 +2260,17 @@ function initializeSaveButtonsFallback() {
                     // Revert back to saved (green)
                     this.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                     this.classList.add('bg-green-500', 'hover:bg-green-600');
-                    this.querySelector('span').textContent = 'محفوظة';
+                    this.querySelector('span').textContent = homeTranslations.saved;
                     this.dataset.saved = 'true';
                 } else {
                     // Revert back to not saved (orange)
                     this.classList.remove('bg-green-500', 'hover:bg-green-600');
                     this.classList.add('bg-orange-500', 'hover:bg-orange-600');
-                    this.querySelector('span').textContent = 'حفظ';
+                    this.querySelector('span').textContent = homeTranslations.save;
                     this.dataset.saved = 'false';
                 }
                 
-                showNotification('حدث خطأ أثناء حفظ الوصفة', 'error');
+                showNotification(homeTranslations.alerts.error, 'error');
             });
         });
     });

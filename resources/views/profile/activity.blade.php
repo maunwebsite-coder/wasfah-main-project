@@ -59,8 +59,9 @@
                             </div>
                             <div class="text-sm font-semibold text-gray-800">{{ $activity['title'] }}</div>
                             @if (!empty($activity['meta']['category']))
-                                <div class="text-xs text-gray-500">
-                                    التصنيف: {{ $activity['meta']['category'] }}
+                                <div class="text-xs text-gray-500 flex flex-wrap items-center gap-1">
+                                    <span>التصنيف:</span>
+                                    <span>{{ $activity['meta']['category'] }}</span>
                                 </div>
                             @endif
                             @if ($activity['type'] === 'workshop_booking')
@@ -77,8 +78,9 @@
                                         {{ $status === 'confirmed' ? 'مؤكد' : ($status === 'pending' ? 'بانتظار' : ($status === 'cancelled' ? 'ملغي' : $status)) }}
                                     </span>
                                     @if (!empty($activity['meta']['start_date']))
-                                        <span class="ml-2">
-                                            يبدأ بتاريخ {{ Carbon::parse($activity['meta']['start_date'])->locale('ar')->translatedFormat('d F Y • h:i a') }}
+                                        <span class="ml-2 flex flex-wrap items-center gap-1">
+                                            <span>يبدأ بتاريخ</span>
+                                            <span>{{ Carbon::parse($activity['meta']['start_date'])->locale('ar')->translatedFormat('d F Y • h:i a') }}</span>
                                         </span>
                                     @endif
                                 </div>
@@ -115,10 +117,14 @@
                                         {{ $recipe->title }}
                                     </a>
                                     @if ($recipe->category?->name)
-                                        <div class="text-xs text-gray-500">التصنيف: {{ $recipe->category->name }}</div>
+                                        <div class="text-xs text-gray-500 flex flex-wrap items-center gap-1">
+                                            <span>التصنيف:</span>
+                                            <span>{{ $recipe->category->name }}</span>
+                                        </div>
                                     @endif
-                                    <div class="mt-1 text-xs text-gray-400">
-                                        تمت الإضافة {{ optional($recipe->userInteraction->updated_at ?? $recipe->userInteraction->created_at)->diffForHumans() }}
+                                    <div class="mt-1 text-xs text-gray-400 flex flex-wrap items-center gap-1">
+                                        <span>تمت الإضافة</span>
+                                        <span>{{ optional($recipe->userInteraction->updated_at ?? $recipe->userInteraction->created_at)->diffForHumans() }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -152,10 +158,14 @@
                                         {{ $recipe->title }}
                                     </a>
                                     @if ($recipe->category?->name)
-                                        <div class="text-xs text-gray-500">التصنيف: {{ $recipe->category->name }}</div>
+                                        <div class="text-xs text-gray-500 flex flex-wrap items-center gap-1">
+                                            <span>التصنيف:</span>
+                                            <span>{{ $recipe->category->name }}</span>
+                                        </div>
                                     @endif
-                                    <div class="mt-1 text-xs text-gray-400">
-                                        تمت التجربة {{ optional($recipe->userInteraction->updated_at ?? $recipe->userInteraction->created_at)->diffForHumans() }}
+                                    <div class="mt-1 text-xs text-gray-400 flex flex-wrap items-center gap-1">
+                                        <span>تمت التجربة</span>
+                                        <span>{{ optional($recipe->userInteraction->updated_at ?? $recipe->userInteraction->created_at)->diffForHumans() }}</span>
                                     </div>
                                 </div>
                             </div>

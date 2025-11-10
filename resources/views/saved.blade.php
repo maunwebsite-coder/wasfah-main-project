@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الأدوات المحفوظة')
+@section('title', __('saved.title'))
 
 @section('content')
 <div class="min-h-screen bg-gray-50">
@@ -11,10 +11,10 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1">
                         <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-2">
-                            الأدوات المحفوظة
+                            {{ __('saved.title') }}
                         </h1>
                         <p class="text-gray-600 text-center">
-                            المنتجات التي حفظتها للشراء لاحقاً
+                            {{ __('saved.subtitle') }}
                         </p>
                     </div>
                     
@@ -37,7 +37,7 @@
                                     <img src="{{ $savedTool->tool->image_url }}" 
                                          alt="{{ $savedTool->tool->name }}" 
                                          class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                                         onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                         onerror="this.src='{{ asset('image/logo.png') }}'; this.alt=@json(__('saved.placeholder_alt'));"
                                     
                                     <!-- Category Badge -->
                                     <div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -69,7 +69,7 @@
 
                                     <!-- Price -->
                                     <div class="text-sm sm:text-lg font-bold text-orange-600 mb-2 sm:mb-3">
-                                        {{ number_format($savedTool->tool->price, 2) }} درهم إماراتي
+                                        {{ number_format($savedTool->tool->price, 2) }} {{ __('saved.price_currency') }}
                                     </div>
 
                                     <!-- Action Buttons - Always at bottom -->
@@ -79,7 +79,7 @@
                                            target="_blank"
                                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95 group">
                                             <i class="fab fa-amazon ml-1 sm:ml-2 group-hover:scale-110 transition-transform duration-300"></i>
-                                            <span>متابعة الشراء من Amazon</span>
+                                            <span>{{ __('saved.buttons.amazon') }}</span>
                                             <i class="fas fa-external-link-alt mr-1 sm:mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>
                                         </a>
                                         @endif
@@ -88,7 +88,7 @@
                                                 data-tool-id="{{ $savedTool->tool->id }}"
                                                 data-saved-id="{{ $savedTool->id }}">
                                             <i class="fas fa-trash ml-1 sm:ml-2"></i>
-                                            <span class="btn-text">حذف من المحفوظات</span>
+                                            <span class="btn-text">{{ __('saved.buttons.remove') }}</span>
                                             <i class="fas fa-spinner fa-spin ml-1 sm:ml-2 hidden loading-icon"></i>
                                         </button>
                                     </div>
@@ -102,12 +102,12 @@
                         <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                             <i class="fas fa-bookmark text-4xl text-gray-400"></i>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد منتجات محفوظة</h3>
-                        <p class="text-gray-600 mb-6">ابدأ بحفظ المنتجات التي تريد شراءها لاحقاً</p>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('saved.states.empty_title') }}</h3>
+                        <p class="text-gray-600 mb-6">{{ __('saved.states.empty_description') }}</p>
                         <a href="{{ route('tools') }}" 
                            class="inline-flex items-center px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors">
                             <i class="fas fa-shopping-bag ml-2"></i>
-                            تصفح الأدوات
+                            {{ __('saved.buttons.browse_tools') }}
                         </a>
                     </div>
                 @endif
@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show loading state
             this.disabled = true;
-            this.querySelector('.btn-text').textContent = 'جاري الحذف...';
+            this.querySelector('.btn-text').textContent = @json(__('saved.messages.removing'));
             this.querySelector('.loading-icon').classList.remove('hidden');
             
             // Remove from saved
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // Show success message
-                    showToast('تم حذف المنتج من المحفوظات!', 'success');
+                    showToast(@json(__('saved.messages.remove_success')), 'success');
                     
                     // Check if no more items
                     const remainingCards = document.querySelectorAll('.tool-card');
@@ -419,15 +419,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         location.reload();
                     }
                 } else {
-                    throw new Error(data.message || 'حدث خطأ أثناء حذف المنتج');
+                    throw new Error(data.message || @json(__('saved.messages.remove_error')));
                 }
             })
             .catch(error => {
                 console.error('Error removing from saved:', error);
                 this.disabled = false;
-                this.querySelector('.btn-text').textContent = 'حذف من المحفوظات';
+                this.querySelector('.btn-text').textContent = @json(__('saved.buttons.remove'));
                 this.querySelector('.loading-icon').classList.add('hidden');
-                showToast('حدث خطأ أثناء حذف المنتج من المحفوظات', 'error');
+                showToast(@json(__('saved.messages.remove_error_saved')), 'error');
             });
         });
     });

@@ -1,14 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'ملف الشيف ' . ($chef->name ?? ''))
+@section('title', __('chef.meta.title', ['name' => $chef->name ?? '']))
 
 @php
+    $locale = app()->getLocale();
+    $carbonLocale = $locale === 'ar' ? 'ar' : 'en';
+
     $totalFollowers = max(0, (int) ($chef->instagram_followers ?? 0)) + max(0, (int) ($chef->youtube_followers ?? 0));
     $bio = $chef->chef_specialty_description
-        ?: 'شيف مبدع يشارك وصفاته المميزة مع مجتمع وصفه.';
+        ?: __('chef.defaults.bio');
     $specialty = $chef->chef_specialty_area
-        ? 'متخصص في ' . $chef->chef_specialty_area
-        : 'عضو في مجتمع وصفه';
+        ? __('chef.defaults.specialty_with_area', ['area' => $chef->chef_specialty_area])
+        : __('chef.defaults.specialty_generic');
 
     $statsAverage = $stats['average_rating']
         ? number_format($stats['average_rating'], 1)
@@ -36,6 +39,12 @@
 
     $platformFollowers = $totalFollowers;
     $recipesCount = max(0, (int) $stats['recipes_count']);
+    $workshopPlaceholderText = rawurlencode(__('chef.workshops.placeholder_text'));
+    $workshopDateTimeFormat = __('chef.workshops.datetime_format');
+    $workshopDateFormat = __('chef.workshops.date_format');
+    $isRtl = $locale === 'ar';
+    $arrowIcon = $isRtl ? 'fa-arrow-left' : 'fa-arrow-right';
+    $arrowLongIcon = $isRtl ? 'fa-arrow-left-long' : 'fa-arrow-right-long';
 @endphp
 
 @push('styles')
@@ -456,6 +465,139 @@
             font-weight: 600;
         }
 
+        .chef-impact {
+            margin-top: clamp(2.2rem, 5vw, 4rem);
+            padding: clamp(2rem, 4vw, 3rem);
+            border-radius: 2.5rem;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(249, 115, 22, 0));
+            border: 1px solid rgba(249, 115, 22, 0.12);
+            box-shadow: 0 26px 48px -38px rgba(15, 23, 42, 0.3);
+        }
+
+        .chef-impact__header {
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+        }
+
+        .chef-impact__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--chef-primary-strong);
+            background: rgba(249, 115, 22, 0.12);
+            margin-bottom: 0.8rem;
+        }
+
+        .chef-impact__header h2 {
+            margin: 0;
+            font-size: clamp(1.85rem, 3.2vw, 2.4rem);
+            color: var(--chef-neutral-900);
+        }
+
+        .chef-impact__header p {
+            margin: 0.25rem 0 0;
+            color: var(--chef-neutral-600, #4b5563);
+            line-height: 1.8;
+            max-width: 520px;
+        }
+
+        .chef-impact__highlight {
+            min-width: 220px;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1.75rem;
+            background: #fff;
+            border: 1px solid rgba(249, 115, 22, 0.1);
+            box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.05);
+            text-align: center;
+        }
+
+        .chef-impact__highlight span {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--chef-neutral-500);
+        }
+
+        .chef-impact__highlight strong {
+            display: block;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0.25rem 0;
+            color: var(--chef-primary-strong);
+        }
+
+        .chef-impact__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .chef-impact-card {
+            position: relative;
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            background: #fff;
+            border: 1px solid rgba(249, 115, 22, 0.08);
+            box-shadow: 0 18px 32px -34px rgba(15, 23, 42, 0.45);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chef-impact-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .chef-impact-card__icon.is-saves {
+            background: linear-gradient(135deg, #f97316, #fbbf24);
+        }
+
+        .chef-impact-card__icon.is-made {
+            background: linear-gradient(135deg, #34d399, #10b981);
+        }
+
+        .chef-impact-card__icon.is-reviews {
+            background: linear-gradient(135deg, #f43f5e, #f97316);
+        }
+
+        .chef-impact-card__content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .chef-impact-card__eyebrow {
+            font-size: 0.85rem;
+            color: var(--chef-neutral-500);
+            margin: 0;
+        }
+
+        .chef-impact-card__value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--chef-neutral-900);
+            margin: 0;
+        }
+
+        .chef-impact-card__hint {
+            margin: 0;
+            font-size: 0.92rem;
+            color: var(--chef-neutral-600, #4b5563);
+        }
+
         .chef-workshops-section {
             margin-block: clamp(3rem, 7vw, 4.5rem);
             padding: clamp(2rem, 5vw, 3.5rem);
@@ -814,6 +956,15 @@
             .chef-profile-hero__social {
                 justify-content: center;
             }
+
+            .chef-impact__header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .chef-impact__highlight {
+                width: 100%;
+            }
         }
 
         @media (max-width: 640px) {
@@ -859,7 +1010,6 @@
 
             .chef-profile-hero__meta {
                 grid-area: stats;
-                direction: rtl;
                 grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: 0.85rem;
                 align-items: stretch;
@@ -869,7 +1019,7 @@
                 padding: 0.75rem 0.85rem;
                 background: #ffffff;
                 border-radius: 1rem;
-                text-align: right;
+                text-align: start;
                 box-shadow: 0 12px 30px -28px rgba(15, 23, 42, 0.25);
             }
 
@@ -890,7 +1040,7 @@
             .chef-profile-hero__identity {
                 grid-area: name;
                 align-items: flex-end;
-                text-align: right;
+                text-align: start;
                 gap: 0.45rem;
             }
 
@@ -907,7 +1057,7 @@
 
             .chef-profile-hero__bio-block {
                 grid-area: bio;
-                text-align: right;
+                text-align: start;
                 gap: 0.35rem;
             }
 
@@ -956,6 +1106,25 @@
                 color: var(--chef-primary-strong);
             }
 
+            .chef-impact {
+                padding: 1.5rem;
+                border-radius: 1.5rem;
+            }
+
+            .chef-impact__header {
+                text-align: center;
+            }
+
+            .chef-impact-card {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+            }
+
+            .chef-impact-card__content {
+                align-items: center;
+            }
+
             .chef-workshops-section {
                 border-radius: 1.75rem;
                 padding: 1.75rem;
@@ -997,6 +1166,49 @@
                 padding: 1.25rem;
             }
         }
+
+        [dir='ltr'] .chef-profile-hero__identity,
+        [dir='ltr'] .chef-profile-hero__bio-block {
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        [dir='ltr'] .chef-profile-hero__actions {
+            justify-content: flex-start;
+        }
+
+        [dir='ltr'] .chef-profile-hero__social {
+            justify-content: flex-start;
+        }
+
+        [dir='ltr'] .chef-impact__header {
+            text-align: left;
+        }
+
+        [dir='ltr'] .chef-impact-card,
+        [dir='ltr'] .chef-impact-card__content {
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        [dir='ltr'] .chef-recipe-card__cta:hover {
+            transform: translateX(2px);
+        }
+
+        @media (max-width: 640px) {
+            [dir='ltr'] .chef-profile-hero__avatar {
+                justify-self: start;
+            }
+
+            [dir='ltr'] .chef-profile-hero__identity,
+            [dir='ltr'] .chef-profile-hero__bio-block {
+                text-align: left;
+            }
+
+            [dir='ltr'] .chef-impact__header {
+                text-align: center;
+            }
+        }
     </style>
 @endpush
 
@@ -1004,13 +1216,13 @@
     <div class="chef-profile-page">
         <div class="chef-profile-shell">
             <section class="chef-profile-hero">
-                <div class="chef-profile-hero__grid">
+                    <div class="chef-profile-hero__grid">
                     <div class="chef-profile-hero__avatar">
-                        <img src="{{ $avatarUrl }}" alt="صورة الشيف {{ $chef->name }}">
+                        <img src="{{ $avatarUrl }}" alt="{{ __('chef.hero.avatar_alt', ['name' => $chef->name]) }}">
                     </div>
                     <div class="chef-profile-hero__details">
                         <div class="chef-profile-hero__identity">
-                            <h1>الشيف {{ $chef->name }}</h1>
+                            <h1>{{ __('chef.hero.heading', ['name' => $chef->name]) }}</h1>
                         </div>
                         <div class="chef-profile-hero__bio-block">
                             <p class="chef-profile-hero__bio">{{ $bio }}</p>
@@ -1019,32 +1231,32 @@
                         <div class="chef-profile-hero__meta">
                             <div class="chef-meta-card chef-meta-card--followers">
                                 <strong>{{ number_format($wasfahFollowers) }}</strong>
-                                <span>عدد المشتركين</span>
+                                <span>{{ __('chef.hero.stats.wasfah_followers') }}</span>
                             </div>
                             <div class="chef-meta-card chef-meta-card--platforms">
                                 <strong>{{ number_format($platformFollowers) }}</strong>
-                                <span>مشتركو المنصات الأخرى</span>
+                                <span>{{ __('chef.hero.stats.other_platform_followers') }}</span>
                             </div>
                             <div class="chef-meta-card chef-meta-card--recipes">
                                 <strong>{{ number_format($recipesCount) }}</strong>
-                                <span>عدد الوصفات</span>
+                                <span>{{ __('chef.hero.stats.recipes') }}</span>
                             </div>
                             <div class="chef-meta-card chef-meta-card--rating">
                                 <strong>{{ $statsAverage }}</strong>
-                                <span>متوسط التقييم</span>
+                                <span>{{ __('chef.hero.stats.average_rating') }}</span>
                             </div>
                         </div>
                         <div class="chef-profile-hero__actions">
                             @if (! $isOwner)
                                 @auth
                                     <button type="button" class="chef-follow-btn" data-follow-button>
-                                        <i class="fa-solid fa-plus"></i>
-                                        متابعة
+                                        <i class="fa-solid fa-plus" data-follow-icon></i>
+                                        <span data-follow-label>{{ __('chef.hero.buttons.follow') }}</span>
                                     </button>
                                 @else
                                     <a href="{{ route('login') }}" class="chef-follow-btn">
                                         <i class="fa-solid fa-plus"></i>
-                                        متابعة
+                                        <span>{{ __('chef.hero.buttons.follow') }}</span>
                                     </a>
                                 @endauth
                             @endif
@@ -1071,20 +1283,69 @@
                 </div>
             </section>
 
+            <section class="chef-impact">
+                <div class="chef-impact__header">
+                    <div>
+                        <span class="chef-impact__badge">
+                            <i class="fa-solid fa-chart-line"></i>
+                            {{ __('chef.impact.badge') }}
+                        </span>
+                        <h2>{{ __('chef.impact.title') }}</h2>
+                        <p>{{ __('chef.impact.description', ['name' => $chef->name]) }}</p>
+                    </div>
+                    <div class="chef-impact__highlight">
+                        <span>{{ __('chef.impact.highlight_label') }}</span>
+                        <strong>{{ number_format($recipesCount) }}</strong>
+                        <span>{{ __('chef.impact.highlight_hint') }}</span>
+                    </div>
+                </div>
+                <div class="chef-impact__grid">
+                    <article class="chef-impact-card">
+                        <span class="chef-impact-card__icon is-saves">
+                            <i class="fa-solid fa-bookmark"></i>
+                        </span>
+                        <div class="chef-impact-card__content">
+                            <p class="chef-impact-card__eyebrow">{{ __('chef.impact.cards.saves.title') }}</p>
+                            <p class="chef-impact-card__value">{{ number_format((int) ($stats['total_saves'] ?? 0)) }}</p>
+                            <p class="chef-impact-card__hint">{{ __('chef.impact.cards.saves.hint') }}</p>
+                        </div>
+                    </article>
+                    <article class="chef-impact-card">
+                        <span class="chef-impact-card__icon is-made">
+                            <i class="fa-solid fa-utensils"></i>
+                        </span>
+                        <div class="chef-impact-card__content">
+                            <p class="chef-impact-card__eyebrow">{{ __('chef.impact.cards.made.title') }}</p>
+                            <p class="chef-impact-card__value">{{ number_format((int) ($stats['total_made'] ?? 0)) }}</p>
+                            <p class="chef-impact-card__hint">{{ __('chef.impact.cards.made.hint') }}</p>
+                        </div>
+                    </article>
+                    <article class="chef-impact-card">
+                        <span class="chef-impact-card__icon is-reviews">
+                            <i class="fa-solid fa-star"></i>
+                        </span>
+                        <div class="chef-impact-card__content">
+                            <p class="chef-impact-card__eyebrow">{{ __('chef.impact.cards.reviews.title') }}</p>
+                            <p class="chef-impact-card__value">{{ number_format((int) ($stats['rating_count'] ?? 0)) }}</p>
+                            <p class="chef-impact-card__hint">{{ __('chef.impact.cards.reviews.hint') }}</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
             @if ($upcomingWorkshops->isNotEmpty() || $pastWorkshops->isNotEmpty())
                 <section class="chef-workshops-section">
                     <div class="chef-workshops-header">
                         <div class="chef-workshops-header__meta">
                             <div>
-                                <h2>ورشات الشيف</h2>
+                                <h2>{{ __('chef.workshops.title') }}</h2>
                                 <p>
-                                    اكتشف التجارب التعليمية التي يقدمها {{ $chef->name }} وتعرّف على الورشات القادمة والماضية التي
-                                    شارك فيها عشاق الطهي.
+                                    {{ __('chef.workshops.description', ['name' => $chef->name]) }}
                                 </p>
                             </div>
                             <a href="{{ route('workshops') }}" class="chef-workshops-link">
-                                استعراض كل الورشات
-                                <i class="fa-solid fa-arrow-left-long"></i>
+                                {{ __('chef.workshops.view_all') }}
+                                <i class="fa-solid {{ $arrowLongIcon }}"></i>
                             </a>
                         </div>
                     </div>
@@ -1093,46 +1354,52 @@
                         <div class="chef-workshops-group">
                             <h3>
                                 <i class="fa-solid fa-calendar-check text-emerald-500"></i>
-                                ورشات قادمة
+                                {{ __('chef.workshops.upcoming') }}
                             </h3>
                             <div class="chef-workshops-grid">
                                 @foreach ($upcomingWorkshops as $workshop)
                                     @php
                                         $coverImage = $workshop->image
                                             ? asset('storage/' . ltrim($workshop->image, '/'))
-                                            : 'https://placehold.co/600x400/f97316/FFFFFF?text=ورشة';
+                                            : "https://placehold.co/600x400/f97316/FFFFFF?text={$workshopPlaceholderText}";
                                         $startDateLabel = $workshop->start_date
-                                            ? $workshop->start_date->copy()->locale('ar')->translatedFormat('j F Y • h:i a')
-                                            : 'سيتم التحديد لاحقاً';
-                                        $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
+                                            ? $workshop->start_date->copy()->locale($carbonLocale)->translatedFormat($workshopDateTimeFormat)
+                                            : __('chef.workshops.tbd_time');
+                                        $locationLabel = $workshop->is_online
+                                            ? __('chef.workshops.online_live')
+                                            : ($workshop->location ?: __('chef.workshops.location_tbd'));
                                         $priceLabel = $workshop->formatted_price
                                             ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
                                         $levelLabels = [
-                                            'beginner' => 'مبتدئ',
-                                            'intermediate' => 'متوسط',
-                                            'advanced' => 'متقدم',
+                                            'beginner' => __('chef.workshops.levels.beginner'),
+                                            'intermediate' => __('chef.workshops.levels.intermediate'),
+                                            'advanced' => __('chef.workshops.levels.advanced'),
                                         ];
                                         $levelLabel = $levelLabels[$workshop->level] ?? null;
+                                        $currentBookings = number_format((int) ($workshop->bookings_count ?? 0));
+                                        $maxParticipants = $workshop->max_participants ? number_format((int) $workshop->max_participants) : null;
                                         $capacityLabel = $workshop->max_participants
-                                            ? sprintf('%d / %d مشارك', $workshop->bookings_count ?? 0, $workshop->max_participants)
-                                            : (($workshop->bookings_count ?? 0) . ' مشاركين');
+                                            ? __('chef.workshops.capacity_with_limit', ['current' => $currentBookings, 'max' => $maxParticipants])
+                                            : __('chef.workshops.capacity_open', ['count' => $currentBookings]);
                                         $deadlineLabel = $workshop->registration_deadline
-                                            ? $workshop->registration_deadline->copy()->locale('ar')->translatedFormat('j F Y')
+                                            ? $workshop->registration_deadline->copy()->locale($carbonLocale)->translatedFormat($workshopDateFormat)
                                             : null;
                                         $isRegistrationOpen = (bool) $workshop->is_registration_open;
                                         $badgeClass = $isRegistrationOpen ? 'chef-workshop-card__badge' : 'chef-workshop-card__badge is-closed';
-                                        $badgeLabel = $isRegistrationOpen ? 'متاحة للحجز' : 'انتهى التسجيل';
+                                        $badgeLabel = $isRegistrationOpen
+                                            ? __('chef.workshops.badges.open')
+                                            : __('chef.workshops.badges.closed');
                                     @endphp
                                     <article class="chef-workshop-card">
                                         <div class="chef-workshop-card__media">
-                                            <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}">
+                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' => $workshop->title]) }}">
                                             <span class="{{ $badgeClass }}">{{ $badgeLabel }}</span>
                                         </div>
                                         <div class="chef-workshop-card__body">
                                             <div class="chef-workshop-card__meta">
                                                 <span class="chef-workshop-chip {{ $workshop->is_online ? 'is-online' : 'is-offline' }}">
                                                     <i class="fa-solid {{ $workshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
-                                                    {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                                    {{ $workshop->is_online ? __('chef.workshops.delivery.online_short') : __('chef.workshops.delivery.in_person_short') }}
                                                 </span>
                                                 @if ($workshop->max_participants || $workshop->bookings_count)
                                                     <span class="chef-workshop-chip">
@@ -1143,13 +1410,13 @@
                                                 @if ($levelLabel)
                                                     <span class="chef-workshop-chip">
                                                         <i class="fa-solid fa-signal"></i>
-                                                        مستوى {{ $levelLabel }}
+                                                        {{ __('chef.workshops.level_label', ['level' => $levelLabel]) }}
                                                     </span>
                                                 @endif
                                             </div>
                                             <h3 class="chef-workshop-card__title">{{ $workshop->title }}</h3>
                                             @if (! empty($workshop->instructor))
-                                                <p class="chef-workshop-card__lead">مع {{ $workshop->instructor }}</p>
+                                                <p class="chef-workshop-card__lead">{{ __('chef.workshops.with_instructor', ['name' => $workshop->instructor]) }}</p>
                                             @endif
                                             <ul class="chef-workshop-card__details">
                                                 <li>
@@ -1167,19 +1434,19 @@
                                                 @if ($deadlineLabel)
                                                     <li>
                                                         <i class="fa-solid fa-hourglass-half text-slate-500"></i>
-                                                        التسجيل متاح حتى {{ $deadlineLabel }}
+                                                        {{ __('chef.workshops.register_until', ['date' => $deadlineLabel]) }}
                                                     </li>
                                                 @endif
                                             </ul>
                                             <div class="chef-workshop-card__footer">
                                                 @if ($isRegistrationOpen)
                                                     <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="chef-workshop-card__cta">
-                                                        احجز مقعدك الآن
-                                                        <i class="fa-solid fa-arrow-left"></i>
+                                                        {{ __('chef.workshops.book_now') }}
+                                                        <i class="fa-solid {{ $arrowIcon }}"></i>
                                                     </a>
                                                 @else
                                                     <span class="chef-workshop-card__cta is-closed">
-                                                        انتهى التسجيل
+                                                        {{ __('chef.workshops.registration_closed') }}
                                                     </span>
                                                 @endif
                                             </div>
@@ -1194,48 +1461,50 @@
                         <div class="chef-workshops-group">
                             <h3>
                                 <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
-                                ورشات سابقة
+                                {{ __('chef.workshops.past') }}
                             </h3>
                             <div class="chef-workshops-grid">
                                 @foreach ($pastWorkshops as $workshop)
                                     @php
                                         $coverImage = $workshop->image
                                             ? asset('storage/' . ltrim($workshop->image, '/'))
-                                            : 'https://placehold.co/600x400/f97316/FFFFFF?text=ورشة';
+                                            : "https://placehold.co/600x400/f97316/FFFFFF?text={$workshopPlaceholderText}";
                                         $startDateLabel = $workshop->start_date
-                                            ? $workshop->start_date->copy()->locale('ar')->translatedFormat('j F Y • h:i a')
-                                            : 'موعد غير محدد';
-                                        $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
+                                            ? $workshop->start_date->copy()->locale($carbonLocale)->translatedFormat($workshopDateTimeFormat)
+                                            : __('chef.workshops.unscheduled_time');
+                                        $locationLabel = $workshop->is_online
+                                            ? __('chef.workshops.online_live')
+                                            : ($workshop->location ?: __('chef.workshops.location_tbd'));
                                         $priceLabel = $workshop->formatted_price
                                             ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
                                         $levelLabels = [
-                                            'beginner' => 'مبتدئ',
-                                            'intermediate' => 'متوسط',
-                                            'advanced' => 'متقدم',
+                                            'beginner' => __('chef.workshops.levels.beginner'),
+                                            'intermediate' => __('chef.workshops.levels.intermediate'),
+                                            'advanced' => __('chef.workshops.levels.advanced'),
                                         ];
                                         $levelLabel = $levelLabels[$workshop->level] ?? null;
                                     @endphp
                                     <article class="chef-workshop-card">
                                         <div class="chef-workshop-card__media">
-                                            <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}">
-                                            <span class="chef-workshop-card__badge is-closed">انتهت</span>
+                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' => $workshop->title]) }}">
+                                            <span class="chef-workshop-card__badge is-closed">{{ __('chef.workshops.badges.completed') }}</span>
                                         </div>
                                         <div class="chef-workshop-card__body">
                                             <div class="chef-workshop-card__meta">
                                                 <span class="chef-workshop-chip {{ $workshop->is_online ? 'is-online' : 'is-offline' }}">
                                                     <i class="fa-solid {{ $workshop->is_online ? 'fa-globe' : 'fa-location-dot' }}"></i>
-                                                    {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                                    {{ $workshop->is_online ? __('chef.workshops.delivery.online_short') : __('chef.workshops.delivery.in_person_short') }}
                                                 </span>
                                                 @if ($levelLabel)
                                                     <span class="chef-workshop-chip">
                                                         <i class="fa-solid fa-signal"></i>
-                                                        مستوى {{ $levelLabel }}
+                                                        {{ __('chef.workshops.level_label', ['level' => $levelLabel]) }}
                                                     </span>
                                                 @endif
                                             </div>
                                             <h3 class="chef-workshop-card__title">{{ $workshop->title }}</h3>
                                             @if (! empty($workshop->instructor))
-                                                <p class="chef-workshop-card__lead">قدّمها {{ $workshop->instructor }}</p>
+                                                <p class="chef-workshop-card__lead">{{ __('chef.workshops.delivered_by', ['name' => $workshop->instructor]) }}</p>
                                             @endif
                                             <ul class="chef-workshop-card__details">
                                                 <li>
@@ -1252,10 +1521,10 @@
                                                 </li>
                                             </ul>
                                             <div class="chef-workshop-card__footer">
-                                                <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="chef-workshop-card__cta is-muted">
-                                                    عرض التفاصيل
-                                                    <i class="fa-solid fa-arrow-left"></i>
-                                                </a>
+                                                    <a href="{{ route('workshop.show', ['workshop' => $workshop->slug]) }}" class="chef-workshop-card__cta is-muted">
+                                                        {{ __('chef.workshops.view_details') }}
+                                                        <i class="fa-solid {{ $arrowIcon }}"></i>
+                                                    </a>
                                             </div>
                                         </div>
                                     </article>
@@ -1269,11 +1538,11 @@
             <section class="chef-profile-tabs">
                 <div class="chef-tab-nav" role="tablist">
                     <button class="chef-tab-btn is-active" data-tab="public" type="button" role="tab" aria-selected="true">
-                        الوصفات العامة
+                        {{ __('chef.recipes.tabs.public') }}
                     </button>
                     @if ($canViewExclusive)
                         <button class="chef-tab-btn" data-tab="exclusive" type="button" role="tab" aria-selected="false">
-                            الوصفات الخاصة
+                            {{ __('chef.recipes.tabs.exclusive') }}
                         </button>
                     @endif
                 </div>
@@ -1282,7 +1551,7 @@
                     <div class="chef-tab-panel is-active" data-panel="public" role="tabpanel">
                         @if ($publicRecipes->isEmpty())
                             <div class="chef-empty-state">
-                                لا توجد وصفات عامة منشورة بعد. ترقب وصفات الشيف الجديدة قريباً!
+                                {{ __('chef.recipes.public_empty') }}
                             </div>
                         @else
                             <div class="chef-recipes-grid">
@@ -1293,7 +1562,7 @@
                                             @if ($recipe->category)
                                                 <span class="chef-recipe-card__tag">
                                                     <i class="fa-solid fa-tag"></i>
-                                                    {{ $recipe->category->category_name ?? 'وصفة' }}
+                                                    {{ $recipe->category->category_name ?? __('chef.recipes.category_fallback') }}
                                                 </span>
                                             @endif
                                         </a>
@@ -1302,21 +1571,21 @@
                                             <div class="chef-recipe-card__meta">
                                                 <span class="chef-chip">
                                                     <i class="fa-solid fa-star text-amber-400"></i>
-                                                    {{ $recipe->interactions_avg_rating ? number_format($recipe->interactions_avg_rating, 1) : 'لا يوجد تقييم بعد' }}
+                                                    {{ $recipe->interactions_avg_rating ? number_format($recipe->interactions_avg_rating, 1) : __('chef.recipes.no_rating') }}
                                                 </span>
                                                 <span class="chef-chip">
                                                     <i class="fa-solid fa-bookmark"></i>
-                                                    {{ number_format($recipe->saved_count ?? 0) }} حفظ
+                                                    {{ __('chef.recipes.saves', ['count' => number_format($recipe->saved_count ?? 0)]) }}
                                                 </span>
                                                 <span class="chef-chip">
                                                     <i class="fa-solid fa-heart"></i>
-                                                    {{ number_format($recipe->rating_count ?? 0) }} إعجاب
+                                                    {{ __('chef.recipes.likes', ['count' => number_format($recipe->rating_count ?? 0)]) }}
                                                 </span>
                                             </div>
                                             <div class="chef-recipe-card__footer">
                                                 <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="chef-recipe-card__cta">
-                                                    عرض الوصفة
-                                                    <i class="fa-solid fa-arrow-left"></i>
+                                                    {{ __('chef.recipes.view_recipe') }}
+                                                    <i class="fa-solid {{ $arrowIcon }}"></i>
                                                 </a>
                                             </div>
                                         </div>
@@ -1330,7 +1599,7 @@
                         <div class="chef-tab-panel" data-panel="exclusive" role="tabpanel">
                             @if ($exclusiveRecipes->isEmpty())
                                 <div class="chef-empty-state">
-                                    لم تضف وصفات خاصة بعد. شارك وصفاتك الحصرية هنا لتكون مرجعك الشخصي.
+                                    {{ __('chef.recipes.exclusive_empty') }}
                                 </div>
                             @else
                                 <div class="chef-recipes-grid">
@@ -1340,7 +1609,7 @@
                                                 <img src="{{ $recipe->image_url ?? asset('image/Brownies.png') }}" alt="{{ $recipe->title }}">
                                                 <span class="chef-recipe-card__tag">
                                                     <i class="fa-solid fa-lock"></i>
-                                                    وصفة خاصة
+                                                    {{ __('chef.recipes.private_tag') }}
                                                 </span>
                                             </a>
                                             <div class="chef-recipe-card__body">
@@ -1348,21 +1617,21 @@
                                                 <div class="chef-recipe-card__meta">
                                                     <span class="chef-chip">
                                                         <i class="fa-solid fa-star text-amber-400"></i>
-                                                        {{ $recipe->interactions_avg_rating ? number_format($recipe->interactions_avg_rating, 1) : 'لا يوجد تقييم بعد' }}
+                                                        {{ $recipe->interactions_avg_rating ? number_format($recipe->interactions_avg_rating, 1) : __('chef.recipes.no_rating') }}
                                                     </span>
                                                     <span class="chef-chip">
                                                         <i class="fa-solid fa-book-open"></i>
-                                                        خطوات تفصيلية مميزة
+                                                        {{ __('chef.recipes.private_details') }}
                                                     </span>
                                                     <span class="chef-chip">
                                                         <i class="fa-solid fa-shield-halved"></i>
-                                                        مشاهدة خاصة
+                                                        {{ __('chef.recipes.private_access') }}
                                                     </span>
                                                 </div>
                                                 <div class="chef-recipe-card__footer">
                                                     <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="chef-recipe-card__cta">
-                                                        عرض الوصفة
-                                                        <i class="fa-solid fa-arrow-left"></i>
+                                                        {{ __('chef.recipes.view_recipe') }}
+                                                        <i class="fa-solid {{ $arrowIcon }}"></i>
                                                     </a>
                                                 </div>
                                             </div>
@@ -1378,8 +1647,8 @@
             @if ($popularRecipes->isNotEmpty())
                 <section class="chef-carousel-section">
                     <div class="chef-carousel-header">
-                        <h2>وصفات الشيف الأكثر مشاهدة</h2>
-                        <span>استكشف أبرز الوصفات التي خطفت قلوب عشاق الطهي والمتابعين.</span>
+                        <h2>{{ __('chef.popular.title') }}</h2>
+                        <span>{{ __('chef.popular.subtitle') }}</span>
                     </div>
                     <div class="swiper chef-popular-swiper">
                         <div class="swiper-wrapper">
@@ -1398,16 +1667,16 @@
                                                 </span>
                                                 <span class="chef-chip">
                                                     <i class="fa-solid fa-bookmark"></i>
-                                                    {{ number_format($recipe->saved_count ?? 0) }} حفظ
+                                                    {{ __('chef.recipes.saves', ['count' => number_format($recipe->saved_count ?? 0)]) }}
                                                 </span>
                                                 <span class="chef-chip">
                                                     <i class="fa-solid fa-heart"></i>
-                                                    {{ number_format($recipe->rating_count ?? 0) }} إعجاب
+                                                    {{ __('chef.recipes.likes', ['count' => number_format($recipe->rating_count ?? 0)]) }}
                                                 </span>
                                             </div>
                                             <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="chef-recipe-card__cta">
-                                                اكتشف التفاصيل
-                                                <i class="fa-solid fa-arrow-left"></i>
+                                                {{ __('chef.popular.view_details') }}
+                                                <i class="fa-solid {{ $arrowIcon }}"></i>
                                             </a>
                                         </div>
                                     </article>
@@ -1423,7 +1692,16 @@
 @endsection
 
 @push('scripts')
+    @php
+        $chefTranslations = array(
+            'buttons' => array(
+                'follow' => __('chef.hero.buttons.follow'),
+                'following' => __('chef.hero.buttons.following'),
+            ),
+        );
+    @endphp
     <script>
+        const chefTranslations = @json($chefTranslations);
         document.addEventListener('DOMContentLoaded', function () {
             const tabButtons = document.querySelectorAll('.chef-tab-btn');
             const tabPanels = document.querySelectorAll('.chef-tab-panel');
@@ -1446,11 +1724,31 @@
 
             const followButton = document.querySelector('[data-follow-button]');
             if (followButton) {
+                const followLabel = followButton.querySelector('[data-follow-label]');
+                const followIcon = followButton.querySelector('[data-follow-icon]');
+                const states = {
+                    follow: {
+                        icon: 'fa-plus',
+                        label: chefTranslations.buttons.follow,
+                    },
+                    following: {
+                        icon: 'fa-check',
+                        label: chefTranslations.buttons.following,
+                    },
+                };
+
                 followButton.addEventListener('click', () => {
                     const isFollowing = followButton.classList.toggle('is-following');
-                    followButton.innerHTML = isFollowing
-                        ? '<i class="fa-solid fa-check"></i> تمّت المتابعة'
-                        : '<i class="fa-solid fa-plus"></i> متابعة';
+                    const state = isFollowing ? states.following : states.follow;
+
+                    if (followLabel) {
+                        followLabel.textContent = state.label;
+                    }
+
+                    if (followIcon) {
+                        followIcon.classList.remove('fa-plus', 'fa-check');
+                        followIcon.classList.add(state.icon);
+                    }
                 });
             }
 

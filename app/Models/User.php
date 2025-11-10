@@ -54,6 +54,9 @@ class User extends Authenticatable
         'referral_commission_currency',
         'referral_partner_since_at',
         'referral_admin_notes',
+        'policies_accepted_at',
+        'policies_accepted_ip',
+        'policies_version',
     ];
 
     /**
@@ -87,7 +90,14 @@ class User extends Authenticatable
             'is_referral_partner' => 'boolean',
             'referral_partner_since_at' => 'datetime',
             'referral_commission_rate' => 'decimal:2',
+            'policies_accepted_at' => 'datetime',
         ];
+    }
+
+    public function requiresPolicyConsent(): bool
+    {
+        return $this->provider === 'google'
+            && is_null($this->policies_accepted_at);
     }
 
     protected static function booted(): void

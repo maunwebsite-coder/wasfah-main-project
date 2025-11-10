@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Wasfah | تسجيل الدخول أو إنشاء حساب')
+@section('title', __('auth.title'))
 
 @php
     $oldSource = old('form_source');
@@ -411,7 +411,7 @@
         <div class="brand-banner">
             <div class="brand-block">
                 <div class="brand-logo">
-                    <img src="{{ asset('image/logo.png') }}" alt="شعار Wasfah">
+                    <img src="{{ asset('image/logo.png') }}" alt="{{ __('auth.logo_alt') }}">
                 </div>
             </div>
         </div>
@@ -437,7 +437,7 @@
                 <div class="inline-alert inline-alert--warning">
                     <span class="inline-alert__icon">⚠️</span>
                     <div>
-                        <strong>يرجى مراجعة الحقول باللون الأحمر.</strong>
+                        <strong>{{ __('auth.alerts.review_fields') }}</strong>
                         <ul class="list-disc space-y-1 pe-4">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -451,23 +451,23 @@
         <div class="panel-layout" data-intent-state="customer">
             <div class="panel-card panel-card--center">
                 <div class="google-stack">
-                    <p data-text-switch="intro-default">أفضل تجربة لدينا هي المصادقة عبر Google. اختر نوع حسابك ثم تابع بزر واحد.</p>
-                    <p class="hidden" data-text-switch="intro-chef">متابعة كشيف تمنحك أدوات إضافية لعرض ورشاتك واعتماد ملفك المهني بعد تسجيل الدخول.</p>
+                    <p data-text-switch="intro-default">{{ __('auth.intro.default') }}</p>
+                    <p class="hidden" data-text-switch="intro-chef">{{ __('auth.intro.chef') }}</p>
                     <div class="intent-switch" data-intent-switch="login">
-                        <button type="button" class="intent-pill is-active" data-role="customer">حساب مستخدم</button>
-                        <button type="button" class="intent-pill" data-role="chef">حساب شيف</button>
+                        <button type="button" class="intent-pill is-active" data-role="customer">{{ __('auth.intent.customer') }}</button>
+                        <button type="button" class="intent-pill" data-role="chef">{{ __('auth.intent.chef') }}</button>
                     </div>
                     <button type="button" class="google-btn" data-google-button data-sync-role="hybrid">
                         <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
-                        متابعة عبر Google (تسجيل / إنشاء حساب)
+                        {{ __('auth.google.cta') }}
                     </button>
                     <div class="micro-flags">
-                        <span class="micro-flag">مصادقة آمنة</span>
-                        <span class="micro-flag">دعم عربي مباشر</span>
+                        <span class="micro-flag">{{ __('auth.google.flags.secure') }}</span>
+                        <span class="micro-flag">{{ __('auth.google.flags.support') }}</span>
                     </div>
                 </div>
 
-                <div class="divider">أو باستخدام البريد الإلكتروني</div>
+                <div class="divider">{{ __('auth.divider.email') }}</div>
 
                 <form action="{{ route('login.password') }}" method="POST" class="auth-form" novalidate>
                     @csrf
@@ -476,7 +476,7 @@
                         <input type="hidden" name="pending_workshop_booking" value="{{ $pendingWorkshop }}">
                     @endif
                     <div class="field-group" data-field-switch="email">
-                        <label for="login-email">البريد الإلكتروني</label>
+                        <label for="login-email">{{ __('auth.form.email.label') }}</label>
                         <input
                             id="login-email"
                             name="email"
@@ -486,14 +486,14 @@
                             value="{{ $loginOldEmail }}"
                             class="input-control {{ $errors->has('email') && $oldSource === 'login' ? 'has-error' : '' }}"
                         >
-                        <p class="field-hint">استخدم البريد المسجل في Wasfah.</p>
+                        <p class="field-hint">{{ __('auth.form.email.hint') }}</p>
                         @if ($errors->has('email') && $oldSource === 'login')
                             <p class="field-error">{{ $errors->first('email') }}</p>
                         @endif
                     </div>
 
                     <div class="field-group" data-field-switch="password">
-                        <label for="login-password">كلمة المرور</label>
+                        <label for="login-password">{{ __('auth.form.password.label') }}</label>
                         <input
                             id="login-password"
                             name="password"
@@ -501,7 +501,7 @@
                             autocomplete="current-password"
                             class="input-control {{ $errors->has('password') && $oldSource === 'login' ? 'has-error' : '' }}"
                         >
-                        <p class="field-hint">اخترنا كلمة مرور قوية عند تسجيلك السابق.</p>
+                        <p class="field-hint">{{ __('auth.form.password.hint') }}</p>
                         @if ($errors->has('password') && $oldSource === 'login')
                             <p class="field-error">{{ $errors->first('password') }}</p>
                         @endif
@@ -510,12 +510,12 @@
                     <div class="actions-row">
                         <label class="remember" data-field-switch="remember">
                             <input type="checkbox" name="remember" value="1" {{ $rememberOld ? 'checked' : '' }}>
-                            تذكرني لهذه الجلسة
+                            {{ __('auth.form.remember') }}
                         </label>
-                        <a href="{{ route('login') }}#support" class="ghost-link">بحاجة لمساعدة؟</a>
+                        <a href="{{ route('login') }}#support" class="ghost-link">{{ __('auth.form.help') }}</a>
                     </div>
 
-                    <button type="submit" class="primary-action">تسجيل الدخول الآن</button>
+                    <button type="submit" class="primary-action">{{ __('auth.form.submit') }}</button>
                 </form>
             </div>
         </div>

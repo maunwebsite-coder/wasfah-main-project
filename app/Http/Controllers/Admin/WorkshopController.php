@@ -390,7 +390,7 @@ class WorkshopController extends Controller
         }
 
         return redirect()->route('admin.workshops.index')
-            ->with('success', 'تم تحديث الورشة بنجاح!');
+            ->with('success', __('workshops.flash.updated'));
     }
 
     public function generateMeetingLink(Request $request)

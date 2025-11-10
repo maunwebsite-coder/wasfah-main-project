@@ -325,55 +325,76 @@ class HomeController extends Controller
         $fallbackDesktop = data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'));
         $fallbackMobile = data_get($heroMedia, 'workshop.mobile', $fallbackDesktop);
 
-        return $managedSlides->map(function (HeroSlide $slide) use ($fallbackDesktop, $fallbackMobile, $createWorkshopAction, $createWasfahLinkAction) {
-            $desktop = $slide->desktop_image_url ?? $fallbackDesktop;
-            $mobile = $slide->mobile_image_url ?? $slide->desktop_image_url ?? $fallbackMobile;
+        return $managedSlides
+            ->map(function (HeroSlide $slide) use ($fallbackDesktop, $fallbackMobile, $createWorkshopAction, $createWasfahLinkAction) {
+                $desktop = $slide->desktop_image_url ?? $fallbackDesktop;
+                $mobile = $slide->mobile_image_url ?? $slide->desktop_image_url ?? $fallbackMobile;
 
-            $features = collect($slide->features ?? [])->filter()->values()->all();
+                $features = collect($slide->features ?? [])->filter()->values()->all();
 
-            $actions = collect($slide->actions ?? [])
-                ->map(fn ($action) => $this->resolveHeroSlideAction($action, $createWorkshopAction, $createWasfahLinkAction))
-                ->filter()
-                ->values()
-                ->all();
+                $actions = collect($slide->actions ?? [])
+                    ->map(fn ($action) => $this->resolveHeroSlideAction($action, $createWorkshopAction, $createWasfahLinkAction))
+                    ->filter()
+                    ->values()
+                    ->all();
 
-            return [
-                'badge' => $slide->badge,
-                'title' => $slide->title,
-                'description' => $slide->description,
-                'features' => $features,
-                'image' => $desktop,
-                'mobile_image' => $mobile,
-                'image_alt' => $slide->image_alt ?: $slide->title,
-                'actions' => $actions,
-            ];
-        })->all();
+                return [
+                    'badge' => $slide->badge,
+                    'title' => $slide->title,
+                    'description' => $slide->description,
+                    'features' => $features,
+                    'image' => $desktop,
+                    'mobile_image' => $mobile,
+                    'image_alt' => $slide->image_alt ?: $slide->title,
+                    'actions' => $actions,
+                ];
+            })
+            ->map(fn (array $slide) => $this->localizeHeroSlide($slide))
+            ->all();
     }
 
     protected function defaultHeroSlides(array $heroMedia, array $createWorkshopAction, array $createWasfahLinkAction): array
     {
-        return [
+        $defaults = trans('home.hero.defaults');
+
+        $workshops = data_get($defaults, 'workshops', []);
+        $chef = data_get($defaults, 'chef', []);
+        $links = data_get($defaults, 'links', []);
+        $tools = data_get($defaults, 'tools', []);
+        $recipes = data_get($defaults, 'recipes', []);
+
+        $workshopFeatures = array_values(array_filter(data_get($workshops, 'features', [])));
+        $workshopActions = data_get($workshops, 'actions', []);
+
+        $linksFeatures = array_values(array_filter(data_get($links, 'features', [])));
+        $linksActions = data_get($links, 'actions', []);
+        $linksSecondaryLabel = data_get($linksActions, 'secondary', 'استعرض Wasfah Links');
+
+        $toolFeatures = array_values(array_filter(data_get($tools, 'features', [])));
+        $toolActions = data_get($tools, 'actions', []);
+
+        $recipeFeatures = array_values(array_filter(data_get($recipes, 'features', [])));
+        $recipeActions = data_get($recipes, 'actions', []);
+
+        $slides = [
             [
-                'badge' => 'ورشات العمل',
-                'title' => 'ورشات حلويات احترافية',
-                'description' => 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.',
-                'features' => [
-                    'جلسات تفاعلية محدودة العدد',
-                    'ملفات تطبيقية وشهادة حضور',
-                ],
+                'badge' => data_get($workshops, 'badge', 'ورشات العمل'),
+                'title' => data_get($workshops, 'title', 'ورشات حلويات احترافية'),
+                'description' => data_get($workshops, 'description', 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.'),
+                'features' => $workshopFeatures,
                 'image' => data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png')),
                 'mobile_image' => data_get($heroMedia, 'workshop.mobile', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'))),
-                'image_alt' => 'ورشة عمل للحلويات الاحترافية',
+                'image_alt' => data_get($workshops, 'image_alt', 'ورشة عمل للحلويات الاحترافية'),
                 'actions' => [
                     [
-                        'label' => 'استكشف الورشات',
+                        'label' => data_get($workshopActions, 'primary', 'استكشف الورشات'),
                         'url' => route('workshops'),
                         'icon' => 'fas fa-chalkboard-teacher',
                         'type' => 'primary',
                         'open_in_new_tab' => false,
                     ],
                     [
-                        'label' => 'جدول الورشات',
+                        'label' => data_get($workshopActions, 'secondary', 'جدول الورشات'),
                         'url' => route('workshops'),
                         'icon' => 'fas fa-calendar-alt',
                         'type' => 'secondary',
@@ -382,37 +403,29 @@ class HomeController extends Controller
                 ],
             ],
             [
-                'badge' => 'للشيفات',
-                'title' => 'أنشئ ورشتك على وصفة',
-                'description' => 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق مصممة للشيفات.',
-                'features' => [
-                    'لوحة تحكم لإدارة الجلسات والمدفوعات',
-                    'رابط تسجيل مباشر للمتدربين',
-                    'دعم فني وخبراء يساعدونك في كل خطوة',
-                ],
+                'badge' => data_get($chef, 'badge', 'للشيفات'),
+                'title' => data_get($chef, 'title', 'أنشئ ورشتك على وصفة'),
+                'description' => data_get($chef, 'description', 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق مصممة للشيفات.'),
+                'features' => array_values(array_filter(data_get($chef, 'features', []))),
                 'image' => data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'))),
                 'mobile_image' => data_get($heroMedia, 'chef.mobile', data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png')))),
-                'image_alt' => 'شيف يطلق ورشته الخاصة',
+                'image_alt' => data_get($chef, 'image_alt', 'شيف يطلق ورشته الخاصة'),
                 'actions' => [
                     $createWorkshopAction,
                 ],
             ],
             [
-                'badge' => 'Wasfah Links',
-                'title' => 'Wasfah Links للشيفات',
-                'description' => 'اجمع ورشاتك وروابطك المهمة في صفحة واحدة قابلة للمشاركة مع متابعيك.',
-                'features' => [
-                    'صفحة مخصصة باسمك مع رابط قصير',
-                    'تحكم كامل من لوحة الشيف لتحديث المحتوى فوراً',
-                    'مثالية لمشاركتها على إنستغرام وواتساب',
-                ],
+                'badge' => data_get($links, 'badge', 'Wasfah Links'),
+                'title' => data_get($links, 'title', 'Wasfah Links للشيفات'),
+                'description' => data_get($links, 'description', 'اجمع ورشاتك وروابطك المهمة في صفحة واحدة قابلة للمشاركة مع متابعيك.'),
+                'features' => $linksFeatures,
                 'image' => data_get($heroMedia, 'links.desktop', asset('image/wasfah-links.webm')),
                 'mobile_image' => data_get($heroMedia, 'links.mobile', data_get($heroMedia, 'links.desktop', asset('image/wasfah-links.webm'))),
-                'image_alt' => 'صفحة Wasfah Links للشيف',
+                'image_alt' => data_get($links, 'image_alt', 'صفحة Wasfah Links للشيف'),
                 'actions' => [
                     $createWasfahLinkAction,
                     [
-                        'label' => 'استعرض Wasfah Links',
+                        'label' => $linksSecondaryLabel,
                         'url' => route('links'),
                         'icon' => 'fas fa-eye',
                         'type' => 'secondary',
@@ -421,26 +434,23 @@ class HomeController extends Controller
                 ],
             ],
             [
-                'badge' => 'أدوات الشيف',
-                'title' => 'دليل أدوات الشيف',
-                'description' => 'اختيارات دقيقة لأدوات تساعدك على الإتقان.',
-                'features' => [
-                    'قوائم محدثة وروابط موثوقة',
-                    'نصائح استخدام وصيانة مختصرة',
-                ],
+                'badge' => data_get($tools, 'badge', 'أدوات الشيف'),
+                'title' => data_get($tools, 'title', 'دليل أدوات الشيف'),
+                'description' => data_get($tools, 'description', 'اختيارات دقيقة لأدوات تساعدك على الإتقان.'),
+                'features' => $toolFeatures,
                 'image' => data_get($heroMedia, 'tool.desktop', asset('image/tnl.png')),
                 'mobile_image' => data_get($heroMedia, 'tool.mobile', data_get($heroMedia, 'tool.desktop', asset('image/tnl.png'))),
-                'image_alt' => 'مجموعة أدوات لتحضير الحلويات',
+                'image_alt' => data_get($tools, 'image_alt', 'مجموعة أدوات لتحضير الحلويات'),
                 'actions' => [
                     [
-                        'label' => 'استعرض أدوات الشيف',
+                        'label' => data_get($toolActions, 'primary', 'استعرض أدوات الشيف'),
                         'url' => route('tools'),
                         'icon' => 'fas fa-toolbox',
                         'type' => 'primary',
                         'open_in_new_tab' => false,
                     ],
                     [
-                        'label' => 'الأدوات المحفوظة',
+                        'label' => data_get($toolActions, 'secondary', 'الأدوات المحفوظة'),
                         'url' => route('saved.index'),
                         'icon' => 'fas fa-heart',
                         'type' => 'secondary',
@@ -449,26 +459,23 @@ class HomeController extends Controller
                 ],
             ],
             [
-                'badge' => 'الوصفات',
-                'title' => 'مكتبة وصفات عالمية',
-                'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
-                'features' => [
-                    'تصنيفات حسب المستوى والمناسبة',
-                    'حفظ ومزامنة وصفاتك المفضلة',
-                ],
+                'badge' => data_get($recipes, 'badge', 'الوصفات'),
+                'title' => data_get($recipes, 'title', 'مكتبة وصفات عالمية'),
+                'description' => data_get($recipes, 'description', 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.'),
+                'features' => $recipeFeatures,
                 'image' => data_get($heroMedia, 'recipe.desktop', asset('image/Brownies.png')),
                 'mobile_image' => data_get($heroMedia, 'recipe.mobile', data_get($heroMedia, 'recipe.desktop', asset('image/Brownies.png'))),
-                'image_alt' => 'حلى براونيز فاخرة',
+                'image_alt' => data_get($recipes, 'image_alt', 'حلى براونيز فاخرة'),
                 'actions' => [
                     [
-                        'label' => 'ابدأ اكتشاف الوصفات',
+                        'label' => data_get($recipeActions, 'primary', 'ابدأ اكتشاف الوصفات'),
                         'url' => route('recipes'),
                         'icon' => 'fas fa-utensils',
                         'type' => 'primary',
                         'open_in_new_tab' => false,
                     ],
                     [
-                        'label' => 'الوصفات المحفوظة',
+                        'label' => data_get($recipeActions, 'secondary', 'الوصفات المحفوظة'),
                         'url' => route('saved.index'),
                         'icon' => 'fas fa-bookmark',
                         'type' => 'secondary',
@@ -477,6 +484,11 @@ class HomeController extends Controller
                 ],
             ],
         ];
+
+        return array_map(
+            fn (array $slide) => $this->localizeHeroSlide($slide),
+            $slides
+        );
     }
 
     protected function resolveHeroSlideAction(array $action, array $createWorkshopAction, array $createWasfahLinkAction): ?array
@@ -523,5 +535,64 @@ class HomeController extends Controller
             'type' => $action['type'] ?? 'primary',
             'open_in_new_tab' => (bool) ($action['open_in_new_tab'] ?? false),
         ];
+    }
+
+    /**
+     * Apply locale-specific replacements to hero slide content.
+     */
+    protected function localizeHeroSlide(array $slide): array
+    {
+        $locale = app()->getLocale();
+
+        if ($locale === 'ar') {
+            return $slide;
+        }
+
+        $translate = fn (?string $value) => $this->translateContentString($value, $locale);
+
+        $slide['badge'] = $translate($slide['badge'] ?? null);
+        $slide['title'] = $translate($slide['title'] ?? null);
+        $slide['description'] = $translate($slide['description'] ?? null);
+        $slide['image_alt'] = $translate($slide['image_alt'] ?? null);
+
+        if (!empty($slide['features'])) {
+            $slide['features'] = array_map(
+                fn ($feature) => $translate($feature),
+                $slide['features']
+            );
+        }
+
+        if (!empty($slide['actions'])) {
+            $slide['actions'] = array_map(function ($action) use ($translate) {
+                if (!empty($action['label'])) {
+                    $action['label'] = $translate($action['label']);
+                }
+
+                return $action;
+            }, $slide['actions']);
+        }
+
+        return $slide;
+    }
+
+    /**
+     * Retrieve translation mapping from config/content-translations.php.
+     */
+    protected function translateContentString(?string $text, string $locale): ?string
+    {
+        if (!$text || $locale === 'ar') {
+            return $text;
+        }
+
+        static $dictionaries = [];
+
+        if (!array_key_exists($locale, $dictionaries)) {
+            $dictionaries[$locale] = data_get(config('content-translations.locales'), $locale, []);
+        }
+
+        $dictionary = $dictionaries[$locale] ?? [];
+        $trimmed = trim($text);
+
+        return $dictionary[$trimmed] ?? $text;
     }
 }
