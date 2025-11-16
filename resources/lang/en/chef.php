@@ -68,6 +68,13 @@ return [
         ],
     ],
 
+    'follow' => [
+        'errors' => [
+            'self_follow' => 'You cannot follow your own profile.',
+            'generic' => 'We couldn’t update the follow status. Please try again.',
+        ],
+    ],
+
     'impact' => [
         'badge' => 'Community pulse',
         'title' => 'Impact snapshot',
@@ -96,7 +103,7 @@ return [
             'hero' => [
                 'eyebrow' => 'Chef zone',
                 'title' => 'My workshops',
-                'description' => 'Create online sessions easily and share the Jitsi link once people book.',
+                'description' => 'Create online sessions easily and share the Google Meet link once people book.',
             ],
             'ctas' => [
                 'new' => 'Add new workshop',
@@ -119,6 +126,60 @@ return [
                     'manual_reset_validation_failed' => 'Password verification failed. Please try again so we can confirm it is you.',
                 ],
             ],
+            'host_room' => [
+                'meta_title' => 'Host room – :title',
+                'eyebrow' => 'Host room',
+                'description' => 'This panel is dedicated to the host to manage the online workshop. Open Google Meet using the button below and attendees will be notified automatically once the session goes live.',
+                'stats' => [
+                    'schedule' => 'Workshop schedule',
+                    'attendance' => 'Confirmed attendees',
+                    'status' => 'Status',
+                ],
+                'no_schedule' => 'Not scheduled',
+                'attendance_value' => '{0} :count attendees|{1} :count attendee|[2,*] :count attendees',
+                'status_badges' => [
+                    'locked' => 'Locked',
+                    'live' => 'Session is live',
+                    'pending' => 'Waiting to start',
+                ],
+                'meeting' => [
+                    'label' => 'Google Meet link',
+                    'open' => 'Open Google Meet now',
+                    'refresh' => 'Refresh status',
+                    'secure_label' => 'Secure Wasfah link',
+                    'secure_help' => 'Opens Google Meet using your verified Google account so you skip waiting rooms.',
+                    'secure_missing' => 'Add your Google Meet email from your profile to enable this shortcut.',
+                ],
+                'recording' => [
+                    'label' => 'Recording tools',
+                    'description' => 'After each session ends, sync the Google Drive recording so participants can rewatch it later.',
+                    'sync' => 'Sync recording link',
+                    'syncing' => 'Syncing...',
+                    'status_ready' => 'Recording link saved and visible on the public page.',
+                    'status_missing' => 'Recording not synced yet. Try again a few minutes after ending the Meet.',
+                    'status_error' => 'Unable to sync the recording. Paste the link manually if needed.',
+                    'current_label' => 'Current recording link',
+                    'missing_label' => 'No recording link has been added yet.',
+                    'disabled_hint' => 'Recording sync is temporarily unavailable. Add the Google Drive link from the workshop editor instead.',
+                    'messages' => [
+                        'synced' => 'Recording link synced successfully.',
+                        'already_synced' => 'Recording link was already saved.',
+                        'not_found' => 'We could not find a matching recording yet. Please try again later.',
+                        'disabled' => 'Recording sync is not available right now.',
+                        'missing_code' => 'Unable to detect the Google Meet code for this workshop.',
+                        'offline' => 'Recording sync is only available for online workshops.',
+                    ],
+                ],
+                'participants' => [
+                    'eyebrow' => 'Latest confirmed attendees',
+                    'title' => 'Ready to join',
+                    'summary' => ':current of :total',
+                    'fallback_name' => 'Attendee',
+                    'fallback_email' => 'Email not provided',
+                    'last_update' => 'Last update: :time',
+                    'empty' => 'No confirmed attendees yet. Once bookings are confirmed they will appear here.',
+                ],
+            ],
             'stats' => [
                 'total' => 'Total workshops',
                 'active' => 'Active workshops',
@@ -137,14 +198,13 @@ return [
             ],
             'duration' => '• Lasts :minutes minutes',
             'capacity' => ':current / :max participants',
-            'jitsi_card' => [
-                'title' => 'Online session via Jitsi',
-                'description' => 'The link stays hidden for everyone. Only the button below opens the room.',
-                'launch' => 'Start session',
+            'google_card' => [
+                'title' => 'Online via Google Meet',
+                'description' => 'The link stays hidden for everyone. Only the button below opens your Google Meet room.',
+                'launch' => 'Open Google Meet',
                 'launched' => 'Room opened :time',
-                'not_ready' => 'Participants cannot join until you click "Start meeting" on the launch page.',
-                'pending_link' => 'The button will be enabled after the link is generated.',
-                'passcode' => 'Participant passcode: :code',
+                'not_ready' => 'Participants cannot join until you open the Google Meet room.',
+                'pending_link' => 'Generate the meeting link to enable this button.',
             ],
             'actions' => [
                 'edit' => 'Edit',
@@ -155,10 +215,12 @@ return [
             ],
             'empty' => [
                 'title' => 'No workshops yet',
-                'description' => 'Create your first workshop now and we will generate a Jitsi link instantly.',
+            'description' => 'Create your first workshop now and we will generate a Google Meet link instantly.',
                 'cta' => 'Create workshop',
             ],
         ],
+
+
     ],
 
     'workshops' => [
@@ -266,12 +328,30 @@ return [
             'plan_next' => 'Plan the next workshop',
         ],
     ],
+    'recordings' => [
+        'eyebrow' => 'Workshop library',
+        'title' => 'Recorded workshops',
+        'description' => 'Catch up on :name\'s completed sessions and watch every recording from here.',
+        'view_all' => 'Open recordings page',
+        'fallback_drive' => 'Recording available via Google Drive',
+        'badges' => [
+            'available' => 'Playable now',
+            'drive' => 'External recording',
+        ],
+        'cta' => [
+            'watch' => 'Watch the recording',
+        ],
+        'library_label' => 'Google Drive Library',
+        'drive_default_description' => 'A recorded workshop available in the chef’s archive.',
+        'updated_unknown' => 'Last update unknown',
+        'untitled' => 'Untitled recording',
+    ],
 
     'workshops_create' => [
         'page_title' => 'Launch a new workshop',
         'hero_badge' => 'Chef area',
         'hero_heading' => 'Launch a new online workshop',
-        'hero_description' => 'Once you save, we will prepare a shareable Jitsi link for your attendees.',
+        'hero_description' => 'Once you save, we will prepare a shareable Google Meet link for your attendees.',
         'back_to_list' => 'Back to workshops list',
         'validation_heading' => 'Please review the following fields:',
         'draft_notice' => 'The workshop will be saved under your account so you can edit or publish it whenever you are ready.',
@@ -280,7 +360,7 @@ return [
 
     'workshop_form' => [
         'currencies' => [
-            'jod' => 'Jordanian dinar',
+            'usd' => 'US Dollar',
         ],
         'sections' => [
             'basics' => [
@@ -300,9 +380,9 @@ return [
             ],
             'delivery' => [
                 'eyebrow' => 'Delivery method',
-                'title' => 'Online via Jitsi',
-                'description' => 'We can automatically generate a secured Jitsi meeting link for you.',
-                'highlight' => 'We provide automatic Jitsi meeting links for you.',
+                'title' => 'Online via Google Meet',
+                'description' => 'We can automatically generate a secured Google Meet link for you.',
+                'highlight' => 'We provide automatic Google Meet links for you.',
             ],
             'host' => [
                 'eyebrow' => 'Your info',
@@ -367,6 +447,10 @@ return [
             'meeting_link' => [
                 'label' => 'Meeting link',
             ],
+            'recording_url' => [
+                'label' => 'Google Drive recording link',
+                'helper' => 'Paste the share link in the /file/d/.../view format so we can convert it to an embeddable player on your public page.',
+            ],
             'location' => [
                 'label' => 'Location *',
             ],
@@ -393,7 +477,7 @@ return [
         'options' => [
             'online_label' => 'This workshop is online',
             'online_hint' => 'You can switch it to an in-person session anytime.',
-            'auto_generate_label' => 'Auto-generate a Jitsi link on save',
+            'auto_generate_label' => 'Auto-generate a Google Meet link on save',
         ],
         'buttons' => [
             'generate_link' => 'Generate link now',
@@ -405,7 +489,7 @@ return [
             'pricing_notice_followup' => 'After this fee is deducted, the net payout is transferred to you within 7 business days of the workshop.',
             'meeting_hint_auto' => 'The link will be assigned automatically after saving.',
             'meeting_hint_manual' => 'You can paste an existing meeting link if you prefer.',
-            'jitsi_ready' => 'A Jitsi link is ready:',
+            'google_ready' => 'A Google Meet link is ready:',
             'managed_link_title' => 'Link managed by the Wasfah team',
             'managed_link_description' => 'We will generate and secure the meeting link automatically after saving, and the raw link stays hidden for privacy.',
             'image_max_size' => 'You cannot upload an image larger than 5 MB.',
@@ -422,7 +506,7 @@ return [
         'hero' => [
             'eyebrow' => 'Chef area',
             'heading' => 'Workshop earnings',
-            'description' => 'Review the financial performance of your online workshops and track the expected net payout after platform fees.',
+            'description' => 'Review the financial performance of your online workshops and track the net payout that was already allocated to you.',
             'cta' => [
                 'new' => 'Launch new workshop',
                 'back' => 'Back to workshops list',
@@ -439,17 +523,16 @@ return [
                 'hint' => 'From all paid bookings',
             ],
             'net' => [
-                'label' => 'Estimated net after platform fee',
-                'hint' => 'Depends on the commission range (25%–30%)',
-                'range_to' => 'to',
+                'label' => 'Net payout released',
+                'hint' => 'What the finance split already assigned to you',
             ],
             'paid_seats' => [
                 'label' => 'Paid seats',
                 'hint' => 'Includes all completed workshops',
             ],
             'average' => [
-                'label' => 'Average revenue per attendee',
-                'hint' => 'Helps you price upcoming workshops',
+                'label' => 'Average net per attendee',
+                'hint' => 'Based on confirmed payouts only',
             ],
         ],
         'monthly' => [
@@ -457,23 +540,25 @@ return [
                 'label' => 'This month\'s earnings',
                 'delta' => ':amount vs last month',
                 'hint' => 'Updates as soon as participants\' payments are confirmed',
+                'net_label' => 'Net payout',
             ],
             'previous' => [
                 'label' => 'Last month\'s earnings',
                 'hint' => 'For historical comparison only',
+                'net_label' => 'Net payout',
             ],
         ],
         'leaderboard' => [
             'eyebrow' => 'Top-performing workshops',
             'title' => 'Workshop-by-workshop breakdown',
-            'description' => 'Approximate net amounts after the platform fee.',
+            'description' => 'Actual net amounts after the automated split.',
             'button' => 'Manage workshops',
             'table' => [
                 'workshop' => 'Workshop',
                 'start_date' => 'Start date',
                 'paid' => 'Paid participants',
                 'gross' => 'Total paid',
-                'net' => 'Estimated net',
+                'net' => 'Net payout',
             ],
             'capacity' => 'Capacity :capacity',
             'capacity_unknown' => 'Not set yet',

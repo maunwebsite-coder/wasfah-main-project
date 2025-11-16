@@ -11,20 +11,24 @@ use App\Http\Controllers\Chef\RecipeController as ChefRecipeController;
 use App\Http\Controllers\Chef\WorkshopController as ChefWorkshopController;
 use App\Http\Controllers\ChefLinkPublicController;
 use App\Http\Controllers\ChefPublicProfileController;
+use App\Http\Controllers\ChefPublicWorkshopController;
+use App\Http\Controllers\ChefFollowController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ReferralDashboardController;
+use App\Http\Controllers\MeetingRedirectController;
 use App\Http\Controllers\UserMeetingController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 use App\Http\Controllers\Admin\UserManagementController as AdminUserManagementController;
+use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Payments\StripeBookingController;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\View;
 
 // مسارات المصادقة عبر Google
 Route::get('/auth/google/redirect', [SocialiteController::class, 'redirect'])->name('google.redirect');
@@ -33,7 +37,7 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'callback'])->n
 // المسار الرئيسي لعرض الصفحة الرئيسية
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-$renderLocalizedHome = static function (Request $request, string $locale) {
+$legacyLocaleRedirect = static function (Request $request, string $locale) {
     $supportedLocales = ['ar', 'en'];
 
     if (! in_array($locale, $supportedLocales, true)) {
@@ -43,20 +47,18 @@ $renderLocalizedHome = static function (Request $request, string $locale) {
     $request->session()->put('app_locale', $locale);
     app()->setLocale($locale);
 
-    $isRtl = $locale === 'ar';
-    View::share('currentLocale', $locale);
-    View::share('isRtl', $isRtl);
-
-    return app(HomeController::class)->index();
+    return redirect()->route('home');
 };
 
-Route::get('/ar', function (Request $request) use ($renderLocalizedHome) {
-    return $renderLocalizedHome($request, 'ar');
+Route::get('/ar', function (Request $request) use ($legacyLocaleRedirect) {
+    return $legacyLocaleRedirect($request, 'ar');
 })->name('home.ar');
 
-Route::get('/en', function (Request $request) use ($renderLocalizedHome) {
-    return $renderLocalizedHome($request, 'en');
+Route::get('/en', function (Request $request) use ($legacyLocaleRedirect) {
+    return $legacyLocaleRedirect($request, 'en');
 })->name('home.en');
+
+Route::get('/redirect-to-meet', [MeetingRedirectController::class, 'redirect'])->name('meet.redirect');
 
 // صفحات السياسات القانونية
 Route::view('/terms', 'pages.legal.terms')->name('legal.terms');
@@ -72,19 +74,19 @@ Route::get('/wasfah-links', function () {
     $fallbackSelections = collect([
         [
             'title' => __('links.fallback.recipe_box.title'),
-            'image' => asset('image/works.png'),
+            'image' => asset('image/works.webp'),
             'alt' => __('links.fallback.recipe_box.alt'),
             'url' => url('/recipes'),
         ],
         [
             'title' => __('links.fallback.workshops.title'),
-            'image' => asset('image/wterm.png'),
+            'image' => asset('image/wterm.webp'),
             'alt' => __('links.fallback.workshops.alt'),
             'url' => url('/workshops'),
         ],
         [
             'title' => __('links.fallback.tools.title'),
-            'image' => asset('image/term.png'),
+            'image' => asset('image/term.webp'),
             'alt' => __('links.fallback.tools.alt'),
             'url' => url('/tools'),
         ],
@@ -98,7 +100,7 @@ Route::get('/wasfah-links', function () {
         ->map(function (Recipe $recipe) {
             return [
                 'title' => $recipe->title,
-                'image' => $recipe->image_url ?? asset('image/Brownies.png'),
+                'image' => $recipe->image_url ?? asset('image/brownies.webp'),
                 'alt' => $recipe->title,
                 'url' => route('recipe.show', ['recipe' => $recipe->slug]),
             ];
@@ -133,7 +135,7 @@ Route::get('/wasfah-links', function () {
                 : ($nextWorkshop->location ?? __('links.upcoming.mode.offline')),
             'image' => $nextWorkshop->image
                 ? \Storage::disk('public')->url($nextWorkshop->image)
-                : asset('image/wterm.png'),
+                : asset('image/wterm.webp'),
         ];
     }
 
@@ -150,6 +152,19 @@ Route::get('/wasfah-links/{chefLinkPage:slug}', [ChefLinkPublicController::class
 Route::get('/chefs/{chef}', [ChefPublicProfileController::class, 'show'])
     ->whereNumber('chef')
     ->name('chefs.show');
+
+Route::get('/chef/{username}/workshops', [ChefPublicWorkshopController::class, 'show'])
+    ->name('chef.public.workshops');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/chefs/{chef}/follow', [ChefFollowController::class, 'store'])
+        ->whereNumber('chef')
+        ->name('chefs.follow');
+
+    Route::delete('/chefs/{chef}/follow', [ChefFollowController::class, 'destroy'])
+        ->whereNumber('chef')
+        ->name('chefs.unfollow');
+});
 
 // مسار صفحة المصادقة الموحدة (تسجيل الدخول + إنشاء حساب)
 Route::get('/login', function () {
@@ -187,10 +202,6 @@ Route::post('/login', [LoginController::class, 'store'])
 
 // مسارات المحفوظات
 Route::prefix('saved')->middleware(['web'])->group(function () {
-    // عداد المحفوظات متاح للضيوف ويعيد 0 عند عدم تسجيل الدخول
-    Route::get('/count', [App\Http\Controllers\SavedController::class, 'count'])->name('saved.count');
-    Route::post('/count', [App\Http\Controllers\SavedController::class, 'count'])->name('saved.count.post');
-
     Route::middleware('auth')->group(function () {
         Route::get('/', [App\Http\Controllers\SavedController::class, 'index'])->name('saved.index');
         Route::post('/add', [App\Http\Controllers\SavedController::class, 'add'])->name('saved.add');
@@ -264,6 +275,7 @@ Route::middleware(['auth', 'chef'])->prefix('chef')->name('chef.')->group(functi
     Route::resource('recipes', ChefRecipeController::class)->except(['show']);
     Route::get('workshops/{workshop}/join', [ChefWorkshopController::class, 'join'])->name('workshops.join');
     Route::post('workshops/{workshop}/start', [ChefWorkshopController::class, 'startMeeting'])->name('workshops.start');
+    Route::post('workshops/{workshop}/recording', [ChefWorkshopController::class, 'syncRecording'])->name('workshops.recording');
     Route::post('workshops/{workshop}/presence', [ChefWorkshopController::class, 'updatePresence'])->name('workshops.presence');
     Route::post('workshops/{workshop}/reset-device', [ChefWorkshopController::class, 'resetHostDeviceLock'])->name('workshops.reset-device');
     Route::post('workshops/generate-meeting-link', [ChefWorkshopController::class, 'generateMeetingLink'])->name('workshops.generate-link');
@@ -295,12 +307,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookings', [App\Http\Controllers\WorkshopBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [App\Http\Controllers\WorkshopBookingController::class, 'show'])->name('bookings.show');
     Route::post('/bookings/{booking}/cancel', [App\Http\Controllers\WorkshopBookingController::class, 'cancel'])->name('bookings.cancel');
+
+    Route::post('/payments/stripe/intent', [StripeBookingController::class, 'createIntent'])->name('payments.stripe.intent');
+    Route::post('/payments/stripe/confirm', [StripeBookingController::class, 'confirm'])->name('payments.stripe.confirm');
 });
 
 Route::get('/bookings/{booking:public_code}/status', [App\Http\Controllers\WorkshopBookingController::class, 'status'])
     ->name('bookings.status');
 Route::get('/bookings/{booking:public_code}/join', [App\Http\Controllers\WorkshopBookingController::class, 'join'])
     ->name('bookings.join');
+Route::get('/bookings/{booking:public_code}/launch', [App\Http\Controllers\WorkshopBookingController::class, 'launch'])
+    ->name('bookings.launch');
 
 // مسارات الإشعارات - محمية بـ middleware المصادقة
 Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
@@ -354,7 +371,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('bookings/{booking}/cancel', [App\Http\Controllers\Admin\BookingController::class, 'cancel'])->name('bookings.cancel');
     Route::post('bookings/{booking}/update-payment', [App\Http\Controllers\Admin\BookingController::class, 'updatePayment'])->name('bookings.update-payment');
     Route::post('bookings/{booking}/admin-note', [App\Http\Controllers\Admin\BookingController::class, 'updateAdminNote'])->name('bookings.admin-note');
-    
+
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('/dashboard', [FinanceController::class, 'dashboard'])->name('dashboard');
+        Route::get('/invoices', [FinanceController::class, 'invoices'])->name('invoices.index');
+        Route::get('/invoices/{invoice}', [FinanceController::class, 'showInvoice'])->name('invoices.show');
+        Route::post('/invoices/{invoice}/issue', [FinanceController::class, 'issueInvoice'])->name('invoices.issue');
+        Route::post('/invoices/{invoice}/mark-paid', [FinanceController::class, 'markInvoicePaid'])->name('invoices.mark-paid');
+        Route::post('/invoices/{invoice}/void', [FinanceController::class, 'voidInvoice'])->name('invoices.void');
+        Route::post('/bookings/{booking}/invoice/regenerate', [FinanceController::class, 'regenerateBookingInvoice'])->name('bookings.invoice.regenerate');
+    });
+
     // إضافة الحجوزات يدوياً
     Route::get('bookings/manual/add', [App\Http\Controllers\Admin\ManualBookingController::class, 'index'])->name('bookings.manual');
     Route::post('bookings/manual/add', [App\Http\Controllers\Admin\ManualBookingController::class, 'store'])->name('bookings.manual.store');
@@ -444,4 +471,8 @@ Route::post('/test-amazon-extraction', [App\Http\Controllers\Admin\AdminToolsCon
 // مسارات الاتصال
 Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/contact/send', [App\Http\Controllers\ContactController::class, 'sendMessage'])->name('contact.send');
+
+
+
+
 
