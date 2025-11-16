@@ -12,7 +12,7 @@ return [
     ],
     'search' => [
         'placeholder' => 'Search for a recipe, tool, or workshop...',
-        'open' => 'Open search',
+        'open' => 'Search',
         'submit' => 'Start search',
     ],
     'menu' => [
@@ -28,6 +28,10 @@ return [
             'finance' => 'Finance console',
             'logout' => 'Sign out',
         ],
+    ],
+    'guest_actions' => [
+        'login' => 'Sign in',
+        'register' => 'Create account',
     ],
     'links' => [
         'home' => 'Home',

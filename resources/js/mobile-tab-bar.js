@@ -139,6 +139,88 @@ const initMobileTabBar = () => {
 
     let isNavigating = false;
 
+    const visibilityAlreadyHandled =
+        hasWindow && window.__mobileTabBarScrollVisibilityInit === true;
+
+    if (!visibilityAlreadyHandled) {
+        const MIN_SCROLL_DELTA = 6;
+        const MIN_HIDE_OFFSET = 72;
+        const getScrollPosition = () => {
+            if (!hasWindow) {
+                return 0;
+            }
+            return (
+                window.scrollY ??
+                window.pageYOffset ??
+                document.documentElement.scrollTop ??
+                0
+            );
+        };
+        let lastScrollY = getScrollPosition();
+        let scrollTicking = false;
+
+        const revealNav = () => {
+            nav.classList.remove('mobile-tab-bar--hidden');
+        };
+
+        const updateScrollVisibility = () => {
+            scrollTicking = false;
+
+            if (!hasWindow) {
+                return;
+            }
+
+            const currentY = Math.max(getScrollPosition(), 0);
+
+            if (!isMobileViewport()) {
+                revealNav();
+                lastScrollY = currentY;
+                return;
+            }
+
+            const delta = Math.abs(currentY - lastScrollY);
+            if (delta < MIN_SCROLL_DELTA) {
+                return;
+            }
+
+            const scrollingDown = currentY > lastScrollY;
+
+            if (scrollingDown && currentY > MIN_HIDE_OFFSET) {
+                nav.classList.add('mobile-tab-bar--hidden');
+            } else {
+                revealNav();
+            }
+
+            lastScrollY = currentY;
+        };
+
+        const handleScroll = () => {
+            if (!hasWindow) {
+                return;
+            }
+
+            if (!scrollTicking) {
+                scrollTicking = true;
+                window.requestAnimationFrame(updateScrollVisibility);
+            }
+        };
+
+        const handleResize = () => {
+            lastScrollY = getScrollPosition();
+            if (!isMobileViewport()) {
+                revealNav();
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        window.addEventListener('resize', handleResize);
+        updateScrollVisibility();
+
+        if (hasWindow) {
+            window.__mobileTabBarScrollVisibilityInit = true;
+        }
+    }
+
     const setActiveLink = (url) => {
         const normalized = new URL(url, window.location.origin);
         links.forEach((link) => {

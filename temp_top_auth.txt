@@ -1,0 +1,40 @@
+@php($hideLocaleSwitcher = true)
+@extends('layouts.auth')
+
+@section('title', __('auth.title'))
+
+@php
+    $pendingWorkshopBooking = $pendingWorkshopBooking
+        ?? $pendingWorkshop
+        ?? request()->input('pending_workshop_booking');
+@endphp
+
+@push('styles')
+<style>
+:root {
+    --auth-bg: #fff6ef;
+    --auth-card: #ffffff;
+    --auth-primary: #f97316;
+    --auth-primary-dark: #ea580c;
+    --auth-primary-soft: #ffedd5;
+    --auth-accent: #fb923c;
+    --auth-text: #1f2937;
+    --auth-muted: #6b7280;
+    --auth-border: rgba(249, 115, 22, 0.14);
+}
+
+.auth-shell {
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 55%),
+        radial-gradient(circle at bottom left, rgba(251, 146, 60, 0.15), transparent 45%),
+        var(--auth-bg);
+    padding: clamp(1.5rem, 4vw, 4rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-stack {
+    width: min(100%, 1100px);
+    display: flex;
+    flex-direction: column;

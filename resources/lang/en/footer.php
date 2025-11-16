@@ -31,6 +31,14 @@ return [
     ],
     'bottom' => [
         'copyright' => '© :year Wasfah. All rights reserved.',
+        'links' => [
+            'recipes' => 'Recipes',
+            'workshops' => 'Workshops',
+            'tools' => 'Chef tools',
+            'about' => 'About Wasfah',
+            'contact' => 'Contact us',
+            'legal' => 'Privacy & terms',
+        ],
         'line_one' => 'Wasfah is part of Wasfah Jordan.',
         'line_two' => 'We obsess over the details of every recipe.',
     ],

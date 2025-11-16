@@ -15,6 +15,7 @@
         ['route' => 'tools', 'icon' => 'fas fa-kitchen-set', 'label' => $navCopy['links']['tools']],
     ];
     $mobileLinkDescriptions = $navCopy['mobile_descriptions'];
+    $guestActions = $navCopy['guest_actions'] ?? [];
     $accountMenuCopy = $navCopy['account_menu'] ?? [];
     $accountMenuLinks = $accountMenuCopy['links'] ?? [];
     $authUser = Auth::user();
@@ -32,7 +33,7 @@
         } elseif ($authUser->role !== \App\Models\User::ROLE_CHEF) {
             $chefLinkData = [
                 'route' => route('onboarding.show'),
-                'icon' => 'fas fa-hat-chef',
+                'icon' => 'fas fa-bowl-food',
                 'label' => data_get($chefLinkLabels, 'apply', 'التقديم كـ شيف'),
             ];
         } elseif ($authUser->needsChefProfile()) {
@@ -53,7 +54,7 @@
     }
 @endphp
 
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-orange-100 shadow-sm">
+<header class="sticky top-0 bg-white/95 backdrop-blur border-b border-orange-100 shadow-sm" data-navbar-layer>
     <div class="h-1 w-full bg-gradient-to-l from-orange-500 via-rose-500 to-amber-400 hidden md:block"></div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between gap-4 py-3 md:py-4 header-container">
@@ -87,7 +88,9 @@
 
                 <a href="{{ route('saved.index') }}" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
+                        <circle cx="9" cy="21" r="1" fill="none" stroke="currentColor" />
+                        <circle cx="20" cy="21" r="1" fill="none" stroke="currentColor" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M1 1h4l2.68 13.39A2 2 0 009.64 16h9.72a2 2 0 001.96-1.61L23 6H6" />
                     </svg>
                     <span id="mobile-cart-count" class="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px]">0</span>
                     <span class="sr-only">{{ $navCopy['saved']['sr'] }}</span>
@@ -250,8 +253,12 @@
                             </a>
                         @endif
                     @else
-                        <a href="{{ route('login') }}" class="rounded-full border border-transparent bg-orange-500 px-4 py-2 text-white shadow-sm transition-all duration-200 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">تسجيل الدخول</a>
-                        <a href="{{ route('register') }}" class="rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-200">إنشاء حساب</a>
+                        <a href="{{ route('login') }}" class="rounded-full border border-transparent bg-orange-500 px-4 py-2 text-white shadow-sm transition-all duration-200 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                            {{ data_get($guestActions, 'login', __('navbar.guest_actions.login')) }}
+                        </a>
+                        <a href="{{ route('register') }}" class="rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                            {{ data_get($guestActions, 'register', __('navbar.guest_actions.register')) }}
+                        </a>
                     @endif
                 </nav>
             </div>
@@ -297,7 +304,7 @@
             <div class="rounded-3xl bg-gradient-to-l from-orange-500 via-rose-500 to-amber-400 p-4 text-white shadow-lg">
                 <div class="flex items-center gap-3">
                     <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 shadow-inner">
-                        <i class="fas fa-hat-chef text-lg"></i>
+                        <i class="fas fa-bowl-food text-lg"></i>
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs text-white/80">{{ $mobileGreeting }}</p>
@@ -493,14 +500,14 @@
                     <div class="flex flex-col gap-3">
                         <a href="{{ route('login') }}" class="flex items-center justify-between rounded-2xl bg-gradient-to-l from-orange-500 to-rose-500 p-4 text-white shadow-lg transition hover:opacity-95">
                             <div>
-                                <p class="text-base font-semibold">تسجيل الدخول</p>
+                                <p class="text-base font-semibold">{{ data_get($guestActions, 'login', __('navbar.guest_actions.login')) }}</p>
                                 <p class="text-sm text-white/80">تابع أدواتك وحجوزاتك بسهولة</p>
                             </div>
                             <i class="fas fa-arrow-left text-white/80"></i>
                         </a>
                         <a href="{{ route('register') }}" class="flex items-center justify-between rounded-2xl border border-orange-200 bg-white/90 p-4 text-sm font-semibold text-orange-600 transition hover:bg-orange-50">
                             <div>
-                                <p>إنشاء حساب</p>
+                                <p>{{ data_get($guestActions, 'register', __('navbar.guest_actions.register')) }}</p>
                                 <p class="text-xs font-normal text-orange-500">ابدأ رحلتك مع مجتمع وصْفة</p>
                             </div>
                             <i class="fas fa-chevron-left text-orange-400"></i>

@@ -34,7 +34,7 @@
     $tabItems[] = [
         'key' => $isChef ? 'chef' : 'profile',
         'href' => $isChef ? route('chef.dashboard') : route('profile'),
-        'icon' => $isChef ? 'fa-solid fa-hat-chef' : 'fa-solid fa-user',
+        'icon' => $isChef ? 'fa-solid fa-bowl-food' : 'fa-solid fa-user',
         'label' => data_get(
             $tabBarLabels,
             $isChef ? 'chef' : 'profile',
@@ -64,3 +64,93 @@
         @endforeach
     </div>
 </nav>
+
+@once
+    @push('scripts')
+        <script>
+            (() => {
+                const init = () => {
+                    if (typeof window === 'undefined' || typeof document === 'undefined') {
+                        return;
+                    }
+                    if (window.__mobileTabBarScrollVisibilityInit) {
+                        return;
+                    }
+                    const nav = document.querySelector('[data-mobile-tab-bar]');
+                    if (!nav) {
+                        return;
+                    }
+                    window.__mobileTabBarScrollVisibilityInit = true;
+
+                    const mediaQuery = window.matchMedia('(max-width: 768px)');
+                    const getScrollY = () =>
+                        window.scrollY ??
+                        window.pageYOffset ??
+                        document.documentElement?.scrollTop ??
+                        0;
+
+                    const MIN_DELTA = 6;
+                    const HIDE_OFFSET = 72;
+                    let lastScrollY = getScrollY();
+                    let ticking = false;
+
+                    const isMobile = () => !mediaQuery || mediaQuery.matches;
+                    const reveal = () => nav.classList.remove('mobile-tab-bar--hidden');
+
+                    const updateVisibility = () => {
+                        ticking = false;
+                        const currentY = Math.max(getScrollY(), 0);
+
+                        if (!isMobile()) {
+                            reveal();
+                            lastScrollY = currentY;
+                            return;
+                        }
+
+                        if (Math.abs(currentY - lastScrollY) < MIN_DELTA) {
+                            return;
+                        }
+
+                        const scrollingDown = currentY > lastScrollY;
+                        if (scrollingDown && currentY > HIDE_OFFSET) {
+                            nav.classList.add('mobile-tab-bar--hidden');
+                        } else {
+                            reveal();
+                        }
+
+                        lastScrollY = currentY;
+                    };
+
+                    const requestFrame =
+                        window.requestAnimationFrame ?? ((cb) => window.setTimeout(cb, 16));
+
+                    const handleScroll = () => {
+                        if (!ticking) {
+                            ticking = true;
+                            requestFrame(updateVisibility);
+                        }
+                    };
+
+                    const handleResize = () => {
+                        lastScrollY = getScrollY();
+                        if (!isMobile()) {
+                            reveal();
+                        } else {
+                            updateVisibility();
+                        }
+                    };
+
+                    window.addEventListener('scroll', handleScroll, { passive: true });
+                    window.addEventListener('resize', handleResize);
+                    updateVisibility();
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', init, { once: true });
+                } else {
+                    init();
+                }
+            })();
+        </script>
+    @endpush
+@endonce

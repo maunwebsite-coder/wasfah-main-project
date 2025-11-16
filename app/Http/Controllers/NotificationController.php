@@ -12,11 +12,22 @@ class NotificationController extends Controller
     // صفحة الإشعارات الرئيسية
     public function index()
     {
-        $notifications = Auth::user()->notifications()
+        $user = Auth::user();
+        $unreadCount = $user->unreadNotificationsCount();
+
+        if ($unreadCount > 0) {
+            $user->unreadNotifications()->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
+
+            $this->clearNotificationCache();
+            $unreadCount = 0;
+        }
+
+        $notifications = $user->notifications()
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-
-        $unreadCount = Auth::user()->unreadNotificationsCount();
 
         return view('notifications.index', compact('notifications', 'unreadCount'));
     }

@@ -3,10 +3,10 @@
 @section('title', __('auth.title'))
 
 @php
-    $oldSource = old('form_source');
-    $pendingWorkshop = request('pending_workshop_booking');
-    $loginOldEmail = $oldSource === 'login' ? old('email') : '';
-    $rememberOld = $oldSource === 'login' ? (bool) old('remember') : false;
+    $hideLocaleSwitcher = true;
+    $pendingWorkshopBooking = $pendingWorkshopBooking
+        ?? $pendingWorkshop
+        ?? request()->input('pending_workshop_booking');
 @endphp
 
 @push('styles')
@@ -58,11 +58,8 @@
     display: flex;
     align-items: center;
     gap: clamp(1rem, 2vw, 2.25rem);
-    padding: clamp(1.25rem, 2vw, 1.75rem);
-    border-radius: 24px;
-    background: linear-gradient(135deg, #fffaf4, #ffe4d0);
-    border: 1px solid rgba(249, 115, 22, 0.2);
-    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+    padding-bottom: clamp(1.25rem, 2vw, 1.75rem);
+    border-bottom: 1px solid var(--auth-border);
 }
 
 .brand-logo {
@@ -110,28 +107,12 @@
 }
 
 
-.panel-layout {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.75rem;
-}
-
-.panel-card {
-    background: #ffffff;
-    border-radius: 22px;
-    padding: 1.5rem;
-    border: 1px solid var(--auth-border);
-    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-}
-
-.panel-card--center {
-    max-width: 480px;
+.auth-flow {
+    width: 100%;
+    max-width: 520px;
     margin: 0 auto;
-    align-items: stretch;
+    display: grid;
+    gap: 1.5rem;
     text-align: right;
 }
 
@@ -445,56 +426,55 @@
 <div class="auth-shell">
     <div class="auth-stack">
         <div class="auth-card">
-            <div class="auth-brand">
-                <div class="brand-logo">
-                    <x-optimized-picture
-                        base="image/logo"
-                        :widths="[96, 192, 384]"
-                        alt="{{ __('auth.logo_alt') }}"
-                        :lazy="false"
-                        sizes="96px"
-                    />
+            <div class="auth-flow" data-intent-state="customer">
+                <div class="auth-brand">
+                    <div class="brand-logo">
+                        <x-optimized-picture
+                            base="image/logo"
+                            :widths="[96, 192, 384]"
+                            alt="{{ __('auth.logo_alt') }}"
+                            :lazy="false"
+                            sizes="96px"
+                        />
+                    </div>
+                    <div class="auth-brand__copy">
+                        <p class="auth-brand__eyebrow">{{ __('auth.brand.eyebrow') }}</p>
+                        <h1 class="auth-brand__headline">{{ __('auth.brand.headline') }}</h1>
+                        <p class="auth-brand__subcopy">{{ __('auth.brand.subcopy') }}</p>
+                    </div>
                 </div>
-                <div class="auth-brand__copy">
-                    <p class="auth-brand__eyebrow">{{ __('auth.brand.eyebrow') }}</p>
-                    <h1 class="auth-brand__headline">{{ __('auth.brand.headline') }}</h1>
-                    <p class="auth-brand__subcopy">{{ __('auth.brand.subcopy') }}</p>
-                </div>
-            </div>
 
-            <div class="inline-alerts" aria-live="polite" data-copy-switch>
+                <div class="inline-alerts" aria-live="polite" data-copy-switch>
                     @foreach (['success' => 'inline-alert--success', 'status' => 'inline-alert--info', 'info' => 'inline-alert--info', 'error' => 'inline-alert--error'] as $key => $class)
-                    @if (session($key))
-                    <div class="inline-alert {{ $class }}">
-                        <span class="inline-alert__icon">
-                            @switch($key)
-                                @case('success') ✅ @break
-                                @case('error') ⚠️ @break
-                                @default ℹ️
-                            @endswitch
-                        </span>
-                        <div>{{ session($key) }}</div>
-                    </div>
-                @endif
-            @endforeach
+                        @if (session($key))
+                            <div class="inline-alert {{ $class }}">
+                                <span class="inline-alert__icon">
+                                    @switch($key)
+                                        @case('success') ✅ @break
+                                        @case('error') ⚠️ @break
+                                        @default ℹ️
+                                    @endswitch
+                                </span>
+                                <div>{{ session($key) }}</div>
+                            </div>
+                        @endif
+                    @endforeach
 
-            @if ($errors->any())
-                <div class="inline-alert inline-alert--warning">
-                    <span class="inline-alert__icon">⚠️</span>
-                    <div>
-                        <strong>{{ __('auth.alerts.review_fields') }}</strong>
-                        <ul class="list-disc space-y-1 pe-4">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
+                    @if ($errors->any())
+                        <div class="inline-alert inline-alert--warning">
+                            <span class="inline-alert__icon">⚠️</span>
+                            <div>
+                                <strong>{{ __('auth.alerts.review_fields') }}</strong>
+                                <ul class="list-disc space-y-1 pe-4">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
                 </div>
-            @endif
-        </div>
 
-        <div class="panel-layout" data-intent-state="customer">
-            <div class="panel-card panel-card--center">
                 <div class="google-stack">
                     <p data-text-switch="intro-default">{{ __('auth.intro.default') }}</p>
                     <p class="hidden" data-text-switch="intro-chef">{{ __('auth.intro.chef') }}</p>
@@ -517,8 +497,8 @@
                 <form action="{{ route('login.password') }}" method="POST" class="auth-form" novalidate>
                     @csrf
                     <input type="hidden" name="form_source" value="login">
-                    @if ($pendingWorkshop)
-                        <input type="hidden" name="pending_workshop_booking" value="{{ $pendingWorkshop }}">
+                    @if (!empty($pendingWorkshopBooking))
+                        <input type="hidden" name="pending_workshop_booking" value="{{ $pendingWorkshopBooking }}">
                     @endif
                     <div class="field-group" data-field-switch="email">
                         <label for="login-email">{{ __('auth.form.email.label') }}</label>
@@ -528,11 +508,11 @@
                             type="email"
                             dir="ltr"
                             autocomplete="email"
-                            value="{{ $loginOldEmail }}"
-                            class="input-control {{ $errors->has('email') && $oldSource === 'login' ? 'has-error' : '' }}"
+                            value="{{ old('form_source') === 'login' ? old('email') : '' }}"
+                            class="input-control {{ $errors->has('email') && old('form_source') === 'login' ? 'has-error' : '' }}"
                         >
                         <p class="field-hint">{{ __('auth.form.email.hint') }}</p>
-                        @if ($errors->has('email') && $oldSource === 'login')
+                        @if ($errors->has('email') && old('form_source') === 'login')
                             <p class="field-error">{{ $errors->first('email') }}</p>
                         @endif
                     </div>
@@ -544,17 +524,21 @@
                             name="password"
                             type="password"
                             autocomplete="current-password"
-                            class="input-control {{ $errors->has('password') && $oldSource === 'login' ? 'has-error' : '' }}"
+                            class="input-control {{ $errors->has('password') && old('form_source') === 'login' ? 'has-error' : '' }}"
                         >
                         <p class="field-hint">{{ __('auth.form.password.hint') }}</p>
-                        @if ($errors->has('password') && $oldSource === 'login')
+                        @if ($errors->has('password') && old('form_source') === 'login')
                             <p class="field-error">{{ $errors->first('password') }}</p>
                         @endif
                     </div>
 
                     <div class="actions-row">
                         <label class="remember" data-field-switch="remember">
-                            <input type="checkbox" name="remember" value="1" {{ $rememberOld ? 'checked' : '' }}>
+                            <input
+                                type="checkbox"
+                                name="remember"
+                                value="1"
+                                {{ (old('form_source') === 'login' && old('remember')) ? 'checked' : '' }}>
                             {{ __('auth.form.remember') }}
                         </label>
                         <a href="{{ route('login') }}#support" class="ghost-link">{{ __('auth.form.help') }}</a>
@@ -564,9 +548,9 @@
                 </form>
             </div>
         </div>
-        </div>
     </div>
 </div>
+@include('layouts.partials.footer')
 @endsection
 
 @push('scripts')
@@ -641,3 +625,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

@@ -65,6 +65,7 @@ return [
             'workshops' => 'إدارة الورشات',
             'earnings' => 'عرض الأرباح',
             'new_recipe' => 'وصفة جديدة',
+            'new_workshop' => 'إنشاء ورشة جديدة',
         ],
     ],
 

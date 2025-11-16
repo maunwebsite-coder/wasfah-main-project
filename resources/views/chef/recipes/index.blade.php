@@ -73,40 +73,50 @@
                 <h1 class="text-3xl font-bold text-gray-900">{{ __('chef.hero.heading', ['name' => $chefName]) }}</h1>
                 <p class="text-gray-600 mt-1">{{ __('chef.hero.description') }}</p>
             </div>
-            <div class="flex flex-col sm:flex-row items-stretch justify-end gap-3">
+            <div class="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-row sm:items-stretch sm:justify-end">
                 @if ($publicProfileUrl)
-                    <a href="{{ $publicProfileUrl }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-orange-600 font-semibold shadow-sm hover:bg-orange-50 hover:border-orange-300 transition">
+                    <a href="{{ $publicProfileUrl }}" target="_blank" rel="noopener" class="order-5 sm:order-1 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-orange-600 font-semibold shadow-sm hover:bg-orange-50 hover:border-orange-300 transition">
                         <i class="fas fa-eye"></i>
                         {{ __('chef.hero.actions.public_profile') }}
                     </a>
                 @endif
-                <a href="{{ route('chef.workshops.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-white px-5 py-3 text-indigo-600 font-semibold shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition">
+                <a href="{{ route('chef.workshops.index') }}" class="order-3 sm:order-3 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white px-5 py-3 text-indigo-600 font-semibold shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition">
                     <i class="fas fa-video"></i>
                     {{ __('chef.hero.actions.workshops') }}
                 </a>
-                <a href="{{ route('chef.workshops.earnings') }}" class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-emerald-600 font-semibold shadow-sm hover:border-emerald-300 hover:bg-emerald-50 transition">
+                <a href="{{ route('chef.workshops.earnings') }}" class="order-4 sm:order-2 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-emerald-600 font-semibold shadow-sm hover:border-emerald-300 hover:bg-emerald-50 transition">
                     <i class="fas fa-wallet"></i>
                     {{ __('chef.hero.actions.earnings') }}
                 </a>
-                <a href="{{ route('chef.recipes.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
+                <a href="{{ route('chef.workshops.create') }}" class="order-2 sm:order-4 col-span-2 sm:col-span-1 group flex w-full sm:w-auto items-center gap-3 rounded-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 px-6 py-3 text-white font-semibold shadow-[0_12px_30px_rgba(37,99,235,0.32)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(37,99,235,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70">
+                    <span class="flex h-11 w-11 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-lg text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
+                        <i class="fas fa-calendar-plus" aria-hidden="true"></i>
+                    </span>
+                    <span class="flex flex-col text-left leading-tight">
+                        <span>{{ __('chef.hero.actions.new_workshop') }}</span>
+                    </span>
+                </a>
+                <a href="{{ route('chef.recipes.create') }}" class="order-1 sm:order-5 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
                     <i class="fas fa-plus"></i>
                     {{ __('chef.hero.actions.new_recipe') }}
                 </a>
             </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-4 mb-8">
-            @foreach ($statusMeta as $status => $meta)
-                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm font-medium text-gray-500">{{ $meta['label'] }}</p>
-                        <span class="{{ $meta['bg'] }} {{ $meta['text'] }} inline-flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-semibold">
-                            {{ $statusCounts[$status] ?? 0 }}
-                        </span>
+        <div class="-mx-4 mb-8 overflow-hidden sm:mx-0">
+            <div class="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4">
+                @foreach ($statusMeta as $status => $meta)
+                    <div class="min-w-[180px] flex-shrink-0 snap-center rounded-xl border border-gray-100 bg-white/95 p-4 shadow-sm backdrop-blur-sm transition hover:-translate-y-1 hover:shadow-md">
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs font-semibold text-gray-500">{{ $meta['label'] }}</p>
+                            <span class="{{ $meta['bg'] }} {{ $meta['text'] }} inline-flex h-8 w-8 items-center justify-center rounded-xl text-base font-bold">
+                                {{ $statusCounts[$status] ?? 0 }}
+                            </span>
+                        </div>
+                        <p class="mt-2 text-[13px] leading-relaxed text-gray-500">{{ $meta['description'] }}</p>
                     </div>
-                    <p class="mt-3 text-sm text-gray-500">{{ $meta['description'] }}</p>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
 
         <section class="mb-10">

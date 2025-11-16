@@ -8,7 +8,7 @@
         <div class="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
             <div class="bg-gradient-to-l from-orange-500 to-orange-400 text-white px-8 py-10">
                 <h1 class="text-3xl font-extrabold mb-3">
-                    <i class="fas fa-hat-chef text-white ml-3"></i>
+                    <i class="fas fa-bowl-food text-white ml-3"></i>
                     Your application is under review
                 </h1>
                 <p class="text-orange-100 text-lg leading-7">

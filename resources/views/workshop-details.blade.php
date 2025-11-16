@@ -38,21 +38,21 @@
     .workshop-hero {
         position: relative;
         isolation: isolate;
-        background: linear-gradient(120deg, #f59e0b, #ea580c 60%, #c2410c);
+        background: linear-gradient(120deg, #ff7a18, #f97316 55%, #c2410c);
         color: white;
         border-radius: 1.5rem;
         margin: 2rem auto 0 auto;
         max-width: 1200px;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 25px 50px -12px rgba(234, 88, 12, 0.45);
     }
 
     .workshop-hero::after {
         content: '';
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.25), transparent 55%);
-        opacity: 0.6;
+        background: radial-gradient(circle at top right, rgba(255, 237, 213, 0.5), transparent 55%);
+        opacity: 0.75;
         pointer-events: none;
     }
 
@@ -63,42 +63,121 @@
     
     .workshop-hero-details {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 0.75rem 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
     }
 
-    .workshop-hero-details > div {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 1rem;
-        padding: 0.85rem 1rem;
+    .hero-detail-card {
+        position: relative;
         display: flex;
-        align-items: center;
-        gap: 0.75rem;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.25rem;
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 247, 237, 0.98), rgba(255, 210, 165, 0.6));
+        border: 1px solid rgba(255, 171, 94, 0.7);
+        box-shadow: 0 20px 45px -18px rgba(234, 88, 12, 0.35);
+        backdrop-filter: blur(16px);
+        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        color: #0f172a;
+        overflow: hidden;
     }
 
-    .workshop-hero-details i {
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.25);
+    .hero-detail-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.6), transparent 55%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .hero-detail-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(249, 115, 22, 0.85);
+        box-shadow: 0 30px 60px -24px rgba(249, 115, 22, 0.45);
+    }
+
+    .hero-detail-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-detail-icon {
+        width: 3.25rem;
+        height: 3.25rem;
+        border-radius: 1rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 1.3rem;
+        color: #fff;
+        box-shadow: 0 12px 25px -10px rgba(124, 45, 18, 0.45);
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
     }
 
-    .workshop-hero-details span.font-medium {
-        font-size: 0.95rem;
+    .hero-detail-icon::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top, rgba(255, 255, 255, 0.45), transparent 55%);
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .hero-detail-icon--date {
+        background: linear-gradient(135deg, #ffe0b2, #f97316);
+    }
+
+    .hero-detail-icon--time {
+        background: linear-gradient(135deg, #ffd8aa, #fb923c);
+    }
+
+    .hero-detail-icon--instructor {
+        background: linear-gradient(135deg, #ffb86c, #ea580c);
+    }
+
+    .hero-detail-icon--online {
+        background: linear-gradient(135deg, #ff9248, #d97706);
+    }
+
+    .hero-detail-icon--location {
+        background: linear-gradient(135deg, #fb923c, #b45309);
+    }
+
+    .hero-detail-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .hero-detail-value {
+        display: block;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #0f172a;
         letter-spacing: 0.01em;
+        line-height: 1.4;
+    }
+
+    .hero-detail-extra {
+        display: block;
+        font-size: 0.8rem;
+        color: #9a3412;
+        line-height: 1.5;
     }
 
     .workshop-hero-meta-label {
         display: block;
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         text-transform: uppercase;
-        letter-spacing: 0.18em;
-        color: rgba(255, 255, 255, 0.7);
+        letter-spacing: 0.2em;
+        color: #9a3412;
         margin-bottom: 0.2rem;
+        font-weight: 700;
     }
 
     /* Add margin to prevent edge sticking */
@@ -132,7 +211,26 @@
         }
         
         .workshop-hero-details {
-            font-size: 0.9rem;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.85rem;
+        }
+
+        .hero-detail-card {
+            padding: 1rem;
+        }
+
+        .hero-detail-icon {
+            width: 3rem;
+            height: 3rem;
+            font-size: 1.15rem;
+        }
+
+        .hero-detail-value {
+            font-size: 1rem;
+        }
+
+        .hero-detail-extra {
+            font-size: 0.75rem;
         }
         
         .workshop-image {
@@ -285,33 +383,32 @@
         }
         
         .workshop-hero-details {
-            font-size: 0.95rem;
             grid-template-columns: 1fr;
             gap: 0.75rem;
         }
         
-        .workshop-hero-details > div {
-            padding: 0.85rem 0.95rem;
+        .hero-detail-card {
+            padding: 0.9rem 1rem;
             gap: 0.75rem;
         }
 
-        .workshop-hero-details i {
-            width: 2rem;
-            height: 2rem;
-            font-size: 0.95rem;
+        .hero-detail-icon {
+            width: 2.65rem;
+            height: 2.65rem;
+            font-size: 1rem;
         }
 
-        .workshop-hero-details span.font-medium {
-            font-size: 0.95rem;
+        .hero-detail-value {
+            font-size: 0.98rem;
+        }
+
+        .hero-detail-extra {
+            font-size: 0.72rem;
         }
 
         .workshop-hero-meta-label {
-            font-size: 0.65rem;
-            letter-spacing: 0.15em;
-        }
-
-        .workshop-hero-details .hero-detail--secondary {
-            display: none;
+            font-size: 0.62rem;
+            letter-spacing: 0.16em;
         }
         
         .workshop-image {
@@ -556,7 +653,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-left: 1rem;
+        margin-inline-end: 1rem;
         background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
         color: white;
         font-size: 1.1rem;
@@ -731,30 +828,38 @@
         position: fixed;
         left: 50%;
         bottom: 1rem;
-        transform: translateX(-50%);
+        transform: translate(-50%, 0);
         width: min(620px, calc(100% - 2.5rem));
         z-index: 60;
-        display: none;
+        display: flex;
         align-items: center;
-        gap: 1.25rem;
-        padding: 1rem 1.5rem;
-        border-radius: 1.5rem;
+        gap: 0.5rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 1.25rem;
         background: #fff;
         box-shadow: 0 30px 65px rgba(15, 23, 42, 0.25);
         border: 1px solid rgba(15, 23, 42, 0.08);
         margin-bottom: env(safe-area-inset-bottom, 0);
+        transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    }
+
+    .floating-booking-bar.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translate(-50%, 1.5rem);
     }
 
     .floating-booking-price {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.15rem;
+        gap: 0;
         min-width: 0;
     }
 
     .floating-booking-price-label {
-        font-size: 0.8rem;
+        font-size: 0.72rem;
         font-weight: 600;
         letter-spacing: 0.05em;
         text-transform: uppercase;
@@ -762,13 +867,14 @@
     }
 
     .floating-booking-price-value {
-        font-size: 1.25rem;
+        font-size: 1.05rem;
         font-weight: 800;
         color: #0f172a;
+        line-height: 1.1;
     }
 
     .floating-booking-meta {
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         color: #475569;
         font-weight: 600;
         white-space: nowrap;
@@ -781,14 +887,15 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        padding: 0.9rem 1.5rem;
+        padding: 0.5rem 1rem;
         border-radius: 999px;
         background: linear-gradient(135deg, #fb923c, #ea580c);
         color: #fff;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.85rem;
         text-decoration: none;
-        min-width: 160px;
+        min-width: 120px;
+        line-height: 1;
         box-shadow: 0 18px 35px rgba(249, 115, 22, 0.35);
     }
 
@@ -973,47 +1080,56 @@
 
                     <!-- Compact Hero Details -->
                     <div class="mb-8 workshop-hero-details">
-                        <div class="text-amber-100 hero-detail hero-detail--primary">
-                            <i class="fas fa-calendar-day"></i>
-                            <div>
+                        <div class="hero-detail-card">
+                            <div class="hero-detail-icon hero-detail-icon--date">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="hero-detail-content">
                                 <span class="workshop-hero-meta-label">{{ __('workshops.details.hero.date_label') }}</span>
-                                <span class="font-medium">{{ $workshopDateLabel }}</span>
+                                <span class="hero-detail-value">{{ $workshopDateLabel }}</span>
                             </div>
                         </div>
-                        <div class="text-amber-100 hero-detail hero-detail--primary">
-                            <i class="fas fa-clock"></i>
-                            <div>
+                        <div class="hero-detail-card">
+                            <div class="hero-detail-icon hero-detail-icon--time">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="hero-detail-content">
                                 <span class="workshop-hero-meta-label">{{ __('workshops.details.booking_card.hours_label') }}</span>
-                                <span class="font-medium">
-                                    {{ $workshopStartTimeLabel }} - {{ $workshopEndTimeLabel }}
-                                    @if($workshopStartIso)
-                                        <span
-                                            class="block text-sm text-amber-200 font-normal mt-1"
-                                            data-local-time
-                                            data-source-time="{{ $workshopStartIso }}"
-                                            data-label="{{ __('workshops.details.timezones.viewer_label') }}"
-                                            data-template="{{ __('workshops.details.timezones.viewer_timezone_template') }}"
-                                            data-fallback-timezone="{{ __('workshops.details.timezones.viewer_timezone_fallback') }}"
-                                            data-placeholder="{{ __('workshops.details.timezones.viewer_placeholder') }}"
-                                            data-locale="{{ app()->getLocale() }}"
-                                            data-format="datetime-full"
-                                        >{{ __('workshops.details.timezones.viewer_placeholder') }}</span>
-                                    @endif
-                                </span>
+                                <span class="hero-detail-value">{{ $workshopStartTimeLabel }} - {{ $workshopEndTimeLabel }}</span>
+                                @if($workshopStartIso)
+                                    <span
+                                        class="hero-detail-extra"
+                                        data-local-time
+                                        data-source-time="{{ $workshopStartIso }}"
+                                        data-label="{{ __('workshops.details.timezones.viewer_label') }}"
+                                        data-template="{{ __('workshops.details.timezones.viewer_timezone_template') }}"
+                                        data-fallback-timezone="{{ __('workshops.details.timezones.viewer_timezone_fallback') }}"
+                                        data-placeholder="{{ __('workshops.details.timezones.viewer_placeholder') }}"
+                                        data-locale="{{ app()->getLocale() }}"
+                                        data-format="datetime-full"
+                                    >{{ __('workshops.details.timezones.viewer_placeholder') }}</span>
+                                @endif
                             </div>
                         </div>
-                        <div class="text-amber-100 hero-detail hero-detail--primary">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <div>
+                        <div class="hero-detail-card">
+                            <div class="hero-detail-icon hero-detail-icon--instructor">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="hero-detail-content">
                                 <span class="workshop-hero-meta-label">{{ __('workshops.details.hero.instructor_label') }}</span>
-                                <span class="font-medium">{{ $workshop->instructor ?? $notSpecifiedLabel }}</span>
+                                <span class="hero-detail-value">{{ $workshop->instructor ?? $notSpecifiedLabel }}</span>
                             </div>
                         </div>
-                        <div class="text-amber-100 hero-detail hero-detail--primary">
-                            <i class="fas {{ $workshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }}"></i>
-                            <div>
+                        <div class="hero-detail-card">
+                            <div class="hero-detail-icon {{ $workshop->is_online ? 'hero-detail-icon--online' : 'hero-detail-icon--location' }}">
+                                <i class="fas {{ $workshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }}"></i>
+                            </div>
+                            <div class="hero-detail-content">
                                 <span class="workshop-hero-meta-label">{{ __('workshops.details.hero.format_label') }}</span>
-                                <span class="font-medium">{{ $workshop->is_online ? __('workshops.labels.online_workshop') : ($workshop->location ?? __('workshops.labels.offline_workshop')) }}</span>
+                                <span class="hero-detail-value">{{ $workshop->is_online ? __('workshops.labels.online_workshop') : ($workshop->location ?? __('workshops.labels.offline_workshop')) }}</span>
+                                @if(!$workshop->is_online && $workshop->address)
+                                    <span class="hero-detail-extra">{{ $workshop->address }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -1062,7 +1178,7 @@
                         <!-- About Workshop -->
                         <div class="content-card p-8 sm:p-10">
                             <h2 class="text-3xl font-bold text-gray-900 mb-8 text-right flex items-center workshop-content-title">
-                                <div class="info-icon ml-4">
+                                <div class="info-icon">
                                     <i class="fas fa-info-circle"></i>
                                 </div>
                                 {{ __('workshops.details.sections.about') }}
@@ -1075,7 +1191,7 @@
                         @if($workshop->what_you_will_learn)
                             <div class="content-card p-8 sm:p-10">
                                 <h2 class="text-3xl font-bold text-gray-900 mb-8 text-right flex items-center workshop-content-title">
-                                    <div class="info-icon ml-4">
+                                    <div class="info-icon">
                                         <i class="fas fa-graduation-cap"></i>
                                     </div>
                                     {{ __('workshops.details.sections.learn') }}
@@ -1089,7 +1205,7 @@
                         @if($workshop->requirements)
                             <div class="content-card p-8 sm:p-10">
                                 <h2 class="text-3xl font-bold text-gray-900 mb-8 text-right flex items-center workshop-content-title">
-                                    <div class="info-icon ml-4">
+                                    <div class="info-icon">
                                         <i class="fas fa-list-check"></i>
                                     </div>
                                     {{ __('workshops.details.sections.requirements') }}
@@ -1103,7 +1219,7 @@
                         @if($workshop->materials_needed)
                             <div class="content-card p-8 sm:p-10">
                                 <h2 class="text-3xl font-bold text-gray-900 mb-8 text-right flex items-center workshop-content-title">
-                                    <div class="info-icon ml-4">
+                                    <div class="info-icon">
                                         <i class="fas fa-tools"></i>
                                     </div>
                                     {{ __('workshops.details.sections.materials') }}
@@ -1117,7 +1233,7 @@
                         @if($workshop->recipes && $workshop->recipes->count() > 0)
                             <div class="content-card p-8 sm:p-10">
                                 <h2 class="text-3xl font-bold text-gray-900 mb-8 text-right flex items-center workshop-content-title">
-                                    <div class="info-icon ml-4">
+                                    <div class="info-icon">
                                         <i class="fas fa-utensils"></i>
                                     </div>
                                     {{ __('workshops.details.sections.recipes') }}
@@ -1189,7 +1305,7 @@
                     <div class="space-y-8 workshop-sidebar">
                         <div class="sidebar-card p-8" id="workshop-summary">
                             <h3 class="text-2xl font-bold text-gray-900 mb-6 text-right flex items-center">
-                                <div class="info-icon ml-4">
+                                <div class="info-icon">
                                     <i class="fas fa-clipboard-list"></i>
                                 </div>
                                 {{ __('workshops.details.booking_card.summary.title') }}
@@ -1473,7 +1589,7 @@
                         </div>
                         <div class="sidebar-card p-8" id="additional-details">
                             <h3 class="text-2xl font-bold text-gray-900 mb-6 text-right flex items-center">
-                                <div class="info-icon ml-4">
+                                <div class="info-icon">
                                     <i class="fas fa-info-circle"></i>
                                 </div>
                                 {{ __('workshops.details.sidebar.title') }}
@@ -2529,9 +2645,47 @@ function initFloatingBookingBarScroll() {
     window.__floatingBookingBarScrollInitialized = true;
 }
 
+function initFloatingBookingBarFooterObserver() {
+    if (window.__floatingBookingBarFooterObserverInitialized) {
+        return;
+    }
+
+    const floatingBar = document.querySelector('.floating-booking-bar');
+    const footer = document.querySelector('footer');
+
+    if (!floatingBar || !footer) {
+        return;
+    }
+
+    const toggleBar = shouldHide => {
+        floatingBar.classList.toggle('is-hidden', shouldHide);
+    };
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                toggleBar(entry.isIntersecting);
+            });
+        });
+
+        observer.observe(footer);
+    } else {
+        const handleScroll = () => {
+            const footerRect = footer.getBoundingClientRect();
+            toggleBar(footerRect.top < window.innerHeight);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+    }
+
+    window.__floatingBookingBarFooterObserverInitialized = true;
+}
+
 function bootWorkshopDetailsScripts() {
     initWorkshopDetailsBooking();
     initFloatingBookingBarScroll();
+    initFloatingBookingBarFooterObserver();
 }
 
 if (document.readyState === 'loading') {

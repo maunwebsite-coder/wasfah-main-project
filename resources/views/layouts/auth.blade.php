@@ -57,25 +57,27 @@
 </head>
 <body class="font-sans relative">
 
-    <div class="fixed bottom-6 {{ $isRtl ? 'left-6' : 'right-6' }} z-50">
-        <form
-            method="POST"
-            action="{{ route('locale.switch') }}"
-            class="flex flex-col gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-2xl shadow-orange-100/60 backdrop-blur {{ $isRtl ? 'text-right items-end' : 'text-left items-start' }}"
-        >
-            @csrf
-            <input type="hidden" name="locale" value="{{ $alternateLocale }}">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{{ data_get($languageCopy, 'label', 'Language') }}</p>
-            <button
-                type="submit"
-                class="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-gradient-to-r from-amber-50 to-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-amber-600 shadow-sm transition hover:from-white hover:to-amber-50 focus:outline-none focus:ring-2 focus:ring-orange-200"
-                aria-label="{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}"
+    @unless($hideLocaleSwitcher ?? false)
+        <div class="fixed bottom-6 {{ $isRtl ? 'left-6' : 'right-6' }} z-50">
+            <form
+                method="POST"
+                action="{{ route('locale.switch') }}"
+                class="flex flex-col gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-2xl shadow-orange-100/60 backdrop-blur {{ $isRtl ? 'text-right items-end' : 'text-left items-start' }}"
             >
-                <span>{{ data_get($languageCopy, 'short.' . $alternateLocale, strtoupper($alternateLocale)) }}</span>
-                <span class="text-[11px] font-medium text-slate-500">{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}</span>
-            </button>
-        </form>
-    </div>
+                @csrf
+                <input type="hidden" name="locale" value="{{ $alternateLocale }}">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{{ data_get($languageCopy, 'label', 'Language') }}</p>
+                <button
+                    type="submit"
+                    class="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-gradient-to-r from-amber-50 to-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-amber-600 shadow-sm transition hover:from-white hover:to-amber-50 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                    aria-label="{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}"
+                >
+                    <span>{{ data_get($languageCopy, 'short.' . $alternateLocale, strtoupper($alternateLocale)) }}</span>
+                    <span class="text-[11px] font-medium text-slate-500">{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}</span>
+                </button>
+            </form>
+        </div>
+    @endunless
 
     <!-- Page Content -->
     <main>

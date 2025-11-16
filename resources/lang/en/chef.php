@@ -65,6 +65,7 @@ return [
             'workshops' => 'Manage workshops',
             'earnings' => 'View earnings',
             'new_recipe' => 'New recipe',
+            'new_workshop' => 'Create workshop',
         ],
     ],
 

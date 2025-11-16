@@ -29,6 +29,10 @@ return [
             'logout' => 'تسجيل الخروج',
         ],
     ],
+    'guest_actions' => [
+        'login' => 'تسجيل الدخول',
+        'register' => 'إنشاء حساب',
+    ],
     'links' => [
         'home' => 'الرئيسية',
         'recipes' => 'الوصفات',

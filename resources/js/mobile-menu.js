@@ -7,6 +7,29 @@ console.log('Mobile Menu JS loaded');
 
 let isMobileMenuInitialized = false;
 let outsideClickHandler = null;
+let escapeKeyHandler = null;
+
+function openMobileMenu(mobileMenu, menuIcon, closeIcon) {
+    mobileMenu.classList.remove('hidden');
+    mobileMenu.classList.add('show');
+    mobileMenu.style.display = 'block';
+    mobileMenu.style.visibility = 'visible';
+    mobileMenu.style.opacity = '1';
+    menuIcon?.classList.add('hidden');
+    closeIcon?.classList.remove('hidden');
+    document.body?.classList.add('mobile-menu-open');
+}
+
+function closeMobileMenu(mobileMenu, menuIcon, closeIcon) {
+    mobileMenu.classList.add('hidden');
+    mobileMenu.classList.remove('show');
+    mobileMenu.style.display = 'none';
+    mobileMenu.style.visibility = 'hidden';
+    mobileMenu.style.opacity = '0';
+    menuIcon?.classList.remove('hidden');
+    closeIcon?.classList.add('hidden');
+    document.body?.classList.remove('mobile-menu-open');
+}
 
 // Mobile Menu Setup Function
 function setupMobileMenu(force = false) {
@@ -39,26 +62,14 @@ function setupMobileMenu(force = false) {
             e.preventDefault();
             e.stopPropagation();
             console.log('Mobile menu button clicked!');
-            
+
             if (mobileMenu.classList.contains('hidden')) {
                 console.log('Opening mobile menu...');
-                mobileMenu.classList.remove('hidden');
-                mobileMenu.classList.add('show');
-                mobileMenu.style.display = 'block';
-                mobileMenu.style.visibility = 'visible';
-                mobileMenu.style.opacity = '1';
-                menuIcon.classList.add('hidden');
-                closeIcon.classList.remove('hidden');
+                openMobileMenu(mobileMenu, menuIcon, closeIcon);
                 console.log('Mobile menu opened successfully');
             } else {
                 console.log('Closing mobile menu...');
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('show');
-                mobileMenu.style.display = 'none';
-                mobileMenu.style.visibility = 'hidden';
-                mobileMenu.style.opacity = '0';
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
+                closeMobileMenu(mobileMenu, menuIcon, closeIcon);
                 console.log('Mobile menu closed successfully');
             }
         };
@@ -72,18 +83,25 @@ function setupMobileMenu(force = false) {
             if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
                 if (mobileMenu.classList.contains('show')) {
                     console.log('Closing menu - clicked outside');
-                    mobileMenu.classList.add('hidden');
-                    mobileMenu.classList.remove('show');
-                    mobileMenu.style.display = 'none';
-                    mobileMenu.style.visibility = 'hidden';
-                    mobileMenu.style.opacity = '0';
-                    menuIcon.classList.remove('hidden');
-                    closeIcon.classList.add('hidden');
+                    closeMobileMenu(mobileMenu, menuIcon, closeIcon);
                 }
             }
         };
 
         document.addEventListener('click', outsideClickHandler);
+
+        if (escapeKeyHandler) {
+            document.removeEventListener('keydown', escapeKeyHandler);
+        }
+
+        escapeKeyHandler = function(e) {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('show')) {
+                console.log('Closing menu - escape key');
+                closeMobileMenu(mobileMenu, menuIcon, closeIcon);
+            }
+        };
+
+        document.addEventListener('keydown', escapeKeyHandler);
 
         console.log('Mobile menu setup completed successfully!');
         isMobileMenuInitialized = true;
@@ -111,22 +129,10 @@ if (typeof window !== 'undefined') {
 
         if (mobileMenu && menuIcon && closeIcon) {
             if (mobileMenu.classList.contains('hidden')) {
-                mobileMenu.classList.remove('hidden');
-                mobileMenu.classList.add('show');
-                mobileMenu.style.display = 'block';
-                mobileMenu.style.visibility = 'visible';
-                mobileMenu.style.opacity = '1';
-                menuIcon.classList.add('hidden');
-                closeIcon.classList.remove('hidden');
+                openMobileMenu(mobileMenu, menuIcon, closeIcon);
                 console.log('Menu opened via test function');
             } else {
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('show');
-                mobileMenu.style.display = 'none';
-                mobileMenu.style.visibility = 'hidden';
-                mobileMenu.style.opacity = '0';
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
+                closeMobileMenu(mobileMenu, menuIcon, closeIcon);
                 console.log('Menu closed via test function');
             }
         } else {
