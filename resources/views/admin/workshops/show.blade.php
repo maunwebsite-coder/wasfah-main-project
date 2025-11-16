@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'تفاصيل الورشة - ' . $workshop->title)
 
@@ -239,6 +239,11 @@
     $isOnline = (bool) $workshop->is_online;
     $isFeatured = (bool) $workshop->is_featured;
     $hasMeetingLink = $isOnline && $workshop->meeting_link;
+    $currencyOptions = \App\Support\Currency::all();
+    $currencyMeta = $currencyOptions[$workshop->currency] ?? [
+        'label' => $workshop->currency,
+        'symbol' => $workshop->currency,
+    ];
 @endphp
 <div class="py-10 md:py-16">
     <div class="container mx-auto px-4 max-w-6xl space-y-10">
@@ -284,8 +289,14 @@
                     </div>
                     <div class="hero-meta-card">
                         <span class="hero-meta-label">السعر</span>
-                        <span class="hero-meta-value">{{ number_format($workshop->price, 2) }} {{ $workshop->currency }}</span>
-                        <span class="hero-meta-sub">تأكد من أن التسعير متوافق مع المحتوى والمدة.</span>
+                        <span class="hero-meta-value">
+                            {{ number_format($workshop->price, 2) }}
+                            {{ $currencyMeta['symbol'] ?? $workshop->currency }}
+                            <span class="text-sm text-slate-500">({{ $workshop->currency }})</span>
+                        </span>
+                        <span class="hero-meta-sub">
+                            {{ $currencyMeta['label'] ?? $workshop->currency }} · تأكد من أن التسعير متوافق مع المحتوى والمدة.
+                        </span>
                     </div>
                 </div>
             </div>
@@ -322,7 +333,7 @@
                 <div class="admin-card overflow-hidden">
                     <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/1200x600/f97316/FFFFFF?text=ورشة' }}"
                          alt="{{ $workshop->title }}"
-                         class="h-72 w-full object-cover">
+                         class="h-72 w-full object-cover" loading="lazy">
                 </div>
 
                 <div class="admin-card p-6 md:p-8">
@@ -427,7 +438,7 @@
                                             <i class="fas fa-copy"></i>
                                             نسخ الرابط للمشاركين
                                         </button>
-                                        @if($workshop->meeting_provider === 'jitsi')
+                                        @if($workshop->meeting_provider === 'google_meet')
                                             <a href="{{ route('admin.workshops.meeting', $workshop) }}"
                                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-sky-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-md transition hover:-translate-y-0.5">
                                                 <i class="fas fa-user-shield"></i>
@@ -452,7 +463,7 @@
                                             <img src="{{ $recipe->image_url ?: 'https://placehold.co/80x80/f97316/FFFFFF?text=وصفة' }}"
                                                  alt="{{ $recipe->title }}"
                                                  class="h-16 w-16 rounded-xl border border-slate-200 object-cover"
-                                                 onerror="this.src='{{ asset('image/logo.png') }}';">
+                                                 onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                                             <div class="space-y-1">
                                                 <p class="text-sm font-bold text-slate-900">{{ $recipe->title }}</p>
                                                 <p class="text-xs text-slate-500">{{ $recipe->author }}</p>
@@ -600,3 +611,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endpush
+
+

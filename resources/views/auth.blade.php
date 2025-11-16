@@ -54,32 +54,59 @@
     border: 1px solid rgba(249, 115, 22, 0.15);
 }
 
-.brand-banner {
-    width: 100%;
-    background: var(--auth-card);
-    border-radius: 24px;
-    padding: clamp(1.2rem, 2vw, 1.8rem);
-    border: 1px solid rgba(249, 115, 22, 0.15);
-    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
-    text-align: center;
-    margin-bottom: clamp(1rem, 2vw, 1.5rem);
-}
-
-.brand-block {
+.auth-brand {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    gap: clamp(1rem, 2vw, 2.25rem);
+    padding: clamp(1.25rem, 2vw, 1.75rem);
+    border-radius: 24px;
+    background: linear-gradient(135deg, #fffaf4, #ffe4d0);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
 }
 
 .brand-logo {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 92px;
+    height: 92px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.15), 0 15px 30px rgba(249, 115, 22, 0.15);
+    flex-shrink: 0;
 }
 
 .brand-logo img {
-    width: 78px;
-    height: 78px;
+    width: 64px;
+    height: 64px;
     object-fit: contain;
+}
+
+.auth-brand__copy {
+    display: grid;
+    gap: 0.35rem;
+    text-align: start;
+}
+
+.auth-brand__eyebrow {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--auth-primary-dark);
+    font-weight: 700;
+}
+
+.auth-brand__headline {
+    margin: 0;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    color: var(--auth-text);
+}
+
+.auth-brand__subcopy {
+    margin: 0;
+    color: var(--auth-muted);
+    line-height: 1.6;
 }
 
 
@@ -146,6 +173,10 @@
 .google-stack {
     display: grid;
     gap: 0.9rem;
+}
+
+.google-stack > p {
+    text-align: left;
 }
 
 .google-btn {
@@ -388,8 +419,13 @@
 }
 
 @media (max-width: 640px) {
-    .brand-logo {
+    .auth-brand {
         flex-direction: column;
+        text-align: center;
+    }
+
+    .auth-brand__copy {
+        text-align: center;
     }
 
     .actions-row {
@@ -408,15 +444,24 @@
 @section('content')
 <div class="auth-shell">
     <div class="auth-stack">
-        <div class="brand-banner">
-            <div class="brand-block">
+        <div class="auth-card">
+            <div class="auth-brand">
                 <div class="brand-logo">
-                    <img src="{{ asset('image/logo.png') }}" alt="{{ __('auth.logo_alt') }}">
+                    <x-optimized-picture
+                        base="image/logo"
+                        :widths="[96, 192, 384]"
+                        alt="{{ __('auth.logo_alt') }}"
+                        :lazy="false"
+                        sizes="96px"
+                    />
+                </div>
+                <div class="auth-brand__copy">
+                    <p class="auth-brand__eyebrow">{{ __('auth.brand.eyebrow') }}</p>
+                    <h1 class="auth-brand__headline">{{ __('auth.brand.headline') }}</h1>
+                    <p class="auth-brand__subcopy">{{ __('auth.brand.subcopy') }}</p>
                 </div>
             </div>
-        </div>
 
-        <div class="auth-card">
             <div class="inline-alerts" aria-live="polite" data-copy-switch>
                     @foreach (['success' => 'inline-alert--success', 'status' => 'inline-alert--info', 'info' => 'inline-alert--info', 'error' => 'inline-alert--error'] as $key => $class)
                     @if (session($key))
@@ -458,7 +503,7 @@
                         <button type="button" class="intent-pill" data-role="chef">{{ __('auth.intent.chef') }}</button>
                     </div>
                     <button type="button" class="google-btn" data-google-button data-sync-role="hybrid">
-                        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+                        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google" loading="lazy" width="48" height="48" decoding="async">
                         {{ __('auth.google.cta') }}
                     </button>
                     <div class="micro-flags">

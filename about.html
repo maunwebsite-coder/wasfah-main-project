@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <link rel="preload" as="style" href="https://wasfah.ae/build/assets/app-BPWzf21J.css" /><link rel="modulepreload" as="script" href="https://wasfah.ae/build/assets/app-DeIeCXgO.js" /><link rel="modulepreload" as="script" href="https://wasfah.ae/build/assets/header-Dt_uZCzA.js" /><link rel="stylesheet" href="https://wasfah.ae/build/assets/app-BPWzf21J.css" data-navigate-track="reload" /><script type="module" src="https://wasfah.ae/build/assets/app-DeIeCXgO.js" data-navigate-track="reload"></script>    <meta charset="UTF-8">
@@ -23,6 +23,13 @@
 
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
     body {
         font-family: 'Tajawal', sans-serif;
         background-color: #f8f8f8;
@@ -948,7 +955,7 @@
         <div class="flex items-center justify-between gap-4 py-3 md:py-4 header-container">
             <div class="flex items-center gap-4 min-w-0">
                 <a href="https://wasfah.ae" class="flex items-center gap-3 text-slate-800">
-                    <img src="https://wasfah.ae/image/logo.png" alt="Logo" class="h-12 w-auto inline header-logo">
+                    <img src="https://wasfah.ae/image/logo.webp" alt="Logo" class="h-12 w-auto inline header-logo" loading="eager" fetchpriority="high">
                     <span class="hidden md:inline text-xl font-bold tracking-tight"></span>
                 </a>
 
@@ -1290,17 +1297,24 @@
     <!-- Load Cart Count Script -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-            // Load cart count on page load
+        // Load cart count on page load
         loadCartCount();
-        
-        // Load saved count for mobile menu
-        loadSavedCountMobile();
-        
-        // Load saved count for desktop menu
-        loadSavedCountDesktop();
-        
-        // Load mobile cart count
-        loadMobileCartCount();
+
+        const triggerSavedCounterLoad = () => {
+            if (typeof window.loadSavedCount === 'function') {
+                window.loadSavedCount({ force: true });
+            }
+        };
+
+        if (typeof window.loadSavedCount === 'function') {
+            triggerSavedCounterLoad();
+        } else {
+            const handleReady = () => {
+                triggerSavedCounterLoad();
+                window.removeEventListener('saved-counter:ready', handleReady);
+            };
+            window.addEventListener('saved-counter:ready', handleReady);
+        }
     });
     
     function loadCartCount() {
@@ -1343,80 +1357,8 @@
             });
     }
     
-    function loadSavedCountMobile() {
-        fetch('/saved/count')
-            .then(response => response.json())
-            .then(data => {
-                const savedCountEl = document.getElementById('saved-count-mobile');
-                if (savedCountEl) {
-                    const count = data.count || 0;
-                    savedCountEl.textContent = count;
-                    
-                    if (count > 0) {
-                        savedCountEl.classList.remove('hidden');
-                    } else {
-                        savedCountEl.classList.add('hidden');
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading saved count for mobile:', error);
-            });
-    }
-    
-    function loadSavedCountDesktop() {
-        fetch('/saved/count')
-            .then(response => response.json())
-            .then(data => {
-                const savedCountEl = document.getElementById('saved-count');
-                if (savedCountEl) {
-                    const count = data.count || 0;
-                    savedCountEl.textContent = count;
-                    
-                    if (count > 0) {
-                        savedCountEl.classList.remove('hidden');
-                    } else {
-                        savedCountEl.classList.add('hidden');
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading saved count for desktop:', error);
-            });
-    }
-    
-    function loadMobileCartCount() {
-        fetch('/saved/count')
-            .then(response => response.json())
-            .then(data => {
-                const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                if (mobileCartCountEl) {
-                    const count = data.count || 0;
-                    mobileCartCountEl.textContent = count;
-                    
-                    if (count > 0) {
-                        mobileCartCountEl.classList.remove('hidden');
-                        
-                        // Add pulse animation for attention
-                        mobileCartCountEl.classList.add('animate-pulse');
-                        setTimeout(() => {
-                            mobileCartCountEl.classList.remove('animate-pulse');
-                        }, 3000);
-                    } else {
-                        mobileCartCountEl.classList.add('hidden');
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading mobile cart count:', error);
-            });
-    }
-    
     // Make function globally available
     window.loadCartCount = loadCartCount;
-    window.loadSavedCountMobile = loadSavedCountMobile;
-    window.loadSavedCountDesktop = loadSavedCountDesktop;
-    window.loadMobileCartCount = loadMobileCartCount;
     </script>
 
     <!-- Footer -->
@@ -1428,7 +1370,7 @@
             <div class="space-y-4 text-center sm:text-right lg:col-span-3">
                 <h3 class="text-sm font-semibold text-orange-500 tracking-wider uppercase">شعار وصفة</h3>
                 <div class="flex items-center justify-center sm:justify-end space-x-3 rtl:space-x-reverse">
-                    <img src="https://wasfah.ae/image/logo.png" alt="شعار وصفة" class="h-12 w-auto">
+                    <img src="https://wasfah.ae/image/logo.webp" alt="شعار وصفة" class="h-12 w-auto" loading="eager" fetchpriority="high">
                 </div>
                 <p class="text-gray-600 leading-relaxed">
                     منصّة وصفة للحلويات الفاخرة والراقية، نرافقك في كل خطوة لتقديم أطيب الحلويات.
@@ -2159,763 +2101,187 @@
     
     <!-- تحميل عداد الأدوات المحفوظة -->
     <script>
-        // دالة تحديث واجهة العداد - متاحة في جميع الصفحات
-        function updateSavedCountUI(count) {
-            // تحديث العداد في الهيدر
-            const savedCountEl = document.getElementById('saved-count');
-            if (savedCountEl) {
-                if (count > 0) {
-                    savedCountEl.textContent = count;
-                    savedCountEl.classList.remove('hidden');
-                    console.log('Updated navbar counter to:', count);
-                } else {
-                    savedCountEl.classList.add('hidden');
-                    console.log('Hidden navbar counter');
-                }
-            } else {
-                console.log('saved-count element not found in navbar');
-            }
-            
-            // تحديث العداد في الهاتف المحمول (السلة - الأدوات المحفوظة)
-            const mobileCartCountEl = document.getElementById('mobile-cart-count');
-            if (mobileCartCountEl) {
-                if (count > 0) {
-                    mobileCartCountEl.textContent = count;
-                    mobileCartCountEl.classList.remove('hidden');
-                    
-                    // Add pulse animation for attention
-                    mobileCartCountEl.classList.add('animate-pulse');
-                    setTimeout(() => {
-                        mobileCartCountEl.classList.remove('animate-pulse');
-                    }, 3000);
-                    
-                    console.log('Updated mobile cart counter (saved tools) to:', count);
-                } else {
-                    mobileCartCountEl.classList.add('hidden');
-                    console.log('Hidden mobile cart counter (saved tools)');
-                }
-            }
-            
-            // تحديث العداد في الهاتف المحمول (الأدوات المحفوظة)
-            const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-            if (mobileSavedCountEl) {
-                if (count > 0) {
-                    mobileSavedCountEl.textContent = count;
-                    mobileSavedCountEl.classList.remove('hidden');
-                    
-                    // Add pulse animation for attention
-                    mobileSavedCountEl.classList.add('animate-pulse');
-                    setTimeout(() => {
-                        mobileSavedCountEl.classList.remove('animate-pulse');
-                    }, 3000);
-                    
-                    console.log('Updated mobile saved counter to:', count);
-                } else {
-                    mobileSavedCountEl.classList.add('hidden');
-                    console.log('Hidden mobile saved counter');
-                }
-            }
-            
-            // تحديث العداد في صفحة الأدوات
-            const savedCountBadge = document.getElementById('saved-count-badge');
-            if (savedCountBadge) {
-                if (count > 0) {
-                    savedCountBadge.textContent = count;
-                    savedCountBadge.classList.remove('hidden');
-                } else {
-                    savedCountBadge.classList.add('hidden');
-                }
-            }
-        }
+        (function() {
+            const state = {
+                value: null,
+                pending: null,
+                lastFetchedAt: 0,
+                minInterval: 15000
+            };
 
-        // دالة تحميل العداد - متاحة في جميع الصفحات
-        function loadSavedCount() {
-            console.log('Loading saved count from layout...');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
-            fetch('/saved/count', {
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin',
-                cache: 'no-cache'
-            })
-            .then(response => {
-                console.log('Layout response status:', response.status);
-                if (response.status === 401) {
-                    console.log('User not authenticated in layout');
-                    updateSavedCountUI(0);
+            const CSRF_SELECTOR = 'meta[name="csrf-token"]';
+
+            function normalizeCount(value) {
+                const parsed = Number(value);
+                if (!Number.isFinite(parsed) || parsed <= 0) {
+                    return 0;
+                }
+                return Math.max(0, Math.round(parsed));
+            }
+
+            function renderSavedCounter(count) {
+                const savedCountEl = document.getElementById('saved-count');
+                if (savedCountEl) {
+                    if (count > 0) {
+                        savedCountEl.textContent = count;
+                        savedCountEl.classList.remove('hidden');
+                    } else {
+                        savedCountEl.classList.add('hidden');
+                    }
+                }
+
+                const mobileCartCountEl = document.getElementById('mobile-cart-count');
+                if (mobileCartCountEl) {
+                    if (count > 0) {
+                        mobileCartCountEl.textContent = count;
+                        mobileCartCountEl.classList.remove('hidden');
+                        mobileCartCountEl.classList.add('animate-pulse');
+                        setTimeout(() => mobileCartCountEl.classList.remove('animate-pulse'), 300);
+                    } else {
+                        mobileCartCountEl.classList.add('hidden');
+                    }
+                }
+
+                const mobileSavedCountEl = document.getElementById('saved-count-mobile');
+                if (mobileSavedCountEl) {
+                    if (count > 0) {
+                        mobileSavedCountEl.textContent = count;
+                        mobileSavedCountEl.classList.remove('hidden');
+                    } else {
+                        mobileSavedCountEl.classList.add('hidden');
+                    }
+                }
+
+                const savedCountBadge = document.getElementById('saved-count-badge');
+                if (savedCountBadge) {
+                    if (count > 0) {
+                        savedCountBadge.textContent = count;
+                        savedCountBadge.classList.remove('hidden');
+                    } else {
+                        savedCountBadge.classList.add('hidden');
+                    }
+                }
+            }
+
+            function setSavedCount(count) {
+                const normalized = normalizeCount(count);
+                state.value = normalized;
+                renderSavedCounter(normalized);
+                return normalized;
+            }
+
+            function updateSavedCountUI(count) {
+                return setSavedCount(count);
+            }
+
+            function requestSavedCount(options = {}) {
+                const force = Boolean(options.force);
+                const now = Date.now();
+
+                if (!force) {
+                    if (state.pending) {
+                        return state.pending;
+                    }
+
+                    if (state.value !== null && now - state.lastFetchedAt < state.minInterval) {
+                        return Promise.resolve(state.value);
+                    }
+                }
+
+                const csrfToken = document.querySelector(CSRF_SELECTOR)?.getAttribute('content') || '';
+
+                state.pending = fetch('/saved/count', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-cache'
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        setSavedCount(0);
+                        return 0;
+                    }
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => setSavedCount(data?.count))
+                .catch(error => {
+                    console.error('Error loading saved count:', error);
+                    if (state.value === null) {
+                        setSavedCount(0);
+                    }
+                    throw error;
+                })
+                .finally(() => {
+                    state.lastFetchedAt = Date.now();
+                    state.pending = null;
+                });
+
+                return state.pending;
+            }
+
+            function applySavedCountDelta(delta) {
+                if (typeof delta !== 'number' || !Number.isFinite(delta) || delta === 0) {
+                    return requestSavedCount({ force: true });
+                }
+                const next = Math.max(0, (state.value ?? 0) + Math.round(delta));
+                return Promise.resolve(setSavedCount(next));
+            }
+
+            function handleSavedCounterChanged(event) {
+                const detail = event.detail || {};
+                if (typeof detail.count === 'number') {
+                    setSavedCount(detail.count);
                     return;
                 }
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (typeof detail.delta === 'number') {
+                    applySavedCountDelta(detail.delta);
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    console.log('Layout saved count data:', data);
-                    updateSavedCountUI(data.count);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading saved count from layout:', error);
-                updateSavedCountUI(0);
-            });
-        }
+                requestSavedCount({ force: true });
+            }
 
-        // جعل الدوال متاحة عالمياً
-        window.updateSavedCountUI = updateSavedCountUI;
-        window.loadSavedCount = loadSavedCount;
-        window.initDesktopDropdown = initDesktopDropdown;
-        window.toggleUserMenu = toggleUserMenu;
+            document.addEventListener('DOMContentLoaded', () => {
+                requestSavedCount({ force: true });
+            });
 
-        // تحميل فوري للعداد عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, loading saved count...');
-            loadSavedCount();
-        });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    requestSavedCount();
+                }
+            });
 
-        // تحميل عداد الأدوات المحفوظة بعد تحميل جميع الـ scripts
-        window.addEventListener('load', function() {
-            loadSavedCount();
-        });
-        
-        // تحديث العداد كل 5 ثوان للتأكد من التزامن
-        setInterval(function() {
-            loadSavedCount();
-        }, 5000);
-        
-        // تحديث فوري للعداد عند إضافة/حذف أدوات
-        function updateCountersImmediately() {
-            console.log('Updating counters immediately...');
-            try {
-                // تحديث مباشر للعدادات
-                const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                const savedCountEl = document.getElementById('saved-count');
-                const savedCountMobileEl = document.getElementById('saved-count-mobile');
-                
-                console.log('Counter elements found:', {
-                    mobileCartCountEl: !!mobileCartCountEl,
-                    savedCountEl: !!savedCountEl,
-                    savedCountMobileEl: !!savedCountMobileEl
-                });
-                
-                // تحديث مباشر للعدادات
-                if (mobileCartCountEl || savedCountEl || savedCountMobileEl) {
-                    fetch('/saved/count')
-                        .then(response => response.json())
-                        .then(data => {
-                            const count = data.count || 0;
-                            console.log('Counter count:', count);
-                            
-                            if (mobileCartCountEl) {
-                                mobileCartCountEl.textContent = count;
-                                if (count > 0) {
-                                    mobileCartCountEl.classList.remove('hidden');
-                                    console.log('Mobile cart counter shown:', count);
-                                } else {
-                                    mobileCartCountEl.classList.add('hidden');
-                                    console.log('Mobile cart counter hidden');
-                                }
-                            }
-                            
-                            if (savedCountEl) {
-                                savedCountEl.textContent = count;
-                                if (count > 0) {
-                                    savedCountEl.classList.remove('hidden');
-                                    console.log('Desktop counter shown:', count);
-                                } else {
-                                    savedCountEl.classList.add('hidden');
-                                    console.log('Desktop counter hidden');
-                                }
-                            }
-                            
-                            if (savedCountMobileEl) {
-                                savedCountMobileEl.textContent = count;
-                                if (count > 0) {
-                                    savedCountMobileEl.classList.remove('hidden');
-                                    console.log('Mobile menu counter shown:', count);
-                                } else {
-                                    savedCountMobileEl.classList.add('hidden');
-                                    console.log('Mobile menu counter hidden');
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error updating counters:', error);
-                        });
+            window.addEventListener('saved-counter:changed', handleSavedCounterChanged);
+            window.addEventListener('saved-counter:refresh', () => requestSavedCount({ force: true }));
+
+            window.updateSavedCountUI = updateSavedCountUI;
+            window.loadSavedCount = (options) => {
+                if (options && typeof options === 'object' && 'force' in options) {
+                    return requestSavedCount({ force: Boolean(options.force) });
                 }
-                
-                // تحديث إضافي باستخدام الدوال الأخرى
-                loadSavedCount();
-                loadMobileCartCount();
-                loadSavedCountMobile();
-                loadSavedCountDesktop();
-            } catch (error) {
-                console.error('Error in updateCountersImmediately:', error);
-            }
-        }
-        
-        // دالة محددة لتحديث عداد الهاتف المحمول
-        function updateMobileCounterImmediately() {
-            console.log('Updating mobile counter immediately...');
-            const mobileCartCountEl = document.getElementById('mobile-cart-count');
-            
-            if (mobileCartCountEl) {
-                // تحديث فوري بدون انتظار
-                fetch('/saved/count')
-                    .then(response => response.json())
-                    .then(data => {
-                        const count = data.count || 0;
-                        console.log('Mobile counter count:', count);
-                        
-                        // تحديث فوري للعداد
-                        mobileCartCountEl.textContent = count;
-                        if (count > 0) {
-                            mobileCartCountEl.classList.remove('hidden');
-                            console.log('Mobile cart counter shown:', count);
-                            
-                            // إضافة تأثير بصري للجذب
-                            mobileCartCountEl.style.transform = 'scale(1.2)';
-                            mobileCartCountEl.style.transition = 'transform 0.2s ease';
-                            
-                            setTimeout(() => {
-                                mobileCartCountEl.style.transform = 'scale(1)';
-                            }, 200);
-                        } else {
-                            mobileCartCountEl.classList.add('hidden');
-                            console.log('Mobile cart counter hidden');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error updating mobile counter:', error);
-                    });
-            }
-        }
-        
-        // دالة تحديث فوري للعداد في الهاتف المحمول
-        function updateMobileCounterInstant() {
-            const mobileCartCountEl = document.getElementById('mobile-cart-count');
-            if (mobileCartCountEl) {
-                // تحديث فوري بدون انتظار
-                fetch('/saved/count')
-                    .then(response => response.json())
-                    .then(data => {
-                        const count = data.count || 0;
-                        mobileCartCountEl.textContent = count;
-                        if (count > 0) {
-                            mobileCartCountEl.classList.remove('hidden');
-                        } else {
-                            mobileCartCountEl.classList.add('hidden');
-                        }
-                    })
-                    .catch(() => {
-                        // تحديث فوري حتى لو فشل الطلب
-                        const currentCount = parseInt(mobileCartCountEl.textContent) || 0;
-                        mobileCartCountEl.textContent = currentCount;
-                    });
-            }
-        }
-        
-        // دالة تحديث فوري لعداد سلة التسوق في الأعلى
-        function updateTopCartCounterInstant() {
-            const topCartCountEl = document.getElementById('mobile-cart-count');
-            if (topCartCountEl) {
-                // تحديث فوري بدون انتظار
-                fetch('/saved/count')
-                    .then(response => response.json())
-                    .then(data => {
-                        const count = data.count || 0;
-                        topCartCountEl.textContent = count;
-                        if (count > 0) {
-                            topCartCountEl.classList.remove('hidden');
-                            
-                            // إضافة تأثير بصري للجذب
-                            topCartCountEl.style.transform = 'scale(1.3)';
-                            topCartCountEl.style.transition = 'transform 0.3s ease';
-                            
-                            setTimeout(() => {
-                                topCartCountEl.style.transform = 'scale(1)';
-                            }, 300);
-                        } else {
-                            topCartCountEl.classList.add('hidden');
-                        }
-                    })
-                    .catch(() => {
-                        // تحديث فوري حتى لو فشل الطلب
-                        const currentCount = parseInt(topCartCountEl.textContent) || 0;
-                        topCartCountEl.textContent = currentCount;
-                    });
-            }
-        }
-        
-        // جعل الدالة متاحة عالمياً
-        window.updateCountersImmediately = updateCountersImmediately;
-        window.updateMobileCounterImmediately = updateMobileCounterImmediately;
-        window.updateMobileCounterInstant = updateMobileCounterInstant;
-        window.updateTopCartCounterInstant = updateTopCartCounterInstant;
-        
-        // استماع للأحداث المخصصة لتحديث العداد
-        document.addEventListener('toolSaved', function() {
-            console.log('Tool saved event received, updating counters...');
-            updateCountersImmediately();
-        });
-        
-        document.addEventListener('toolRemoved', function() {
-            console.log('Tool removed event received, updating counters...');
-            updateCountersImmediately();
-        });
-        
-        // استماع لتغييرات في localStorage
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'savedToolsUpdated') {
-                console.log('LocalStorage updated, refreshing counters...');
-                updateCountersImmediately();
-            }
-        });
-        
-        // مراقبة تغييرات DOM للعدادات
-        if (typeof MutationObserver !== 'undefined') {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList') {
-                        // تحقق من وجود تغييرات في عناصر العداد
-                        const counters = document.querySelectorAll('#saved-count, #mobile-cart-count, #saved-count-mobile');
-                        counters.forEach(counter => {
-                            if (mutation.target.contains(counter)) {
-                                console.log('Counter element changed, updating...');
-                                updateCountersImmediately();
-                            }
-                        });
-                        
-                        // تحقق من وجود تغييرات في أزرار الحفظ
-                        const saveButtons = mutation.addedNodes;
-                        saveButtons.forEach(node => {
-                            if (node.nodeType === 1) { // Element node
-                                if (node.classList && (node.classList.contains('save-tool-btn') || node.classList.contains('remove-tool-btn'))) {
-                                    console.log('Save button added, updating counters...');
-                                    updateCountersImmediately();
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-            
-            // مراقبة تغييرات في body
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['class', 'data-tool-id']
-            });
-        }
-        
-        // مراقبة تغييرات في localStorage
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'savedTools' || e.key === 'savedToolsUpdated') {
-                console.log('LocalStorage changed, updating counters...');
-                updateCountersImmediately();
-            }
-        });
-        
-        // مراقبة تغييرات في localStorage من نفس التبويب
-        const originalSetItem = localStorage.setItem;
-        localStorage.setItem = function(key, value) {
-            originalSetItem.apply(this, arguments);
-            if (key === 'savedTools' || key === 'savedToolsUpdated') {
-                console.log('LocalStorage setItem detected, updating counters...');
-                updateCountersImmediately();
-            }
-        };
-        
-        // مراقبة تغييرات في localStorage من نفس التبويب
-        const originalRemoveItem = localStorage.removeItem;
-        localStorage.removeItem = function(key) {
-            originalRemoveItem.apply(this, arguments);
-            if (key === 'savedTools' || key === 'savedToolsUpdated') {
-                console.log('LocalStorage removeItem detected, updating counters...');
-                updateCountersImmediately();
-            }
-        };
-        
-        // تحميل العداد عند تغيير الصفحة
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                console.log('Page became visible, reloading saved count...');
-                loadSavedCount();
-            }
-        });
-        
-        // تحميل فوري للعداد
-        setTimeout(function() {
-            loadSavedCount();
-        }, 1000);
-        
-        // تحديث فوري للعداد كل ثانية
-        setInterval(function() {
-            updateCountersImmediately();
-        }, 1000);
-        
-        // مراقبة تغيير حجم الشاشة
-        window.addEventListener('resize', function() {
-            if (window.innerWidth <= 768) {
-                console.log('Switched to mobile view, updating mobile counter...');
-                updateTopCartCounterInstant();
-                updateMobileCounterImmediately();
-            }
-        });
-        
-        // تحديث فوري للعداد في الهاتف المحمول عند تحميل الصفحة
-        if (window.innerWidth <= 768) {
-            console.log('Mobile view on page load, updating mobile counter...');
-            updateTopCartCounterInstant();
-            updateMobileCounterInstant();
-            updateMobileCounterImmediately();
-            setTimeout(() => {
-                updateTopCartCounterInstant();
-                updateMobileCounterInstant();
-                updateMobileCounterImmediately();
-            }, 100);
-            setTimeout(() => {
-                updateTopCartCounterInstant();
-                updateMobileCounterInstant();
-                updateMobileCounterImmediately();
-            }, 500);
-        }
-        
-        // تحديث فوري للعداد في الهاتف المحمول كل 500ms
-        if (window.innerWidth <= 768) {
-            setInterval(function() {
-                updateTopCartCounterInstant();
-                updateMobileCounterInstant();
-            }, 500);
-        }
-        
-        // إعادة تهيئة القائمة المنسدلة بعد تحميل الصفحة
-        window.addEventListener('load', function() {
-            console.log('Window loaded, re-initializing desktop dropdown...');
-            initDesktopDropdown();
-            
-            // إعادة تهيئة القائمة المحمولة
-            initializeMobileMenu();
-        });
-        
-        // دالة منفصلة لتهيئة القائمة المحمولة
-        function initializeMobileMenu() {
-            console.log('Initializing mobile menu...');
-            setupMobileMenu();
-        }
-        
-        // الدوال المكررة تم حذفها - نستخدم الدوال الأساسية فقط
-        
-        // إضافة دالة اختبار بسيطة للقائمة الجانبية
-        function testMobileMenu() {
-            console.log('Testing mobile menu...');
-            const mobileMenu = document.getElementById('mobileMenu');
-            const menuIcon = document.getElementById('menu-icon');
-            const closeIcon = document.getElementById('close-icon');
-            
-            if (mobileMenu && menuIcon && closeIcon) {
-                console.log('Elements found, toggling menu...');
-                mobileMenu.classList.toggle('hidden');
-                mobileMenu.classList.toggle('show');
-                menuIcon.classList.toggle('hidden');
-                closeIcon.classList.toggle('hidden');
-                
-                console.log('Menu state after toggle:', {
-                    menuHidden: mobileMenu.classList.contains('hidden'),
-                    menuShown: mobileMenu.classList.contains('show'),
-                    menuIconHidden: menuIcon.classList.contains('hidden'),
-                    closeIconHidden: closeIcon.classList.contains('hidden')
-                });
-            } else {
-                console.error('Mobile menu elements not found for testing');
-            }
-        }
-        
-        // إضافة دالة تشخيص القائمة الجانبية
-        function diagnoseMobileMenu() {
-            console.log('Diagnosing mobile menu...');
-            
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const mobileMenu = document.getElementById('mobileMenu');
-            const menuIcon = document.getElementById('menu-icon');
-            const closeIcon = document.getElementById('close-icon');
-            
-            console.log('Elements found:', {
-                mobileMenuBtn: !!mobileMenuBtn,
-                mobileMenu: !!mobileMenu,
-                menuIcon: !!menuIcon,
-                closeIcon: !!closeIcon
-            });
-            
-            if (mobileMenu) {
-                console.log('Mobile menu state:', {
-                    classes: mobileMenu.className,
-                    style: mobileMenu.style.cssText,
-                    display: window.getComputedStyle(mobileMenu).display,
-                    visibility: window.getComputedStyle(mobileMenu).visibility,
-                    opacity: window.getComputedStyle(mobileMenu).opacity
-                });
-            }
-            
-            if (menuIcon && closeIcon) {
-                console.log('Icons state:', {
-                    menuIconHidden: menuIcon.classList.contains('hidden'),
-                    closeIconHidden: closeIcon.classList.contains('hidden')
-                });
-            }
-        }
-        
-        // جعل الدوال متاحة عالمياً
-        window.initializeMobileMenu = initializeMobileMenu;
-        window.setupMobileMenu = setupMobileMenu;
-        window.testMobileMenu = testMobileMenu;
-        window.diagnoseMobileMenu = diagnoseMobileMenu;
-        
-        // تهيئة إضافية للقائمة المحمولة بعد تأخير قصير
-        setTimeout(function() {
-            console.log('Delayed mobile menu initialization...');
-            setupMobileMenu();
-        }, 1000);
-        
-        // تهيئة إضافية عند تحميل الصفحة
-        window.addEventListener('load', function() {
-            console.log('Window loaded, setting up mobile menu...');
-            setupMobileMenu();
-        });
-        
-        // تهيئة إضافية للقائمة المحمولة عند تغيير حجم الشاشة
-        window.addEventListener('resize', function() {
-            if (window.innerWidth <= 768) {
-                console.log('Screen resized to mobile, re-initializing mobile menu...');
-                setTimeout(setupMobileMenu, 100);
-            }
-        });
-        
-        // تحديث فوري للعداد عند النقر على أزرار الحفظ
-        document.addEventListener('click', function(e) {
-            const target = e.target;
-            const isSaveButton = target.closest('.save-tool-btn, .remove-tool-btn, .toggle-save-btn, .btn-save, .btn-remove, [data-tool-id]') ||
-                               target.classList.contains('save-tool-btn') ||
-                               target.classList.contains('remove-tool-btn') ||
-                               target.classList.contains('toggle-save-btn') ||
-                               target.classList.contains('btn-save') ||
-                               target.classList.contains('btn-remove') ||
-                               target.hasAttribute('data-tool-id') ||
-                               target.textContent.includes('حفظ') ||
-                               target.textContent.includes('إزالة') ||
-                               target.textContent.includes('إضافة');
-            
-            if (isSaveButton) {
-                console.log('Save/Remove button clicked, updating counters immediately...');
-                
-                // تحديث فوري بدون تأخير
-                updateCountersImmediately();
-                
-                // تحديث إضافي بعد تأخير قصير للتأكد
-                setTimeout(() => {
-                    updateCountersImmediately();
-                }, 100);
-                
-                setTimeout(() => {
-                    updateCountersImmediately();
-                }, 500);
-                
-                setTimeout(() => {
-                    updateCountersImmediately();
-                }, 1000);
-            }
-        });
-        
-        // مراقبة أكثر شمولية للنقر
-        document.addEventListener('click', function(e) {
-            // تحقق من أي عنصر يحتوي على كلمات الحفظ
-            const target = e.target;
-            const parent = target.parentElement;
-            const grandParent = parent ? parent.parentElement : null;
-            
-            const isSaveRelated = target.textContent.includes('حفظ') ||
-                                target.textContent.includes('إزالة') ||
-                                target.textContent.includes('إضافة') ||
-                                target.textContent.includes('Save') ||
-                                target.textContent.includes('Remove') ||
-                                (parent && parent.textContent.includes('حفظ')) ||
-                                (parent && parent.textContent.includes('إزالة')) ||
-                                (grandParent && grandParent.textContent.includes('حفظ')) ||
-                                (grandParent && grandParent.textContent.includes('إزالة'));
-            
-            if (isSaveRelated) {
-                console.log('Save-related element clicked, updating counters...');
-                updateCountersImmediately();
-                updateMobileCounterImmediately();
-                setTimeout(() => {
-                    updateCountersImmediately();
-                    updateMobileCounterImmediately();
-                }, 200);
-                setTimeout(() => {
-                    updateCountersImmediately();
-                    updateMobileCounterImmediately();
-                }, 500);
-            }
-        });
-        
-        // مراقبة خاصة للهاتف المحمول
-        if (window.innerWidth <= 768) {
-            console.log('Mobile device detected, setting up mobile-specific listeners...');
-            
-            // مراقبة النقر على أزرار الحفظ في الهاتف المحمول
-            document.addEventListener('click', function(e) {
-                const target = e.target;
-                const isMobileSaveButton = target.closest('.save-tool-btn, .remove-tool-btn, .toggle-save-btn') ||
-                                         target.classList.contains('save-tool-btn') ||
-                                         target.classList.contains('remove-tool-btn') ||
-                                         target.classList.contains('toggle-save-btn') ||
-                                         target.textContent.includes('حفظ') ||
-                                         target.textContent.includes('إزالة');
-                
-                if (isMobileSaveButton) {
-                    console.log('Mobile save button clicked, updating mobile counter INSTANTLY...');
-                    
-                    // تحديث فوري بدون تأخير
-                    updateMobileCounterImmediately();
-                    
-                    // تحديث فوري إضافي
-                    setTimeout(() => updateMobileCounterImmediately(), 50);
-                    setTimeout(() => updateMobileCounterImmediately(), 100);
-                    setTimeout(() => updateMobileCounterImmediately(), 200);
-                    setTimeout(() => updateMobileCounterImmediately(), 500);
+                if (typeof options === 'boolean') {
+                    return requestSavedCount({ force: options });
                 }
-            });
-            
-            // تحديث دوري للعداد في الهاتف المحمول كل ثانية
-            setInterval(function() {
-                updateMobileCounterImmediately();
-            }, 1000);
-        }
-        
-        // مراقبة شاملة للهاتف المحمول - تعمل دائماً
-        document.addEventListener('click', function(e) {
-            // تحقق من أننا في وضع الهاتف المحمول
-            if (window.innerWidth <= 768) {
-                const target = e.target;
-                const parent = target.parentElement;
-                const grandParent = parent ? parent.parentElement : null;
-                
-                // فحص أكثر شمولية لأزرار الحفظ
-                const isMobileSaveAction = target.closest('.save-tool-btn, .remove-tool-btn, .toggle-save-btn, .btn-save, .btn-remove') ||
-                                         target.classList.contains('save-tool-btn') ||
-                                         target.classList.contains('remove-tool-btn') ||
-                                         target.classList.contains('toggle-save-btn') ||
-                                         target.classList.contains('btn-save') ||
-                                         target.classList.contains('btn-remove') ||
-                                         target.textContent.includes('حفظ') ||
-                                         target.textContent.includes('إزالة') ||
-                                         target.textContent.includes('إضافة') ||
-                                         (parent && parent.textContent.includes('حفظ')) ||
-                                         (parent && parent.textContent.includes('إزالة')) ||
-                                         (grandParent && grandParent.textContent.includes('حفظ')) ||
-                                         (grandParent && grandParent.textContent.includes('إزالة'));
-                
-                if (isMobileSaveAction) {
-                    console.log('Mobile save action detected, updating counter INSTANTLY...');
-                    
-                    // تحديث فوري متعدد
-                    updateTopCartCounterInstant();
-                    updateMobileCounterInstant();
-                    updateMobileCounterImmediately();
-                    updateCountersImmediately();
-                    
-                    // تحديث فوري إضافي
-                    setTimeout(() => {
-                        updateTopCartCounterInstant();
-                        updateMobileCounterInstant();
-                        updateMobileCounterImmediately();
-                        updateCountersImmediately();
-                    }, 10);
-                    
-                    setTimeout(() => {
-                        updateTopCartCounterInstant();
-                        updateMobileCounterInstant();
-                        updateMobileCounterImmediately();
-                        updateCountersImmediately();
-                    }, 25);
-                    
-                    setTimeout(() => {
-                        updateTopCartCounterInstant();
-                        updateMobileCounterInstant();
-                        updateMobileCounterImmediately();
-                        updateCountersImmediately();
-                    }, 50);
-                    
-                    setTimeout(() => {
-                        updateTopCartCounterInstant();
-                        updateMobileCounterInstant();
-                        updateMobileCounterImmediately();
-                        updateCountersImmediately();
-                    }, 100);
-                    
-                    setTimeout(() => {
-                        updateTopCartCounterInstant();
-                        updateMobileCounterInstant();
-                        updateMobileCounterImmediately();
-                        updateCountersImmediately();
-                    }, 200);
-                }
-            }
-        });
-        
-        // مراقبة طلبات AJAX لتحديث العداد
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            return originalFetch.apply(this, args).then(response => {
-                // تحقق من طلبات الحفظ/الحذف
-                if (args[0] && (args[0].includes('/save-tool') || args[0].includes('/remove-tool') || args[0].includes('/saved') || args[0].includes('/api/saved'))) {
-                    console.log('AJAX request detected, updating counters immediately...');
-                    updateCountersImmediately();
-                    setTimeout(() => {
-                        updateCountersImmediately();
-                    }, 200);
-                }
-                return response;
-            }).catch(error => {
-                console.error('Fetch error:', error);
-                return error;
-            });
-        };
-        
-        // مراقبة XMLHttpRequest أيضاً
-        const originalXHR = window.XMLHttpRequest;
-        window.XMLHttpRequest = function() {
-            const xhr = new originalXHR();
-            const originalOpen = xhr.open;
-            const originalSend = xhr.send;
-            
-            xhr.open = function(method, url, ...args) {
-                this._url = url;
-                return originalOpen.apply(this, [method, url, ...args]);
+                return requestSavedCount();
             };
-            
-            xhr.send = function(...args) {
-                const url = this._url;
-                if (url && (url.includes('/save-tool') || url.includes('/remove-tool') || url.includes('/saved'))) {
-                    console.log('XHR request detected, updating counters...');
-                    this.addEventListener('loadend', function() {
-                        updateCountersImmediately();
-                    });
-                }
-                return originalSend.apply(this, args);
-            };
-            
-            return xhr;
-        };
+            window.applySavedCountDelta = applySavedCountDelta;
+            window.getSavedCount = () => state.value;
+
+            if (typeof toggleUserMenu === 'function') {
+                window.toggleUserMenu = toggleUserMenu;
+            }
+
+            window.dispatchEvent(new Event('saved-counter:ready'));
+        })();
     </script>
+
     
     <!-- رسالة تسجيل الخروج -->
         
@@ -3027,3 +2393,6 @@
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"30a6e8d48f30453c921bd583f0e05319","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
+
+
+

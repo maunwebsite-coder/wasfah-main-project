@@ -32,6 +32,11 @@ return [
                 'body' => 'We continually improve the platform and may update these terms from time to time. Continued use indicates acceptance of the latest version.',
             ],
         ],
+        'footnote' => [
+            'updated_label' => 'Last updated',
+            'contact_label' => 'Legal inquiries',
+            'contact_email' => 'legal@wasfah.ae',
+        ],
     ],
 
     'privacy' => [

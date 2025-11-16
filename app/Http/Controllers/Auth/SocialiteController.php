@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Notification;
 use App\Services\ReferralProgramService;
+use App\Support\NotificationCopy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -71,6 +72,7 @@ class SocialiteController extends Controller
         try {
             $stage = 'fetch-social-user';
             $socialUser = Socialite::driver('google')->user();
+            $normalizedSocialEmail = strtolower((string) $socialUser->getEmail());
 
             $stage = 'resolve-flow-and-intent';
             $flow = session('auth_login_flow', 'login');
@@ -106,6 +108,18 @@ class SocialiteController extends Controller
                     'provider_token' => $socialUser->token,
                 ];
 
+                if ($normalizedSocialEmail !== '') {
+                    if ($existingUser->role === User::ROLE_CHEF) {
+                        $currentGoogle = strtolower((string) $existingUser->google_email);
+
+                        if ($currentGoogle !== $normalizedSocialEmail) {
+                            $updates['google_email'] = $normalizedSocialEmail;
+                        }
+                    } elseif (empty($existingUser->google_email)) {
+                        $updates['google_email'] = $normalizedSocialEmail;
+                    }
+                }
+
                 if (
                     $flow === 'register_chef'
                     && !$existingUser->isAdmin()
@@ -129,6 +143,7 @@ class SocialiteController extends Controller
                 $newUserData = [
                     'name' => $socialUser->getName(),
                     'email' => $socialUser->getEmail(),
+                    'google_email' => $normalizedSocialEmail ?: $socialUser->getEmail(),
                     'provider' => 'google',
                     'provider_id' => $socialUser->getId(),
                     'provider_token' => $socialUser->token,
@@ -231,53 +246,15 @@ class SocialiteController extends Controller
      */
     private function createWelcomeNotifications(User $user)
     {
-        // إشعار ترحيبي أساسي
+        [$title, $message] = NotificationCopy::welcome($user);
+
         Notification::createNotification(
             $user->id,
             'general',
-            'مرحباً بك في موقع وصفة!',
-            "أهلاً وسهلاً بك {$user->name}! نحن سعداء لانضمامك إلى مجتمع وصفة. استكشف ورشات الطبخ المتنوعة واكتشف وصفات جديدة.",
+            $title,
+            $message,
             [
                 'welcome' => true,
-                'user_name' => $user->name,
-                'action_url' => route('home'),
-            ]
-        );
-        
-        // إشعار عن الميزات المتاحة
-        Notification::createNotification(
-            $user->id,
-            'general',
-            'اكتشف ميزات موقع وصفة',
-            "يمكنك الآن حجز الورشات، حفظ الوصفات المفضلة، وتتبع أدوات الطبخ. ابدأ رحلتك في عالم الطبخ معنا!",
-            [
-                'features' => true,
-                'user_name' => $user->name,
-                'action_url' => route('home'),
-            ]
-        );
-        
-        // إشعار عن الورشات المتاحة
-        Notification::createNotification(
-            $user->id,
-            'general',
-            'ورشات طبخ رائعة في انتظارك',
-            "لدينا مجموعة متنوعة من ورشات الطبخ التي تناسب جميع المستويات. تصفح الورشات المتاحة واحجز مكانك اليوم!",
-            [
-                'workshops' => true,
-                'user_name' => $user->name,
-                'action_url' => route('workshops'),
-            ]
-        );
-        
-        // إشعار نصائح للبداية
-        Notification::createNotification(
-            $user->id,
-            'general',
-            'نصائح للبداية في موقع وصفة',
-            "للاستفادة القصوى من موقع وصفة، تأكد من تحديث ملفك الشخصي واستكشاف جميع الأقسام المتاحة.",
-            [
-                'tips' => true,
                 'user_name' => $user->name,
                 'action_url' => route('profile'),
             ]

@@ -1,16 +1,22 @@
 @extends('layouts.auth')
 
-@section('title', __('تأكيد البيانات'))
+@php
+    $copy = \Illuminate\Support\Facades\Lang::get('auth.policy_consent');
+    $termsStatement = __('auth.policy_consent.terms_statement');
+    $termsHint = __('auth.policy_consent.terms_hint');
+@endphp
+
+@section('title', data_get($copy, 'title', 'Wasfah'))
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-lg">
         <div class="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-orange-100 p-10 space-y-8">
             <div class="space-y-3 text-center">
-                <p class="text-sm uppercase font-semibold tracking-[0.3em] text-orange-500">Your name</p>
-                <h1 class="text-3xl font-extrabold text-gray-900">Let us know what we should call you</h1>
+                <p class="text-sm uppercase font-semibold tracking-[0.3em] text-orange-500">{{ data_get($copy, 'eyebrow') }}</p>
+                <h1 class="text-3xl font-extrabold text-gray-900">{{ data_get($copy, 'headline') }}</h1>
                 <p class="text-gray-600 leading-relaxed">
-                    We'll use this name on your Wasfah dashboard, in emails, and whenever you interact with our chefs.
+                    {{ data_get($copy, 'description') }}
                 </p>
             </div>
 
@@ -18,7 +24,7 @@
                 @csrf
 
                 <div class="space-y-2">
-                    <label for="name" class="block text-sm font-semibold text-gray-900">Full name</label>
+                    <label for="name" class="block text-sm font-semibold text-gray-900">{{ data_get($copy, 'name_label') }}</label>
                     <input
                         type="text"
                         name="name"
@@ -28,7 +34,7 @@
                         required
                         maxlength="255"
                         class="w-full rounded-2xl border border-gray-200 bg-white/70 focus:bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
-                        placeholder="اكتب اسمك الكامل هنا"
+                        placeholder="{{ data_get($copy, 'name_placeholder') }}"
                     >
                     @error('name')
                         <p class="text-sm text-red-600">{{ $message }}</p>
@@ -45,15 +51,23 @@
                         {{ old('accept_terms') ? 'checked' : '' }}
                         required
                     >
-                    <label for="accept_terms" class="text-sm text-gray-800 leading-6">
-                        I agree to the
-                        <a href="{{ $termsUrl }}" target="_blank" rel="noopener" class="text-orange-600 font-semibold hover:underline">Terms of Service</a>
-                        and
-                        <a href="{{ $privacyUrl }}" target="_blank" rel="noopener" class="text-orange-600 font-semibold hover:underline">Privacy Policy</a>.
-                        <span class="block text-xs text-gray-500 mt-1">
-                            أوافق على شروط الخدمة وسياسة الخصوصية لديك.
-                        </span>
-                    </label>
+                    <div class="flex-1">
+                        <label for="accept_terms" class="text-sm text-gray-800 leading-6">
+                            {{ $termsStatement }}
+                            <span class="block text-xs text-gray-500 mt-1">
+                                {{ $termsHint }}
+                            </span>
+                        </label>
+                        <div class="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold text-orange-600">
+                            <a href="{{ $termsUrl }}" target="_blank" rel="noopener noreferrer" class="hover:underline">
+                                {{ __('auth.policy_consent.terms_link') }}
+                            </a>
+                            <span class="text-gray-300" aria-hidden="true">•</span>
+                            <a href="{{ $privacyUrl }}" target="_blank" rel="noopener noreferrer" class="hover:underline">
+                                {{ __('auth.policy_consent.privacy_link') }}
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 @error('accept_terms')
                     <p class="text-sm text-red-600">{{ $message }}</p>
@@ -64,23 +78,22 @@
                         type="submit"
                         class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 text-white font-semibold py-3 shadow-lg shadow-orange-200 hover:bg-orange-600 transition"
                     >
-                        Create an account
-                        <span class="text-xs uppercase tracking-widest">Continue</span>
+                        {{ data_get($copy, 'submit') }}
+                        <span class="text-xs uppercase tracking-widest">{{ data_get($copy, 'submit_hint') }}</span>
                     </button>
 
                     <div class="text-center">
                         <a href="{{ url()->previous() ?: route('home') }}" class="text-sm font-semibold text-gray-500 hover:text-gray-900">
-                            Go back
+                            {{ data_get($copy, 'back') }}
                         </a>
                     </div>
                 </div>
             </form>
 
             <div class="text-center text-xs text-gray-400">
-                Policy version {{ $policyVersion }}
+                {{ __('auth.policy_consent.policy_version', ['version' => $policyVersion]) }}
             </div>
         </div>
     </div>
 </div>
 @endsection
-

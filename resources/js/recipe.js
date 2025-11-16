@@ -4,6 +4,10 @@
  * يتضمن الكود وظائف لتحديث كميات المكونات، عرض الفيديو أو الصورة، ومعالجة خطوات التحضير.
  */
 
+import { processInChunks, queueMicroTask, runOnNextFrame, scheduleIdleTask } from './utils/task-scheduler.js';
+import { parseQuantity, formatQuantity } from './utils/quantity.js';
+
+
 /**
  * تحويل رابط Google Drive إلى رابط مباشر للصورة
  * @param {string} url - رابط الصورة
@@ -57,6 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
 	const servingsEl = document.getElementById('servings');
 	// saveRecipeBtn تم نقله إلى RecipeSaveButton class
 
+	const ingredientState = {
+		meta: new Map(),
+		textNodes: new Map(),
+	};
+	const hasWorkerSupport = typeof window !== 'undefined' && 'Worker' in window;
+	let ingredientWorker = null;
+	let latestWorkerRequestId = 0;
+	let pendingWorkerRequestId = 0;
+	let lastAppliedMultiplier = 1;
+
 	// فحص مبكر لوجود عنصر الخطوات لضمان سلامة الكود
 	if (!stepsListEl) {
 		console.error("خطأ فادح: لم يتم العثور على العنصر الذي يحمل المعرّف 'steps-list' في ملف HTML.");
@@ -72,44 +86,33 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @param {object} recipe - كائن يحتوي على كافة تفاصيل الوصفة.
 	 */
 	function renderRecipe(recipe) {
-		console.log('Starting to render recipe:', recipe);
-		
-		// Basic validation
 		if (!recipe || !recipe.title) {
 			throw new Error('Recipe data is invalid or missing title');
 		}
-		
-		document.title = `وصفة: ${recipe.title}`;
-		
-		// Safe element updates with null checks
-		if (recipeTitleEl) recipeTitleEl.textContent = recipe.title;
-		if (recipeAuthorEl) recipeAuthorEl.textContent = `بواسطة: ${recipe.author || 'غير معروف'}`;
-		if (recipeDescriptionEl) recipeDescriptionEl.textContent = recipe.description || 'لا يوجد وصف متاح';
 
-		// استدعاء الدوال المساعدة لتنظيم الكود
-		try {
-			console.log('Recipe tools data:', recipe.tools);
+		queueMicroTask(() => {
+			document.title = `وصفة: ${recipe.title}`;
+			if (recipeTitleEl) recipeTitleEl.textContent = recipe.title;
+			if (recipeAuthorEl) recipeAuthorEl.textContent = `بواسطة: ${recipe.author || 'غير معروف'}`;
+			if (recipeDescriptionEl) recipeDescriptionEl.textContent = recipe.description || 'لا يوجد وصف متاح';
+		});
+
+		runOnNextFrame(() => {
 			renderHeaderInfo(recipe);
 			renderMedia(recipe.video_url, recipe.image_url, recipe.title);
-			renderStats(recipe);
-			renderIngredients(recipe.ingredients || []);
-			renderTools(recipe.tools || []); // <-- عرض المعدات
-			renderSteps(recipe.steps || []); // <-- النقطة الأساسية: عرض الخطوات
+		});
 
-			// ملاحظة: زر الحفظ يتم التعامل معه الآن بواسطة RecipeSaveButton
-			// initializeSaveButtonState(recipe); // deprecated
-			
-			// تحديث حالة زر "لقد قمت بتحضيرها" بناءً على البيانات من API
+		scheduleIdleTask(() => renderStats(recipe), { timeout: 200 });
+
+		try {
+			renderIngredients(recipe.ingredients || []);
+			renderTools(recipe.tools || []);
+			renderSteps(recipe.steps || []);
+
 			updateMadeButtonState(recipe.is_made || false);
-			
-			// معالجة روابط Google Drive بعد تحميل البيانات
-			processGoogleDriveImages();
-			
-			console.log('Recipe rendering completed successfully');
+			scheduleIdleTask(() => processGoogleDriveImages(), { timeout: 500 });
 		} catch (error) {
 			console.error('Error during recipe rendering:', error);
-			// لا نرمي الخطأ هنا، بل نكمل العمل
-			console.log('Continuing despite rendering error...');
 		}
 	}
 
@@ -220,153 +223,194 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @param {Array} ingredients - مصفوفة تحتوي على كائنات المكونات.
 	 */
 	function renderIngredients(ingredients) {
-		ingredientsListEl.innerHTML = '';
-		if (Array.isArray(ingredients) && ingredients.length > 0) {
-			ingredients.forEach(ing => {
-				const li = document.createElement('li');
-				const [quantityValue, ...unitParts] = (ing.quantity || '').split(' ');
-				const unitValue = unitParts.join(' ');
-
-				li.setAttribute('data-original-quantity', quantityValue || '0');
-				li.setAttribute('data-unit', unitValue);
-				li.setAttribute('data-name', ing.name);
-
-				li.textContent = `${ing.quantity || ''} ${ing.name}`.trim();
-				ingredientsListEl.appendChild(li);
-			});
-			updateIngredients(1); // استدعاء للتأكد من العرض الأولي الصحيح للكميات
-		} else {
-			ingredientsListEl.innerHTML = '<li>لا توجد مكونات لهذه الوصفة.</li>';
+		if (!ingredientsListEl) {
+			return;
 		}
+
+		ingredientsListEl.innerHTML = '';
+		ingredientState.meta.clear();
+		ingredientState.textNodes.clear();
+
+		if (!Array.isArray(ingredients) || ingredients.length === 0) {
+			ingredientsListEl.innerHTML = '<li>لا توجد مكونات لهذه الوصفة.</li>';
+			return;
+		}
+
+		let fragment = document.createDocumentFragment();
+
+		processInChunks(ingredients, (ingredient, index) => {
+			const quantityText = (ingredient.quantity || '').toString().trim();
+			const nameText = ingredient.name || '';
+			const fullText = `${quantityText} ${nameText}`.trim() || nameText;
+			const ingredientId = `ingredient-${index}`;
+
+			const li = document.createElement('li');
+			li.dataset.ingredientId = ingredientId;
+			li.className = 'flex items-start gap-2 py-2 text-gray-700';
+			li.setAttribute('data-full-text', fullText);
+
+			const textSpan = document.createElement('span');
+			textSpan.className = 'full-ingredient-text';
+			textSpan.textContent = fullText;
+
+			li.appendChild(textSpan);
+			fragment.appendChild(li);
+
+			ingredientState.meta.set(ingredientId, {
+				id: ingredientId,
+				quantity: quantityText,
+				name: nameText,
+				fullText,
+			});
+			ingredientState.textNodes.set(ingredientId, textSpan);
+		}, {
+			chunkSize: 6,
+			onChunkEnd: () => {
+				ingredientsListEl.appendChild(fragment);
+				fragment = document.createDocumentFragment();
+			},
+		}).then(() => {
+			if (Math.abs(lastAppliedMultiplier - 1) > 0.0001) {
+				updateIngredients(lastAppliedMultiplier);
+			}
+		}).catch((error) => {
+			console.error('Failed to render ingredients:', error);
+		});
 	}
 
 	/**
 	 * يعرض المعدات المستخدمة في الوصفة في كروت جميلة
 	 * @param {Array} tools - مصفوفة تحتوي على كائنات المعدات
 	 */
-	function renderTools(tools) {
-		console.log('renderTools called with:', tools);
-		const toolsContainerEl = document.getElementById('tools-container');
-		console.log('toolsContainerEl found:', toolsContainerEl);
-		
-		if (!toolsContainerEl) {
-			console.error('tools-container element not found!');
-			return;
-		}
-
-		// إخفاء loading skeleton
-		const loadingSkeleton = toolsContainerEl.querySelector('#tools-loading-skeleton');
-		if (loadingSkeleton) {
-			loadingSkeleton.style.display = 'none';
-		}
-
-		// إخفاء empty state
-		const emptyState = toolsContainerEl.querySelector('#tools-empty-state');
-		if (emptyState) {
-			emptyState.style.display = 'none';
-		}
-
-		toolsContainerEl.innerHTML = '';
-		
-		if (Array.isArray(tools) && tools.length > 0) {
-			console.log('Rendering', tools.length, 'tools');
-			tools.forEach((tool, index) => {
-				console.log(`Rendering tool ${index + 1}:`, tool);
-				const toolCard = document.createElement('div');
-				toolCard.className = 'tool-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full';
-				
-				// إنشاء HTML للمعدة
-				const defaultImageUrl = '/image/logo.png';
-				const imageUrl = tool.image_url || defaultImageUrl;
-				const stars = Array.from({length: 5}, (_, i) => 
-					`<i class="fas fa-star ${i < Math.round(tool.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}"></i>`
-				).join('');
-				
-				const amazonButton = tool.amazon_url ? `
-					<a href="${tool.amazon_url}" 
-					   target="_blank"
-					   class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95 group">
-						<i class="fab fa-amazon ml-1 sm:ml-2 group-hover:scale-110 transition-transform duration-300"></i>
-						<span>متابعة الشراء من Amazon</span>
-						<i class="fas fa-external-link-alt mr-1 sm:mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>
-					</a>
-				` : '';
-				
-				const saveButton = (tool.amazon_url || tool.affiliate_url) ? `
-					<button class="save-for-later-btn w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95"
-							data-tool-id="${tool.id}"
-							data-tool-name="${tool.name}"
-							data-tool-price="${tool.price}">
-						<i class="fas fa-bookmark ml-1 sm:ml-2"></i>
-						<span class="btn-text">حفظ للشراء لاحقاً</span>
-						<i class="fas fa-spinner fa-spin ml-1 sm:ml-2 hidden loading-icon"></i>
-					</button>
-				` : `
-					<div class="w-full bg-gray-300 text-gray-600 font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center">
-						<i class="fas fa-exclamation-circle ml-1 sm:ml-2"></i>
-						غير متوفر
-					</div>
-				`;
-				
-				toolCard.innerHTML = `
-					<!-- Image Section -->
-					<div class="relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-3 sm:p-4 flex-shrink-0" style="height: 140px;">
-						<img src="${imageUrl}" 
-							 alt="${tool.name}" 
-							 class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-							 onerror="this.src='${defaultImageUrl}'; this.alt='صورة افتراضية';">
-						
-						<!-- Category Badge -->
-						<div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-							${tool.category || 'معدة'}
-						</div>
-					</div>
-
-					<!-- Content Section -->
-					<div class="p-3 sm:p-4 flex flex-col flex-grow">
-						<!-- Brand/Title -->
-						<h3 class="text-xs sm:text-sm font-bold text-gray-900 mb-2 line-clamp-4 leading-tight min-h-[3rem] sm:min-h-[3.5rem]">
-							${tool.name}
-						</h3>
-
-						<!-- Rating -->
-						<div class="flex items-center mb-2 sm:mb-3">
-							<div class="flex rating-stars text-xs">
-								${stars}
-							</div>
-							<span class="text-xs text-gray-600 mr-2 font-medium">
-								${tool.rating || 0}
-							</span>
-							<span class="text-xs text-gray-500 hidden sm:inline">
-								(${Math.floor(Math.random() * 1990) + 10})
-							</span>
-						</div>
-
-						<!-- Price -->
-						<div class="text-sm sm:text-lg font-bold text-orange-600 mb-2 sm:mb-3">
-							${(tool.price || 0).toLocaleString('ar-AE', {minimumFractionDigits: 2})} درهم إماراتي
-						</div>
-
-						<!-- Action Buttons - Always at bottom -->
-						<div class="w-full mt-auto space-y-2">
-							${amazonButton}
-							${saveButton}
-						</div>
-					</div>
-				`;
-				
-				toolsContainerEl.appendChild(toolCard);
-			});
-		} else {
-			console.log('No tools to render, showing empty message');
-			toolsContainerEl.innerHTML = `
-				<div class="text-center text-gray-500 italic col-span-full py-8">
-					<i class="fas fa-tools text-4xl text-gray-300 mb-3"></i>
-					<p>لا توجد معدات محددة لهذه الوصفة</p>
-				</div>
-			`;
-		}
-	}
+	function renderTools(tools) {
+		const toolsContainerEl = document.getElementById('tools-container');
+		
+		if (!toolsContainerEl) {
+			console.error('tools-container element not found!');
+			return;
+		}
+
+		const loadingSkeleton = toolsContainerEl.querySelector('#tools-loading-skeleton');
+		if (loadingSkeleton) {
+			loadingSkeleton.style.display = 'none';
+		}
+
+		const emptyState = toolsContainerEl.querySelector('#tools-empty-state');
+		if (emptyState) {
+			emptyState.style.display = 'none';
+		}
+
+		toolsContainerEl.innerHTML = '';
+		
+		if (!Array.isArray(tools) || tools.length === 0) {
+			toolsContainerEl.innerHTML = `
+				<div class="text-center text-gray-500 italic col-span-full py-8">
+					<i class="fas fa-tools text-4xl text-gray-300 mb-3"></i>
+					<p>لا توجد معدات محددة لهذه الوصفة</p>
+				</div>
+			`;
+			return;
+		}
+
+		let fragment = document.createDocumentFragment();
+		processInChunks(tools, (tool) => {
+			fragment.appendChild(createToolCardElement(tool));
+		}, {
+			chunkSize: 3,
+			onChunkEnd: () => {
+				toolsContainerEl.appendChild(fragment);
+				fragment = document.createDocumentFragment();
+			},
+		}).catch((error) => {
+			console.error('Failed to render tools:', error);
+		});
+	}
+
+	function createToolCardElement(tool) {
+		const toolCard = document.createElement('div');
+		toolCard.className = 'tool-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full';
+
+		const defaultImageUrl = '/image/logo.webp';
+		const imageUrl = tool?.image_url || defaultImageUrl;
+		const ratingValue = Number.isFinite(tool?.rating) ? Number(tool.rating) : 0;
+		const priceValue = Number.isFinite(tool?.price) ? Number(tool.price) : 0;
+
+		const stars = Array.from({ length: 5 }, (_, i) =>
+			`<i class="fas fa-star ${i < Math.round(ratingValue) ? 'text-yellow-400' : 'text-gray-300'}"></i>`
+		).join('');
+
+		const amazonButton = tool?.amazon_url ? `
+			<a href="${tool.amazon_url}" 
+			   target="_blank"
+			   class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95 group">
+				<i class="fab fa-amazon ml-1 sm:ml-2 group-hover:scale-110 transition-transform duration-300"></i>
+				<span>متابعة الشراء من Amazon</span>
+				<i class="fas fa-external-link-alt mr-1 sm:mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>
+			</a>
+		` : '';
+
+		const saveButton = (tool?.amazon_url || tool?.affiliate_url) ? `
+			<button class="save-for-later-btn w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg active:scale-95"
+					data-tool-id="${tool?.id}"
+					data-tool-name="${tool?.name}"
+					data-tool-price="${tool?.price}">
+				<i class="fas fa-bookmark ml-1 sm:ml-2"></i>
+				<span class="btn-text">حفظ للشراء لاحقاً</span>
+				<i class="fas fa-spinner fa-spin ml-1 sm:ml-2 hidden loading-icon"></i>
+			</button>
+		` : `
+			<div class="w-full bg-gray-300 text-gray-600 font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm flex items-center justify-center">
+				<i class="fas fa-exclamation-circle ml-1 sm:ml-2"></i>
+				غير متوفر
+			</div>
+		`;
+
+		toolCard.innerHTML = `
+			<div class="relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-3 sm:p-4 flex-shrink-0" style="height: 140px;">
+				<img src="${imageUrl}" 
+					 alt="${tool?.name || 'معدة'}" 
+					 class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
+					 width="320"
+					 height="200"
+					 decoding="async"
+					 onerror="this.src='${defaultImageUrl}'; this.alt='صورة افتراضية';">
+				<div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+					${tool?.category || 'معدة'}
+				</div>
+			</div>
+
+			<div class="p-3 sm:p-4 flex flex-col flex-grow">
+				<h3 class="text-xs sm:text-sm font-bold text-gray-900 mb-2 line-clamp-4 leading-tight min-h-[3rem] sm:min-h-[3.5rem]">
+					${tool?.name || 'أداة مطبخ'}
+				</h3>
+
+				<div class="flex items-center mb-2 sm:mb-3">
+					<div class="flex rating-stars text-xs">
+						${stars}
+					</div>
+					<span class="text-xs text-gray-600 mr-2 font-medium">
+						${ratingValue}
+					</span>
+					<span class="text-xs text-gray-500 hidden sm:inline">
+						(${Math.floor(Math.random() * 1990) + 10})
+					</span>
+				</div>
+
+				<div class="text-sm sm:text-lg font-bold text-orange-600 mb-2 sm:mb-3">
+					${priceValue.toLocaleString('ar-AE', { minimumFractionDigits: 2 })} درهم إماراتي
+				</div>
+
+				<div class="w-full mt-auto space-y-2">
+					${amazonButton}
+					${saveButton}
+				</div>
+			</div>
+		`;
+
+		return toolCard;
+	}
+
+
 
 	/**
 	 * يعرض خطوات التحضير مع معالجة الأخطاء المحتملة في البيانات.
@@ -381,12 +425,21 @@ document.addEventListener("DOMContentLoaded", () => {
 			return;
 		}
 
-		steps.forEach(stepText => {
+		let fragment = document.createDocumentFragment();
+		processInChunks(steps, (stepText) => {
 			if (typeof stepText === 'string' && stepText.trim() !== '') {
 				const li = document.createElement('li');
 				li.textContent = stepText;
-				stepsListEl.appendChild(li);
+				fragment.appendChild(li);
 			}
+		}, {
+			chunkSize: 5,
+			onChunkEnd: () => {
+				stepsListEl.appendChild(fragment);
+				fragment = document.createDocumentFragment();
+			},
+		}).catch((error) => {
+			console.error('Failed to render steps:', error);
 		});
 	}
 
@@ -445,89 +498,75 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @param {string} value - النص المراد تحليله (مثل "1" أو "1/2").
 	 * @returns {number|null} - القيمة الرقمية أو null إذا لم تكن رقمًا صالحًا.
 	 */
-	function normalizeNumerals(value) {
-		if (!value || typeof value !== 'string') {
-			return '';
+	function ensureIngredientWorker() {
+		if (!hasWorkerSupport) {
+			return null;
 		}
 
-		const map = {
-			'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
-			'٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
-			'۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
-			'۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
-		};
+		if (!ingredientWorker) {
+			try {
+				ingredientWorker = new Worker(
+					new URL('./workers/ingredient-resizer.worker.js', import.meta.url),
+					{ type: 'module' }
+				);
 
-		return value.replace(/[٠-٩۰-۹]/g, (digit) => map[digit] ?? digit);
+				ingredientWorker.onmessage = (event) => {
+					const { requestId, data } = event.data || {};
+					if (!requestId || requestId !== pendingWorkerRequestId) {
+						return;
+					}
+					applyScaledQuantities(data);
+				};
+
+				ingredientWorker.onerror = (error) => {
+					console.error('Ingredient worker error:', error);
+					ingredientWorker.terminate();
+					ingredientWorker = null;
+				};
+			} catch (error) {
+				console.error('Failed to initialize ingredient worker:', error);
+				ingredientWorker = null;
+			}
+		}
+
+		return ingredientWorker;
 	}
 
-	function parseQuantity(value) {
-		const result = { amount: null, unit: '' };
-
-		if (!value || typeof value !== 'string') {
-			return result;
+	function applyScaledQuantities(updates) {
+		if (!Array.isArray(updates) || updates.length === 0) {
+			return;
 		}
 
-		const normalized = normalizeNumerals(value).replace(/،/g, ',').trim();
-		if (!normalized) {
-			return result;
-		}
-
-		let match = normalized.match(/^(-?\d+)\s+(\d+)\/(\d+)\s*(.*)$/);
-		if (match) {
-			const whole = parseFloat(match[1]);
-			const numerator = parseFloat(match[2]);
-			const denominator = parseFloat(match[3]);
-			const unit = match[4]?.trim() ?? '';
-
-			if (!Number.isNaN(whole) && !Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
-				result.amount = whole + numerator / denominator;
-				result.unit = unit;
-				return result;
+		updates.forEach(({ id, text }) => {
+			if (!id) {
+				return;
 			}
-		}
 
-		match = normalized.match(/^(\d+)\/(\d+)\s*(.*)$/);
-		if (match) {
-			const numerator = parseFloat(match[1]);
-			const denominator = parseFloat(match[2]);
-			const unit = match[3]?.trim() ?? '';
-
-			if (!Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
-				result.amount = numerator / denominator;
-				result.unit = unit;
-				return result;
+			const node = ingredientState.textNodes.get(id);
+			if (node) {
+				node.textContent = text;
 			}
-		}
-
-		match = normalized.match(/^(-?\d+(?:[.,]\d+)?)\s*(.*)$/);
-		if (match) {
-			const numericPart = parseFloat(match[1].replace(',', '.'));
-			if (!Number.isNaN(numericPart)) {
-				result.amount = numericPart;
-				result.unit = match[2]?.trim() ?? '';
-				return result;
-			}
-		}
-
-		return result;
+		});
 	}
 
-	function formatQuantity(value) {
-		if (value === null || Number.isNaN(value)) {
-			return '';
-		}
+	function scaleIngredientsSynchronously(multiplier) {
+		const updates = Array.from(ingredientState.meta.values()).map((meta) => {
+			const { amount, unit } = parseQuantity(meta.quantity);
+			if (amount === null) {
+				return { id: meta.id, text: meta.fullText };
+			}
 
-		const rounded = Math.round(value * 100) / 100;
+			const scaledAmount = amount * multiplier;
+			const displayQuantity = formatQuantity(scaledAmount);
+			const parts = [displayQuantity, unit, meta.name].filter((part) => part && part.toString().trim().length > 0);
 
-		if (Math.abs(rounded - 0.25) < 0.001) return '1/4';
-		if (Math.abs(rounded - 0.5) < 0.001) return '1/2';
-		if (Math.abs(rounded - 0.75) < 0.001) return '3/4';
+			return {
+				id: meta.id,
+				text: parts.join(' ').trim() || meta.fullText,
+			};
+		});
 
-		if (Number.isInteger(rounded)) {
-			return rounded.toString();
-		}
-
-		return rounded.toString().replace('.', '.');
+		applyScaledQuantities(updates);
 	}
 
 	/**
@@ -535,31 +574,46 @@ document.addEventListener("DOMContentLoaded", () => {
 	 * @param {number} multiplier - معامل الضرب (مثل 0.5 لنصف الكمية).
 	 */
 	function updateIngredients(multiplier) {
-		if (!ingredientsListEl) {
+		if (!ingredientsListEl || ingredientState.meta.size === 0) {
 			return;
 		}
 
-		ingredientsListEl.querySelectorAll("li").forEach((item) => {
-			const originalQuantity = item.getAttribute("data-original-quantity") || '';
-			const name = item.getAttribute("data-name") || '';
-			const fullText = item.getAttribute("data-full-text") || `${originalQuantity} ${name}`.trim();
-			const textElement = item.querySelector(".full-ingredient-text");
+		const numericMultiplier = Number(multiplier);
+		if (!Number.isFinite(numericMultiplier) || numericMultiplier <= 0) {
+			return;
+		}
 
-			if (!textElement) {
-				return;
-			}
+		lastAppliedMultiplier = numericMultiplier;
 
-			const { amount, unit } = parseQuantity(originalQuantity);
+		if (Math.abs(numericMultiplier - 1) < 0.0001) {
+			ingredientState.meta.forEach((meta, id) => {
+				const node = ingredientState.textNodes.get(id);
+				if (node) {
+					node.textContent = meta.fullText;
+				}
+			});
+			return;
+		}
 
-			if (amount !== null) {
-				const newQuantity = amount * multiplier;
-				const displayQuantity = formatQuantity(newQuantity);
+		if (!hasWorkerSupport) {
+			scaleIngredientsSynchronously(numericMultiplier);
+			return;
+		}
 
-				const parts = [displayQuantity, unit, name].filter((part) => part && part.trim().length > 0);
-				textElement.textContent = parts.join(" ").trim();
-			} else {
-				textElement.textContent = fullText;
-			}
+		const worker = ensureIngredientWorker();
+		if (!worker) {
+			scaleIngredientsSynchronously(numericMultiplier);
+			return;
+		}
+
+		const requestId = ++latestWorkerRequestId;
+		pendingWorkerRequestId = requestId;
+
+		const payload = Array.from(ingredientState.meta.values());
+		worker.postMessage({
+			requestId,
+			multiplier: numericMultiplier,
+			ingredients: payload,
 		});
 	}
 
@@ -1013,3 +1067,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	init(); // تشغيل التطبيق
 });
+
+

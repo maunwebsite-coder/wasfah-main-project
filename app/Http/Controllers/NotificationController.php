@@ -75,10 +75,15 @@ class NotificationController extends Controller
             'read_at' => now()
         ]);
 
+        $unreadCount = 0;
+
         // مسح التخزين المؤقت
         $this->clearNotificationCache();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'unreadCount' => $unreadCount,
+        ]);
     }
 
     // حذف إشعار

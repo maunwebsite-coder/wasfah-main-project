@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Workshop;
 use App\Models\WorkshopBooking;
 use App\Models\Notification;
+use App\Services\GoogleMeetService;
 use App\Services\WorkshopLinkSecurityService;
+use App\Services\WorkshopMeetingAttendeeSyncService;
+use App\Support\GoogleMeetAccountChooser;
+use App\Support\NotificationCopy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +22,8 @@ class WorkshopBookingController extends Controller
 {
     public function __construct(
         protected WorkshopLinkSecurityService $linkSecurity,
+        protected GoogleMeetService $googleMeetService,
+        protected WorkshopMeetingAttendeeSyncService $meetingAttendeeSyncService,
     ) {
     }
 
@@ -80,15 +86,18 @@ class WorkshopBookingController extends Controller
             'booking_date' => now(),
             'payment_status' => 'pending',
             'payment_amount' => $workshop->price,
+            'payment_currency' => $workshop->currency,
             'notes' => $request->notes,
         ]);
+
+        [$notificationTitle, $notificationMessage] = NotificationCopy::bookingPending($booking, $workshop);
 
         // إنشاء إشعار للمستخدم
         Notification::createNotification(
             Auth::id(),
             'workshop_booking',
-            'تم إرسال طلب حجز الورشة',
-            "تم إرسال طلب حجز ورشة '{$workshop->title}' بنجاح. يرجى التحقق من ملفك الشخصي لمتابعة حالة الحجز والورشات المحجوزة.",
+            $notificationTitle,
+            $notificationMessage,
             [
                 'workshop_id' => $workshop->id,
                 'workshop_slug' => $workshop->slug,
@@ -206,7 +215,7 @@ class WorkshopBookingController extends Controller
             abort(404, 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
         }
 
-        if (!in_array($workshop->meeting_provider, ['jitsi', 'jaas'], true)) {
+        if ($workshop->meeting_provider !== 'google_meet') {
             return redirect()->away($workshop->meeting_link);
         }
 
@@ -225,52 +234,13 @@ class WorkshopBookingController extends Controller
         $shouldPromptForDisplayName = !$user;
         $effectiveName = $user?->name ?? $guestDisplayName;
 
-        if ($workshop->meeting_provider === 'jaas') {
-            $missingJaasConfig = $this->getMissingJaasConfigKeys();
-
-            if (!empty($missingJaasConfig)) {
-                Log::error('JaaS configuration is incomplete for booking join.', [
-                    'booking_id' => $booking->id,
-                    'workshop_id' => $workshop->id,
-                    'user_id' => $user?->id,
-                    'missing_keys' => $missingJaasConfig,
-                ]);
-
-                return redirect()
-                    ->route('bookings.show', $booking)
-                    ->with('error', 'لا يمكن فتح غرفة الاجتماع حالياً بسبب مشكلة في الإعدادات. يرجى التواصل مع فريق الدعم أو المحاولة لاحقاً.');
-            }
-        }
-
-        try {
-            $embedConfig = $this->buildJitsiEmbedConfig(
-                $workshop,
-                $effectiveName,
-                $user?->email,
-                false
-            );
-        } catch (\Throwable $exception) {
-            Log::error('Failed to build Jitsi embed configuration for booking join.', [
-                'booking_id' => $booking->id,
-                'workshop_id' => $workshop->id,
-                'user_id' => $user?->id,
-                'provider' => $workshop->meeting_provider,
-                'exception_message' => $exception->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('bookings.show', $booking)
-                ->with('error', 'حدث خطأ أثناء تجهيز غرفة الاجتماع. يرجى المحاولة لاحقاً أو التواصل مع فريق الدعم.');
-        }
-
-        unset($embedConfig['passcode']);
-
         $meetingLockSupported = $this->meetingLockSupported();
+        $meetingStarted = (bool) $workshop->meeting_started_at;
+        $meetingLocked = $meetingLockSupported ? (bool) $workshop->meeting_locked_at : false;
 
         return view('bookings.join', [
             'booking' => $booking,
             'workshop' => $workshop,
-            'embedConfig' => $embedConfig,
             'user' => $user,
             'hostName' => $hostName,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
@@ -278,15 +248,90 @@ class WorkshopBookingController extends Controller
             'meetingLockedAtIso' => $meetingLockSupported
                 ? optional($workshop->meeting_locked_at)->toIso8601String()
                 : null,
-            'isMeetingLocked' => $meetingLockSupported ? (bool) $workshop->meeting_locked_at : false,
+            'isMeetingLocked' => $meetingLocked,
+            'meetingLocked' => $meetingLocked,
+            'meetingStarted' => $meetingStarted,
             'participantName' => $effectiveName,
             'participantEmail' => $user?->email,
             'shouldPromptForDisplayName' => $shouldPromptForDisplayName,
             'guestDisplayName' => $guestDisplayName,
             'supportsMeetingLock' => $meetingLockSupported,
+            'secureLaunchUrl' => $this->linkSecurity->makeParticipantLaunchUrl($booking),
             'secureJoinUrl' => $this->linkSecurity->makeParticipantJoinUrl($booking),
             'secureStatusUrl' => $this->linkSecurity->makeParticipantStatusUrl($booking),
         ]);
+    }
+
+    /**
+     * Redirect the participant to the external meeting provider without exposing the raw URL.
+     */
+    public function launch(Request $request, WorkshopBooking $booking)
+    {
+        if (!$request->hasValidSignature()) {
+            if (!$request->query->has('signature')) {
+                return redirect()->to(
+                    $this->linkSecurity->makeParticipantLaunchUrl($booking)
+                );
+            }
+
+            abort(403, 'رابط فتح الاجتماع غير صالح أو منتهي الصلاحية.');
+        }
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'يجب تسجيل الدخول للوصول إلى غرفة الورشة.');
+        }
+
+        if ($booking->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $booking->load(['workshop', 'user']);
+        $workshop = $booking->workshop;
+
+        if ($booking->status !== 'confirmed') {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'لا يمكنك الدخول للورشة قبل تأكيد الحجز.');
+        }
+
+        if (!$workshop || !$workshop->is_online || !$workshop->meeting_link) {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح حالياً.');
+        }
+
+        if ($redirect = $this->enforceJoinDeviceLock($request, $booking)) {
+            return $redirect;
+        }
+
+        $isGoogleMeet = $workshop->meeting_provider === 'google_meet';
+
+        if ($isGoogleMeet) {
+            $meetingLockSupported = $this->meetingLockSupported();
+            $meetingLocked = $meetingLockSupported ? (bool) $workshop->meeting_locked_at : false;
+
+            if ($meetingLocked) {
+                return redirect()
+                    ->to($this->linkSecurity->makeParticipantJoinUrl($booking))
+                    ->with('error', 'تم قفل الاجتماع من قبل المضيف. يرجى انتظار السماح بالدخول.');
+            }
+
+            if (!$workshop->meeting_started_at) {
+                return redirect()
+                    ->to($this->linkSecurity->makeParticipantJoinUrl($booking))
+                    ->with('error', 'لم يبدأ المضيف الاجتماع بعد.');
+            }
+
+            if ($trustedRedirect = $this->attemptTrustedGoogleRedirect($booking, $workshop)) {
+                return $trustedRedirect;
+            }
+        }
+
+        return redirect()->away($workshop->meeting_link);
     }
 
     public function status(Request $request, WorkshopBooking $booking)
@@ -329,6 +374,83 @@ class WorkshopBookingController extends Controller
                 ? $workshop->meeting_locked_at?->toIso8601String()
                 : null,
         ]);
+    }
+
+    protected function attemptTrustedGoogleRedirect(
+        WorkshopBooking $booking,
+        Workshop $workshop
+    ): ?\Illuminate\Http\RedirectResponse {
+        if (
+            !$this->googleMeetService->isEnabled()
+            || !filter_var($workshop->meeting_link, FILTER_VALIDATE_URL)
+        ) {
+            return null;
+        }
+
+        $meetHost = parse_url($workshop->meeting_link, PHP_URL_HOST);
+
+        if (!is_string($meetHost) || !str_contains($meetHost, 'meet.google.com')) {
+            return null;
+        }
+
+        $participant = $booking->user;
+
+        if (!$participant) {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'لا يمكن التحقق من بيانات الحجز. يرجى تسجيل الدخول من جديد.');
+        }
+
+        $participantEmail = $participant->preferredGoogleEmail();
+
+        if (!$participantEmail) {
+            return redirect()
+                ->route('bookings.show', $booking)
+                ->with('error', 'يرجى تحديث بريدك الإلكتروني المخصص لـ Google قبل محاولة الانضمام.');
+        }
+
+        $eventId = trim((string) $workshop->meeting_event_id);
+        $calendarId = $workshop->meeting_calendar_id
+            ?: config('services.google_meet.calendar_id')
+            ?: config('services.google_meet.organizer_email');
+
+        if ($eventId === '' || !$calendarId) {
+            return null;
+        }
+
+        $attendeeStatus = $this->googleMeetService->eventHasAttendee($eventId, $participantEmail, $calendarId);
+
+        if ($attendeeStatus === false) {
+            $ensured = $this->googleMeetService->ensureAttendeePresent(
+                $eventId,
+                [
+                    'email' => $participantEmail,
+                    'displayName' => $participant->name,
+                ],
+                $calendarId
+            );
+
+            if (!$ensured) {
+                $this->meetingAttendeeSyncService->sync($workshop);
+                $attendeeStatus = $this->googleMeetService->eventHasAttendee($eventId, $participantEmail, $calendarId);
+            } else {
+                $attendeeStatus = true;
+            }
+        }
+
+        if ($attendeeStatus === false) {
+            return redirect()
+                ->to($this->linkSecurity->makeParticipantJoinUrl($booking))
+                ->with('error', 'بريدك الإلكتروني غير موجود بعد ضمن قائمة الحضور. تمت إعادة مزامنة الورشة تلقائياً، يرجى المحاولة لاحقاً.');
+        }
+
+        if ($attendeeStatus === null) {
+            return null;
+        }
+
+        return redirect()->away(
+            GoogleMeetAccountChooser::build($participantEmail, $workshop->meeting_link, app()->getLocale())
+        );
     }
 
     protected function enforceJoinDeviceLock(Request $request, WorkshopBooking $booking): ?\Illuminate\Http\RedirectResponse
@@ -504,100 +626,5 @@ class WorkshopBookingController extends Controller
         if ($booking->user_id !== Auth::id()) {
             abort(403);
         }
-    }
-
-    protected function getMissingJaasConfigKeys(): array
-    {
-        $jaasConfig = config('services.jitsi.jaas', []);
-
-        $requiredKeys = ['app_id', 'api_key', 'private_key_path'];
-        $missing = [];
-
-        foreach ($requiredKeys as $key) {
-            $value = $jaasConfig[$key] ?? null;
-
-            if (blank($value)) {
-                $missing[] = $key;
-            }
-        }
-
-        return $missing;
-    }
-
-    protected function buildJitsiEmbedConfig(Workshop $workshop, ?string $displayName = null, ?string $email = null, bool $isModerator = false): array
-    {
-        $provider = $workshop->meeting_provider ?: config('services.jitsi.provider', 'meet');
-
-        if ($provider === 'jaas') {
-            $jaasConfig = config('services.jitsi.jaas', []);
-            $baseUrl = $jaasConfig['base_url'] ?? 'https://8x8.vc';
-            $parsedBase = parse_url($baseUrl);
-            $domain = $parsedBase['host'] ?? '8x8.vc';
-            $scheme = $parsedBase['scheme'] ?? 'https';
-            $appId = $jaasConfig['app_id'] ?? null;
-
-            if (!$appId) {
-                throw new \RuntimeException('JaaS app ID is not configured. Please set JITSI_JAAS_APP_ID.');
-            }
-
-            $roomSlug = trim($workshop->jitsi_room ?? '');
-            if ($roomSlug === '') {
-                $roomSlug = Str::slug($workshop->title . '-' . $workshop->id, '-');
-            }
-            $roomSlug = trim(str_replace(' ', '-', $roomSlug), '/');
-
-            $roomPath = "{$appId}/{$roomSlug}";
-            $tokenService = app(\App\Services\JitsiJaasTokenService::class);
-            $allowParticipantSubject = (bool) config('services.jitsi.allow_participant_subject_edit', true);
-            $shouldIssueModeratorToken = $isModerator || (!$isModerator && $allowParticipantSubject);
-            $userContext = [
-                'name' => $displayName,
-                'email' => $email,
-            ];
-            $jwt = $shouldIssueModeratorToken
-                ? $tokenService->createModeratorToken($roomSlug, $userContext, $workshop->start_date)
-                : $tokenService->createParticipantToken($roomSlug, $userContext, $workshop->start_date);
-
-            return [
-                'provider' => 'jaas',
-                'domain' => $domain,
-                'room' => $roomPath,
-                'jwt' => $jwt,
-                'passcode' => null,
-                'external_api_url' => "{$scheme}://{$domain}/external_api.js",
-            ];
-        }
-
-        $meetingUrl = $workshop->meeting_link;
-        $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
-        $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));
-
-        $domain = $parsedMeeting['host']
-            ?? ($fallbackBase['host'] ?? 'meet.jit.si');
-
-        $scheme = $parsedMeeting['scheme']
-            ?? ($fallbackBase['scheme'] ?? 'https');
-
-        $room = $workshop->jitsi_room
-            ?? ltrim($parsedMeeting['path'] ?? '', '/')
-            ?? Str::slug($workshop->title . '-' . $workshop->id, '-');
-
-        $room = trim($room);
-
-        if (str_contains($room, '/')) {
-            $segments = array_filter(explode('/', $room));
-            $room = end($segments);
-        }
-
-        if (!$room) {
-            $room = Str::slug($workshop->title . '-' . $workshop->id, '-');
-        }
-
-        return [
-            'domain' => $domain,
-            'room' => $room,
-            'passcode' => $workshop->jitsi_passcode,
-            'external_api_url' => "{$scheme}://{$domain}/external_api.js",
-        ];
     }
 }

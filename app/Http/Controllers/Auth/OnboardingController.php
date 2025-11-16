@@ -80,6 +80,7 @@ class OnboardingController extends Controller
         $data = $request->validate([
             'country_code' => ['required', Rule::in($countryCodes)],
             'phone' => ['required', 'string', 'max:30'],
+            'google_email' => ['required', 'email', 'max:255'],
             'instagram_url' => ['nullable', 'url', 'max:255', 'required_without:youtube_url'],
             'youtube_url' => ['nullable', 'url', 'max:255', 'required_without:instagram_url'],
             'chef_specialty_area' => ['required', 'in:food'],
@@ -91,6 +92,8 @@ class OnboardingController extends Controller
             'youtube_url.required_without' => 'يرجى إدخال حساب إنستغرام أو قناة يوتيوب واحدة على الأقل.',
             'chef_specialty_area.in' => 'يجب أن يكون تخصصك الرئيسي في مجال الطعام والطبخ للانضمام كـ شيف.',
             'chef_specialty_description.min' => 'يرجى تقديم وصف مفصل عن خبرتك في مجال الطبخ (20 حرفاً على الأقل).',
+            'google_email.required' => 'يرجى إدخال بريد Google الذي ستستخدمه لاستضافة الورش.',
+            'google_email.email' => 'صيغة بريد Google غير صحيحة.',
         ]);
 
         $countryCode = $data['country_code'];
@@ -110,6 +113,7 @@ class OnboardingController extends Controller
         $user->phone = $fullPhone;
         $user->instagram_url = $data['instagram_url'] ?? null;
         $user->youtube_url = $data['youtube_url'] ?? null;
+        $user->google_email = $data['google_email'];
         $user->chef_specialty_area = $data['chef_specialty_area'];
         $user->chef_specialty_description = $data['chef_specialty_description'];
 

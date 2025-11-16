@@ -1008,7 +1008,7 @@
             : ($recipe->image_url ?? null);
 
         if (empty($imageSource)) {
-            $imageSource = asset('image/logo.png');
+            $imageSource = asset('image/logo.webp');
         }
 
         $difficultyLabel = null;
@@ -1024,7 +1024,7 @@
                                         src="{{ $imageSource }}"
                                         alt="{{ $recipe->title }}"
                                         loading="lazy"
-                                        onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ __('recipes.cards.image_fallback_alt') }}';"
+                                        onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('recipes.cards.image_fallback_alt') }}';"
                                     >
                                     <span class="recipe-card__badge">{{ $recipe->category->name ?? __('recipes.cards.category_fallback') }}</span>
                                 </div>
@@ -1175,6 +1175,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
+
 
 
 

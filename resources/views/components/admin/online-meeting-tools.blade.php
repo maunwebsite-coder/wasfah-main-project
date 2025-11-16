@@ -2,8 +2,6 @@
     'isOnline' => false,
     'autoGenerate' => false,
     'meetingLink' => '',
-    'jitsiRoom' => '',
-    'jitsiPasscode' => '',
     'hasGeneratedMeeting' => false,
     'meetingStatusState' => 'idle',
     'meetingStatusText' => 'سيتم توليد الرابط تلقائياً بعد الحفظ.',
@@ -17,9 +15,7 @@
 
 @php
     $meetingLinkValue = trim((string) ($meetingLink ?? ''));
-    $jitsiRoomValue = trim((string) ($jitsiRoom ?? ''));
-    $jitsiPasscodeValue = trim((string) ($jitsiPasscode ?? ''));
-    $showGeneratedInfo = $hasGeneratedMeeting || ($meetingLinkValue !== '' && $jitsiRoomValue !== '');
+    $showGeneratedInfo = $hasGeneratedMeeting || $meetingLinkValue !== '';
 
     $inputClasses = trim(
         $inputClass .
@@ -34,7 +30,7 @@
             <div>
                 <p class="text-sm font-semibold text-slate-800">توليد رابط الاجتماع الذكي</p>
                 <p class="text-xs text-slate-500">
-                    أنشئ رابط Jitsi آمن بضغطة زر أو دع النظام يقوم بذلك تلقائياً عند الحفظ.
+                    احصل على رابط Google Meet رسمي بضغطة زر أو دع النظام يجهزه عند الحفظ.
                 </p>
             </div>
             <div class="generator-actions">
@@ -45,10 +41,10 @@
                     <input type="hidden" name="auto_generate_meeting" value="0">
                     <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                         <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerate ? 'checked' : '' }}>
-                        توليد تلقائي عبر Jitsi
+                        توليد تلقائي عبر Google Meet
                     </label>
                     <button type="button"
-                            id="generateJitsiLinkBtn"
+                            id="generateMeetLinkBtn"
                             data-url="{{ $generateUrl }}"
                             class="generate-link-btn">
                         <i class="fas fa-bolt"></i>
@@ -59,13 +55,8 @@
         </div>
         <div id="generatedMeetingInfo" class="{{ $showGeneratedInfo ? '' : 'hidden' }} meeting-info-card space-y-2">
             @if($showGeneratedInfo)
-                <p class="font-semibold text-slate-800">تم إنشاء رابط Jitsi:</p>
+                <p class="font-semibold text-slate-800">تم إنشاء رابط Google Meet:</p>
                 <p class="mt-1 text-sm break-all text-slate-700">{{ $meetingLinkValue }}</p>
-                @if($jitsiPasscodeValue !== '')
-                    <p class="mt-2 text-xs text-emerald-700">
-                        رمز الدخول: <span class="font-semibold">{{ $jitsiPasscodeValue }}</span>
-                    </p>
-                @endif
             @else
                 <p class="text-sm text-slate-600">سيظهر الرابط والمعلومات الإضافية هنا بعد توليده.</p>
             @endif
@@ -80,7 +71,7 @@
             type="url"
             value="{{ $meetingLinkValue }}"
             class="{{ $inputClasses }}"
-            placeholder="https://meet.jit.si/wasfah-room"
+            placeholder="https://meet.google.com/abc-defg-hij"
             @if($isOnline && !$autoGenerate) required @endif
             @if($isOnline && $autoGenerate) readonly @endif
         >
@@ -97,7 +88,4 @@
             <p class="{{ $errorClass }}">{{ $message }}</p>
         @enderror
     </div>
-
-    <input type="hidden" id="jitsi_room_field" name="jitsi_room" value="{{ $jitsiRoomValue }}">
-    <input type="hidden" id="jitsi_passcode_field" name="jitsi_passcode" value="{{ $jitsiPasscodeValue }}">
 </div>

@@ -15,6 +15,7 @@ class NotificationManager {
         this.badgeAnimationDuration = 2000;
         this.realtimeSubscription = null;
         this.maxRealtimeNotifications = 10;
+        this.markAllPromise = null;
     }
 
     /**
@@ -153,6 +154,69 @@ class NotificationManager {
     updateCache(data) {
         this.cachedData = data;
         this.lastUpdate = Date.now();
+    }
+
+    /**
+     * Mark all notifications as read silently
+     * @returns {Promise<Object>}
+     */
+    async markAllAsRead() {
+        if (this.markAllPromise) {
+            return this.markAllPromise;
+        }
+
+        const run = async () => {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            const response = await fetch('/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const unreadCount = data?.unreadCount ?? 0;
+            const notifications = Array.isArray(this.cachedData?.notifications)
+                ? this.cachedData.notifications.map(notification => ({
+                    ...notification,
+                    is_read: true,
+                    read_at: notification.read_at || new Date().toISOString(),
+                }))
+                : [];
+
+            const updatedData = {
+                ...(this.cachedData || {}),
+                notifications,
+                unreadCount,
+                timestamp: Date.now()
+            };
+
+            this.updateCache(updatedData);
+            this.updateBadgeElements(unreadCount);
+            this.dispatchUpdateEvent(updatedData);
+
+            return data;
+        };
+
+        this.markAllPromise = run()
+            .catch(error => {
+                console.error('Error marking notifications as read:', error);
+                throw error;
+            })
+            .finally(() => {
+                this.markAllPromise = null;
+            });
+
+        return this.markAllPromise;
     }
 
     /**

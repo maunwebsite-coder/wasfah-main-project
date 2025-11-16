@@ -70,7 +70,7 @@ class ReferralController extends Controller
     {
         $supportedCurrencies = array_keys(config('referrals.currencies', []));
         if (empty($supportedCurrencies)) {
-            $supportedCurrencies = [config('referrals.default_currency', 'JOD')];
+            $supportedCurrencies = [config('referrals.default_currency', 'USD')];
         }
 
         $data = $request->validate([
@@ -99,7 +99,7 @@ class ReferralController extends Controller
             'is_referral_partner' => true,
             'referral_commission_rate' => $data['referral_commission_rate']
                 ?? ($user->referral_commission_rate ?? config('referrals.default_rate')),
-            'referral_commission_currency' => $data['referral_commission_currency'] ?? config('referrals.default_currency', 'JOD'),
+            'referral_commission_currency' => $data['referral_commission_currency'] ?? config('referrals.default_currency', 'USD'),
         ]);
 
         $user->ensureReferralCode();
@@ -207,7 +207,7 @@ class ReferralController extends Controller
     {
         $supportedCurrencies = array_keys(config('referrals.currencies', []));
         if (empty($supportedCurrencies)) {
-            $supportedCurrencies = [config('referrals.default_currency', 'JOD')];
+            $supportedCurrencies = [config('referrals.default_currency', 'USD')];
         }
 
         $data = $request->validate([

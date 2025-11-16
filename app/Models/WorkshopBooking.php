@@ -7,10 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Services\WorkshopLinkSecurityService;
 use App\Services\ReferralProgramService;
+use App\Services\BookingFinancialService;
+use App\Services\FinanceInvoiceService;
+use App\Services\WorkshopMeetingAttendeeSyncService;
+use App\Support\Currency;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class WorkshopBooking extends Model
 {
     use HasFactory;
+
+    public const FINANCIAL_STATUS_PENDING = 'pending';
+    public const FINANCIAL_STATUS_DISTRIBUTED = 'distributed';
+    public const FINANCIAL_STATUS_VOID = 'void';
 
     protected static function boot()
     {
@@ -22,10 +31,20 @@ class WorkshopBooking extends Model
             }
         });
 
+        static::saving(function ($booking) {
+            static::ensureCurrencyAttributes($booking);
+        });
+
         // عند إنشاء حجز جديد
         static::created(function ($booking) {
             if ($booking->status === 'confirmed') {
                 $booking->workshop->increment('bookings_count');
+            }
+
+            app(FinanceInvoiceService::class)->syncFromBooking($booking);
+
+            if ($booking->status === 'confirmed') {
+                static::dispatchGoogleMeetSync($booking);
             }
         });
 
@@ -53,6 +72,29 @@ class WorkshopBooking extends Model
                 } elseif ($originalPaymentStatus === 'paid') {
                     $referrals->handleBookingPaymentReverted($booking);
                 }
+
+                app(FinanceInvoiceService::class)->syncFromBooking($booking);
+            }
+
+            if (
+                $booking->wasChanged('payment_amount') ||
+                $booking->wasChanged('payment_currency')
+            ) {
+                app(FinanceInvoiceService::class)->syncFromBooking($booking);
+            }
+
+            if (
+                $booking->wasChanged('status') ||
+                $booking->wasChanged('payment_status')
+            ) {
+                app(BookingFinancialService::class)->sync($booking);
+            }
+
+            if (
+                $booking->wasChanged('status') ||
+                $booking->wasChanged('user_id')
+            ) {
+                static::dispatchGoogleMeetSync($booking);
             }
         });
 
@@ -60,10 +102,17 @@ class WorkshopBooking extends Model
         static::deleted(function ($booking) {
             if ($booking->status === 'confirmed') {
                 $booking->workshop->decrement('bookings_count');
+                static::dispatchGoogleMeetSync($booking);
             }
 
             if ($booking->payment_status === 'paid') {
                 app(ReferralProgramService::class)->handleBookingPaymentReverted($booking, 'booking_deleted');
+            }
+
+            app(BookingFinancialService::class)->cancelDistribution($booking, 'booking_deleted');
+
+            if ($invoice = $booking->invoice()->first()) {
+                app(FinanceInvoiceService::class)->void($invoice, 'booking_deleted');
             }
         });
     }
@@ -75,7 +124,12 @@ class WorkshopBooking extends Model
         'booking_date',
         'payment_status',
         'payment_method',
+        'payment_reference',
+        'payment_payload',
         'payment_amount',
+        'payment_currency',
+        'payment_exchange_rate',
+        'payment_amount_usd',
         'notes',
         'confirmed_at',
         'cancelled_at',
@@ -87,6 +141,8 @@ class WorkshopBooking extends Model
         'join_device_fingerprint',
         'join_device_ip',
         'join_device_user_agent',
+        'financial_status',
+        'financial_split_at',
     ];
 
     protected $casts = [
@@ -95,6 +151,10 @@ class WorkshopBooking extends Model
         'cancelled_at' => 'datetime',
         'first_joined_at' => 'datetime',
         'payment_amount' => 'decimal:2',
+        'payment_exchange_rate' => 'decimal:6',
+        'payment_amount_usd' => 'decimal:2',
+        'payment_payload' => 'array',
+        'financial_split_at' => 'datetime',
     ];
 
     // العلاقات
@@ -106,6 +166,16 @@ class WorkshopBooking extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function revenueShares()
+    {
+        return $this->hasMany(BookingRevenueShare::class);
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(FinanceInvoice::class, 'workshop_booking_id');
     }
 
     // Scopes
@@ -129,6 +199,11 @@ class WorkshopBooking extends Model
         return $query->where('payment_status', 'paid');
     }
 
+    public function scopeForCurrency($query, string $currency)
+    {
+        return $query->where('payment_currency', strtoupper($currency));
+    }
+
     // Accessors
     public function getIsConfirmedAttribute()
     {
@@ -148,6 +223,32 @@ class WorkshopBooking extends Model
     public function getIsPaidAttribute()
     {
         return $this->payment_status === 'paid';
+    }
+
+    public function getPaymentCurrencyLabelAttribute(): string
+    {
+        $meta = Currency::meta($this->payment_currency);
+
+        return $meta['label'] ?? strtoupper((string) $this->payment_currency);
+    }
+
+    public function getIsWhatsappBookingAttribute(): bool
+    {
+        $notes = Str::lower((string) ($this->notes ?? ''));
+        $paymentMethod = Str::lower((string) ($this->payment_method ?? ''));
+        $configuredNotes = Str::lower((string) config('services.whatsapp_booking.notes', ''));
+
+        if ($paymentMethod && Str::contains($paymentMethod, 'whatsapp')) {
+            return true;
+        }
+
+        foreach (array_filter([$configuredNotes, 'whatsapp', 'واتساب']) as $keyword) {
+            if ($keyword && Str::contains($notes, $keyword)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected static function generateUniquePublicCode(int $length = 10): string
@@ -173,5 +274,39 @@ class WorkshopBooking extends Model
     public function getSecureStatusUrlAttribute(): string
     {
         return app(WorkshopLinkSecurityService::class)->makeParticipantStatusUrl($this);
+    }
+
+    protected static function ensureCurrencyAttributes(self $booking): void
+    {
+        $currency = strtoupper($booking->payment_currency ?: optional($booking->workshop)->currency ?: Currency::default());
+
+        if (! $booking->relationLoaded('workshop') && empty($booking->payment_currency)) {
+            $workshop = Workshop::find($booking->workshop_id);
+            if ($workshop) {
+                $currency = strtoupper($workshop->currency ?: $currency);
+                $booking->setRelation('workshop', $workshop);
+            }
+        }
+
+        $rate = $booking->payment_exchange_rate ?: Currency::rateToUsd($currency);
+        $booking->payment_currency = $currency;
+        $booking->payment_exchange_rate = $rate;
+
+        if (! is_null($booking->payment_amount)) {
+            $booking->payment_amount_usd = Currency::round($booking->payment_amount * $rate, 'USD');
+        }
+    }
+
+    protected static function dispatchGoogleMeetSync(self $booking): void
+    {
+        $booking->loadMissing('workshop');
+
+        $workshop = $booking->workshop;
+
+        if (!$workshop) {
+            return;
+        }
+
+        app(WorkshopMeetingAttendeeSyncService::class)->sync($workshop);
     }
 }

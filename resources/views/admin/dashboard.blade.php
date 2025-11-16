@@ -2,10 +2,6 @@
 
 @section('title', 'لوحة التحكم - الإدارة')
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
-@endpush
-
 @section('content')
 <div class="min-h-screen bg-gray-50 py-6">
     @php
@@ -20,6 +16,7 @@
         $recipeTrend = $recipeDailyAverage > 0 ? (($todayRecipes - $recipeDailyAverage) / $recipeDailyAverage) * 100 : 0;
         $bookingTrend = $bookingDailyAverage > 0 ? (($todayBookings - $bookingDailyAverage) / $bookingDailyAverage) * 100 : 0;
         $revenueTrend = $revenueDailyAverage > 0 ? (($todayRevenue - $revenueDailyAverage) / $revenueDailyAverage) * 100 : 0;
+        $defaultCurrency = config('finance.default_currency', 'USD');
     @endphp
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
@@ -162,7 +159,7 @@
                             </span>
                         </div>
                         <div class="mt-3 text-3xl font-bold text-gray-900">
-                            @if($summary['unit'] === 'ر.س')
+                            @if(!empty($summary['is_currency']))
                                 {{ number_format($summary['value'], 2) }}
                             @else
                                 {{ number_format($summary['value']) }}
@@ -275,7 +272,7 @@
                         <div class="ml-4 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium opacity-90 truncate">إيرادات اليوم</dt>
-                                <dd class="stat-number">{{ number_format($todayRevenue, 2) }} ر.س</dd>
+                                <dd class="stat-number">{{ number_format($todayRevenue, 2) }} {{ $defaultCurrency }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -285,7 +282,7 @@
                             {{ number_format(abs($revenueTrend), 1) }}%
                         </span>
                         <span class="trend-average">
-                            متوسط يومي: {{ number_format($revenueDailyAverage, 2) }} ر.س
+                            متوسط يومي: {{ number_format($revenueDailyAverage, 2) }} {{ $defaultCurrency }}
                         </span>
                     </div>
                     <p class="trend-context">مقارنة بمتوسط الشهر الحالي</p>
@@ -495,13 +492,38 @@
                             <div class="text-3xl font-bold text-green-600">
                                 {{ number_format($totalRevenue, 2) }}
                             </div>
-                            <div class="text-sm text-gray-500">دينار أردني إجمالي</div>
+                            <div class="text-sm text-gray-500">دولار أمريكي إجمالي</div>
                         </div>
                         <div class="text-center">
                             <div class="text-3xl font-bold text-blue-600">
                                 {{ number_format($monthlyRevenue, 2) }}
                             </div>
-                            <div class="text-sm text-gray-500">دينار أردني هذا الشهر</div>
+                            <div class="text-sm text-gray-500">دولار أمريكي هذا الشهر</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 border-t border-gray-100 pt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <p class="font-semibold text-gray-500">حصة المنصة</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900">
+                                    {{ number_format($platformRevenue, 2) }} <span class="text-xs font-normal text-gray-500">إجمالي</span>
+                                </p>
+                                <p class="text-xs text-gray-500">هذا الشهر: {{ number_format($platformMonthlyRevenue, 2) }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-500">صافي الشيفات</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900">
+                                    {{ number_format($chefPayoutTotal, 2) }} <span class="text-xs font-normal text-gray-500">إجمالي</span>
+                                </p>
+                                <p class="text-xs text-gray-500">هذا الشهر: {{ number_format($chefMonthlyPayout, 2) }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-500">عمولات الشركاء</p>
+                                <p class="mt-1 text-lg font-bold text-gray-900">
+                                    {{ number_format($partnerPayoutTotal, 2) }} <span class="text-xs font-normal text-gray-500">إجمالي</span>
+                                </p>
+                                <p class="text-xs text-gray-500">هذا الشهر: {{ number_format($partnerMonthlyPayout, 2) }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1163,7 +1185,7 @@ if (periodCanvas && periodStatsData.length) {
                 yAxisID: 'y',
             }, {
                 type: 'line',
-                label: 'الإيرادات (ر.س)',
+                label: 'الإيرادات ({{ $defaultCurrency }})',
                 data: periodRevenue,
                 borderColor: 'rgb(249, 115, 22)',
                 backgroundColor: 'rgba(249, 115, 22, 0.15)',
@@ -1197,7 +1219,7 @@ if (periodCanvas && periodStatsData.length) {
                         label(context) {
                             const value = context.parsed.y ?? 0;
                             if (context.dataset.yAxisID === 'y1') {
-                                return `${context.dataset.label}: ${value.toLocaleString()} ر.س`;
+                                return `${context.dataset.label}: ${value.toLocaleString()} {{ $defaultCurrency }}`;
                             }
                             return `${context.dataset.label}: ${value.toLocaleString()}`;
                         }
@@ -1220,7 +1242,7 @@ if (periodCanvas && periodStatsData.length) {
                     },
                     title: {
                         display: true,
-                        text: 'الإيرادات (ر.س)'
+                        text: 'الإيرادات ({{ $defaultCurrency }})'
                     }
                 }
             }

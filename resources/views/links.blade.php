@@ -7,7 +7,7 @@
     <meta name="description" content="{{ __('links.meta.description') }}">
     <meta property="og:title" content="{{ __('links.meta.og_title') }}">
     <meta property="og:description" content="{{ __('links.meta.og_description') }}">
-    <meta property="og:image" content="{{ asset('image/logo.png') }}">
+    <meta property="og:image" content="{{ asset('image/logo.webp') }}">
     <meta name="theme-color" content="#f97316">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -593,7 +593,7 @@
                     </a>
                 </div>
                 <div class="feature-media">
-                    <img src="{{ $upcomingWorkshop['image'] }}" alt="{{ __('links.upcoming.image_alt') }}">
+                    <img src="{{ $upcomingWorkshop['image'] }}" alt="{{ __('links.upcoming.image_alt') }}" loading="lazy">
                 </div>
             </section>
         @endif
@@ -610,7 +610,7 @@
                 @foreach ($monthlySelections as $selection)
                     <article class="monthly-card" role="listitem">
                         <div class="monthly-media">
-                            <img src="{{ $selection['image'] }}" alt="{{ $selection['alt'] }}">
+                            <img src="{{ $selection['image'] }}" alt="{{ $selection['alt'] }}" loading="lazy">
                         </div>
                         <div class="monthly-body">
                             <h3>{{ $selection['title'] }}</h3>
@@ -661,7 +661,12 @@
     </main>
     <footer>
         <div class="footer-brand">
-            <img src="{{ asset('image/logo.png') }}" alt="{{ __('links.footer.logo_alt') }}">
+            <x-optimized-picture
+                base="image/logo"
+                :widths="[96, 192, 384]"
+                alt="{{ __('links.footer.logo_alt') }}"
+                sizes="96px"
+            />
             <div>
                 <strong>{{ __('links.footer.tagline_title') }}</strong>
                 <div>{{ __('links.footer.tagline_subtitle') }}</div>

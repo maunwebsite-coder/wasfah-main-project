@@ -625,7 +625,7 @@
                                 <div id="image-preview-{{$i}}" class="hidden mt-3">
                                     <div class="image-preview">
                                         <img id="preview-img-{{$i}}" src="" alt="معاينة الصورة {{$i}}" 
-                                             class="w-full h-32 object-cover rounded-xl">
+                                             class="w-full h-32 object-cover rounded-xl" loading="lazy">
                                         <button type="button" onclick="removeImage({{$i}})" 
                                                 class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
                                             <i class="fas fa-times"></i>

@@ -3,6 +3,11 @@
 return [
     'title' => 'Wasfah | Sign in or create an account',
     'logo_alt' => 'Wasfah logo',
+    'brand' => [
+        'eyebrow' => 'Wasfah Platform',
+        'headline' => 'Sign in to keep your bookings and saved recipes synced.',
+        'subcopy' => 'Full Arabic support with one-tap Google authentication.',
+    ],
     'alerts' => [
         'review_fields' => 'Please review the highlighted fields.',
     ],
@@ -46,5 +51,21 @@ return [
     'flash' => [
         'workshop_success' => 'Signed in successfully! You can now complete the workshop booking.',
         'login_success' => 'Signed in successfully! Welcome back to Wasfah 👋',
+    ],
+    'policy_consent' => [
+        'title' => 'Confirm your details',
+        'eyebrow' => 'Your name',
+        'headline' => 'Let us know what we should call you',
+        'description' => 'We\'ll use this name on your Wasfah dashboard, in emails, and whenever you interact with our chefs.',
+        'name_label' => 'Full name',
+        'name_placeholder' => 'Type your full name here',
+        'terms_statement' => 'I agree to Wasfah\'s Terms of Service and Privacy Policy.',
+        'terms_hint' => 'Open each policy link below in its own page before continuing.',
+        'terms_link' => 'Terms of Service',
+        'privacy_link' => 'Privacy Policy',
+        'submit' => 'Create an account',
+        'submit_hint' => 'Continue',
+        'back' => 'Go back',
+        'policy_version' => 'Policy version :version',
     ],
 ];

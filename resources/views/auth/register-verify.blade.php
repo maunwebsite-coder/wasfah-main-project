@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'تأكيد البريد الإلكتروني - وصفة')
+@section('title', 'Verify your email – Wasfah')
 
 @push('styles')
 <style>
@@ -77,10 +77,10 @@
     <div class="verify-card">
         <div class="verify-header">
             <h1 class="text-3xl font-extrabold mb-2">
-                تأكيد البريد الإلكتروني
+                Verify your email
             </h1>
             <p class="text-orange-100 text-sm">
-                أدخل رمز التحقق المرسل إلى بريدك الإلكتروني لإكمال التسجيل
+                Enter the verification code we sent to your email to complete registration.
             </p>
         </div>
         <div class="verify-content space-y-6">
@@ -104,13 +104,13 @@
                         <i class="fas fa-envelope text-base"></i>
                     </span>
                     <div>
-                        <div class="font-semibold">تم إرسال الرمز إلى:</div>
+                        <div class="font-semibold">We sent the code to:</div>
                         <div class="text-base text-orange-900">{{ $email }}</div>
                     </div>
                 </div>
                 <p class="mt-3">
-                    صلاحية الرمز تنتهي {{ $expiresAt?->locale('ar')->diffForHumans() ?? 'بعد 15 دقيقة' }}.
-                    إذا لم يصلك البريد خلال دقيقة، تحقق من مجلد الرسائل غير المرغوبة أو اطلب رمزاً جديداً.
+                    The code expires {{ $expiresAt?->locale(app()->getLocale())->diffForHumans() ?? 'in 15 minutes' }}.
+                    If you do not see the email within a minute, check your spam folder or request a new code.
                 </p>
             </div>
 
@@ -118,7 +118,7 @@
                 @csrf
                 <div class="space-y-2">
                     <label for="code" class="text-sm font-semibold text-gray-700">
-                        رمز التحقق المكون من 6 أرقام
+                        6-digit verification code
                     </label>
                     <input
                         id="code"
@@ -137,18 +137,18 @@
                 </div>
 
                 <button type="submit" class="submit-btn">
-                    تأكيد البريد وإنشاء الحساب
+                    Verify email and create account
                 </button>
             </form>
 
             <div class="text-sm text-gray-600 leading-6">
                 <p class="mb-3">
-                    لم يصلك الرمز؟ يمكننا إعادة إرساله بعد مرور دقيقة واحدة.
+                    Didn’t receive the code? We can resend it after one minute.
                 </p>
                 <form method="POST" action="{{ route('register.verify.resend') }}">
                     @csrf
                     <button type="submit" class="resend-btn">
-                        إعادة إرسال الرمز
+                        Resend the code
                     </button>
                 </form>
             </div>

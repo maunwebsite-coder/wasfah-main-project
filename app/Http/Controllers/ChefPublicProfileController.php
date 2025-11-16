@@ -5,15 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Recipe;
 use App\Models\User;
 use App\Models\Workshop;
+use App\Services\GoogleDriveService;
+use App\Support\Concerns\ResolvesWorkshopRecordings;
+use Google\Service\Drive\DriveFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View as ViewFacade;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ChefPublicProfileController extends Controller
 {
+    use ResolvesWorkshopRecordings;
+
+    public function __construct(protected GoogleDriveService $googleDrive)
+    {
+    }
+
     /**
      * Display the public profile for a chef with their published recipes.
      */
@@ -23,8 +34,11 @@ class ChefPublicProfileController extends Controller
             abort(404);
         }
 
+        $chef->loadCount('followers');
+
         $viewer = Auth::user();
         $isOwner = $viewer && $viewer->id === $chef->id;
+        $isFollowing = $viewer ? $viewer->isFollowingChef($chef) : false;
         $canViewExclusive = $isOwner;
         $visibilityColumnExists = Schema::hasColumn('recipes', 'visibility');
 
@@ -69,6 +83,51 @@ class ChefPublicProfileController extends Controller
                 return (int) ($workshop->start_date?->getTimestamp() ?? 0);
             })
             ->values();
+
+        $recordingColumns = collect([
+            'recording_url',
+            Schema::hasColumn('workshops', 'recording_link') ? 'recording_link' : null,
+            Schema::hasColumn('workshops', 'recording') ? 'recording' : null,
+            Schema::hasColumn('workshops', 'video_url') ? 'video_url' : null,
+            Schema::hasColumn('workshops', 'meeting_link') ? 'meeting_link' : null,
+        ])->filter();
+
+        $recordingCandidates = $chef->workshops()
+            ->when($recordingColumns->isNotEmpty(), function ($query) use ($recordingColumns) {
+                $query->where(function ($subQuery) use ($recordingColumns) {
+                    foreach ($recordingColumns as $column) {
+                        $subQuery->orWhereNotNull($column);
+                    }
+                });
+            })
+            ->orderByDesc('start_date')
+            ->limit(8)
+            ->get();
+
+        $recordedWorkshops = $recordingCandidates
+            ->map(function (Workshop $workshop) {
+                $recordingUrl = $this->resolveRecordingUrl($workshop);
+                $workshop->setAttribute('recording_source_url', $recordingUrl);
+                $workshop->setAttribute('video_preview_url', $this->buildRecordingPreviewUrl($recordingUrl));
+                $workshop->setAttribute('is_direct_video', $this->isDirectVideoUrl($recordingUrl));
+
+                return $workshop;
+            })
+            ->filter(function (Workshop $workshop) {
+                return $workshop->getAttribute('recording_source_url')
+                    || $workshop->getAttribute('video_preview_url');
+            })
+            ->values();
+
+        $appLocale = app()->getLocale();
+        $carbonLocale = $appLocale === 'ar' ? 'ar' : 'en';
+        $workshopDateTimeFormat = __('chef.workshops.datetime_format');
+
+        $recordingEntries = $this->buildRecordingEntries(
+            $recordedWorkshops,
+            $carbonLocale,
+            $workshopDateTimeFormat
+        );
 
         if (!$visibilityColumnExists) {
             $recipes->each(function (Recipe $recipe) {
@@ -123,6 +182,13 @@ class ChefPublicProfileController extends Controller
             'canViewExclusive' => $canViewExclusive,
             'upcomingWorkshops' => $upcomingWorkshops,
             'pastWorkshops' => $pastWorkshops,
+            'recordedWorkshops' => $recordedWorkshops,
+            'recordingEntries' => $recordingEntries,
+            'isFollowing' => $isFollowing,
+            'followRoutes' => [
+                'follow' => route('chefs.follow', ['chef' => $chef->id]),
+                'unfollow' => route('chefs.unfollow', ['chef' => $chef->id]),
+            ],
         ]);
     }
 
@@ -152,7 +218,7 @@ class ChefPublicProfileController extends Controller
     protected function resolveAvatarUrl(?string $avatar): string
     {
         if (!$avatar) {
-            return asset('image/logo.png');
+            return asset('image/logo.webp');
         }
 
         if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
@@ -186,4 +252,100 @@ class ChefPublicProfileController extends Controller
             ] : null,
         ])->filter()->values();
     }
+
+    protected function buildRecordingEntries(
+        Collection $recordedWorkshops,
+        string $locale,
+        string $dateTimeFormat
+    ): Collection {
+        $workshopEntries = $recordedWorkshops
+            ->map(function (Workshop $workshop) use ($locale, $dateTimeFormat): ?array {
+                $startDateLabel = $workshop->start_date
+                    ? $workshop->start_date->copy()->locale($locale)->translatedFormat($dateTimeFormat)
+                    : __('chef.workshops.unscheduled_time');
+
+                $locationLabel = $workshop->is_online
+                    ? __('chef.workshops.online_live')
+                    : ($workshop->location ?: __('chef.workshops.location_tbd'));
+
+                $recordingUrl = $workshop->getAttribute('recording_source_url');
+                $previewUrl = $workshop->getAttribute('video_preview_url');
+
+                if (! $recordingUrl && ! $previewUrl) {
+                    return null;
+                }
+
+                $description = $workshop->description
+                    ? Str::limit(strip_tags($workshop->description), 130)
+                    : null;
+
+                return [
+                    'id' => 'workshop-' . $workshop->id,
+                    'title' => $workshop->title,
+                    'excerpt' => $description,
+                    'date_label' => $startDateLabel,
+                    'location_label' => $locationLabel,
+                    'watch_url' => $recordingUrl,
+                    'preview_url' => $previewUrl,
+                    'details_url' => $workshop->slug
+                        ? route('workshop.show', ['workshop' => $workshop->slug])
+                        : null,
+                    'badge' => $previewUrl
+                        ? __('chef.recordings.badges.available')
+                        : __('chef.recordings.badges.drive'),
+                    'type' => 'workshop',
+                    'sort_timestamp' => (int) ($workshop->start_date?->getTimestamp() ?? 0),
+                    'poster' => $workshop->image
+                        ? asset('storage/' . ltrim($workshop->image, '/'))
+                        : null,
+                    'is_direct_video' => $this->isDirectVideoUrl($recordingUrl),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->toBase();
+
+        $driveEntries = collect($this->googleDrive->listRecordings(null, 12))
+            ->filter(fn ($file) => $file instanceof DriveFile)
+            ->map(function (DriveFile $file) use ($locale, $dateTimeFormat): array {
+                $modifiedAt = $file->getModifiedTime()
+                    ? Carbon::parse($file->getModifiedTime())->locale($locale)
+                    : null;
+
+                $fileId = $file->getId();
+                $previewUrl = $fileId
+                    ? sprintf('https://drive.google.com/file/d/%s/preview', $fileId)
+                    : null;
+
+                $watchUrl = $file->getWebViewLink() ?: $previewUrl ?: $file->getWebContentLink();
+                $description = $file->getDescription();
+
+                return [
+                    'id' => 'drive-' . ($fileId ?: uniqid('drive-', true)),
+                    'title' => $file->getName() ?: __('chef.recordings.untitled'),
+                    'excerpt' => $description
+                        ? Str::limit($description, 130)
+                        : __('chef.recordings.drive_default_description'),
+                    'date_label' => $modifiedAt
+                        ? $modifiedAt->translatedFormat($dateTimeFormat)
+                        : __('chef.recordings.updated_unknown'),
+                    'location_label' => __('chef.recordings.library_label'),
+                    'watch_url' => $watchUrl,
+                    'preview_url' => $previewUrl,
+                    'details_url' => $watchUrl,
+                    'badge' => __('chef.recordings.badges.available'),
+                    'type' => 'drive',
+                    'sort_timestamp' => $modifiedAt ? $modifiedAt->getTimestamp() : 0,
+                    'poster' => $file->getIconLink(),
+                    'is_direct_video' => false,
+                ];
+            });
+
+        return $workshopEntries
+            ->merge($driveEntries)
+            ->sortByDesc('sort_timestamp')
+            ->take(12)
+            ->values();
+    }
 }
+

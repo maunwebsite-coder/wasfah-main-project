@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Chef;
 
+use App\Support\ImageUploadConstraints;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LinkPageUpdateRequest extends FormRequest
@@ -32,9 +33,17 @@ class LinkPageUpdateRequest extends FormRequest
             'accent_color' => ['nullable', 'regex:/^#?[0-9a-fA-F]{3,8}$/'],
             'is_published' => ['nullable', 'boolean'],
             'show_upcoming_workshop' => ['nullable', 'boolean'],
-            'hero_image' => ['nullable', 'image', 'max:5120'],
+            'hero_image' => array_merge(['nullable'], ImageUploadConstraints::rules()),
             'remove_hero_image' => ['nullable', 'boolean'],
         ];
+    }
+
+    public function messages(): array
+    {
+        return ImageUploadConstraints::messages('hero_image', [
+            'ar' => 'صورة العرض',
+            'en' => 'hero image',
+        ]);
     }
 
     /**

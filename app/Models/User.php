@@ -7,8 +7,11 @@ use App\Models\Recipe;
 use App\Models\ChefLinkPage;
 use App\Models\Workshop;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens; // ✅ تم إضافة هذا السطر
 
@@ -16,6 +19,9 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens; // ✅ تم إضافة HasApiTokens هنا
+
+    protected static bool $googleEmailColumnChecked = false;
+    protected static bool $googleEmailColumnExists = false;
 
     /**
      * The attributes that are mass assignable.
@@ -25,6 +31,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_email',
         'password',
         'phone',
         'country_code',
@@ -92,6 +99,42 @@ class User extends Authenticatable
             'referral_commission_rate' => 'decimal:2',
             'policies_accepted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Determine whether the users table actually has the google_email column.
+     */
+    public static function hasGoogleEmailColumn(): bool
+    {
+        if (! static::$googleEmailColumnChecked) {
+            try {
+                $model = new static();
+                static::$googleEmailColumnExists = Schema::connection($model->getConnectionName())
+                    ->hasColumn($model->getTable(), 'google_email');
+            } catch (\Throwable $exception) {
+                static::$googleEmailColumnExists = false;
+            }
+
+            static::$googleEmailColumnChecked = true;
+        }
+
+        return static::$googleEmailColumnExists;
+    }
+
+    /**
+     * Columns needed when eager loading a chef for hosting flows.
+     *
+     * @return array<int, string>
+     */
+    public static function columnsForHostContext(): array
+    {
+        $columns = ['id', 'name', 'email'];
+
+        if (static::hasGoogleEmailColumn()) {
+            $columns[] = 'google_email';
+        }
+
+        return $columns;
     }
 
     public function requiresPolicyConsent(): bool
@@ -185,7 +228,49 @@ class User extends Authenticatable
         $hasPhone = filled($this->phone) && filled($this->phone_country_code) && filled($this->country_code);
         $hasSocialPresence = filled($this->instagram_url) || filled($this->youtube_url);
 
-        return $hasPhone && $hasSocialPresence;
+        $hasGoogleEmail = filled($this->google_email)
+            && filter_var($this->google_email, FILTER_VALIDATE_EMAIL);
+
+        return $hasPhone && $hasSocialPresence && $hasGoogleEmail;
+    }
+
+    /**
+     * Retrieve the preferred Google account email for Meet.
+     */
+    public function preferredGoogleEmail(): ?string
+    {
+        $email = $this->google_email ?: $this->email;
+
+        if (!is_string($email)) {
+            return null;
+        }
+
+        $normalized = strtolower(trim($email));
+
+        return filter_var($normalized, FILTER_VALIDATE_EMAIL) ? $normalized : null;
+    }
+
+    /**
+     * Normalize stored Google email addresses.
+     */
+    protected function googleEmail(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value,
+            set: function ($value) {
+                if (!is_string($value)) {
+                    return null;
+                }
+
+                $email = strtolower(trim($value));
+
+                if ($email === '') {
+                    return null;
+                }
+
+                return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+            }
+        );
     }
 
     /**
@@ -272,7 +357,7 @@ class User extends Authenticatable
 
     public function getReferralCurrencyCodeAttribute(): string
     {
-        return $this->referral_commission_currency ?: (string) config('referrals.default_currency', 'JOD');
+        return $this->referral_commission_currency ?: (string) config('referrals.default_currency', 'USD');
     }
 
     public function getReferralCurrencySymbolAttribute(): string
@@ -337,6 +422,11 @@ class User extends Authenticatable
         return $this->hasMany(WorkshopBooking::class);
     }
 
+    public function bookingRevenueShares()
+    {
+        return $this->hasMany(BookingRevenueShare::class, 'recipient_id');
+    }
+
     // علاقة مع تقييمات الورشات
     public function workshopReviews()
     {
@@ -347,6 +437,50 @@ class User extends Authenticatable
     public function interactions()
     {
         return $this->hasMany(UserInteraction::class);
+    }
+
+    /**
+     * المستخدمون الذين يتابعون هذا الشيف.
+     */
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'chef_followers',
+            'chef_id',
+            'follower_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * الشيفات الذين يتابعهم هذا المستخدم.
+     */
+    public function followingChefs(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'chef_followers',
+            'follower_id',
+            'chef_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * تحقّق ما إذا كان المستخدم يتابع شيفاً محدداً.
+     */
+    public function isFollowingChef(User $chef): bool
+    {
+        if (! $this->exists || $this->id === $chef->id) {
+            return false;
+        }
+
+        if ($this->relationLoaded('followingChefs')) {
+            return $this->followingChefs->contains('id', $chef->id);
+        }
+
+        return $this->followingChefs()
+            ->where('chef_id', $chef->id)
+            ->exists();
     }
 
     /**

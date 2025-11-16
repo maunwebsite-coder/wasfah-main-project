@@ -3,113 +3,241 @@
 @section('title', __('notifications.page.title'))
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <section class="bg-white py-8 shadow-sm">
+@php
+    $notificationsCollection = $notifications instanceof \Illuminate\Contracts\Pagination\Paginator
+        ? collect($notifications->items())
+        : collect($notifications);
+    $workshopTypes = ['workshop_booking', 'workshop_confirmed', 'workshop_cancelled'];
+    $todayCount = $notificationsCollection->filter(fn($notification) => optional($notification->created_at)->isToday())->count();
+    $workshopAlerts = $notificationsCollection->whereIn('type', $workshopTypes)->count();
+    $readCount = $notificationsCollection->where('is_read', true)->count();
+    $hasNotifications = $notifications->count() > 0;
+    $isArabic = app()->isLocale('ar');
+    $heroTagline = $isArabic ? 'كل تحديثات وصفة في لوحة واحدة أنيقة' : 'Every Wasfah update in one elegant hub';
+    $heroSubline = $isArabic ? 'تابع حجوزاتك، تأكيدات الورش، وأي تذكير جديد في ثوانٍ.' : 'Track bookings, confirmations, and friendly nudges in seconds.';
+    $filterLabels = [
+        'all' => $isArabic ? 'الكل' : 'All',
+        'unread' => $isArabic ? 'غير مقروء' : 'Unread',
+        'workshops' => $isArabic ? 'ورش وصفة' : 'Workshops',
+    ];
+    $statsCopy = [
+        [
+            'label' => $isArabic ? 'إشعارات اليوم' : "Today's alerts",
+            'value' => $todayCount,
+            'description' => $isArabic ? 'تم تسليمها خلال 24 ساعة' : 'Delivered in the last 24h',
+        ],
+        [
+            'label' => $isArabic ? 'تنبيهات الورش' : 'Workshop alerts',
+            'value' => $workshopAlerts,
+            'description' => $isArabic ? 'طلبات وتأكيدات الورش' : 'Bookings & confirmations',
+        ],
+        [
+            'label' => $isArabic ? 'مُراجعة' : 'Reviewed',
+            'value' => $readCount,
+            'description' => $isArabic ? 'تمت مراجعتها مؤخراً' : 'Checked recently',
+        ],
+    ];
+    $statusLabels = [
+        'workshop_booking' => __('navbar.notifications_dropdown.status_labels.workshop_booking'),
+        'workshop_confirmed' => __('navbar.notifications_dropdown.status_labels.workshop_confirmed'),
+        'workshop_cancelled' => __('navbar.notifications_dropdown.status_labels.workshop_cancelled'),
+        'default' => __('navbar.notifications_dropdown.status_labels.default'),
+    ];
+    $typeMeta = [
+        'workshop_booking' => [
+            'icon' => 'calendar-plus',
+            'wrapper' => 'bg-sky-50 text-sky-600 ring-1 ring-sky-100 shadow-[0_12px_24px_rgba(14,165,233,0.18)]',
+            'badge' => $statusLabels['workshop_booking'],
+            'badgeClasses' => 'bg-sky-50 text-sky-700',
+            'timeline' => 'from-sky-200/70 via-sky-100/20 to-transparent',
+        ],
+        'workshop_confirmed' => [
+            'icon' => 'check-circle',
+            'wrapper' => 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-[0_12px_24px_rgba(16,185,129,0.18)]',
+            'badge' => $statusLabels['workshop_confirmed'],
+            'badgeClasses' => 'bg-emerald-50 text-emerald-700',
+            'timeline' => 'from-emerald-200/70 via-emerald-100/20 to-transparent',
+        ],
+        'workshop_cancelled' => [
+            'icon' => 'times-circle',
+            'wrapper' => 'bg-rose-50 text-rose-600 ring-1 ring-rose-100 shadow-[0_12px_24px_rgba(244,63,94,0.18)]',
+            'badge' => $statusLabels['workshop_cancelled'],
+            'badgeClasses' => 'bg-rose-50 text-rose-700',
+            'timeline' => 'from-rose-200/70 via-rose-100/20 to-transparent',
+        ],
+        'default' => [
+            'icon' => 'info-circle',
+            'wrapper' => 'bg-slate-100 text-slate-600 ring-1 ring-slate-200 shadow-[0_12px_24px_rgba(15,23,42,0.1)]',
+            'badge' => $statusLabels['default'],
+            'badgeClasses' => 'bg-slate-100 text-slate-700',
+            'timeline' => 'from-orange-200/60 via-orange-100/20 to-transparent',
+        ],
+    ];
+@endphp
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <section class="border-b border-slate-100 bg-white/95">
         <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                            {{ __('notifications.page.title') }}
-                            <span id="unread-count" data-notification-badge aria-live="polite" aria-atomic="true" class="unread-count bg-red-500 text-white text-sm font-bold rounded-full px-2 py-1 ml-2 {{ $unreadCount > 0 ? '' : 'hidden' }}" aria-hidden="{{ $unreadCount > 0 ? 'false' : 'true' }}">{{ $unreadCount }}</span>
-                        </h1>
-                        <p class="text-gray-600">
-                            {{ __('notifications.page.description') }}
-                        </p>
+            <div class="max-w-5xl mx-auto py-10 space-y-6">
+                <div class="grid gap-6 lg:grid-cols-3">
+                    <div class="notifications-hero relative overflow-hidden rounded-[32px] border border-slate-100 bg-white p-8 shadow-xl shadow-slate-100 lg:col-span-2">
+                        <div class="flex flex-col gap-5">
+                            <div class="space-y-2">
+                                <p class="text-xs font-semibold uppercase tracking-[0.45em] text-slate-400">{{ __('notifications.page.title') }}</p>
+                                <h1 class="text-3xl font-black leading-tight text-slate-900">{{ __('notifications.page.description') }}</h1>
+                                <p class="text-sm text-slate-500">{{ $heroTagline }}</p>
+                                <p class="text-sm text-slate-400">{{ $heroSubline }}</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-4 text-slate-900">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{{ $isArabic ? 'غير المقروء' : 'Unread' }}</p>
+                                    <p class="text-4xl font-black">{{ $unreadCount }}</p>
+                                </div>
+                                <span class="h-10 w-px bg-slate-200"></span>
+                                <div class="flex flex-wrap gap-2">
+                                    <button id="mark-all-read" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-orange-200 hover:text-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-100 {{ $hasNotifications ? '' : 'opacity-40 cursor-not-allowed' }}" {{ $hasNotifications ? '' : 'disabled' }}>
+                                        <i class="fas fa-check-double text-orange-500"></i>
+                                        {{ __('notifications.buttons.mark_all_read') }}
+                                    </button>
+                                    <button id="clear-read" class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-2 text-sm font-semibold text-rose-500 shadow-sm transition hover:border-rose-300 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-100 {{ $hasNotifications ? '' : 'opacity-40 cursor-not-allowed' }}" {{ $hasNotifications ? '' : 'disabled' }}>
+                                        <i class="fas fa-trash"></i>
+                                        {{ __('notifications.buttons.clear_read') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="pointer-events-none absolute -right-10 top-8 h-48 w-48 rounded-full bg-orange-100/60 blur-3xl"></span>
+                        <span class="pointer-events-none absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-rose-100/60 blur-3xl"></span>
                     </div>
-                    
-                    <div class="flex space-x-2 rtl:space-x-reverse">
-                        <button id="mark-all-read" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors">
-                            <i class="fas fa-check-double ml-2"></i>
-                            {{ __('notifications.buttons.mark_all_read') }}
-                        </button>
-                        <button id="clear-read" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors">
-                            <i class="fas fa-trash ml-2"></i>
-                            {{ __('notifications.buttons.clear_read') }}
-                        </button>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1">
+                        @foreach($statsCopy as $stat)
+                            <div class="rounded-3xl border border-slate-100 bg-white px-5 py-4 text-slate-700 shadow-sm">
+                                <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">{{ $stat['label'] }}</p>
+                                <p class="mt-1 text-3xl font-black text-slate-900">{{ $stat['value'] }}</p>
+                                <p class="text-xs text-slate-400">{{ $stat['description'] }}</p>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Content -->
-    <section class="py-8">
+    <section class="py-10">
         <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto">
-                @if($notifications->count() > 0)
-                    <!-- Notifications List -->
-                    <div class="space-y-4">
-                        @foreach($notifications as $notification)
-                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow notification-item {{ $notification->is_read ? 'opacity-75' : 'bg-orange-50 border-orange-200' }} cursor-pointer" 
-                                 data-id="{{ $notification->id }}"
-                                 data-action-url="{{ $notification->action_url }}">
-                                <div class="p-6">
-                                    <div class="flex items-start space-x-4 rtl:space-x-reverse">
-                                        <!-- Icon -->
-                                        <div class="flex-shrink-0">
-                                            <div class="w-10 h-10 {{ $notification->type === 'workshop_booking' ? 'bg-blue-100' : ($notification->type === 'workshop_confirmed' ? 'bg-green-100' : ($notification->type === 'workshop_cancelled' ? 'bg-red-100' : 'bg-orange-100')) }} rounded-full flex items-center justify-center">
-                                                <i class="fas fa-{{ $notification->type === 'workshop_booking' ? 'calendar-plus' : ($notification->type === 'workshop_confirmed' ? 'check-circle' : ($notification->type === 'workshop_cancelled' ? 'times-circle' : 'info-circle')) }} {{ $notification->type === 'workshop_booking' ? 'text-blue-600' : ($notification->type === 'workshop_confirmed' ? 'text-green-600' : ($notification->type === 'workshop_cancelled' ? 'text-red-600' : 'text-orange-600')) }}"></i>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Content -->
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-start justify-between">
-                                                <div class="flex-1">
-                                                    <h3 class="text-lg font-semibold text-gray-900 {{ $notification->is_read ? '' : 'font-bold' }}">
-                                                        {{ $notification->title }}
-                                                    </h3>
-                                                    <p class="text-gray-600 mt-1">{{ $notification->message }}</p>
-                                                    <p class="text-sm text-gray-400 mt-2">
-                                                        <i class="fas fa-clock ml-1"></i>
-                                                        {{ $notification->created_at->diffForHumans() }}
-                                                    </p>
-                                                </div>
-                                                
-                                                <!-- Actions -->
-                                                <div class="flex items-center space-x-2 rtl:space-x-reverse ml-4">
-                                                    @if(!$notification->is_read)
-                                                        <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
-                                                    @endif
-                                                    
-                                                    <div class="flex space-x-1 rtl:space-x-reverse">
-                                                        @if(!$notification->is_read)
-                                                            <button class="mark-read-btn p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors" 
-                                                                    data-id="{{ $notification->id }}"
-                                                                    title="{{ __('notifications.tooltips.mark_as_read') }}">
-                                                                <i class="fas fa-check"></i>
-                                                            </button>
-                                                        @endif
-                                                        
-                                                        <button class="delete-notification-btn p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" 
-                                                                data-id="{{ $notification->id }}"
-                                                                title="{{ __('notifications.tooltips.delete') }}">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            <div class="max-w-5xl mx-auto space-y-6">
+                <div class="flex flex-col gap-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+                    <div class="flex flex-wrap gap-2" role="tablist">
+                        @foreach($filterLabels as $filterKey => $filterLabel)
+                            <button type="button" data-filter-button data-filter="{{ $filterKey }}" class="filter-pill inline-flex items-center gap-2 rounded-full border border-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:text-orange-600 {{ $loop->first ? 'is-active' : '' }}">
+                                <span class="h-2 w-2 rounded-full bg-orange-300"></span>
+                                {{ $filterLabel }}
+                            </button>
                         @endforeach
                     </div>
-                    
-                    <!-- Pagination -->
-                    <div class="mt-8">
-                        {{ $notifications->links() }}
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                        <div class="relative w-full sm:w-64">
+                            <i class="fas fa-search pointer-events-none absolute inset-y-0 flex items-center text-slate-400" style="{{ $isArabic ? 'right:1rem' : 'left:1rem' }}"></i>
+                            <input id="notification-search" type="search" class="w-full rounded-full border border-slate-100 bg-white/90 px-10 py-2 text-sm text-slate-700 shadow-inner focus:border-orange-300 focus:ring-2 focus:ring-orange-200" placeholder="{{ $isArabic ? 'ابحث في الإشعارات' : 'Search notifications' }}">
+                        </div>
+                        <span class="text-xs font-medium text-slate-400">{{ $isArabic ? 'اكتب للبحث أو استخدم المرشحات المتاحة' : 'Type to search or use one of the filters.' }}</span>
+                    </div>
+                </div>
+
+                @if($hasNotifications)
+                    <div class="rounded-[32px] border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100">
+                        <div id="notification-list-wrapper" class="space-y-4">
+                            <div id="notification-timeline" class="notification-timeline space-y-4">
+                                @php $currentGroup = null; @endphp
+                                @foreach($notifications as $notification)
+                                    @php
+                                        $meta = $typeMeta[$notification->type] ?? $typeMeta['default'];
+                                        $searchText = \Illuminate\Support\Str::lower($notification->title . ' ' . $notification->message);
+                                        $datasetType = in_array($notification->type, $workshopTypes, true) ? 'workshops' : 'general';
+                                        $groupKey = $datasetType === 'workshops' ? 'workshops' : 'general';
+                                        $groupLabel = $groupKey === 'workshops'
+                                            ? ($isArabic ? 'تنبيهات ورش Wasfah' : 'Wasfah workshop alerts')
+                                            : ($isArabic ? 'تنبيهات عامة' : 'General alerts');
+                                    @endphp
+
+                                    @if($currentGroup !== $groupKey)
+                                        @php $currentGroup = $groupKey; @endphp
+                                        <div class="flex items-center gap-3 pt-2 text-slate-400">
+                                            <span class="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent"></span>
+                                            <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">{{ $groupLabel }}</p>
+                                            <span class="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent"></span>
+                                        </div>
+                                    @endif
+
+                                    <article class="notification-item group relative overflow-hidden rounded-[28px] border border-white/60 bg-white/80 p-5 text-slate-700 shadow-[0_18px_35px_rgba(15,23,42,0.07)] ring-1 ring-slate-100/70 backdrop-blur-sm transition hover:-translate-y-1 hover:shadow-[0_32px_60px_rgba(15,23,42,0.12)] {{ $notification->is_read ? 'opacity-80' : '' }}" data-id="{{ $notification->id }}" data-action-url="{{ $notification->action_url }}" data-status="{{ $notification->is_read ? 'read' : 'unread' }}" data-type="{{ $datasetType }}" data-search="{{ $searchText }}">
+                                        <span class="notification-timeline-line pointer-events-none" style="{{ $isArabic ? 'right:1.35rem' : 'left:1.35rem' }}"></span>
+                                        <span class="notification-timeline-dot {{ $notification->is_read ? '' : 'notification-timeline-dot--active' }}" style="{{ $isArabic ? 'right:1.1rem' : 'left:1.1rem' }}"></span>
+                                        <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+                                            <div class="flex flex-1 gap-4">
+                                                <div class="notification-icon relative flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100/70 {{ $meta['wrapper'] }}">
+                                                    <i class="fas fa-{{ $meta['icon'] }} text-base"></i>
+                                                    @unless($notification->is_read)
+                                                        <span class="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 ring-2 ring-white animate-pulse"></span>
+                                                    @endunless
+                                                </div>
+                                                <div class="min-w-0 space-y-3">
+                                                    <div class="flex flex-wrap items-center gap-2 text-slate-900">
+                                                        <h3 class="text-base font-semibold leading-snug">{{ $notification->title }}</h3>
+                                                        <span class="notification-status inline-flex items-center gap-1 rounded-full border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold shadow-sm {{ $meta['badgeClasses'] }}">
+                                                            <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>
+                                                            {{ $meta['badge'] }}
+                                                        </span>
+                                                        <span class="flex items-center gap-1 text-xs font-medium text-slate-400">
+                                                            <i class="fas fa-clock text-[10px]"></i>
+                                                            {{ $notification->created_at->diffForHumans() }}
+                                                        </span>
+                                                    </div>
+                                                    <p class="notification-message text-sm leading-relaxed text-slate-600">{{ \Illuminate\Support\Str::limit(strip_tags($notification->message), 140) }}</p>
+                                                    @if($notification->action_url)
+                                                        <span class="inline-flex items-center gap-1 text-xs font-semibold text-orange-600">
+                                                            <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
+                                                            {{ $isArabic ? 'عرض التفاصيل' : 'Open details' }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="notification-actions flex flex-wrap gap-2">
+                                                @unless($notification->is_read)
+                                                    <button type="button" class="mark-read-btn inline-flex items-center gap-1.5 rounded-full border border-orange-100/70 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-orange-600 shadow-inner shadow-orange-100/40 transition hover:bg-orange-50" data-id="{{ $notification->id }}">
+                                                        <i class="fas fa-check text-xs"></i>
+                                                        {{ __('notifications.tooltips.mark_as_read') }}
+                                                    </button>
+                                                @endunless
+                                                <button type="button" class="delete-notification-btn inline-flex items-center gap-1.5 rounded-full border border-rose-100/70 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-rose-600 shadow-inner shadow-rose-100/40 transition hover:bg-rose-50" data-id="{{ $notification->id }}">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                    {{ __('notifications.tooltips.delete') }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+
+                            <div id="filtered-empty-state" class="hidden rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-slate-500">
+                                <p class="text-base font-semibold text-slate-900">{{ $isArabic ? 'لا توجد نتائج مطابقة' : 'Nothing matches your filters' }}</p>
+                                <p class="text-sm text-slate-500">{{ $isArabic ? 'حاول تعديل المرشحات أو مسح البحث لإظهار الإشعارات.' : 'Try adjusting the filters or clearing the search query.' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            {{ $notifications->links() }}
+                        </div>
                     </div>
                 @else
-                    <!-- Empty State -->
-                    <div class="text-center py-12">
-                        <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-bell-slash text-4xl text-gray-400"></i>
+                    <div class="rounded-[32px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center shadow-inner">
+                        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-orange-500">
+                            <i class="fas fa-bell-slash text-2xl"></i>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('notifications.page.empty_title') }}</h3>
-                        <p class="text-gray-600">{{ __('notifications.page.empty_description') }}</p>
+                        <h2 class="text-2xl font-bold text-slate-900">{{ __('notifications.page.empty_title') }}</h2>
+                        <p class="mt-2 text-sm text-slate-500">{{ __('notifications.page.empty_description') }}</p>
+                        <a href="{{ route('workshops') }}" class="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-l from-orange-500 to-rose-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 rtl:flex-row-reverse">
+                            <i class="fas {{ $isArabic ? 'fa-arrow-left' : 'fa-arrow-right' }}"></i>
+                            <span>{{ $isArabic ? 'استكشف ورش وصفة' : 'Explore Wasfah workshops' }}</span>
+                        </a>
                     </div>
                 @endif
             </div>
@@ -120,16 +248,95 @@
 
 @push('styles')
 <style>
-    .notification-item {
-        transition: all 0.3s ease;
+    .notifications-hero {
+        position: relative;
+        overflow: hidden;
     }
-    
+
+    .notifications-hero::after {
+        content: '';
+        position: absolute;
+        inset-inline-end: -25%;
+        top: -35%;
+        width: 70%;
+        height: 150%;
+        background: radial-gradient(circle, rgba(251, 191, 36, 0.25), transparent 65%);
+        filter: blur(40px);
+    }
+
+    .filter-pill {
+        background: #fff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.2s ease;
+    }
+
+    .filter-pill.is-active {
+        color: #fff;
+        border-color: transparent;
+        background-image: linear-gradient(135deg, #f97316, #fb923c);
+        box-shadow: 0 15px 30px rgba(249, 115, 22, 0.25);
+    }
+
+    .notification-item {
+        position: relative;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
     .notification-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 32px 50px rgba(15, 23, 42, 0.12);
+        border-color: rgba(249, 115, 22, 0.45);
+    }
+
+    .notification-message {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .notification-timeline-line {
+        position: absolute;
+        top: 1.5rem;
+        bottom: 1.5rem;
+        width: 2px;
+        background: linear-gradient(180deg, rgba(251, 191, 36, 0.25), rgba(15, 23, 42, 0.05));
+        opacity: 0.5;
+    }
+
+    .notification-timeline-dot {
+        position: absolute;
+        top: 1.4rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        border: 2px solid #fff;
+        background: rgba(148, 163, 184, 0.9);
+        box-shadow: 0 6px 15px rgba(15, 23, 42, 0.2);
+        transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        pointer-events: none;
+    }
+
+    .notification-timeline-dot--active {
+        background: #f97316;
+        box-shadow: 0 8px 20px rgba(249, 115, 22, 0.35);
+        transform: scale(1.05);
+    }
+
+    .notification-item:hover .notification-timeline-dot {
         transform: translateY(-1px);
     }
-    
-    .notification-item.unread {
-        border-left: 4px solid #f97316;
+
+    .notification-actions button {
+        backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 640px) {
+        .notifications-hero::after {
+            inset-inline-end: -60%;
+            top: -10%;
+            width: 120%;
+        }
     }
 </style>
 @endpush
@@ -246,6 +453,59 @@ function refreshNotificationCounts(force = false) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = Array.from(document.querySelectorAll('[data-filter-button]'));
+    const searchInput = document.getElementById('notification-search');
+    const filteredEmptyState = document.getElementById('filtered-empty-state');
+    const notificationTimeline = document.getElementById('notification-timeline');
+
+    const applyFilters = () => {
+        const activeFilter = document.querySelector('[data-filter-button].is-active')?.dataset.filter || 'all';
+        const query = (searchInput?.value || '').trim().toLowerCase();
+        let visibleCount = 0;
+
+        document.querySelectorAll('.notification-item').forEach(item => {
+            const matchesFilter =
+                activeFilter === 'all' ||
+                (activeFilter === 'unread' && item.dataset.status === 'unread') ||
+                (activeFilter === 'workshops' && item.dataset.type === 'workshops');
+
+            const matchesSearch = !query || (item.dataset.search || '').includes(query);
+            const shouldShow = matchesFilter && matchesSearch;
+
+            item.classList.toggle('hidden', !shouldShow);
+            if (shouldShow) {
+                visibleCount += 1;
+            }
+        });
+
+        if (notificationTimeline) {
+            notificationTimeline.classList.toggle('hidden', visibleCount === 0);
+        }
+        if (filteredEmptyState) {
+            filteredEmptyState.classList.toggle('hidden', visibleCount !== 0);
+        }
+    };
+
+    window.applyNotificationFilters = applyFilters;
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterButtons.forEach(btn => btn.classList.remove('is-active'));
+            button.classList.add('is-active');
+            applyFilters();
+        });
+    });
+
+    if (searchInput) {
+        let searchDebounce;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(applyFilters, 200);
+        });
+    }
+
+    applyFilters();
+
     const pollInterval = setInterval(() => refreshNotificationCounts(), 30000);
     refreshNotificationCounts();
 
@@ -281,15 +541,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // تحديد الكل كمقروء
-    document.getElementById('mark-all-read').addEventListener('click', function() {
-        markAllAsRead();
-    });
+    const markAllButton = document.getElementById('mark-all-read');
+    if (markAllButton) {
+        markAllButton.addEventListener('click', () => markAllAsRead());
+    }
     
-    // حذف المقروء
-    document.getElementById('clear-read').addEventListener('click', function() {
-        clearReadNotifications();
-    });
+    const clearReadButton = document.getElementById('clear-read');
+    if (clearReadButton) {
+        clearReadButton.addEventListener('click', () => clearReadNotifications());
+    }
     
     // النقر على إشعار لتحديده كمقروء والتنقل
     document.querySelectorAll('.notification-item').forEach(item => {
@@ -332,20 +592,20 @@ function markAsRead(notificationId) {
         if (data.success) {
             const notificationItem = document.querySelector(`[data-id="${notificationId}"]`);
             if (notificationItem) {
-                notificationItem.classList.add('opacity-75');
-                notificationItem.classList.remove('bg-orange-50', 'border-orange-200');
-                notificationItem.classList.add('bg-white', 'border-gray-200');
+                notificationItem.classList.add('opacity-90');
+                notificationItem.dataset.status = 'read';
                 
-                // إزالة النقطة البرتقالية
-                const dot = notificationItem.querySelector('.w-3.h-3.bg-orange-500');
+                const dot = notificationItem.querySelector('.animate-pulse');
                 if (dot) dot.remove();
                 
-                // إزالة زر "تحديد كمقروء"
                 const markReadBtn = notificationItem.querySelector('.mark-read-btn');
                 if (markReadBtn) markReadBtn.remove();
             }
 
             refreshNotificationCounts(true);
+            if (typeof window.applyNotificationFilters === 'function') {
+                window.applyNotificationFilters();
+            }
         }
     })
     .catch(error => {
@@ -425,6 +685,9 @@ function deleteNotification(notificationId) {
                     notificationItem.style.opacity = '0';
                     setTimeout(() => {
                         notificationItem.remove();
+                        if (typeof window.applyNotificationFilters === 'function') {
+                            window.applyNotificationFilters();
+                        }
                     }, 300);
                 }
                 

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'متابعة طلب الانضمام كشيف')
+@section('title', 'Track your chef application')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 py-12">
@@ -9,10 +9,10 @@
             <div class="bg-gradient-to-l from-orange-500 to-orange-400 text-white px-8 py-10">
                 <h1 class="text-3xl font-extrabold mb-3">
                     <i class="fas fa-hat-chef text-white ml-3"></i>
-                    طلبك قيد المراجعة
+                    Your application is under review
                 </h1>
                 <p class="text-orange-100 text-lg leading-7">
-                    شكراً لانضمامك إلى عائلة وصفة! نقوم حالياً بمراجعة بياناتك للتحقق من خبرتك ومعلوماتك قبل اعتمادك كشيف رسمي على المنصة.
+                    Thanks for joining the Wasfah family! We are reviewing your details to verify your expertise before approving you as an official chef on the platform.
                 </p>
             </div>
 
@@ -23,40 +23,40 @@
                     </span>
                     <div>
                         <h2 class="font-semibold text-orange-700 text-lg mb-1">
-                            المراجعة تستغرق عادةً من 24 إلى 72 ساعة
+                            Reviews usually take 24–72 hours
                         </h2>
                         <p class="text-sm text-orange-600 leading-6">
-                            نتحقق من حضورك الرقمي لضمان جودة التجربة لكل مستخدمينا. سنقوم بإشعارك فور اكتمال المراجعة عبر البريد الإلكتروني والإشعارات داخل الموقع.
+                            We verify your digital presence to keep the experience high-quality for every member. We will notify you by email and in-app alerts once the review is complete.
                         </p>
                     </div>
                 </div>
 
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6">
                     <h3 class="text-lg font-semibold text-slate-800 mb-4">
-                        ماذا يمكنك أن تفعل الآن؟
+                        What can you do now?
                     </h3>
                     <ul class="space-y-3 text-sm text-slate-600 leading-6">
                         <li class="flex items-start gap-3">
                             <i class="fas fa-check-circle mt-1 text-emerald-500"></i>
-                            <span>تأكد من أن معلومات التواصل وروابط حساباتك محدثة وصحيحة.</span>
+                            <span>Make sure your contact info and social links are up to date.</span>
                         </li>
                         <li class="flex items-start gap-3">
                             <i class="fas fa-share-alt mt-1 text-orange-500"></i>
-                            <span>شارك معنا أي أعمال جديدة أو حسابات إضافية قد تساعد في اعتمادك بشكل أسرع عن طريق التواصل مع فريق الدعم.</span>
+                            <span>Share new work or additional accounts with our support team to speed up the approval.</span>
                         </li>
                         <li class="flex items-start gap-3">
                             <i class="fas fa-bell mt-1 text-sky-500"></i>
-                            <span>راقب بريدك الإلكتروني والإشعارات، وسنخبرك فور اتخاذ قرارنا.</span>
+                            <span>Keep an eye on your email and notifications and we will update you once we decide.</span>
                         </li>
                     </ul>
                 </div>
 
                 <div class="bg-white border border-slate-200 rounded-2xl p-6">
                     <h3 class="text-lg font-semibold text-slate-800 mb-3">
-                        هل تحتاج مساعدة؟
+                        Need help?
                     </h3>
                     <p class="text-sm text-slate-600 leading-6 mb-4">
-                        يسعدنا الرد على أي استفسار لديك. تواصل معنا عبر البريد التالي وسنعود إليك في أقرب وقت ممكن.
+                        We are happy to answer any question. Email us and we will reply as soon as possible.
                     </p>
                     <a href="mailto:support@wasfah.ae"
                        class="inline-flex items-center gap-2 rounded-xl border border-orange-200 px-5 py-3 text-orange-600 text-sm font-semibold transition hover:bg-orange-50">
@@ -68,12 +68,12 @@
 
             <div class="bg-slate-50 border-t border-slate-200 px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <p class="text-sm text-slate-500">
-                    يمكنك العودة للصفحة الرئيسية وتصفح المحتوى بينما نراجع طلبك.
+                    You can return to the homepage and browse content while we review your application.
                 </p>
                 <a href="{{ route('home') }}"
                    class="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-5 py-3 text-white text-sm font-semibold transition hover:bg-slate-900">
                     <i class="fas fa-home"></i>
-                    العودة إلى الرئيسية
+                    Back to homepage
                 </a>
             </div>
         </div>

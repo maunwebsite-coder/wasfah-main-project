@@ -23,9 +23,12 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $email = fake()->unique()->safeEmail();
+
         return [
             'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'email' => $email,
+            'google_email' => $email,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -35,7 +38,7 @@ class UserFactory extends Factory
             'youtube_followers' => 0,
             'is_referral_partner' => false,
             'referral_commission_rate' => 5,
-            'referral_commission_currency' => config('referrals.default_currency', 'JOD'),
+            'referral_commission_currency' => config('referrals.default_currency', 'USD'),
             'referrer_id' => null,
             'referral_partner_since_at' => null,
             'referral_admin_notes' => null,

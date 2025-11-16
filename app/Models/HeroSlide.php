@@ -80,7 +80,7 @@ class HeroSlide extends Model
      */
     public function toHeroArray(array $dynamicActions = []): array
     {
-        $image = $this->desktop_image_url ?? asset('image/wterm.png');
+        $image = $this->desktop_image_url ?? asset('image/wterm.webp');
 
         return [
             'badge' => $this->badge,
@@ -262,3 +262,4 @@ class HeroSlide extends Model
         return url('/' . ltrim($value, '/'));
     }
 }
+

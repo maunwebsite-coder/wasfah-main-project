@@ -156,7 +156,7 @@
                                 @if ($coverImage)
                                     <img src="{{ $coverImage }}"
                                          alt="{{ $workshop->title }}"
-                                         class="h-full w-full object-cover">
+                                         class="h-full w-full object-cover" loading="lazy">
                                 @else
                                     <div class="flex h-full w-full items-center justify-center text-slate-400">
                                         <i class="fas fa-camera text-xl"></i>
@@ -195,40 +195,33 @@
                                 <div class="w-full rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
                                     <p class="font-semibold text-slate-800 flex items-center gap-2">
                                         <i class="fas fa-shield-alt text-indigo-500"></i>
-                                        {{ __('chef.dashboard.workshops.jitsi_card.title') }}
+                                        {{ __('chef.dashboard.workshops.google_card.title') }}
                                     </p>
                                     <p class="mt-1 text-slate-500">
-                                        {{ __('chef.dashboard.workshops.jitsi_card.description') }}
+                                        {{ __('chef.dashboard.workshops.google_card.description') }}
                                     </p>
                                     @if ($workshop->meeting_link)
                                         <a href="{{ route('chef.workshops.join', $workshop) }}"
                                            class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow hover:from-indigo-600 hover:to-indigo-700">
                                             <i class="fas fa-play"></i>
-                                            {{ __('chef.dashboard.workshops.jitsi_card.launch') }}
+                                            {{ __('chef.dashboard.workshops.google_card.launch') }}
                                         </a>
                                         @if ($workshop->meeting_started_at)
                                             <p class="mt-2 text-xs text-emerald-600 flex items-center gap-2">
                                                 <i class="fas fa-check-circle"></i>
-                                                {{ __('chef.dashboard.workshops.jitsi_card.launched', ['time' => $workshop->meeting_started_at->locale(app()->getLocale())->diffForHumans()]) }}
+                                                {{ __('chef.dashboard.workshops.google_card.launched', ['time' => $workshop->meeting_started_at->locale(app()->getLocale())->diffForHumans()]) }}
                                             </p>
                                         @else
                                             <p class="mt-2 text-[11px] text-slate-400">
-                                                {{ __('chef.dashboard.workshops.jitsi_card.not_ready') }}
+                                                {{ __('chef.dashboard.workshops.google_card.not_ready') }}
                                             </p>
                                         @endif
                                     @else
                                         <button type="button"
                                                 class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-3 py-2 text-sm font-semibold text-slate-400"
                                                 disabled>
-                                            {{ __('chef.dashboard.workshops.jitsi_card.pending_link') }}
+                                            {{ __('chef.dashboard.workshops.google_card.pending_link') }}
                                         </button>
-                                    @endif
-                                    @if ($workshop->jitsi_passcode)
-                                        <p class="mt-2 text-xs text-slate-500">
-                                            {!! __('chef.dashboard.workshops.jitsi_card.passcode', [
-                                                'code' => '<span class="font-semibold text-slate-700">' . e($workshop->jitsi_passcode) . '</span>',
-                                            ]) !!}
-                                        </p>
                                     @endif
                                 </div>
                             @endif
@@ -279,3 +272,4 @@
     </div>
 </div>
 @endsection
+

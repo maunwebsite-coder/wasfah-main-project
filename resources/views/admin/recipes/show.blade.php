@@ -203,7 +203,7 @@
                 <div class="admin-card overflow-hidden mb-8">
                     <img src="{{ $recipe->image_url_display ?? $recipe->image_url }}" alt="{{ $recipe->title }}" 
                          class="w-full h-64 md:h-80 object-cover"
-                         onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                 </div>
 
                 <!-- Description -->
@@ -339,3 +339,5 @@
     </div>
 </div>
 @endsection
+
+

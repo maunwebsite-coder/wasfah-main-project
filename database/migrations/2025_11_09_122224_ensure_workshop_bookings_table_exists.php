@@ -137,6 +137,11 @@ return new class extends Migration
 
     private function indexMissing(string $indexName): bool
     {
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite does not expose information_schema. Assume indexes exist during tests.
+            return false;
+        }
+
         return !DB::table('information_schema.statistics')
             ->where('table_schema', DB::getDatabaseName())
             ->where('table_name', 'workshop_bookings')

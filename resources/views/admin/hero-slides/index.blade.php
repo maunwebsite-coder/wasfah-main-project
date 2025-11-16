@@ -160,7 +160,7 @@
                                                         {{ __('المتصفح لا يدعم عرض الفيديو.') }}
                                                     </video>
                                                 @else
-                                                    <img src="{{ $slide->desktop_image_url }}" alt="{{ $slide->title }}" class="w-full h-full object-cover">
+                                                    <img src="{{ $slide->desktop_image_url }}" alt="{{ $slide->title }}" class="w-full h-full object-cover" loading="lazy">
                                                 @endif
                                             @else
                                                 <span class="text-gray-400 text-xs">لا توجد صورة</span>
@@ -230,3 +230,4 @@
     </div>
 </div>
 @endsection
+

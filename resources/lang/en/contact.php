@@ -25,6 +25,7 @@ return [
         'title' => 'Tell us how we can help',
         'description' => 'Fill in the following details so your message reaches the right team. We normally reply within one business day.',
         'badge' => 'We review the inbox twice a day',
+        'response_notice' => 'We usually reply within one business day.',
         'success' => 'Your message has been logged and the Wasfah team will get back to you shortly.',
         'submit' => 'Send message',
         'fields' => [

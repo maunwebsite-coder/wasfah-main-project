@@ -105,16 +105,19 @@
                     @php
                         $imageUrl = $suggestedWorkshop->image
                             ? Storage::disk('public')->url($suggestedWorkshop->image)
-                            : asset('image/wterm.png');
+                            : asset('image/wterm.webp');
                         $startsAt = $suggestedWorkshop->start_date
                             ? $suggestedWorkshop->start_date->locale('ar')->translatedFormat('d F Y • h:i a')
                             : 'سيتم تحديد الموعد';
                         $isOnline = $suggestedWorkshop->is_online;
-                        $priceLabel = $suggestedWorkshop->price ? number_format($suggestedWorkshop->price) . ' ر.س' : 'مجاناً';
+                        $priceLabel = $suggestedWorkshop->price
+                            ? ($suggestedWorkshop->formatted_price
+                                ?? number_format((float) $suggestedWorkshop->price, 2) . ' ' . ($suggestedWorkshop->currency ?? config('finance.default_currency', 'USD')))
+                            : 'مجاناً';
                     @endphp
                     <a href="{{ route('workshop.show', $suggestedWorkshop->slug) }}" class="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
                         <div class="relative">
-                            <img src="{{ $imageUrl }}" alt="{{ $suggestedWorkshop->title }}" class="h-48 w-full object-cover">
+                            <img src="{{ $imageUrl }}" alt="{{ $suggestedWorkshop->title }}" class="h-48 w-full object-cover" loading="lazy">
                             <span class="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-gray-700">
                                 {{ $isOnline ? 'أونلاين' : 'حضوري' }}
                             </span>
@@ -155,3 +158,5 @@
     </div>
 </div>
 @endsection
+
+

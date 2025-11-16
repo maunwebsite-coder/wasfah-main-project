@@ -83,7 +83,7 @@ class Tool extends Model
             }
         }
         
-        return asset('image/logo.png');
+        return asset('image/logo.webp');
     }
 
     /**
@@ -122,3 +122,4 @@ class Tool extends Model
         return $query->orderBy('sort_order')->orderBy('created_at', 'desc');
     }
 }
+

@@ -24,10 +24,31 @@ class SetLocale
     public function handle(Request $request, Closure $next)
     {
         $defaultLocale = Config::get('app.locale', 'ar');
-        $locale = Session::get('app_locale', $defaultLocale);
+        $locale = $this->localeFromQuery($request);
+
+        if ($locale) {
+            Session::put('app_locale', $locale);
+        } else {
+            $locale = Session::get('app_locale');
+        }
+
+        if (! $locale) {
+            $preferred = $request->getPreferredLanguage($this->availableLocales);
+
+            if ($preferred && in_array($preferred, $this->availableLocales, true)) {
+                $locale = $preferred;
+                Session::put('app_locale', $locale);
+            }
+        }
+
+        if (! $locale) {
+            $locale = $defaultLocale;
+            Session::put('app_locale', $locale);
+        }
 
         if (! in_array($locale, $this->availableLocales, true)) {
             $locale = $defaultLocale;
+            Session::put('app_locale', $locale);
         }
 
         App::setLocale($locale);
@@ -38,5 +59,21 @@ class SetLocale
         View::share('isRtl', $isRtl);
 
         return $next($request);
+    }
+
+    /**
+     * Resolve locale from query string (?locale=en or ?lang=en).
+     */
+    protected function localeFromQuery(Request $request): ?string
+    {
+        $queryLocale = $request->query('locale', $request->query('lang'));
+
+        if (! $queryLocale) {
+            return null;
+        }
+
+        $queryLocale = strtolower($queryLocale);
+
+        return in_array($queryLocale, $this->availableLocales, true) ? $queryLocale : null;
     }
 }

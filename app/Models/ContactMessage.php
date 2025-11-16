@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ContactMessage extends Model
 {
@@ -13,18 +14,18 @@ class ContactMessage extends Model
     public const STATUS_NOTIFIED = 'notified';
 
     /**
-     * Mapped labels for subject dropdown selections.
+     * Supported subject keys that users may choose from.
      *
-     * @var array<string, string>
+     * @var array<int, string>
      */
-    public const SUBJECT_LABELS = [
-        'general' => 'استفسار عام',
-        'partnership' => 'طلب شراكة أو تعاون',
-        'recipe' => 'مشكلة في وصفة',
-        'workshop' => 'استفسار عن ورشة عمل',
-        'technical' => 'مشكلة تقنية',
-        'suggestion' => 'اقتراح',
-        'other' => 'أخرى',
+    public const SUBJECT_KEYS = [
+        'general',
+        'partnership',
+        'recipe',
+        'workshop',
+        'technical',
+        'suggestion',
+        'other',
     ];
 
     protected $fillable = [
@@ -44,11 +45,11 @@ class ContactMessage extends Model
     ];
 
     /**
-     * Resolve a human-readable label for the stored subject key.
+     * Resolve a human-readable, localized label for the stored subject key.
      */
     public function getSubjectLabelAttribute(): string
     {
-        return self::SUBJECT_LABELS[$this->subject] ?? $this->subject;
+        return self::subjectLabel($this->subject);
     }
 
     /**
@@ -57,5 +58,46 @@ class ContactMessage extends Model
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    /**
+     * Return the list of allowed subject keys.
+     *
+     * @return array<int, string>
+     */
+    public static function subjectKeys(): array
+    {
+        return self::SUBJECT_KEYS;
+    }
+
+    /**
+     * Build a keyed list of localized labels for the subject dropdown.
+     *
+     * @return array<string, string>
+     */
+    public static function subjectLabelOptions(): array
+    {
+        $options = [];
+
+        foreach (self::subjectKeys() as $key) {
+            $options[$key] = self::subjectLabel($key);
+        }
+
+        return $options;
+    }
+
+    /**
+     * Fetch a translated label for a given subject key with a sensible fallback.
+     */
+    public static function subjectLabel(string $key): string
+    {
+        $translationKey = "contact.form.subjects.{$key}";
+        $translated = __($translationKey);
+
+        if ($translated === $translationKey) {
+            return Str::headline($key);
+        }
+
+        return $translated;
     }
 }

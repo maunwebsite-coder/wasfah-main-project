@@ -123,32 +123,56 @@ class Breadcrumbs
                 self::crumb('سجل النشاط'),
             ],
             'meetings.index' => self::singleCrumbTrail('اجتماعاتي'),
-            'bookings.index' => self::singleCrumbTrail('حجوزاتي'),
+            'bookings.index' => self::singleCrumbTrail(
+                self::translateLabel('breadcrumbs.bookings.index', 'حجوزاتي')
+            ),
             'bookings.show' => [
-                self::crumb('حجوزاتي', 'bookings.index'),
+                self::crumb(
+                    self::translateLabel('breadcrumbs.bookings.index', 'حجوزاتي'),
+                    'bookings.index'
+                ),
                 [
                     'label' => static function () {
                         $booking = request()->route('booking');
-                        if (!$booking) {
-                            return 'تفاصيل الحجز';
-                        }
-
                         $code = $booking->public_code ?? $booking->id ?? null;
 
-                        return $code ? "تفاصيل الحجز #{$code}" : 'تفاصيل الحجز';
+                        if ($code) {
+                            return self::translateLabel(
+                                'breadcrumbs.bookings.show.with_code',
+                                'تفاصيل الحجز #:code',
+                                ['code' => $code]
+                            );
+                        }
+
+                        return self::translateLabel(
+                            'breadcrumbs.bookings.show.title',
+                            'تفاصيل الحجز'
+                        );
                     },
                 ],
             ],
             'bookings.join' => [
-                self::crumb('حجوزاتي', 'bookings.index'),
+                self::crumb(
+                    self::translateLabel('breadcrumbs.bookings.index', 'حجوزاتي'),
+                    'bookings.index'
+                ),
                 [
                     'label' => static function () {
                         $booking = request()->route('booking');
                         $title = $booking?->workshop?->title;
 
-                        return $title
-                            ? 'غرفة ورشة: ' . $title
-                            : 'غرفة الورشة';
+                        if ($title) {
+                            return self::translateLabel(
+                                'breadcrumbs.bookings.join.with_title',
+                                'غرفة ورشة: :title',
+                                ['title' => $title]
+                            );
+                        }
+
+                        return self::translateLabel(
+                            'breadcrumbs.bookings.join.title',
+                            'غرفة الورشة'
+                        );
                     },
                 ],
             ],
@@ -186,7 +210,9 @@ class Breadcrumbs
                 ],
             ],
             'notifications.index' => self::singleCrumbTrail('مركز الإشعارات'),
-            'referrals.dashboard' => self::singleCrumbTrail('برنامج الشركاء'),
+            'referrals.dashboard' => self::singleCrumbTrail(
+                self::translateLabel('breadcrumbs.referrals.dashboard', 'برنامج الشركاء')
+            ),
             'legal.terms' => self::singleCrumbTrail('الشروط والأحكام'),
             'legal.privacy' => self::singleCrumbTrail('سياسة الخصوصية'),
             'about' => self::singleCrumbTrail('عن وصفة'),
@@ -426,9 +452,11 @@ class Breadcrumbs
      */
     protected static function workshopsTrail(bool $isSearch = false): array
     {
+        $workshopsLabel = self::translateLabel('breadcrumbs.workshops', 'Workshops');
+
         $trail = [
             [
-                'label' => 'ورشات العمل',
+                'label' => $workshopsLabel,
                 'url' => $isSearch ? route('workshops') : null,
             ],
         ];
@@ -450,9 +478,11 @@ class Breadcrumbs
      */
     protected static function workshopTrail(): array
     {
+        $workshopsLabel = self::translateLabel('breadcrumbs.workshops', 'Workshops');
+
         $trail = [
             [
-                'label' => 'ورشات العمل',
+                'label' => $workshopsLabel,
                 'url' => route('workshops'),
             ],
         ];
@@ -475,7 +505,7 @@ class Breadcrumbs
     {
         $trail = [
             [
-                'label' => 'منطقة الإدمن',
+                'label' => self::translateLabel('breadcrumbs.admin.area', 'منطقة الإدمن'),
                 'url' => self::routeUrl('admin.dashboard'),
             ],
         ];
@@ -508,7 +538,7 @@ class Breadcrumbs
     {
         $trail = [
             [
-                'label' => 'منطقة الشيف',
+                'label' => self::translateLabel('breadcrumbs.chef.area', 'Chef zone'),
                 'url' => self::routeUrl('chef.dashboard'),
             ],
         ];
@@ -632,7 +662,7 @@ class Breadcrumbs
                 'route' => 'admin.users.index',
             ],
             'referrals' => [
-                'label' => 'برنامج الإحالات',
+                'label' => self::translateLabel('breadcrumbs.admin.sections.referrals', 'برنامج الإحالات'),
                 'route' => 'admin.referrals.index',
             ],
             'visibility' => [
@@ -663,19 +693,19 @@ class Breadcrumbs
     {
         return [
             'dashboard' => [
-                'label' => 'لوحة الشيف',
+                'label' => self::translateLabel('breadcrumbs.chef.sections.dashboard', 'Chef dashboard'),
                 'route' => 'chef.dashboard',
             ],
             'links' => [
-                'label' => 'روابط Wasfah',
+                'label' => self::translateLabel('breadcrumbs.chef.sections.links', 'Wasfah links'),
                 'route' => 'chef.links.edit',
             ],
             'recipes' => [
-                'label' => 'وصفاتي',
+                'label' => self::translateLabel('breadcrumbs.chef.sections.recipes', 'My recipes'),
                 'route' => 'chef.recipes.index',
             ],
             'workshops' => [
-                'label' => 'ورش الشيف',
+                'label' => self::translateLabel('breadcrumbs.chef.sections.workshops', 'Chef workshops'),
                 'route' => 'chef.workshops.index',
             ],
         ];
@@ -781,7 +811,11 @@ class Breadcrumbs
 
             case 'referrals':
                 return self::resourceActionTrail($action, 'user', [
-                    'show' => fn ($user) => 'شريك الإحالة: ' . self::modelLabel($user, 'name', 'الحساب'),
+                    'show' => fn ($user) => self::translateLabel(
+                        'breadcrumbs.admin.referrals.partner_show',
+                        'شريك الإحالة: :name',
+                        ['name' => self::modelLabel($user, 'name', 'الحساب')]
+                    ),
                 ]);
 
             case 'visibility':
@@ -835,7 +869,7 @@ class Breadcrumbs
                 if ($action === 'edit') {
                     return [
                         [
-                            'label' => 'تعديل صفحة الروابط',
+                            'label' => self::translateLabel('breadcrumbs.chef.links.edit', 'Edit links page'),
                             'url' => null,
                         ],
                     ];
@@ -843,17 +877,45 @@ class Breadcrumbs
                 return [];
 
             case 'recipes':
+                $recipeFallback = self::translateLabel('breadcrumbs.chef.recipes.fallback_title', 'the recipe');
+
                 return self::resourceActionTrail($action, 'recipe', [
-                    'create' => 'إضافة وصفة جديدة',
-                    'edit' => fn ($recipe) => 'تعديل: ' . self::modelLabel($recipe, 'title', 'الوصفة'),
+                    'create' => self::translateLabel('breadcrumbs.chef.recipes.create', 'Add new recipe'),
+                    'edit' => static function ($recipe) use ($recipeFallback) {
+                        $title = self::modelLabel($recipe, 'title', $recipeFallback);
+
+                        return self::translateLabel(
+                            'breadcrumbs.chef.recipes.edit',
+                            'Edit :title',
+                            ['title' => $title]
+                        );
+                    },
                 ]);
 
             case 'workshops':
+                $workshopFallback = self::translateLabel('breadcrumbs.chef.workshops.fallback_title', 'the workshop');
+
                 return self::resourceActionTrail($action, 'workshop', [
-                    'create' => 'إنشاء ورشة جديدة',
-                    'edit' => fn ($workshop) => 'تعديل: ' . self::modelLabel($workshop, 'title', 'الورشة'),
-                    'earnings' => 'أرباح الورش',
-                    'join' => fn ($workshop) => 'انضمام إلى ' . self::modelLabel($workshop, 'title', 'الورشة'),
+                    'create' => self::translateLabel('breadcrumbs.chef.workshops.create', 'Create new workshop'),
+                    'edit' => static function ($workshop) use ($workshopFallback) {
+                        $title = self::modelLabel($workshop, 'title', $workshopFallback);
+
+                        return self::translateLabel(
+                            'breadcrumbs.chef.workshops.edit',
+                            'Edit :title',
+                            ['title' => $title]
+                        );
+                    },
+                    'earnings' => self::translateLabel('breadcrumbs.chef.workshops.earnings', 'Workshop earnings'),
+                    'join' => static function ($workshop) use ($workshopFallback) {
+                        $title = self::modelLabel($workshop, 'title', $workshopFallback);
+
+                        return self::translateLabel(
+                            'breadcrumbs.chef.workshops.join',
+                            'Join :title',
+                            ['title' => $title]
+                        );
+                    },
                 ]);
         }
 
@@ -908,13 +970,41 @@ class Breadcrumbs
     }
 
     /**
-     * Translate a breadcrumb label with graceful fallback.
+     * Translate a breadcrumb label with graceful fallback and optional replacements.
+     *
+     * @param array<string, string> $replace
      */
-    protected static function translateLabel(string $key, string $fallback): string
+    protected static function translateLabel(string $key, string $fallback, array $replace = []): string
     {
-        $translated = trans($key);
+        $translated = trans($key, $replace);
 
-        return $translated !== $key ? $translated : $fallback;
+        if ($translated !== $key) {
+            return $translated;
+        }
+
+        return self::applyReplacements($fallback, $replace);
+    }
+
+    /**
+     * Apply Laravel-style placeholder replacements to a fallback string.
+     *
+     * @param array<string, string> $replace
+     */
+    protected static function applyReplacements(string $text, array $replace): string
+    {
+        if (empty($replace)) {
+            return $text;
+        }
+
+        $search = [];
+        $values = [];
+
+        foreach ($replace as $key => $value) {
+            $search[] = ':' . $key;
+            $values[] = (string) $value;
+        }
+
+        return str_replace($search, $values, $text);
     }
 
     /**

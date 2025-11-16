@@ -100,6 +100,16 @@
     $whyItems = \Illuminate\Support\Facades\Lang::get('workshops.why.items');
     $faqItems = is_array($faqItems) ? $faqItems : [];
     $whyItems = is_array($whyItems) ? $whyItems : [];
+    $whatsappBookingEnabled = data_get($whatsappBookingConfig ?? [], 'enabled', false);
+    $whatsappBookingPayload = [
+        'isLoggedIn' => data_get($whatsappBookingConfig ?? [], 'isLoggedIn', false),
+        'whatsappNumber' => data_get($whatsappBookingConfig ?? [], 'number'),
+        'bookingEndpoint' => data_get($whatsappBookingConfig ?? [], 'bookingEndpoint'),
+        'bookingNotes' => data_get($whatsappBookingConfig ?? [], 'notes'),
+        'loginUrl' => data_get($whatsappBookingConfig ?? [], 'loginUrl'),
+        'registerUrl' => data_get($whatsappBookingConfig ?? [], 'registerUrl'),
+        'user' => data_get($whatsappBookingConfig ?? [], 'user', []),
+    ];
     $whyIcons = [
         'chefs' => 'fas fa-user-tie',
         'hands_on' => 'fas fa-hands-helping',
@@ -131,6 +141,10 @@
             : __('workshops.labels.unspecified');
         $featuredInstructor = $featuredWorkshop->instructor ?? __('workshops.labels.unspecified');
         $featuredIsBooked = !empty($bookedWorkshopIds) && in_array($featuredWorkshop->id, $bookedWorkshopIds, true);
+        $featuredPriceLabel = trim($featuredWorkshop->formatted_price ?? ($featuredWorkshop->price.' '.$featuredWorkshop->currency));
+        $featuredDateLabel = $featuredWorkshop->start_date
+            ? $featuredWorkshop->start_date->format('d/m/Y h:i A')
+            : __('workshops.labels.unspecified');
     @endphp
     <section class="container mx-auto px-4 pt-10 md:pt-16 relative z-20">
         <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl overflow-hidden shadow-2xl">
@@ -194,19 +208,13 @@
                                 {{ __('workshops.featured.closed') }}
                             </button>
                         @else
-                            <button type="button"
-                                    class="js-whatsapp-booking bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
-                                    data-workshop-id="{{ $featuredWorkshop->id }}"
-                                    data-title="{{ e($featuredWorkshop->title) }}"
-                                    data-price="{{ e($featuredWorkshop->formatted_price) }}"
-                                    data-date="{{ e($featuredWorkshop->start_date->format('d/m/Y')) }}"
-                                    data-instructor="{{ e($featuredInstructor) }}"
-                                    data-location="{{ e($featuredLocationLabel) }}"
-                                    data-deadline="{{ e($featuredDeadlineLabel) }}"
-                                    data-is-booked="false">
-                                <i class="fab fa-whatsapp ml-2 text-xl booking-button-icon"></i>
-                                <span class="booking-button-label">{{ __('workshops.featured.primary_cta') }}</span>
-                            </button>
+                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1">
+                                <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}#workshop-booking"
+                                   class="flex-1 bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-calendar-check ml-2 text-xl booking-button-icon"></i>
+                                    <span class="booking-button-label">{{ __('workshops.featured.primary_cta') }}</span>
+                                </a>
+                            </div>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
@@ -220,7 +228,7 @@
                 <div class="relative h-48 sm:h-64 lg:h-auto">
                     <img src="{{ $featuredWorkshop->image ? asset('storage/' . $featuredWorkshop->image) : $featuredPlaceholderUrl }}" 
                          alt="{{ $featuredWorkshop->title }}" 
-                         class="w-full h-full object-cover">
+                         class="w-full h-full object-cover" loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
                 </div>
             </div>
@@ -278,11 +286,11 @@
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div id="filter-buttons" class="flex flex-wrap justify-center items-center gap-3">
-                <button class="filter-btn active font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="all">{{ __('workshops.filters.all') }}</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="online">{{ __('workshops.filters.online') }}</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="offline">{{ __('workshops.filters.offline') }}</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="beginner">{{ __('workshops.filters.beginner') }}</button>
-                <button class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="advanced">{{ __('workshops.filters.advanced') }}</button>
+                <button type="button" class="filter-btn active font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="all">{{ __('workshops.filters.all') }}</button>
+                <button type="button" class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="online">{{ __('workshops.filters.online') }}</button>
+                <button type="button" class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="offline">{{ __('workshops.filters.offline') }}</button>
+                <button type="button" class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="beginner">{{ __('workshops.filters.beginner') }}</button>
+                <button type="button" class="filter-btn font-semibold px-5 py-2 border rounded-full transition-colors duration-300" data-filter="advanced">{{ __('workshops.filters.advanced') }}</button>
             </div>
         </div>
     </section>
@@ -315,16 +323,20 @@
                             $bookingButtonStateClasses = $isBooked
                                 ? 'bg-green-500 text-white cursor-not-allowed'
                                 : 'bg-green-500 hover:bg-green-600 text-white';
+                            $bookingPriceLabel = trim($workshop->formatted_price ?? ($workshop->price.' '.$workshop->currency));
+                            $bookingDateLabel = $workshop->start_date
+                                ? $workshop->start_date->format('d/m/Y h:i A')
+                                : __('workshops.labels.unspecified');
                         @endphp
                         <div class="workshop-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full" 
                              data-type="{{ $workshop->is_online ? 'online' : 'offline' }}" 
-                             data-level="{{ $workshop->level }}" 
+                             data-level="{{ \Illuminate\Support\Str::of($workshop->level)->lower() }}" 
                              data-category="{{ $workshop->category }}"
                              data-workshop-id="{{ $workshop->id }}">
                             <div class="relative">
                                 <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : $cardPlaceholderUrl }}" 
                                      alt="{{ $workshop->title }}"
-                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ addslashes(__('workshops.labels.fallback_image_alt')) }}';">
+                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ addslashes(__('workshops.labels.fallback_image_alt')) }}';" loading="lazy">
                                 @if($isFull)
                                 <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                                     <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">{{ __('workshops.cards.overlay_full') }}</span>
@@ -384,19 +396,13 @@
                                                 {{ __('workshops.featured.closed') }}
                                             </button>
                                         @else
-                                                        <button type="button"
-                                                                class="js-whatsapp-booking flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}"
-                                                    data-workshop-id="{{ $workshop->id }}"
-                                                    data-title="{{ e($workshop->title) }}"
-                                                    data-price="{{ e($workshop->formatted_price) }}"
-                                                    data-date="{{ e($workshop->start_date->format('d/m/Y')) }}"
-                                                    data-instructor="{{ e($bookingInstructor) }}"
-                                                    data-location="{{ e($bookingLocationLabel) }}"
-                                                    data-deadline="{{ e($bookingDeadlineLabel) }}"
-                                                    data-is-booked="false">
-                                                <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
-                                                <span class="booking-button-label">{{ __('workshops.cards.button_book') }}</span>
-                                            </button>
+                                            <div class="flex flex-col gap-2 flex-1">
+                                                <a href="{{ route('workshop.show', $workshop->slug) }}#workshop-booking"
+                                                   class="flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}">
+                                                    <i class="fas fa-calendar-check ml-2 booking-button-icon"></i>
+                                                    <span class="booking-button-label">{{ __('workshops.cards.button_book') }}</span>
+                                                </a>
+                                            </div>
                                         @endif
                                         <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
                                             <i class="fas fa-info-circle text-sm ml-2 group-hover:text-orange-500 transition-colors"></i>
@@ -465,97 +471,133 @@
 @endsection
 
 @push('scripts')
-@vite(['resources/js/workshops.js', 'resources/js/whatsapp-booking.js'])
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    WhatsAppBooking.configure({
-        isLoggedIn: @json(auth()->check()),
-        whatsappNumber: '962790553680',
-        bookingEndpoint: @json(route('bookings.store')),
-        loginUrl: @json(route('login')),
-        registerUrl: @json(route('register')),
-        user: {
-            name: @json(optional(auth()->user())->name ?? __('workshops.whatsapp.fallback_name')),
-            phone: @json(optional(auth()->user())->phone ?? __('workshops.labels.unspecified')),
-            email: @json(optional(auth()->user())->email ?? __('workshops.labels.unspecified')),
-        },
-    });
-    WhatsAppBooking.initButtons();
+(() => {
+const noResultsTitle = @json(__('workshops.no_results.title'));
+const noResultsDescription = @json(__('workshops.no_results.description'));
 
-    // Filter functionality
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const workshopsContainer = document.getElementById('workshops-container');
-    const workshops = document.querySelectorAll('.workshop-card');
-    const noResults = document.getElementById('no-results');
-    const noResultsTitle = @json(__('workshops.no_results.title'));
-    const noResultsDescription = @json(__('workshops.no_results.description'));
-
-    // Initialize no results message if it doesn't exist
-    if (!noResults) {
-        const noResultsHTML = `
-            <div id="no-results" class="col-span-full text-center py-16 hidden">
-                <i class="fas fa-search text-7xl text-gray-300 mb-6"></i>
-                <h3 class="text-2xl font-semibold text-gray-700 mb-2">${noResultsTitle}</h3>
-                <p class="text-gray-500 max-w-md mx-auto">${noResultsDescription}</p>
-            </div>
-        `;
-        workshopsContainer.insertAdjacentHTML('afterend', noResultsHTML);
+const ensureNoResultsElement = () => {
+    const existing = document.getElementById('no-results');
+    if (existing) {
+        return existing;
     }
 
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const filter = this.getAttribute('data-filter');
-            
-            // Update active button
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Filter workshops
-            let visibleCount = 0;
-            workshops.forEach(workshop => {
-                const type = workshop.getAttribute('data-type');
-                const level = workshop.getAttribute('data-level');
-                
-                let show = false;
-                
-                switch(filter) {
-                    case 'all':
-                        show = true;
-                        break;
-                    case 'online':
-                        show = type === 'online';
-                        break;
-                    case 'offline':
-                        show = type === 'offline';
-                        break;
-                    case 'beginner':
-                        show = level === 'beginner';
-                        break;
-                    case 'advanced':
-                        show = level === 'advanced';
-                        break;
-                }
-                
-                if (show) {
-                    workshop.style.display = 'flex';
-                    visibleCount++;
-                } else {
-                    workshop.style.display = 'none';
-                }
-            });
-            
-            // Show/hide no results message
-            const noResultsElement = document.getElementById('no-results');
-            if (visibleCount === 0) {
-                noResultsElement.classList.remove('hidden');
-            } else {
-                noResultsElement.classList.add('hidden');
-            }
-        });
+    const container = document.getElementById('workshops-container');
+    if (!container) {
+        return null;
+    }
+
+    const noResultsHTML = `
+        <div id="no-results" class="col-span-full text-center py-16 hidden">
+            <i class="fas fa-search text-7xl text-gray-300 mb-6"></i>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">${noResultsTitle}</h3>
+            <p class="text-gray-500 max-w-md mx-auto">${noResultsDescription}</p>
+        </div>
+    `;
+    container.insertAdjacentHTML('afterend', noResultsHTML);
+    return document.getElementById('no-results');
+};
+
+const filterWorkshops = (filter = 'all') => {
+    const workshopsContainer = document.getElementById('workshops-container');
+    const workshops = document.querySelectorAll('.workshop-card');
+    if (!workshopsContainer || !workshops.length) {
+        return;
+    }
+
+    const normalizedFilter = filter.toLowerCase();
+    let visibleCount = 0;
+
+    workshops.forEach((workshop) => {
+        const type = (workshop.getAttribute('data-type') || '').toLowerCase();
+        const level = (workshop.getAttribute('data-level') || '').toLowerCase();
+
+        let show = false;
+        switch (normalizedFilter) {
+            case 'online':
+                show = type === 'online';
+                break;
+            case 'offline':
+                show = type === 'offline';
+                break;
+            case 'beginner':
+                show = level === 'beginner';
+                break;
+            case 'advanced':
+                show = level === 'advanced';
+                break;
+            case 'all':
+            default:
+                show = true;
+        }
+
+        workshop.style.display = show ? 'flex' : 'none';
+        if (show) {
+            visibleCount++;
+        }
     });
+
+    const noResultsElement = ensureNoResultsElement();
+    if (noResultsElement) {
+        noResultsElement.classList.toggle('hidden', visibleCount !== 0);
+    }
+};
+
+const updateActiveButton = (activeButton) => {
+    document.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn === activeButton);
+    });
+};
+
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('.filter-btn');
+    if (!button) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const filter = button.dataset.filter || 'all';
+    updateActiveButton(button);
+    filterWorkshops(filter);
 });
+
+const bootstrapFilters = () => {
+    ensureNoResultsElement();
+    filterWorkshops(document.querySelector('.filter-btn.active')?.dataset.filter || 'all');
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapFilters, { once: true });
+} else {
+    bootstrapFilters();
+}
+
+document.addEventListener('livewire:navigated', bootstrapFilters);
+document.addEventListener('livewire:load', bootstrapFilters);
+
+window.filterWorkshops = filterWorkshops;
+})();
 </script>
 
-@endpush
+@if($whatsappBookingEnabled)
+<script>
+(function bootstrapWhatsAppBooking(config) {
+    if (window.WhatsAppBooking) {
+        window.WhatsAppBooking.configure(config);
+        window.WhatsAppBooking.initButtons();
+        window.WhatsAppBooking.initInquiryButtons();
+        return;
+    }
 
+    window.__WHATSAPP_BOOKING_PENDING__ = window.__WHATSAPP_BOOKING_PENDING__ || [];
+    window.__WHATSAPP_BOOKING_PENDING__.push(function(instance) {
+        instance.configure(config);
+        instance.initButtons();
+        instance.initInquiryButtons();
+    });
+})(@json($whatsappBookingPayload));
+</script>
+@endif
+
+@endpush

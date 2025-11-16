@@ -202,6 +202,10 @@ async function handleSaveRecipe(button, recipeId) {
         console.log('Save request successful:', responseData);
         
         // استخدام بيانات الاستجابة لتحديث الواجهة بدقة
+        const finalSavedState = responseData && typeof responseData.is_saved !== 'undefined'
+            ? Boolean(responseData.is_saved)
+            : newSavedState;
+
         if (responseData && typeof responseData.is_saved !== 'undefined') {
             // تحديث جميع أزرار الحفظ في الصفحة بناءً على الاستجابة الفعلية
             const allSaveButtons = document.querySelectorAll('.save-recipe-btn:not(#save-recipe-page-btn), .save-btn');
@@ -213,9 +217,15 @@ async function handleSaveRecipe(button, recipeId) {
             });
             
         }
+        const delta = finalSavedState === isCurrentlySaved ? 0 : (finalSavedState ? 1 : -1);
+        if (delta !== 0 && typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('saved-counter:changed', {
+                detail: { delta }
+            }));
+        }
         
         // إظهار رسالة نجاح
-        showToast(newSavedState ? 'تم حفظ الوصفة بنجاح!' : 'تم إلغاء حفظ الوصفة', 'success');
+        showToast(finalSavedState ? 'تم حفظ الوصفة بنجاح!' : 'تم إلغاء حفظ الوصفة', 'success');
 
     } catch (err) {
         console.error(err);
@@ -326,14 +336,37 @@ function initializeSaveButtonWithState(button, isSaved) {
     }
 }
 
-// تهيئة الأزرار عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    // تهيئة الأزرار الموجودة حالياً
+const bootstrapState = {
+    attempts: 0,
+    maxAttempts: 3,
+};
+
+function hasSaveRecipeTargets() {
+    return Boolean(
+        document.querySelector('.save-btn, .save-recipe-btn, #save-recipe-page-btn, [data-save-button]') ||
+            document.getElementById('recipeCards') ||
+            document.querySelector('.card-container'),
+    );
+}
+
+function bootstrapSaveRecipeModule() {
+    if (!hasSaveRecipeTargets()) {
+        if (bootstrapState.attempts < bootstrapState.maxAttempts - 1) {
+            bootstrapState.attempts += 1;
+            setTimeout(bootstrapSaveRecipeModule, 400);
+        }
+        return;
+    }
+
     initializeSaveButtons();
-    
-    // تهيئة الحالة الأولية للبطاقات
     initializeCardStates();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapSaveRecipeModule, { once: true });
+} else {
+    bootstrapSaveRecipeModule();
+}
 
 /**
  * يهيئ الحالة الأولية للبطاقات
@@ -354,31 +387,6 @@ function initializeCardStates() {
         }
     });
 }
-
-// تهيئة الأزرار عند إضافة محتوى جديد
-const observer = new MutationObserver((mutations) => {
-    let shouldInitialize = false;
-    mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-            // البحث عن أزرار حفظ جديدة
-            const newSaveButtons = Array.from(mutation.addedNodes).filter(node => 
-                node.nodeType === Node.ELEMENT_NODE && 
-                (node.classList?.contains('save-btn') || node.querySelector?.('.save-btn'))
-            );
-            if (newSaveButtons.length > 0) {
-                shouldInitialize = true;
-            }
-        }
-    });
-    
-    // إزالة التهيئة المكررة لتجنب التحديث المزدوج
-});
-
-// مراقبة التغييرات في المحتوى
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
-});
 
 /**
  * تحديث عداد الحفظ فوراً في صفحة الوصفة

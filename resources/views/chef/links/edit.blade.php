@@ -14,7 +14,7 @@
     $ctaUrlValue = old('cta_url', $page->cta_url) ?: '#';
     $accentColorValue = old('accent_color', $page->accent_color ?? $accentColor ?? '#f97316') ?: '#f97316';
     $lastUpdated = $page->updated_at?->locale('ar')->diffForHumans() ?? 'الآن';
-    $heroPlaceholder = asset('image/logo.png');
+    $heroPlaceholder = asset('image/logo.webp');
     $heroPreviewDefault = $heroImageUrl ?: $heroPlaceholder;
     $createContextActive = old('form_context') === 'create';
     $createTitle = $createContextActive ? old('title') : '';
@@ -166,7 +166,7 @@
                                 @php
                                     $workshopDate = optional($upcomingWorkshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a');
                                     $workshopLocation = $upcomingWorkshop->is_online ? 'أونلاين عبر المنصة' : ($upcomingWorkshop->location ?: 'سيتم تحديد الموقع');
-                                    $workshopPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'SAR'));
+                                    $workshopPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'USD'));
                                 @endphp
                                 <div class="rounded-2xl border border-dashed border-orange-200 bg-white/90 px-4 py-4 shadow-sm">
                                     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -221,7 +221,7 @@
                             <label class="text-sm font-medium text-gray-700">صورة الغلاف</label>
                             <div class="flex flex-col gap-4 md:flex-row md:items-center">
                                 <div class="h-32 w-32 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 flex items-center justify-center">
-                                    <img src="{{ $heroPreviewDefault }}" alt="صورة الصفحة" class="h-full w-full object-cover" id="preview-hero-image" data-original="{{ $heroPreviewDefault }}" data-fallback="{{ $heroPlaceholder }}">
+                                    <img src="{{ $heroPreviewDefault }}" alt="صورة الصفحة" class="h-full w-full object-cover" id="preview-hero-image" data-original="{{ $heroPreviewDefault }}" data-fallback="{{ $heroPlaceholder }}" loading="lazy" decoding="async" width="128" height="128">
                                 </div>
                                 <div class="flex-1 space-y-3">
                                     <input type="file"
@@ -379,7 +379,7 @@
                         <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.7), transparent 60%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.5), transparent 60%);"></div>
                         <div class="relative flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white">
                             <div class="h-20 w-20 overflow-hidden rounded-2xl border border-white/50 shadow" style="background-color: rgba(255,255,255,0.15);">
-                                <img src="{{ $heroPreviewDefault }}" alt="معاينة صورة الغلاف" class="h-full w-full object-cover" id="preview-hero-image-clone">
+                                <img src="{{ $heroPreviewDefault }}" alt="معاينة صورة الغلاف" class="h-full w-full object-cover" id="preview-hero-image-clone" loading="lazy" decoding="async" width="80" height="80">
                             </div>
                             <div class="space-y-1">
                                 <p class="text-xs uppercase tracking-[0.3em] text-white/70">معاينة مباشرة</p>
@@ -875,3 +875,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

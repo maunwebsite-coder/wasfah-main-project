@@ -162,7 +162,7 @@
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">الصورة الحالية</label>
                                     <img src="{{ asset('storage/' . $tool->image) }}" 
                                          alt="{{ $tool->name }}" 
-                                         class="current-image">
+                                         class="current-image" loading="lazy">
                                 </div>
                             @endif
 
@@ -518,7 +518,7 @@ function updateImagePreview(primaryUrl, galleryUrls = []) {
     previewDiv.classList.remove('hidden');
     const slides = images.map(url => `
         <div class="w-24 h-24 rounded-lg overflow-hidden border flex-shrink-0 bg-white">
-            <img src="${url}" alt="معاينة الصورة" class="w-full h-full object-cover">
+            <img src="${url}" alt="معاينة الصورة" class="w-full h-full object-cover" loading="lazy">
         </div>
     `).join('');
 
@@ -552,3 +552,4 @@ function showPriceConversion(usdPrice, aedPrice) {
 </script>
 @endpush
 @endsection
+

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\ImageUploadConstraints;
+use App\Support\Currency;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,9 +45,12 @@ class Workshop extends Model
         'registration_deadline',
         'is_online',
         'meeting_link',
+        'meeting_code',
+        'meeting_event_id',
+        'meeting_calendar_id',
+        'meeting_conference_id',
+        'recording_url',
         'meeting_provider',
-        'jitsi_room',
-        'jitsi_passcode',
         'meeting_started_at',
         'meeting_started_by',
         'meeting_locked_at',
@@ -177,6 +182,41 @@ class Workshop extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Retrieve the Google account email for the workshop host when available.
+     */
+    public function hostGoogleEmail(): ?string
+    {
+        $columns = User::columnsForHostContext();
+
+        $this->loadMissing([
+            'chef' => fn ($query) => $query->select($columns),
+        ]);
+
+        return $this->chef?->preferredGoogleEmail();
+    }
+
+    /**
+     * Build an attendee payload for the workshop host.
+     *
+     * @return array{email:string,displayName?:string}|null
+     */
+    public function hostAttendeePayload(): ?array
+    {
+        $email = $this->hostGoogleEmail();
+
+        if (!$email) {
+            return null;
+        }
+
+        $displayName = optional($this->chef)->name ?: ($this->instructor ?: 'Wasfah Chef');
+
+        return [
+            'email' => $email,
+            'displayName' => $displayName,
+        ];
+    }
+
     public function meetingStarter()
     {
         return $this->belongsTo(User::class, 'meeting_started_by');
@@ -188,6 +228,16 @@ class Workshop extends Model
         return $this->belongsToMany(Recipe::class, 'workshop_recipes', 'workshop_id', 'recipe_id')
                     ->withPivot('order')
                     ->orderBy('workshop_recipes.order');
+    }
+
+    public function revenueShares()
+    {
+        return $this->hasManyThrough(
+            BookingRevenueShare::class,
+            WorkshopBooking::class,
+            'workshop_id',
+            'workshop_booking_id'
+        );
     }
 
     // Scopes
@@ -229,7 +279,7 @@ class Workshop extends Model
     // Accessors
     public function getFormattedPriceAttribute()
     {
-        $currencyCode = $this->currency ?: 'JOD';
+        $currencyCode = $this->currency ?: 'USD';
 
         return number_format($this->price, 2) . ' ' . $currencyCode;
     }
@@ -290,6 +340,8 @@ class Workshop extends Model
      */
     public static function validationRules($workshopId = null)
     {
+        $currencyCodes = Currency::codes();
+
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -299,7 +351,7 @@ class Workshop extends Model
             'duration' => 'required|integer|min:30',
             'max_participants' => 'required|integer|min:1|max:1000',
             'price' => 'required|numeric|min:0',
-            'currency' => 'required|string|in:JOD',
+            'currency' => 'required|string|in:' . implode(',', $currencyCodes),
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'location' => ['required_unless:is_online,1', 'nullable', 'string', 'max:255'],
@@ -316,10 +368,9 @@ class Workshop extends Model
                     return $request->boolean('is_online') && !$request->boolean('auto_generate_meeting');
                 }),
             ],
+            'recording_url' => ['nullable', 'url', 'max:512'],
             'meeting_provider' => ['nullable', 'string', 'max:50'],
-            'jitsi_room' => ['nullable', 'string', 'max:255'],
-            'jitsi_passcode' => ['nullable', 'string', 'max:20'],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image' => array_merge(['nullable'], ImageUploadConstraints::rules()),
         ];
 
         // إضافة validation خاص للورشة المميزة
@@ -397,13 +448,26 @@ class Workshop extends Model
      */
     public function generateSlug()
     {
-        $slug = \Str::slug($this->title, '-', 'ar');
+        $title = (string) $this->title;
+        $slug = \Str::slug($title, '-', 'ar');
+
+        if ($slug === '' || $slug === null) {
+            $asciiTitle = \Str::ascii($title) ?: 'workshop';
+            $slug = \Str::slug($asciiTitle);
+        }
+
+        if ($slug === '' || $slug === null) {
+            $slug = 'workshop-'.\Str::lower(\Str::random(8));
+        }
         
-        // Ensure uniqueness
         $originalSlug = $slug;
         $counter = 1;
-        
-        while (static::where('slug', $slug)->where('id', '!=', $this->id)->exists()) {
+
+        while (
+            static::where('slug', $slug)
+                ->when($this->id, fn ($query) => $query->where('id', '!=', $this->id))
+                ->exists()
+        ) {
             $slug = $originalSlug . '-' . $counter;
             $counter++;
         }
@@ -429,6 +493,14 @@ class Workshop extends Model
                 $workshop->slug = $workshop->generateSlug();
             }
         });
+
+        static::saving(function (self $workshop) {
+            if (blank($workshop->slug) && filled($workshop->title)) {
+                $workshop->slug = $workshop->generateSlug();
+            }
+
+            $workshop->meeting_code = static::extractMeetingCode($workshop->meeting_link);
+        });
     }
 
     /**
@@ -437,6 +509,135 @@ class Workshop extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Return a slug for URLs but gracefully fall back to the numeric ID when the slug is missing.
+     */
+    public function getRouteKey()
+    {
+        $keyName = $this->getRouteKeyName();
+        $routeKey = $this->getAttribute($keyName);
+
+        return filled($routeKey) ? $routeKey : $this->getKey();
+    }
+
+    /**
+     * Allow resolving a workshop by slug primarily, but fall back to the ID when needed.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?? $this->getRouteKeyName();
+        $query = $this->newQuery();
+
+        if ($field === 'slug') {
+            return $query
+                ->where(function ($query) use ($value) {
+                    $query->where('slug', $value);
+
+                    if (is_numeric($value)) {
+                        $query->orWhere('id', $value);
+                    }
+                })
+                ->first();
+        }
+
+        return $query->where($field, $value)->first();
+    }
+
+    public static function extractMeetingCode(?string $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $normalized = strtolower($trimmed);
+
+        if (static::isLikelyMeetingCode($normalized)) {
+            return $normalized;
+        }
+
+        if (! str_starts_with($trimmed, 'http://') && ! str_starts_with($trimmed, 'https://')) {
+            return null;
+        }
+
+        $host = strtolower(parse_url($trimmed, PHP_URL_HOST) ?? '');
+
+        if ($host !== '' && ! str_contains($host, 'meet.google.com')) {
+            return null;
+        }
+
+        $codeFromPath = static::extractMeetingCodeFromPath(parse_url($trimmed, PHP_URL_PATH));
+
+        if ($codeFromPath) {
+            return $codeFromPath;
+        }
+
+        $query = parse_url($trimmed, PHP_URL_QUERY);
+
+        if ($query) {
+            parse_str($query, $params);
+
+            foreach (['meeting_code', 'meetingcode', 'meetingid', 'meetingId', 'code'] as $key) {
+                if (! empty($params[$key]) && is_string($params[$key])) {
+                    $candidate = strtolower(trim($params[$key]));
+
+                    if (static::isLikelyMeetingCode($candidate)) {
+                        return $candidate;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected static function extractMeetingCodeFromPath(null|string $path): ?string
+    {
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $segments = array_values(array_filter(explode('/', trim($path, '/'))));
+
+        foreach ($segments as $index => $segment) {
+            $normalized = strtolower($segment);
+
+            if (static::isLikelyMeetingCode($normalized)) {
+                return $normalized;
+            }
+
+            if ($normalized === 'lookup' && isset($segments[$index + 1])) {
+                $candidate = strtolower($segments[$index + 1]);
+
+                return $candidate !== '' ? $candidate : null;
+            }
+
+            if ($normalized === 'v' && isset($segments[$index + 1])) {
+                $candidate = strtolower($segments[$index + 1]);
+
+                if (static::isLikelyMeetingCode($candidate)) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected static function isLikelyMeetingCode(string $value): bool
+    {
+        if ($value === '') {
+            return false;
+        }
+
+        return (bool) preg_match('/^[a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{3}$/', $value);
     }
 
     /**

@@ -40,29 +40,48 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
+    'google_meet' => [
+        'client_id' => env('GOOGLE_MEET_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
+        'client_secret' => env('GOOGLE_MEET_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
+        'refresh_token' => env('GOOGLE_MEET_REFRESH_TOKEN'),
+        'calendar_id' => env('GOOGLE_MEET_CALENDAR_ID', env('GOOGLE_MEET_ORGANIZER_EMAIL')),
+        'organizer_email' => env('GOOGLE_MEET_ORGANIZER_EMAIL', env('GOOGLE_MEET_CALENDAR_ID')),
+        'default_duration' => (int) env('GOOGLE_MEET_DEFAULT_DURATION', 90),
+        'timezone' => env('GOOGLE_MEET_TIMEZONE', env('APP_TIMEZONE', 'UTC')),
+        'host_redirect_ttl' => (int) env('GOOGLE_MEET_HOST_REDIRECT_TTL', 120),
+    ],
+    'google_drive' => [
+        'client_id' => env('GOOGLE_DRIVE_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
+        'client_secret' => env('GOOGLE_DRIVE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
+        'refresh_token' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+        'service_account_json' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
+        'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID', env('GOOGLE_RECORDINGS_FOLDER_ID')),
+        'additional_folders' => env('GOOGLE_DRIVE_ADDITIONAL_FOLDER_IDS'),
+        'recordings_folder_id' => env('GOOGLE_RECORDINGS_FOLDER_ID'),
+        'shared_drive_id' => env('GOOGLE_DRIVE_SHARED_DRIVE_ID'),
+        'max_results' => (int) env('GOOGLE_DRIVE_MAX_RESULTS', 25),
+    ],
 
     'amazon' => [
         'affiliate_tag' => env('AMAZON_AFFILIATE_TAG', 'wasfah-21'),
         'marketplace' => env('AMAZON_MARKETPLACE', 'ae'),
     ],
 
-    'jitsi' => [
-        'provider' => env('JITSI_PROVIDER', 'meet'),
-        'base_url' => env('JITSI_BASE_URL', 'https://meet.jit.si'),
-        'room_prefix' => env('JITSI_ROOM_PREFIX', 'wasfah'),
-        'default_duration' => (int) env('JITSI_DEFAULT_DURATION', 90),
-        'allow_participant_subject_edit' => env('JITSI_ALLOW_PARTICIPANT_SUBJECT_EDIT', true),
-        'jaas' => [
-            'app_id' => env('JITSI_JAAS_APP_ID'),
-            'api_key' => env('JITSI_JAAS_API_KEY'),
-            'private_key_path' => env('JITSI_JAAS_PRIVATE_KEY_PATH'),
-            'base_url' => env('JITSI_JAAS_BASE_URL', 'https://8x8.vc'),
-            'token_ttl_minutes' => (int) env('JITSI_JAAS_TOKEN_TTL', 240),
-        ],
-    ],
-
     'registration' => [
         'require_email_verification' => env('REGISTRATION_REQUIRE_EMAIL_VERIFICATION'),
+    ],
+
+    'whatsapp_booking' => [
+        'enabled' => (bool) env('WHATSAPP_BOOKING_ENABLED', false),
+        'number' => env('WHATSAPP_BOOKING_NUMBER'),
+        'notes' => env('WHATSAPP_BOOKING_NOTES', 'WhatsApp booking'),
+    ],
+
+    'stripe' => [
+        'public_key' => env('STRIPE_PUBLIC_KEY'),
+        'secret_key' => env('STRIPE_SECRET_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'payment_country' => env('STRIPE_PAYMENT_COUNTRY', 'SA'),
     ],
 
 ];

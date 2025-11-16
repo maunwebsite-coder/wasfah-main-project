@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('referral_commission_currency', 10)
-                ->default('JOD')
+                ->default('USD')
                 ->after('referral_commission_rate');
         });
     }

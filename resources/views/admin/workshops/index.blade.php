@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'إدارة الورشات - لوحة الإدارة')
 
@@ -40,6 +40,7 @@
         'upcoming' => 'قادمة',
         'past' => 'منتهية',
     ];
+    $currencyOptions = \App\Support\Currency::all();
 @endphp
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
@@ -343,7 +344,7 @@
                                 <div class="flex items-center">
                                     <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/60x60/f87171/FFFFFF?text=ورشة' }}"
                                          alt="{{ $workshop->title }}"
-                                         class="w-12 h-12 rounded-xl object-cover ml-4 border border-white shadow-sm">
+                                         class="w-12 h-12 rounded-xl object-cover ml-4 border border-white shadow-sm" loading="lazy">
                                     <div class="space-y-1">
                                         <h3 class="font-semibold text-gray-800">{{ $workshop->title }}</h3>
                                         <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -383,7 +384,14 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
-                                    <span class="font-semibold text-gray-800">{{ $workshop->price }} {{ $workshop->currency }}</span>
+                                    <span class="font-semibold text-gray-800">
+                                        {{ number_format($workshop->price, 2) }}
+                                        {{ $currencyOptions[$workshop->currency]['symbol'] ?? $workshop->currency }}
+                                        <span class="text-xs text-gray-500">({{ $workshop->currency }})</span>
+                                    </span>
+                                    <span class="text-xs text-gray-500">
+                                        {{ $currencyOptions[$workshop->currency]['label'] ?? $workshop->currency }}
+                                    </span>
                                     @if($workshop->duration)
                                         <span class="text-xs text-gray-400">{{ $workshop->duration }} دقيقة</span>
                                     @endif
@@ -635,3 +643,4 @@
 @push('styles')
     @include('admin.workshops.partials.swal-styles')
 @endpush
+

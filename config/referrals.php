@@ -20,16 +20,12 @@ return [
     | of supported currencies within the referral dashboards.
     |
     */
-    'default_currency' => 'JOD',
+    'default_currency' => 'USD',
 
     'currencies' => [
-        'AED' => [
-            'label' => 'درهم إماراتي',
-            'symbol' => 'د.إ',
-        ],
-        'JOD' => [
-            'label' => 'دينار أردني',
-            'symbol' => 'د.أ',
+        'USD' => [
+            'label' => 'دولار أمريكي',
+            'symbol' => '$',
         ],
     ],
 

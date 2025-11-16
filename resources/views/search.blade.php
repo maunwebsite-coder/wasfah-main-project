@@ -98,8 +98,8 @@
                                type="text"
                                value="{{ $query }}"
                                placeholder="{{ __('search.form.placeholder') }}"
-                               class="w-full rounded-2xl border border-orange-100 bg-orange-50/70 pr-5 pl-14 py-4 text-base text-slate-700 placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-200">
-                        <button type="submit" class="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                               class="w-full rounded-2xl border border-orange-100 bg-orange-50/70 {{ $isRtl ? 'pr-14 pl-5' : 'pr-5 pl-14' }} py-4 text-base text-slate-700 placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-200">
+                        <button type="submit" class="absolute {{ $isRtl ? 'right-4' : 'left-4' }} top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
                             <i class="fas fa-search text-sm"></i>
                         </button>
                     </div>
@@ -168,7 +168,7 @@
                             <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                                 @foreach($recipes as $recipe)
                                     @php
-                                        $image = $recipe->image_url ?: ($recipe->image ? (str_starts_with($recipe->image, 'http') ? $recipe->image : asset('storage/' . $recipe->image)) : asset('image/logo.png'));
+                                        $image = $recipe->image_url ?: ($recipe->image ? (str_starts_with($recipe->image, 'http') ? $recipe->image : asset('storage/' . $recipe->image)) : asset('image/logo.webp'));
                                         $prepTime = $recipe->prep_time
                                             ? __('search.recipes.prep_time', ['minutes' => $recipe->prep_time])
                                             : __('search.recipes.flex_time');
@@ -176,7 +176,7 @@
                                     @endphp
                                     <article class="SearchCard group flex flex-col overflow-hidden rounded-3xl border border-orange-50 bg-white shadow-sm">
                                         <div class="relative h-56 overflow-hidden">
-                                            <img src="{{ $image }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.png') }}';">
+                                            <img src="{{ $image }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                                             <div class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 py-3 text-xs text-white">
                                                 <span class="flex items-center gap-2 font-medium">
                                                     <i class="fas fa-tag text-[11px] opacity-80"></i>
@@ -245,16 +245,16 @@
                                     @php
                                         $workshopImage = $workshop->image
                                             ? (str_starts_with($workshop->image, 'http') ? $workshop->image : asset('storage/' . $workshop->image))
-                                            : asset('image/logo.png');
+                                            : asset('image/logo.webp');
                                         $workshopExcerpt = \Illuminate\Support\Str::limit($workshop->description ?? '', 140);
                                         $workshopDate = optional($workshop->start_date)->format('Y-m-d');
                                     @endphp
                                     <article class="SearchCard group flex flex-col overflow-hidden rounded-3xl border border-orange-50 bg-white shadow-sm">
                                         <div class="relative h-56 overflow-hidden">
-                                            <img src="{{ $workshopImage }}" alt="{{ $workshop->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.png') }}';">
+                                            <img src="{{ $workshopImage }}" alt="{{ $workshop->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                                             <div class="absolute inset-x-0 top-4 flex items-start justify-between px-4">
                                                 <span class="rounded-full bg-orange-500/90 px-3 py-1 text-xs font-semibold text-white shadow">
-                                                    {{ $workshop->formatted_price ?? number_format($workshop->price ?? 0, 2) . ' ' . ($workshop->currency ?? 'JOD') }}
+                                                    {{ $workshop->formatted_price ?? number_format($workshop->price ?? 0, 2) . ' ' . ($workshop->currency ?? 'USD') }}
                                                 </span>
                                                 @if($workshop->is_featured)
                                                     <span class="rounded-full bg-amber-400/90 px-3 py-1 text-xs font-semibold text-white shadow">
@@ -339,4 +339,6 @@
     </div>
 </div>
 @endsection
+
+
 

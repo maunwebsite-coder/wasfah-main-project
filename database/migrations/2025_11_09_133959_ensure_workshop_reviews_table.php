@@ -150,6 +150,10 @@ return new class extends Migration
 
     private function indexExists(string $indexName): bool
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return true;
+        }
+
         return DB::table('information_schema.statistics')
             ->where('table_schema', DB::getDatabaseName())
             ->where('table_name', 'workshop_reviews')
@@ -159,6 +163,10 @@ return new class extends Migration
 
     private function foreignKeyExists(string $constraintName): bool
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return true;
+        }
+
         return DB::table('information_schema.referential_constraints')
             ->where('constraint_schema', DB::getDatabaseName())
             ->where('table_name', 'workshop_reviews')

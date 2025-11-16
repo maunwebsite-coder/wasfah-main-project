@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\WorkshopBooking;
 use App\Models\Workshop;
 use App\Models\Notification;
+use App\Models\BookingRevenueShare;
+use App\Support\Currency;
+use App\Support\NotificationCopy;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
@@ -21,13 +24,55 @@ class BookingController extends Controller
         $bookings = $query->paginate(20);
 
         $stats = cache()->remember('booking_stats', 300, function () {
+            $paidBookingQuery = WorkshopBooking::where('payment_status', 'paid');
+
+            $financialCounts = [
+                WorkshopBooking::FINANCIAL_STATUS_PENDING => WorkshopBooking::where('financial_status', WorkshopBooking::FINANCIAL_STATUS_PENDING)->count(),
+                WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED => WorkshopBooking::where('financial_status', WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED)->count(),
+                WorkshopBooking::FINANCIAL_STATUS_VOID => WorkshopBooking::where('financial_status', WorkshopBooking::FINANCIAL_STATUS_VOID)->count(),
+            ];
+
+            $shareTotals = BookingRevenueShare::selectRaw('recipient_type, SUM(amount) as total')
+                ->where('status', BookingRevenueShare::STATUS_DISTRIBUTED)
+                ->groupBy('recipient_type')
+                ->pluck('total', 'recipient_type');
+
             return [
                 'total' => WorkshopBooking::count(),
                 'pending' => WorkshopBooking::where('status', 'pending')->count(),
                 'confirmed' => WorkshopBooking::where('status', 'confirmed')->count(),
                 'cancelled' => WorkshopBooking::where('status', 'cancelled')->count(),
-                'paid' => WorkshopBooking::where('payment_status', 'paid')->count(),
+                'paid' => (clone $paidBookingQuery)->count(),
+                'paid_amount' => (float) (clone $paidBookingQuery)->sum('payment_amount_usd'),
                 'unpaid' => WorkshopBooking::where('payment_status', 'pending')->count(),
+                'financial' => [
+                    'pending' => $financialCounts[WorkshopBooking::FINANCIAL_STATUS_PENDING],
+                    'distributed' => $financialCounts[WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED],
+                    'void' => $financialCounts[WorkshopBooking::FINANCIAL_STATUS_VOID],
+                ],
+                'distributed_amount' => (float) BookingRevenueShare::where('status', BookingRevenueShare::STATUS_DISTRIBUTED)->sum('amount'),
+                'distributed_bookings' => BookingRevenueShare::where('status', BookingRevenueShare::STATUS_DISTRIBUTED)
+                    ->distinct('workshop_booking_id')
+                    ->count('workshop_booking_id'),
+                'share_totals' => [
+                    'admin' => (float) ($shareTotals[BookingRevenueShare::TYPE_ADMIN] ?? 0),
+                    'chef' => (float) ($shareTotals[BookingRevenueShare::TYPE_CHEF] ?? 0),
+                    'partner' => (float) ($shareTotals[BookingRevenueShare::TYPE_PARTNER] ?? 0),
+                ],
+                'paid_currencies' => (clone $paidBookingQuery)
+                    ->selectRaw('UPPER(payment_currency) as payment_currency, COUNT(*) as total_bookings, SUM(payment_amount) as total_amount, SUM(payment_amount_usd) as total_amount_usd')
+                    ->groupBy('payment_currency')
+                    ->orderByDesc('total_amount_usd')
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'currency' => $row->payment_currency,
+                            'total_bookings' => (int) $row->total_bookings,
+                            'total_amount' => (float) $row->total_amount,
+                            'total_amount_usd' => (float) $row->total_amount_usd,
+                        ];
+                    })
+                    ->toArray(),
             ];
         });
 
@@ -41,6 +86,8 @@ class BookingController extends Controller
             ->pluck('payment_method')
             ->filter()
             ->values();
+
+        $currencyOptions = Currency::all();
 
         $now = Carbon::now();
         $startOfWeek = $now->copy()->startOfWeek();
@@ -174,6 +221,7 @@ class BookingController extends Controller
             'stats',
             'workshops',
             'paymentMethods',
+            'currencyOptions',
             'insightMetrics',
             'recentBookings',
             'followUpBookings',
@@ -185,7 +233,14 @@ class BookingController extends Controller
 
     protected function filteredBookingsQuery(Request $request): Builder
     {
-        $query = WorkshopBooking::with(['workshop', 'user']);
+        $query = WorkshopBooking::with([
+            'workshop',
+            'user',
+            'invoice',
+            'revenueShares' => function ($relation) {
+                $relation->orderBy('recipient_type');
+            },
+        ]);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -193,6 +248,10 @@ class BookingController extends Controller
 
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->filled('financial_status')) {
+            $query->where('financial_status', $request->financial_status);
         }
 
         if ($request->filled('workshop_id')) {
@@ -273,6 +332,10 @@ class BookingController extends Controller
 
         if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('payment_currency')) {
+            $query->where('payment_currency', strtoupper($request->payment_currency));
         }
 
         if ($request->filled('booking_count')) {
@@ -406,8 +469,20 @@ class BookingController extends Controller
 
     public function show(WorkshopBooking $booking)
     {
-        $booking->load(['workshop', 'user']);
-        return view('admin.bookings.show', compact('booking'));
+        $booking->load([
+            'workshop.chef',
+            'user',
+            'revenueShares.recipient',
+        ]);
+
+        $revenueShares = $booking->revenueShares
+            ->sortBy('recipient_type')
+            ->values();
+
+        return view('admin.bookings.show', [
+            'booking' => $booking,
+            'revenueShares' => $revenueShares,
+        ]);
     }
 
 
@@ -454,50 +529,21 @@ class BookingController extends Controller
         $profileUrl = route('profile');
         $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
         $workshopSlug = $booking->workshop?->slug;
-        $workshopUrl = $workshopSlug
-            ? route('workshop.show', ['workshop' => $workshopSlug])
-            : route('workshops');
+
+        [$notificationTitle, $notificationMessage] = NotificationCopy::bookingConfirmed($booking, $booking->workshop);
 
         // إنشاء إشعار للمستخدم عند تأكيد الحجز
         Notification::createNotification(
             $booking->user_id,
             'workshop_confirmed',
-            'تم تأكيد حجز الورشة',
-            "تم تأكيد حجز ورشة '{$booking->workshop->title}' بنجاح! يمكنك الآن الدخول إلى ملفك الشخصي لمتابعة تفاصيل الورشة",
+            $notificationTitle,
+            $notificationMessage,
             [
                 'workshop_id' => $booking->workshop_id, 
                 'workshop_slug' => $workshopSlug,
                 'booking_id' => $booking->id,
                 'profile_url' => $profileUrl,
                 'action_url' => $bookingShowUrl,
-            ]
-        );
-        
-        // إشعار إضافي: ترحيب بالورشة
-        Notification::createNotification(
-            $booking->user_id,
-            'general',
-            'مرحباً بك في ورشة ' . $booking->workshop->title,
-            "نحن متحمسون لرؤيتك في ورشة '{$booking->workshop->title}'! تأكد من الوصول في الوقت المحدد.",
-            [
-                'workshop_id' => $booking->workshop_id,
-                'workshop_slug' => $workshopSlug,
-                'workshop_title' => $booking->workshop->title,
-                'action_url' => $workshopUrl,
-            ]
-        );
-        
-        // إشعار إضافي: تذكير بالورشة
-        Notification::createNotification(
-            $booking->user_id,
-            'general',
-            'تذكير: ورشة ' . $booking->workshop->title,
-            "ورشة '{$booking->workshop->title}' مؤكدة! لا تنس مراجعة تفاصيل الورشة في ملفك الشخصي قبل الموعد المحدد.",
-            [
-                'workshop_id' => $booking->workshop_id,
-                'workshop_slug' => $workshopSlug,
-                'workshop_title' => $booking->workshop->title,
-                'action_url' => $workshopUrl,
             ]
         );
 
@@ -531,50 +577,25 @@ class BookingController extends Controller
         $profileUrl = route('profile');
         $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
         $workshopSlug = $booking->workshop?->slug;
-        $workshopUrl = $workshopSlug
-            ? route('workshop.show', ['workshop' => $workshopSlug])
-            : route('workshops');
+
+        [$notificationTitle, $notificationMessage] = NotificationCopy::bookingCancelled(
+            $booking,
+            $request->cancellation_reason ?? null,
+            $booking->workshop
+        );
 
         Notification::createNotification(
             $booking->user_id,
             'workshop_cancelled',
-            'تم إلغاء حجز الورشة',
-            "تم إلغاء حجز ورشة '{$booking->workshop->title}'. يمكنك الدخول إلى ملفك الشخصي لمتابعة تفاصيل الإلغاء: {$profileUrl}",
+            $notificationTitle,
+            $notificationMessage,
             [
                 'workshop_id' => $booking->workshop_id, 
                 'workshop_slug' => $workshopSlug,
                 'booking_id' => $booking->id,
                 'profile_url' => $profileUrl,
-                'cancellation_reason' => $request->cancellation_reason ?? 'تم الإلغاء من قبل الإدارة',
+                'cancellation_reason' => $request->cancellation_reason ?? 'Cancelled by the Wasfah team',
                 'action_url' => $bookingShowUrl,
-            ]
-        );
-        
-        // إشعار إضافي: اعتذار عن الإلغاء
-        Notification::createNotification(
-            $booking->user_id,
-            'general',
-            'اعتذار عن إلغاء ورشة ' . $booking->workshop->title,
-            "نعتذر عن إلغاء ورشة '{$booking->workshop->title}'. نأمل أن نراك في ورشات أخرى قريباً. تحقق من الورشات المتاحة في موقعنا.",
-            [
-                'workshop_id' => $booking->workshop_id,
-                'workshop_slug' => $workshopSlug,
-                'workshop_title' => $booking->workshop->title,
-                'action_url' => $workshopUrl,
-            ]
-        );
-        
-        // إشعار إضافي: ورشات بديلة
-        Notification::createNotification(
-            $booking->user_id,
-            'general',
-            'ورشات بديلة متاحة',
-            "نقترح عليك تصفح الورشات الأخرى المتاحة. قد تجد ورشة أخرى تناسب اهتماماتك وتوقيتك.",
-            [
-                'workshop_id' => $booking->workshop_id,
-                'workshop_slug' => $workshopSlug,
-                'workshop_title' => $booking->workshop->title,
-                'action_url' => route('workshops'),
             ]
         );
 

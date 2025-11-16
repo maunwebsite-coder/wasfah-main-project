@@ -71,7 +71,7 @@
                         @if($tool->image)
                             <img src="{{ asset('storage/' . $tool->image) }}" 
                                  alt="{{ $tool->name }}" 
-                                 class="w-full max-w-md mx-auto rounded-lg shadow-lg">
+                                 class="w-full max-w-md mx-auto rounded-lg shadow-lg" loading="lazy">
                         @else
                             <div class="w-full max-w-md mx-auto h-64 bg-gray-200 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-tools text-6xl text-gray-400"></i>
@@ -185,3 +185,4 @@
     </div>
 </div>
 @endsection
+

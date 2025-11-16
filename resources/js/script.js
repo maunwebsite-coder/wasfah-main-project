@@ -45,7 +45,7 @@ function createModernCardHTML(recipe) {
 				
 				<div class="card-front bg-white">
 					<div class="relative h-2/3">
-						<img src="${imgUrl}" alt="${recipe.title}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/500x300/f97316/ffffff?text=لا+توجد+صورة'; this.alt='صورة افتراضية';">
+						<img src="${imgUrl}" alt="${recipe.title}" class="w-full h-full object-cover" width="600" height="360" decoding="async" onerror="this.src='https://placehold.co/500x300/f97316/ffffff?text=لا+توجد+صورة'; this.alt='صورة افتراضية';">
 						<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 						<div class="absolute bottom-4 right-4"><span class="bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">${category}</span></div>
 					</div>
@@ -121,7 +121,7 @@ function createLatestRecipesHTML(recipes) {
 		return `
 		<li class="flex items-start gap-4 p-2 hover:bg-gray-50">
 			<a href="/recipe/${rec.recipe_id}" class="view-recipe-btn-link w-full block flex items-start gap-4">
-				<img src="${imgUrl}" alt="${rec.title}" class="w-20 h-20 object-cover rounded-lg" onerror="this.src='https://placehold.co/80x80?text=No+Image'; this.alt='صورة افتراضية';">
+				<img src="${imgUrl}" alt="${rec.title}" class="w-20 h-20 object-cover rounded-lg" width="80" height="80" decoding="async" onerror="this.src='https://placehold.co/80x80?text=No+Image'; this.alt='صورة افتراضية';">
 				<div>
 					<span class="text-xs text-gray-500">${rec.category?.name || "حلويات"}</span>
 					<p class="font-semibold text-gray-800">${rec.title}</p>
@@ -317,193 +317,6 @@ function loadCartCount() {
 }
 
 /**
- * تحميل عدد الأدوات المحفوظة
- */
-function loadSavedCount() {
-	console.log('Loading saved count...'); // Debug log
-	
-	// إضافة CSRF token
-	const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-	
-	fetch('/saved/count', {
-		method: 'GET',
-		headers: {
-			'X-CSRF-TOKEN': csrfToken || '',
-			'Content-Type': 'application/json',
-			'Accept': 'application/json',
-			'X-Requested-With': 'XMLHttpRequest'
-		},
-		credentials: 'same-origin',
-		cache: 'no-cache'
-	})
-		.then(response => {
-			console.log('Response status:', response.status);
-			if (response.status === 401) {
-				// المستخدم غير مسجل دخول
-				console.log('User not authenticated, showing 0');
-				updateSavedCountUI(0);
-				return;
-			}
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			return response.json();
-		})
-		.then(data => {
-			if (data) {
-				console.log('Saved count data:', data); // Debug log
-				updateSavedCountUI(data.count);
-			}
-		})
-		.catch(error => {
-			console.error('Error loading saved count:', error);
-			// في حالة الخطأ، نعرض 0
-			updateSavedCountUI(0);
-		});
-}
-
-// دالة محسنة لتحميل العداد مع معالجة أفضل للأخطاء
-function loadSavedCountImproved() {
-	console.log('Loading saved count improved...'); // Debug log
-	
-	// إضافة CSRF token
-	const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-	
-	fetch('/saved/count', {
-		method: 'GET',
-		headers: {
-			'X-CSRF-TOKEN': csrfToken || '',
-			'Content-Type': 'application/json',
-			'Accept': 'application/json',
-			'X-Requested-With': 'XMLHttpRequest'
-		},
-		credentials: 'same-origin',
-		cache: 'no-cache'
-	})
-		.then(response => {
-			console.log('Improved response status:', response.status);
-			if (response.status === 401) {
-				// المستخدم غير مسجل دخول
-				console.log('User not authenticated (improved), showing 0');
-				updateSavedCountUI(0);
-				return;
-			}
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			return response.json();
-		})
-		.then(data => {
-			if (data) {
-				console.log('Improved saved count data:', data); // Debug log
-				updateSavedCountUI(data.count);
-			}
-		})
-		.catch(error => {
-			console.error('Error loading saved count improved:', error);
-			// في حالة الخطأ، نعرض 0
-			updateSavedCountUI(0);
-		});
-}
-
-// دالة بديلة لتحميل العداد مع session مختلف
-function loadSavedCountAlternative() {
-	console.log('Loading saved count alternative...'); // Debug log
-	
-	// إضافة CSRF token
-	const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-	
-	fetch('/saved/count', {
-		method: 'POST',
-		headers: {
-			'X-CSRF-TOKEN': csrfToken || '',
-			'Content-Type': 'application/json',
-			'Accept': 'application/json',
-			'X-Requested-With': 'XMLHttpRequest'
-		},
-		credentials: 'same-origin',
-		cache: 'no-cache',
-		body: JSON.stringify({})
-	})
-		.then(response => {
-			console.log('Alternative response status:', response.status);
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log('Alternative saved count data:', data); // Debug log
-			updateSavedCountUI(data.count);
-		})
-		.catch(error => {
-			console.error('Error loading saved count alternative:', error);
-			// في حالة الخطأ، نعرض 0
-			updateSavedCountUI(0);
-		});
-}
-
-// دالة مساعدة لتحميل العداد مع إعادة المحاولة
-function loadSavedCountWithRetry(retries = 3) {
-	loadSavedCount();
-	
-	// إعادة المحاولة مرة واحدة فقط إذا لزم الأمر
-	if (retries > 0) {
-		setTimeout(() => {
-			const savedCountEl = document.getElementById('saved-count');
-			if (savedCountEl && savedCountEl.classList.contains('hidden') && retries > 0) {
-				console.log('Retrying loadSavedCount, final attempt');
-				loadSavedCount(); // محاولة أخيرة بدون إعادة الاستدعاء
-			}
-		}, 1000); // تقليل الوقت من 2000 إلى 1000
-	}
-}
-
-// دالة لاختبار العداد مباشرة
-function testCounterDisplay() {
-	const savedCountEl = document.getElementById('saved-count');
-	if (savedCountEl) {
-		console.log('Testing counter display...');
-		savedCountEl.textContent = '5';
-		savedCountEl.classList.remove('hidden');
-		console.log('Counter should now be visible with number 5');
-	} else {
-		console.error('saved-count element not found');
-	}
-}
-
-/**
- * تحديث واجهة عداد الأدوات المحفوظة
- */
-function updateSavedCountUI(count) {
-	// تحديث العداد في الهيدر
-	const savedCountEl = document.getElementById('saved-count');
-	if (savedCountEl) {
-		if (count > 0) {
-			savedCountEl.textContent = count;
-			savedCountEl.classList.remove('hidden');
-			console.log('Saved count updated in navbar:', count); // Debug log
-		} else {
-			savedCountEl.classList.add('hidden');
-			console.log('Saved count hidden in navbar'); // Debug log
-		}
-	} else {
-		console.log('saved-count element not found in navbar'); // Debug log
-	}
-	
-	// تحديث العداد في صفحة الأدوات
-	const savedCountBadge = document.getElementById('saved-count-badge');
-	if (savedCountBadge) {
-		if (count > 0) {
-			savedCountBadge.textContent = count;
-			savedCountBadge.classList.remove('hidden');
-		} else {
-			savedCountBadge.classList.add('hidden');
-		}
-	}
-}
-
-/**
  * تهيئة مستمعي الأحداث لعناصر الواجهة مثل القائمة الجانبية في الجوال.
  */
 function initializeUIEventListeners() {
@@ -551,15 +364,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	fetchAndDisplayRecipes();
 	initializeCardEventListeners();
 	loadCartCount(); // تحميل عدد المنتجات في السلة
-	loadSavedCount(); // تحميل عدد الأدوات المحفوظة
 });
-
-// جعل الدالة متاحة عالمياً للتحديث الفوري
-window.loadSavedCount = loadSavedCount;
-window.loadSavedCountImproved = loadSavedCountImproved;
-window.loadSavedCountAlternative = loadSavedCountAlternative;
-window.loadSavedCountWithRetry = loadSavedCountWithRetry;
-window.testCounterDisplay = testCounterDisplay;
-window.updateSavedCountUI = updateSavedCountUI;
 // =================================================================================   
 // نهاية الملف (End of File)        

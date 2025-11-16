@@ -3,15 +3,22 @@
 namespace App\Http\Controllers\Chef;
 
 use App\Http\Controllers\Controller;
+use App\Models\BookingRevenueShare;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Workshop;
 use App\Models\WorkshopBooking;
 use App\Services\EnhancedImageUploadService;
-use App\Services\JitsiMeetingService;
+use App\Services\GoogleDriveService;
+use App\Services\GoogleMeetService;
+use App\Services\WorkshopMeetingAttendeeSyncService;
+use App\Support\ImageUploadConstraints;
+use App\Support\HostMeetRedirectLinkFactory;
+use App\Support\NotificationCopy;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
@@ -24,7 +31,11 @@ use Illuminate\Validation\ValidationException;
 
 class WorkshopController extends Controller
 {
-    public function __construct(protected JitsiMeetingService $jitsiMeetingService)
+    public function __construct(
+        protected GoogleMeetService $googleMeetService,
+        protected WorkshopMeetingAttendeeSyncService $meetingAttendeeSync,
+        protected GoogleDriveService $googleDriveService
+    )
     {
     }
 
@@ -65,6 +76,14 @@ class WorkshopController extends Controller
         $paidSeats = (clone $paidBookingsQuery)->count();
         $averageSeat = $paidSeats > 0 ? $lifetimeGross / $paidSeats : 0;
 
+        $chefShareQuery = BookingRevenueShare::query()
+            ->where('recipient_type', BookingRevenueShare::TYPE_CHEF)
+            ->where('status', BookingRevenueShare::STATUS_DISTRIBUTED)
+            ->where('recipient_id', $chefId);
+
+        $lifetimeNet = (clone $chefShareQuery)->sum('amount');
+        $averageNetSeat = $paidSeats > 0 ? $lifetimeNet / $paidSeats : 0;
+
         $now = now();
         $currentMonthRange = [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()];
         $previousMonth = $now->copy()->subMonthNoOverflow();
@@ -78,6 +97,14 @@ class WorkshopController extends Controller
             ->whereBetween('created_at', $previousMonthRange)
             ->sum('payment_amount');
 
+        $currentMonthNet = (clone $chefShareQuery)
+            ->whereBetween('distributed_at', $currentMonthRange)
+            ->sum('amount');
+
+        $previousMonthNet = (clone $chefShareQuery)
+            ->whereBetween('distributed_at', $previousMonthRange)
+            ->sum('amount');
+
         $workshopBreakdown = Workshop::query()
             ->where('user_id', $chefId)
             ->withCount([
@@ -86,22 +113,27 @@ class WorkshopController extends Controller
             ->withSum([
                 'bookings as paid_total' => fn ($query) => $query->where('payment_status', 'paid'),
             ], 'payment_amount')
+            ->withSum([
+                'revenueShares as chef_net_total' => function ($query) use ($chefId) {
+                    $query->where('booking_revenue_shares.recipient_type', BookingRevenueShare::TYPE_CHEF)
+                        ->where('booking_revenue_shares.status', BookingRevenueShare::STATUS_DISTRIBUTED)
+                        ->where('booking_revenue_shares.recipient_id', $chefId);
+                },
+            ], 'amount')
             ->orderByDesc('paid_total')
             ->take(10)
             ->get();
 
-        $netRange = [
-            'low' => $lifetimeGross * 0.70,
-            'high' => $lifetimeGross * 0.75,
-        ];
-
         return view('chef.workshops.earnings', [
             'lifetimeGross' => $lifetimeGross,
+            'lifetimeNet' => $lifetimeNet,
             'paidSeats' => $paidSeats,
             'averageSeat' => $averageSeat,
+            'averageNetSeat' => $averageNetSeat,
             'currentMonthGross' => $currentMonthGross,
             'previousMonthGross' => $previousMonthGross,
-            'netRange' => $netRange,
+            'currentMonthNet' => $currentMonthNet,
+            'previousMonthNet' => $previousMonthNet,
             'workshopBreakdown' => $workshopBreakdown,
         ]);
     }
@@ -127,6 +159,7 @@ class WorkshopController extends Controller
         $workshop->instructor_avatar = Auth::user()->avatar;
         $workshop->is_featured = false;
         $workshop->save();
+        $this->meetingAttendeeSync->sync($workshop);
         $this->notifyAdminsIfReviewRequired($workshop);
 
         return redirect()
@@ -154,6 +187,7 @@ class WorkshopController extends Controller
         $workshop->instructor = $data['instructor'] ?? $workshop->instructor ?? Auth::user()->name;
         $workshop->instructor_bio = $data['instructor_bio'] ?? $workshop->instructor_bio ?? Auth::user()->chef_specialty_description;
         $workshop->save();
+        $this->meetingAttendeeSync->sync($workshop);
 
         return redirect()
             ->route('chef.workshops.index')
@@ -185,55 +219,14 @@ class WorkshopController extends Controller
                 ->with('error', 'هذه الورشة ليست أونلاين أو أن رابط الاجتماع غير متاح.');
         }
 
-        if (!in_array($workshop->meeting_provider, ['jitsi', 'jaas'], true)) {
+        if ($workshop->meeting_provider !== 'google_meet') {
             return redirect()->away($workshop->meeting_link);
         }
 
         $currentUser = Auth::user();
-        if ($workshop->meeting_provider === 'jaas') {
-            $missingJaasConfig = $this->getMissingJaasConfigKeys();
-
-            if (!empty($missingJaasConfig)) {
-                Log::error('JaaS configuration is incomplete for chef workshop join.', [
-                    'workshop_id' => $workshop->id,
-                    'user_id' => $currentUser?->id,
-                    'missing_keys' => $missingJaasConfig,
-                ]);
-
-                $message = 'لا يمكن فتح غرفة الاجتماع لأن إعدادات Jitsi JaaS غير مكتملة. يرجى التواصل مع فريق الدعم.';
-
-                if ($workshop->meeting_link) {
-                    $message .= ' يمكنك استخدام رابط الاجتماع الخارجي مؤقتاً: ' . $workshop->meeting_link;
-                }
-
-                return redirect()
-                    ->route('chef.workshops.index')
-                    ->with('error', $message);
-            }
-        }
 
         if ($redirect = $this->enforceHostJoinDeviceLock($request, $workshop)) {
             return $redirect;
-        }
-
-        try {
-            $embedConfig = $this->buildJitsiEmbedConfig(
-                $workshop,
-                $currentUser?->name,
-                $currentUser?->email,
-                true
-            );
-        } catch (\Throwable $exception) {
-            Log::error('Failed to build Jitsi embed configuration for chef workshop.', [
-                'workshop_id' => $workshop->id,
-                'user_id' => $currentUser?->id,
-                'provider' => $workshop->meeting_provider,
-                'exception_message' => $exception->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('chef.workshops.index')
-                ->with('error', 'تعذر تحميل غرفة الاجتماع بسبب خطأ غير متوقع. يرجى المحاولة لاحقاً أو التواصل مع فريق الدعم.');
         }
 
         $recentParticipants = $workshop->bookings()
@@ -246,10 +239,11 @@ class WorkshopController extends Controller
 
         return view('chef.workshops.join', [
             'workshop' => $workshop,
-            'embedConfig' => $embedConfig,
             'user' => $currentUser,
+            'meetingLink' => $workshop->meeting_link,
             'recentParticipants' => $recentParticipants,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
+            'hostRedirectUrl' => HostMeetRedirectLinkFactory::make($workshop),
         ]);
     }
 
@@ -445,6 +439,70 @@ class WorkshopController extends Controller
         ]);
     }
 
+    public function syncRecording(Request $request, Workshop $workshop): JsonResponse
+    {
+        $this->authorizeWorkshop($workshop);
+
+        if (!$workshop->is_online) {
+            return $this->recordingJsonError(
+                __('chef.dashboard.workshops.host_room.recording.messages.offline'),
+                422
+            );
+        }
+
+        if (!$this->googleDriveService->isEnabled()) {
+            return $this->recordingJsonError(
+                __('chef.dashboard.workshops.host_room.recording.messages.disabled'),
+                503
+            );
+        }
+
+        $meetingCode = $workshop->meeting_code ?: Workshop::extractMeetingCode($workshop->meeting_link);
+
+        if (!$meetingCode) {
+            return $this->recordingJsonError(
+                __('chef.dashboard.workshops.host_room.recording.messages.missing_code'),
+                422
+            );
+        }
+
+        $recordingUrl = $this->googleDriveService->findRecordingUrl($meetingCode);
+
+        if (!$recordingUrl) {
+            return $this->recordingJsonError(
+                __('chef.dashboard.workshops.host_room.recording.messages.not_found'),
+                404
+            );
+        }
+
+        $normalizedUrl = trim($recordingUrl);
+        $updated = false;
+
+        if ($normalizedUrl !== '' && $workshop->recording_url !== $normalizedUrl) {
+            $workshop->forceFill(['recording_url' => $normalizedUrl])->save();
+            $updated = true;
+        }
+
+        $message = $updated
+            ? __('chef.dashboard.workshops.host_room.recording.messages.synced')
+            : __('chef.dashboard.workshops.host_room.recording.messages.already_synced');
+
+        return response()->json([
+            'success' => true,
+            'recording_url' => $normalizedUrl,
+            'updated' => $updated,
+            'message' => $message,
+        ]);
+    }
+
+    protected function recordingJsonError(string $message, int $status = 422): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+        ], $status);
+    }
+
     public function generateMeetingLink(Request $request)
     {
         abort_unless(Auth::user()?->isAdmin(), 403);
@@ -456,17 +514,28 @@ class WorkshopController extends Controller
 
         $startsAt = isset($validated['start_date']) ? Carbon::parse($validated['start_date']) : null;
 
-        $meeting = $this->jitsiMeetingService->createMeeting(
-            $validated['title'],
-            Auth::id(),
-            $startsAt
-        );
+        try {
+            $meeting = $this->googleMeetService->createMeeting(
+                $validated['title'],
+                Auth::id(),
+                $startsAt
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذر إنشاء اجتماع Google Meet في الوقت الحالي.',
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'meeting_link' => $meeting['url'],
-            'room' => $meeting['room'],
-            'passcode' => $meeting['passcode'],
+            'meeting_link' => $meeting['meeting_link'],
+            'event_id' => $meeting['event_id'] ?? null,
+            'starts_at' => optional($meeting['starts_at'] ?? null)?->toIso8601String(),
+            'room' => $meeting['room'] ?? null,
+            'passcode' => $meeting['passcode'] ?? null,
         ]);
     }
 
@@ -625,7 +694,7 @@ class WorkshopController extends Controller
             'duration' => ['required', 'integer', 'min:30', 'max:600'],
             'max_participants' => ['required', 'integer', 'min:1', 'max:500'],
             'price' => ['required', 'numeric', 'min:0'],
-            'currency' => ['required', Rule::in(['JOD'])],
+            'currency' => ['required', Rule::in(['USD'])],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'registration_deadline' => ['nullable', 'date', 'before:start_date'],
@@ -639,22 +708,25 @@ class WorkshopController extends Controller
             'requirements' => ['nullable', 'string'],
             'materials_needed' => ['nullable', 'string'],
             'meeting_link' => ['nullable', 'url', 'max:255'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+            'recording_url' => ['nullable', 'url', 'max:512'],
+            'image' => array_merge(['nullable'], ImageUploadConstraints::rules()),
             'remove_image' => ['sometimes', 'boolean'],
             'auto_generate_meeting' => ['sometimes', 'boolean'],
         ];
 
-        $messages = [
-            'image.image' => 'يرجى اختيار ملف صورة صالح.',
-            'image.mimes' => 'الصيغ المدعومة هي JPG, PNG, GIF أو WebP فقط.',
-            'image.max' => 'حجم الصورة كبير جداً. الحد الأقصى هو 2 ميجابايت.',
-        ];
+        $messages = ImageUploadConstraints::messages('image', [
+            'ar' => 'صورة الورشة',
+            'en' => 'workshop image',
+        ]);
 
         $data = $request->validate($rules, $messages);
 
-        if (!empty($data['is_online']) && empty($data['meeting_link']) && !$request->boolean('auto_generate_meeting')) {
+        $autoGenerateRequested = $request->boolean('auto_generate_meeting');
+        $autoGenerationAvailable = $autoGenerateRequested && $this->googleMeetIntegrationEnabled();
+
+        if (!empty($data['is_online']) && empty($data['meeting_link']) && !$autoGenerationAvailable) {
             throw ValidationException::withMessages([
-                'meeting_link' => 'يرجى إدخال رابط اجتماع أو اختيار خيار توليد رابط Jitsi تلقائياً.',
+                'meeting_link' => 'يرجى إدخال رابط اجتماع أو اختيار خيار توليد رابط Google Meet تلقائياً.',
             ]);
         }
 
@@ -689,24 +761,25 @@ class WorkshopController extends Controller
         }
 
         $workshop->loadMissing('chef');
-        $chefName = $workshop->chef?->name ?? 'أحد الشيفات';
+        $chefName = $workshop->chef?->name ?? 'One of our chefs';
         $reviewUrl = route('admin.workshops.show', $workshop);
+        [$title, $message] = NotificationCopy::workshopReviewRequired($chefName, $workshop);
 
         foreach ($adminIds as $adminId) {
             Notification::createNotification(
                 $adminId,
                 'workshop_review_required',
-                'ورشة جديدة بانتظار المراجعة',
-                "قام {$chefName} بتسجيل ورشة '{$workshop->title}' وهي بانتظار مراجعتك قبل التفعيل.",
+                $title,
+                $message,
                 [
-                'workshop_id' => $workshop->id,
-                'workshop_slug' => $workshop->slug,
-                'review_url' => $reviewUrl,
-                'chef_id' => $workshop->user_id,
-                'action_url' => $reviewUrl,
-            ]
-        );
-    }
+                    'workshop_id' => $workshop->id,
+                    'workshop_slug' => $workshop->slug,
+                    'review_url' => $reviewUrl,
+                    'chef_id' => $workshop->user_id,
+                    'action_url' => $reviewUrl,
+                ]
+            );
+        }
     }
 
     protected function workshopRequiresAdminReview(Workshop $workshop): bool
@@ -740,10 +813,11 @@ class WorkshopController extends Controller
             'what_you_will_learn' => $data['what_you_will_learn'] ?? null,
             'requirements' => $data['requirements'] ?? null,
             'materials_needed' => $data['materials_needed'] ?? null,
+            'recording_url' => $data['recording_url'] ?? null,
             'is_online' => (bool) $data['is_online'],
             'is_active' => isset($data['is_active'])
                 ? (bool) $data['is_active']
-                : false,
+                : true,
         ]);
 
         if (!$workshop->is_online && empty($workshop->location)) {
@@ -787,10 +861,12 @@ class WorkshopController extends Controller
         if (!$workshop->is_online) {
             $workshop->meeting_link = null;
             $workshop->meeting_provider = 'manual';
-            $workshop->jitsi_room = null;
-            $workshop->jitsi_passcode = null;
             $workshop->meeting_started_at = null;
             $workshop->meeting_started_by = null;
+            $workshop->meeting_code = null;
+            $workshop->meeting_event_id = null;
+            $workshop->meeting_calendar_id = null;
+            $workshop->meeting_conference_id = null;
             if ($supportsMeetingLock) {
                 $workshop->meeting_locked_at = null;
             }
@@ -806,8 +882,12 @@ class WorkshopController extends Controller
         }
 
         $currentUser = Auth::user();
-        $shouldForceAutoGeneration = !$currentUser || !$currentUser->isAdmin();
-        $autoGenerate = $request->boolean('auto_generate_meeting');
+        $googleMeetEnabled = $this->googleMeetIntegrationEnabled();
+        $hostOverridesEnabled = $this->hostMeetingLinkOverridesEnabled();
+        $shouldForceAutoGeneration = $googleMeetEnabled
+            && (!$currentUser || !$currentUser->isAdmin())
+            && !$hostOverridesEnabled;
+        $autoGenerate = $googleMeetEnabled && $request->boolean('auto_generate_meeting');
 
         if ($shouldForceAutoGeneration) {
             $autoGenerate = true;
@@ -828,23 +908,45 @@ class WorkshopController extends Controller
             $workshop->host_join_device_user_agent = null;
         }
 
-        if ($autoGenerate || empty($inputLink)) {
-            $meeting = $this->jitsiMeetingService->createMeeting(
-                $workshop->title,
-                Auth::id(),
-                $workshop->start_date instanceof Carbon ? $workshop->start_date : Carbon::parse($workshop->start_date)
-            );
+        if ($autoGenerate) {
+            $hostAttendee = $workshop->hostAttendeePayload();
 
-            $workshop->meeting_link = $meeting['url'];
-            $workshop->meeting_provider = $meeting['provider'] ?? 'jitsi';
-            $workshop->jitsi_room = $meeting['room'];
-            $workshop->jitsi_passcode = $meeting['passcode'];
-            $workshop->location = $workshop->location ?: 'أونلاين عبر Jitsi Meet';
-        } else {
+            try {
+                $meeting = $this->googleMeetService->createMeeting(
+                    $workshop->title,
+                    Auth::id(),
+                    $workshop->start_date instanceof Carbon
+                        ? $workshop->start_date
+                        : Carbon::parse($workshop->start_date),
+                    null,
+                    null,
+                    $hostAttendee ? [$hostAttendee] : [],
+                    $hostAttendee
+                );
+            } catch (\Throwable $exception) {
+                throw ValidationException::withMessages([
+                    'meeting_link' => 'تعذر توليد اجتماع Google Meet. يرجى إدخال الرابط يدوياً أو المحاولة لاحقاً.',
+                ]);
+            }
+
+            $workshop->meeting_link = $meeting['meeting_link'];
+            $workshop->meeting_provider = $meeting['provider'] ?? 'google_meet';
+            $workshop->location = $workshop->location ?: 'أونلاين عبر Google Meet';
+            $workshop->meeting_code = Workshop::extractMeetingCode($workshop->meeting_link);
+            $workshop->meeting_event_id = $meeting['event_id'] ?? null;
+            $workshop->meeting_calendar_id = $meeting['calendar_id'] ?? null;
+            $workshop->meeting_conference_id = $meeting['conference_id'] ?? null;
+        } elseif (!empty($inputLink)) {
             $workshop->meeting_link = $inputLink;
-            $workshop->meeting_provider = 'manual';
-            $workshop->jitsi_room = null;
-            $workshop->jitsi_passcode = null;
+            $workshop->meeting_provider = str_contains((string) $inputLink, 'meet.google.com') ? 'google_meet' : 'manual';
+            $workshop->meeting_code = Workshop::extractMeetingCode($workshop->meeting_link);
+            $workshop->meeting_event_id = null;
+            $workshop->meeting_calendar_id = null;
+            $workshop->meeting_conference_id = null;
+        } else {
+            throw ValidationException::withMessages([
+                'meeting_link' => 'يرجى إدخال رابط الاجتماع أو تفعيل خيار توليد رابط Google Meet.',
+            ]);
         }
     }
 
@@ -855,110 +957,34 @@ class WorkshopController extends Controller
         }
     }
 
-    protected function getMissingJaasConfigKeys(): array
-    {
-        $jaasConfig = config('services.jitsi.jaas', []);
-
-        $requiredKeys = ['app_id', 'api_key', 'private_key_path'];
-        $missing = [];
-
-        foreach ($requiredKeys as $key) {
-            $value = $jaasConfig[$key] ?? null;
-
-            if (blank($value)) {
-                $missing[] = $key;
-            }
-        }
-
-        return $missing;
-    }
-
-    protected function buildJitsiEmbedConfig(Workshop $workshop, ?string $displayName = null, ?string $email = null, bool $isModerator = true): array
-    {
-        $provider = $workshop->meeting_provider ?: config('services.jitsi.provider', 'meet');
-
-        if ($provider === 'jaas') {
-            $jaasConfig = config('services.jitsi.jaas', []);
-            $baseUrl = $jaasConfig['base_url'] ?? 'https://8x8.vc';
-            $parsedBase = parse_url($baseUrl);
-            $domain = $parsedBase['host'] ?? '8x8.vc';
-            $scheme = $parsedBase['scheme'] ?? 'https';
-            $appId = $jaasConfig['app_id'] ?? null;
-
-            if (!$appId) {
-                throw new \RuntimeException('JaaS app ID is not configured. Please set JITSI_JAAS_APP_ID.');
-            }
-
-            $roomSlug = trim($workshop->jitsi_room ?? '');
-            if ($roomSlug === '') {
-                $roomSlug = Str::slug($workshop->title . '-' . $workshop->id, '-');
-            }
-            $roomSlug = trim(str_replace(' ', '-', $roomSlug), '/');
-
-            $roomPath = "{$appId}/{$roomSlug}";
-            $tokenService = app(\App\Services\JitsiJaasTokenService::class);
-            $allowParticipantSubject = (bool) config('services.jitsi.allow_participant_subject_edit', true);
-            $shouldIssueModeratorToken = $isModerator || (!$isModerator && $allowParticipantSubject);
-            $userContext = [
-                'name' => $displayName,
-                'email' => $email,
-            ];
-            $jwt = $shouldIssueModeratorToken
-                ? $tokenService->createModeratorToken($roomSlug, $userContext, $workshop->start_date)
-                : $tokenService->createParticipantToken($roomSlug, $userContext, $workshop->start_date);
-
-            return [
-                'provider' => 'jaas',
-                'domain' => $domain,
-                'room' => $roomPath,
-                'jwt' => $jwt,
-                'passcode' => null,
-                'external_api_url' => "{$scheme}://{$domain}/external_api.js",
-            ];
-        }
-
-        $meetingUrl = $workshop->meeting_link;
-        $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
-        $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));
-
-        $domain = $parsedMeeting['host']
-            ?? ($fallbackBase['host'] ?? 'meet.jit.si');
-
-        $scheme = $parsedMeeting['scheme']
-            ?? ($fallbackBase['scheme'] ?? 'https');
-
-        $room = $workshop->jitsi_room
-            ?? ltrim($parsedMeeting['path'] ?? '', '/')
-            ?? Str::slug($workshop->title . '-' . $workshop->id, '-');
-
-        $room = trim($room);
-
-        if (str_contains($room, '/')) {
-            $segments = array_filter(explode('/', $room));
-            $room = end($segments);
-        }
-
-        if (!$room) {
-            $room = Str::slug($workshop->title . '-' . $workshop->id, '-');
-        }
-
-        return [
-            'domain' => $domain,
-            'room' => $room,
-            'passcode' => $workshop->jitsi_passcode,
-            'external_api_url' => "{$scheme}://{$domain}/external_api.js",
-        ];
-    }
-
     protected function enforceMeetingLinkPrivacyPolicy(Request $request): void
     {
         $user = Auth::user();
+        $googleMeetEnabled = $this->googleMeetIntegrationEnabled();
 
-        if (!$user || !$user->isAdmin()) {
+        if (!$googleMeetEnabled) {
+            $request->merge([
+                'auto_generate_meeting' => 0,
+            ]);
+
+            return;
+        }
+
+        if ((!$user || !$user->isAdmin()) && !$this->hostMeetingLinkOverridesEnabled()) {
             $request->merge([
                 'auto_generate_meeting' => 1,
                 'meeting_link' => null,
             ]);
         }
+    }
+
+    protected function googleMeetIntegrationEnabled(): bool
+    {
+        return $this->googleMeetService->isEnabled();
+    }
+
+    protected function hostMeetingLinkOverridesEnabled(): bool
+    {
+        return (bool) config('workshop-links.allow_host_meeting_link_override', true);
     }
 }

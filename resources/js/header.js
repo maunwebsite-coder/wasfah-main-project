@@ -3,7 +3,15 @@
  * @description هذا الملف يعالج حالة المصادقة للمستخدم ويقوم بتحديث شريط التنقل ديناميكياً بالاعتماد على جلسات Laravel.
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
+const USER_MENU_HANDLER_KEY = '__userMenuDropdownHandlers';
+let headerModuleInitialized = false;
+
+async function initHeaderModule() {
+	if (headerModuleInitialized) {
+		return;
+	}
+	headerModuleInitialized = true;
+
 	console.log('Header.js loaded and DOM ready');
 	
 	// Mobile Search Modal functionality
@@ -51,7 +59,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 	} catch (error) {
 		console.error('Error fetching user status:', error);
 	}
-});
+}
+
+function bootstrapHeaderModule() {
+	if (typeof document === 'undefined') {
+		return;
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initHeaderModule, { once: true });
+	} else {
+		initHeaderModule();
+	}
+}
+
+bootstrapHeaderModule();
 
 /**
  * يقوم بتحديث شريط التنقل (العلوي والجوال) لعرض قائمة المستخدم المسجل.
@@ -202,7 +224,11 @@ function setupMobileSearch() {
  * @param {HTMLElement} userMenuContainer - الحاوية الرئيسية لزر المستخدم والقائمة
  */
 function setupUserMenuDropdown(userMenuContainer) {
-	if (!userMenuContainer || userMenuContainer.dataset.dropdownInitialized === 'true') {
+	if (!userMenuContainer) {
+		return;
+	}
+	
+	if (userMenuContainer.dataset.dropdownInitialized === 'true') {
 		return;
 	}
 	
@@ -214,29 +240,31 @@ function setupUserMenuDropdown(userMenuContainer) {
 		return;
 	}
 	
-	userMenuContainer.dataset.dropdownInitialized = 'true';
 	dropdownMenu.classList.add('hidden');
+	dropdownMenu.classList.remove('show');
 	dropdownMenu.setAttribute('aria-hidden', 'true');
 	userMenuButton.setAttribute('aria-expanded', 'false');
 	userMenuButton.setAttribute('aria-haspopup', 'true');
 	
 	const openMenu = () => {
 		dropdownMenu.classList.remove('hidden');
+		dropdownMenu.classList.add('show');
 		dropdownMenu.setAttribute('aria-hidden', 'false');
 		userMenuButton.setAttribute('aria-expanded', 'true');
 	};
 	
 	const closeMenu = () => {
-		if (dropdownMenu.classList.contains('hidden')) {
+		if (dropdownMenu.classList.contains('hidden') && !dropdownMenu.classList.contains('show')) {
 			return;
 		}
 		
 		dropdownMenu.classList.add('hidden');
+		dropdownMenu.classList.remove('show');
 		dropdownMenu.setAttribute('aria-hidden', 'true');
 		userMenuButton.setAttribute('aria-expanded', 'false');
 	};
 	
-	userMenuButton.addEventListener('click', (event) => {
+	const toggleHandler = (event) => {
 		event.preventDefault();
 		event.stopPropagation();
 		
@@ -245,23 +273,84 @@ function setupUserMenuDropdown(userMenuContainer) {
 		} else {
 			closeMenu();
 		}
-	});
+	};
 	
-	dropdownMenu.addEventListener('click', (event) => {
-		// منع إغلاق القائمة عند التفاعل مع عناصرها
+	const dropdownClickHandler = (event) => {
 		event.stopPropagation();
-	});
+	};
 	
-	document.addEventListener('click', (event) => {
+	const documentClickHandler = (event) => {
 		if (!userMenuContainer.contains(event.target)) {
 			closeMenu();
 		}
-	});
+	};
 	
-	document.addEventListener('keydown', (event) => {
+	const keydownHandler = (event) => {
 		if (event.key === 'Escape') {
 			closeMenu();
 			userMenuButton.focus();
 		}
-	});
+	};
+	
+	userMenuButton.addEventListener('click', toggleHandler);
+	dropdownMenu.addEventListener('click', dropdownClickHandler);
+	document.addEventListener('click', documentClickHandler);
+	document.addEventListener('keydown', keydownHandler);
+	
+	userMenuContainer.dataset.dropdownInitialized = 'true';
+	userMenuContainer[USER_MENU_HANDLER_KEY] = {
+		toggleHandler,
+		dropdownClickHandler,
+		documentClickHandler,
+		keydownHandler,
+	};
+}
+
+function teardownUserMenuDropdown(userMenuContainer) {
+	if (!userMenuContainer || !userMenuContainer[USER_MENU_HANDLER_KEY]) {
+		return;
+	}
+	
+	const handlers = userMenuContainer[USER_MENU_HANDLER_KEY];
+	const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
+	const dropdownMenu = userMenuContainer.querySelector('#user-menu-dropdown');
+	
+	if (userMenuButton && handlers.toggleHandler) {
+		userMenuButton.removeEventListener('click', handlers.toggleHandler);
+	}
+	
+	if (dropdownMenu && handlers.dropdownClickHandler) {
+		dropdownMenu.removeEventListener('click', handlers.dropdownClickHandler);
+	}
+	
+	if (handlers.documentClickHandler) {
+		document.removeEventListener('click', handlers.documentClickHandler);
+	}
+	
+	if (handlers.keydownHandler) {
+		document.removeEventListener('keydown', handlers.keydownHandler);
+	}
+	
+	delete userMenuContainer[USER_MENU_HANDLER_KEY];
+	delete userMenuContainer.dataset.dropdownInitialized;
+}
+
+function initDesktopDropdown({ force = false } = {}) {
+	const userMenuContainer = document.getElementById('user-menu-container');
+	
+	if (!userMenuContainer) {
+		console.warn('initDesktopDropdown: #user-menu-container not found');
+		return false;
+	}
+	
+	if (force && userMenuContainer.dataset.dropdownInitialized === 'true') {
+		teardownUserMenuDropdown(userMenuContainer);
+	}
+	
+	setupUserMenuDropdown(userMenuContainer);
+	return userMenuContainer.dataset.dropdownInitialized === 'true';
+}
+
+if (typeof window !== 'undefined') {
+	window.initDesktopDropdown = initDesktopDropdown;
 }

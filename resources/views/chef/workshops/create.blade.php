@@ -32,7 +32,7 @@
         @php
             $formWorkshop = new \App\Models\Workshop();
             $formWorkshop->is_online = true;
-            $formWorkshop->currency = 'JOD';
+            $formWorkshop->currency = 'USD';
             $formWorkshop->level = 'beginner';
         @endphp
 

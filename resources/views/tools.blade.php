@@ -405,7 +405,6 @@
                            class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all text-sm sm:text-base">
                             <i class="fas fa-bookmark text-base"></i>
                             <span>{{ __('tools.saved.banner_cta') }}</span>
-                            <span id="saved-count-badge" class="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full hidden">0</span>
                         </a>
                         <div class="flex items-center gap-2 text-sm text-gray-500">
                             <i class="fas fa-info-circle text-orange-500"></i>
@@ -453,7 +452,7 @@
                                                 <img src="{{ $image }}"
                                                      alt="{{ $tool->name }}"
                                                      class="tool-card__image"
-                                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='{{ __('tools.cards.image_fallback_alt') }}';">
+                                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('tools.cards.image_fallback_alt') }}';" loading="lazy">
                                             </div>
                                         @endforeach
                                     </div>
@@ -683,13 +682,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load saved status for all tools
     loadSavedStatus();
     
-    // Load saved count for the badge
-    loadSavedCount();
-    
-    // جعل الدالة متاحة عالمياً
-    window.updateSavedCountUI = updateSavedCountUI;
-    window.loadSavedCount = loadSavedCount;
-    
     // Category Filter Functionality
     const categoryButtons = document.querySelectorAll('.category-filter-btn');
     const toolCards = document.querySelectorAll('.tool-card');
@@ -755,79 +747,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Update saved count UI
-    function updateSavedCountUI(count) {
-        // تحديث العداد في الهيدر
-        const savedCountEl = document.getElementById('saved-count');
-        if (savedCountEl) {
-            if (count > 0) {
-                savedCountEl.textContent = count;
-                savedCountEl.classList.remove('hidden');
-                console.log('Updated navbar counter to:', count);
-            } else {
-                savedCountEl.classList.add('hidden');
-                console.log('Hidden navbar counter');
-            }
-        }
-        
-        // تحديث العداد في صفحة الأدوات
-        const savedCountBadge = document.getElementById('saved-count-badge');
-        if (savedCountBadge) {
-            if (count > 0) {
-                savedCountBadge.textContent = count;
-                savedCountBadge.classList.remove('hidden');
-            } else {
-                savedCountBadge.classList.add('hidden');
-            }
-        }
-    }
-
-    // Load saved count for the badge
-    function loadSavedCount() {
-        console.log('Loading saved count from tools page...');
-        fetch('/saved/count')
-            .then(response => {
-                console.log('Tools page response status:', response.status);
-                if (response.status === 401) {
-                    console.log('User not authenticated in tools page');
-                    updateSavedCountUI(0);
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    console.log('Tools page saved count data:', data);
-                    updateSavedCountUI(data.count);
-                    
-                    // تحديث فوري للعداد في الهاتف المحمول
-                    if (window.updateSavedCountUI) {
-                        window.updateSavedCountUI(data.count);
-                        console.log('Updated mobile saved count from tools page:', data.count);
-                    }
-                    
-                    // تحديث فوري للعداد في الهاتف المحمول (السلة)
-                    const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                    if (mobileCartCountEl) {
-                        if (data.count > 0) {
-                            mobileCartCountEl.textContent = data.count;
-                            mobileCartCountEl.classList.remove('hidden');
-                            console.log('Updated mobile cart count (saved tools) from tools page:', data.count);
-                        } else {
-                            mobileCartCountEl.classList.add('hidden');
-                            console.log('Hidden mobile cart count (saved tools) from tools page');
-                        }
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading saved count from tools page:', error);
-                updateSavedCountUI(0);
-            });
-    }
-
-
-
     // Save for Later Functionality
     document.querySelectorAll('.save-for-later-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -865,33 +784,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.querySelector('.btn-text').textContent = toolsTranslations.buttons.saved;
                     applySavedButtonState(this);
                     this.disabled = false;
-                    
-                    // Update saved count in header - تحديث فوري للعداد
-                    if (window.updateSavedCountUI) {
-                        const currentCount = parseInt(document.getElementById('saved-count')?.textContent || '0');
-                        window.updateSavedCountUI(currentCount + 1);
-                        console.log('Updated counter after adding item:', currentCount + 1);
-                    } else if (window.loadSavedCount) {
-                        window.loadSavedCount();
-                    }
-                    
-                    // تحديث فوري للعداد في الهاتف المحمول (السلة)
-                    const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                    if (mobileCartCountEl) {
-                        const currentCartCount = parseInt(mobileCartCountEl.textContent || '0');
-                        mobileCartCountEl.textContent = currentCartCount + 1;
-                        mobileCartCountEl.classList.remove('hidden');
-                        console.log('Updated mobile cart count (saved tools) after adding item:', currentCartCount + 1);
-                    }
-                    
-                    // تحديث فوري للعداد في الهاتف المحمول (الأدوات المحفوظة)
-                    const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-                    if (mobileSavedCountEl) {
-                        const currentMobileCount = parseInt(mobileSavedCountEl.textContent || '0');
-                        mobileSavedCountEl.textContent = currentMobileCount + 1;
-                        mobileSavedCountEl.classList.remove('hidden');
-                        console.log('Updated mobile saved count after adding item:', currentMobileCount + 1);
-                    }
                     
                     // Show success animation on the button
                     this.style.transform = 'scale(1.05)';
@@ -957,43 +849,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.querySelector('.btn-text').textContent = toolsTranslations.buttons.save;
                 applyDefaultButtonState(button);
                 button.disabled = false;
-                
-                // Update saved count - تحديث فوري للعداد
-                if (window.updateSavedCountUI) {
-                    const currentCount = parseInt(document.getElementById('saved-count')?.textContent || '0');
-                    window.updateSavedCountUI(Math.max(0, currentCount - 1));
-                    console.log('Updated counter after removing item:', Math.max(0, currentCount - 1));
-                } else if (window.loadSavedCount) {
-                    window.loadSavedCount();
-                }
-                
-                // تحديث فوري للعداد في الهاتف المحمول (السلة)
-                const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                if (mobileCartCountEl) {
-                    const currentCartCount = parseInt(mobileCartCountEl.textContent || '0');
-                    const newCartCount = Math.max(0, currentCartCount - 1);
-                    mobileCartCountEl.textContent = newCartCount;
-                    if (newCartCount === 0) {
-                        mobileCartCountEl.classList.add('hidden');
-                    } else {
-                        mobileCartCountEl.classList.remove('hidden');
-                    }
-                    console.log('Updated mobile cart count (saved tools) after removing item:', newCartCount);
-                }
-                
-                // تحديث فوري للعداد في الهاتف المحمول (الأدوات المحفوظة)
-                const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-                if (mobileSavedCountEl) {
-                    const currentMobileCount = parseInt(mobileSavedCountEl.textContent || '0');
-                    const newCount = Math.max(0, currentMobileCount - 1);
-                    mobileSavedCountEl.textContent = newCount;
-                    if (newCount === 0) {
-                        mobileSavedCountEl.classList.add('hidden');
-                    } else {
-                        mobileSavedCountEl.classList.remove('hidden');
-                    }
-                    console.log('Updated mobile saved count after removing item:', newCount);
-                }
                 
                 // Show success animation
                 button.style.transform = 'scale(1.05)';
@@ -1095,3 +950,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
+
