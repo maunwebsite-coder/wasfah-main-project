@@ -8,9 +8,10 @@ use App\Models\User;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use App\Models\UserInteraction;
+use App\Services\ContentModerationService;
+use App\Support\ImageUploadConstraints;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Services\ContentModerationService;
 
 class ProfileController extends Controller
 {
@@ -391,11 +392,21 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
         
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20|regex:/^[0-9+\-\s\(\)]+$/',
-            'avatar' => 'nullable|image|max:5120',
+            'google_email' => $user->role === User::ROLE_CHEF
+                ? ['required', 'email', 'max:255']
+                : ['nullable', 'email', 'max:255'],
+            'avatar' => array_merge(['nullable'], ImageUploadConstraints::rules()),
+        ];
+
+        $messages = ImageUploadConstraints::messages('avatar', [
+            'ar' => 'صورة الملف الشخصي',
+            'en' => 'profile photo',
         ]);
+
+        $request->validate($rules, $messages);
 
         if (ContentModerationService::containsProhibitedLanguage($request->name)) {
             return back()
@@ -406,6 +417,7 @@ class ProfileController extends Controller
         $updateData = [
             'name' => $request->name,
             'phone' => $request->phone,
+            'google_email' => $request->input('google_email') ?: null,
         ];
 
         if ($user->isChef() && $request->hasFile('avatar')) {

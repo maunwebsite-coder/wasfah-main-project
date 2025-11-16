@@ -7,28 +7,48 @@
 <!DOCTYPE html>
 <html lang="{{ $currentLocale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'موقع وصفة')</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+    <title>@yield('title', 'Wasfah Platform')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap">
+    </noscript>
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    </noscript>
+    @stack('preloads')
+    @php
+        $vite = app(\Illuminate\Foundation\Vite::class);
+        $isViteHot = \App\Support\ViteHot::shouldUseHotReload();
+    @endphp
+
+    @if ($isViteHot)
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        @php
+            $appCss = $vite->asset('resources/css/app.css');
+        @endphp
+        <link rel="stylesheet" href="{{ $appCss }}">
+        @vite(['resources/js/app.js'])
+    @endif
 
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
     body {
-        font-family: 'Tajawal', sans-serif;
+        font-family: 'Tajawal', 'Cairo', sans-serif;
         background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.18), transparent 50%),
             radial-gradient(circle at bottom left, rgba(251, 146, 60, 0.15), transparent 40%),
             #fdeee2;
     }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script>
         window.__APP_LOCALE = "{{ $currentLocale }}";
         window.__CONTENT_TRANSLATIONS = @json($globalContentTranslations ?? []);
@@ -37,17 +57,22 @@
 </head>
 <body class="font-sans relative">
 
-    <div class="fixed top-6 {{ $isRtl ? 'left-6' : 'right-6' }} z-50">
-        <form method="POST" action="{{ route('locale.switch') }}">
+    <div class="fixed bottom-6 {{ $isRtl ? 'left-6' : 'right-6' }} z-50">
+        <form
+            method="POST"
+            action="{{ route('locale.switch') }}"
+            class="flex flex-col gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-2xl shadow-orange-100/60 backdrop-blur {{ $isRtl ? 'text-right items-end' : 'text-left items-start' }}"
+        >
             @csrf
             <input type="hidden" name="locale" value="{{ $alternateLocale }}">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{{ data_get($languageCopy, 'label', 'Language') }}</p>
             <button
                 type="submit"
-                class="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 shadow-lg shadow-slate-200/70 transition hover:border-orange-200 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                class="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-gradient-to-r from-amber-50 to-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-amber-600 shadow-sm transition hover:from-white hover:to-amber-50 focus:outline-none focus:ring-2 focus:ring-orange-200"
                 aria-label="{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}"
             >
                 <span>{{ data_get($languageCopy, 'short.' . $alternateLocale, strtoupper($alternateLocale)) }}</span>
-                <span class="sr-only">{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}</span>
+                <span class="text-[11px] font-medium text-slate-500">{{ data_get($languageCopy, 'switch_to.' . $alternateLocale, 'Switch language') }}</span>
             </button>
         </form>
     </div>

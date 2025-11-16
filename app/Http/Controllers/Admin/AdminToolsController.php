@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tool;
 use App\Services\ImageCompressionService;
 use App\Services\SimpleImageCompressionService;
+use App\Support\ImageUploadConstraints;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -46,20 +47,26 @@ class AdminToolsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         try {
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'required|string',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-                'amazon_url' => 'nullable|url',
-                'affiliate_url' => 'nullable|url',
-                'price' => 'required|numeric|min:0',
-                'category' => 'required|string|max:255',
-                'rating' => 'nullable|numeric|min:0|max:5',
-                'features' => 'nullable|array',
-                'features.*' => 'nullable|string|max:255',
-                'is_active' => 'boolean',
-                'sort_order' => 'nullable|integer|min:0'
-            ]);
+            $request->validate(
+                [
+                    'name' => 'required|string|max:255',
+                    'description' => 'required|string',
+                    'image' => array_merge(['nullable'], ImageUploadConstraints::rules()),
+                    'amazon_url' => 'nullable|url',
+                    'affiliate_url' => 'nullable|url',
+                    'price' => 'required|numeric|min:0',
+                    'category' => 'required|string|max:255',
+                    'rating' => 'nullable|numeric|min:0|max:5',
+                    'features' => 'nullable|array',
+                    'features.*' => 'nullable|string|max:255',
+                    'is_active' => 'boolean',
+                    'sort_order' => 'nullable|integer|min:0'
+                ],
+                ImageUploadConstraints::messages('image', [
+                    'ar' => 'صورة الأداة',
+                    'en' => 'tool image',
+                ])
+            );
 
             $data = $request->all();
 
@@ -186,20 +193,26 @@ class AdminToolsController extends Controller
      */
     public function update(Request $request, Tool $tool): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'amazon_url' => 'nullable|url',
-            'affiliate_url' => 'nullable|url',
-            'price' => 'required|numeric|min:0',
-            'category' => 'required|string|max:255',
-            'rating' => 'nullable|numeric|min:0|max:5',
-            'features' => 'nullable|array',
-            'features.*' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0'
-        ]);
+        $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'image' => array_merge(['nullable'], ImageUploadConstraints::rules()),
+                'amazon_url' => 'nullable|url',
+                'affiliate_url' => 'nullable|url',
+                'price' => 'required|numeric|min:0',
+                'category' => 'required|string|max:255',
+                'rating' => 'nullable|numeric|min:0|max:5',
+                'features' => 'nullable|array',
+                'features.*' => 'nullable|string|max:255',
+                'is_active' => 'boolean',
+                'sort_order' => 'nullable|integer|min:0'
+            ],
+            ImageUploadConstraints::messages('image', [
+                'ar' => 'صورة الأداة',
+                'en' => 'tool image',
+            ])
+        );
 
         $data = $request->all();
 

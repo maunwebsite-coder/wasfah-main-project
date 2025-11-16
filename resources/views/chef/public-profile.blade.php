@@ -45,6 +45,12 @@
     $isRtl = $locale === 'ar';
     $arrowIcon = $isRtl ? 'fa-arrow-left' : 'fa-arrow-right';
     $arrowLongIcon = $isRtl ? 'fa-arrow-left-long' : 'fa-arrow-right-long';
+    $publicWorkshopsIdentifier = $chef->username
+        ?? $chef->slug
+        ?? $chef->handle
+        ?? $chef->referral_code
+        ?? $chef->id;
+    $publicWorkshopsUrl = route('chef.public.workshops', ['username' => $publicWorkshopsIdentifier]);
 @endphp
 
 @push('styles')
@@ -598,6 +604,208 @@
             color: var(--chef-neutral-600, #4b5563);
         }
 
+        .chef-recordings-section {
+            margin-top: clamp(3rem, 6vw, 4.5rem);
+            padding: clamp(2rem, 5vw, 3.5rem);
+            border-radius: 2.75rem;
+            background: linear-gradient(140deg, rgba(15, 23, 42, 0.04), rgba(249, 115, 22, 0.08));
+            border: 1px solid rgba(249, 115, 22, 0.12);
+            box-shadow: 0 32px 60px -35px rgba(15, 23, 42, 0.28);
+        }
+
+        .chef-recordings-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+        }
+
+        .chef-recordings-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--chef-primary-strong);
+        }
+
+        .chef-recordings-header h2 {
+            margin: 0.6rem 0 0;
+            font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+            color: var(--chef-neutral-900);
+        }
+
+        .chef-recordings-header p {
+            margin: 0.5rem 0 0;
+            color: var(--chef-neutral-600, #4b5563);
+            max-width: 560px;
+            line-height: 1.8;
+        }
+
+        .chef-recordings-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.75rem 1.6rem;
+            border-radius: 999px;
+            background: #fff;
+            color: var(--chef-primary-strong);
+            font-weight: 700;
+            text-decoration: none;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            box-shadow: 0 18px 32px -24px rgba(249, 115, 22, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .chef-recordings-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 36px -24px rgba(249, 115, 22, 0.42);
+        }
+
+        .chef-recordings-grid {
+            display: grid;
+            gap: clamp(1.25rem, 3vw, 2rem);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .chef-recording-card {
+            display: flex;
+            flex-direction: column;
+            border-radius: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(249, 115, 22, 0.1);
+            overflow: hidden;
+            box-shadow: 0 28px 45px -38px rgba(15, 23, 42, 0.35);
+            min-height: 100%;
+        }
+
+        .chef-recording-card__media {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            background: rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .chef-recording-card__media iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .chef-recording-card__placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            color: var(--chef-neutral-600, #4b5563);
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.05);
+        }
+
+        .chef-recording-card__placeholder i {
+            font-size: 1.75rem;
+            color: var(--chef-primary-strong);
+        }
+
+        .chef-recording-card__badge {
+            position: absolute;
+            inset-inline-start: 1rem;
+            inset-block-start: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.45rem 0.95rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .chef-recording-card__body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            padding: 1.5rem;
+        }
+
+        .chef-recording-card__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--chef-neutral-600, #4b5563);
+        }
+
+        .chef-recording-card__meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .chef-recording-card__title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--chef-neutral-900);
+        }
+
+        .chef-recording-card__excerpt {
+            margin: 0;
+            color: var(--chef-neutral-500);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .chef-recording-card__actions {
+            margin-top: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .chef-recording-card__cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 999px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .chef-recording-card__cta.is-primary {
+            background: linear-gradient(135deg, var(--chef-primary), var(--chef-primary-strong));
+            color: #fff;
+            box-shadow: 0 18px 32px -20px rgba(249, 115, 22, 0.35);
+        }
+
+        .chef-recording-card__cta.is-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 34px -20px rgba(234, 88, 12, 0.4);
+        }
+
+        .chef-recording-card__cta.is-muted {
+            background: rgba(15, 23, 42, 0.06);
+            color: var(--chef-neutral-800, #1f2937);
+        }
+
+        .chef-recording-card__cta.is-muted:hover {
+            transform: translateY(-2px);
+            background: rgba(15, 23, 42, 0.1);
+        }
+
         .chef-workshops-section {
             margin-block: clamp(3rem, 7vw, 4.5rem);
             padding: clamp(2rem, 5vw, 3.5rem);
@@ -965,6 +1173,15 @@
             .chef-impact__highlight {
                 width: 100%;
             }
+
+            .chef-recordings-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chef-recording-card__actions {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 640px) {
@@ -1165,6 +1382,29 @@
             .chef-popular-card__body {
                 padding: 1.25rem;
             }
+
+            .chef-recordings-section {
+                padding: 1.75rem;
+            }
+
+            .chef-recordings-link {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .chef-recording-card__body {
+                padding: 1.35rem;
+            }
+
+            .chef-recording-card__actions {
+                width: 100%;
+            }
+
+            .chef-recording-card__cta {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         [dir='ltr'] .chef-profile-hero__identity,
@@ -1218,7 +1458,7 @@
             <section class="chef-profile-hero">
                     <div class="chef-profile-hero__grid">
                     <div class="chef-profile-hero__avatar">
-                        <img src="{{ $avatarUrl }}" alt="{{ __('chef.hero.avatar_alt', ['name' => $chef->name]) }}">
+                        <img src="{{ $avatarUrl }}" alt="{{ __('chef.hero.avatar_alt', ['name' => $chef->name]) }}" loading="lazy">
                     </div>
                     <div class="chef-profile-hero__details">
                         <div class="chef-profile-hero__identity">
@@ -1230,7 +1470,10 @@
                         </div>
                         <div class="chef-profile-hero__meta">
                             <div class="chef-meta-card chef-meta-card--followers">
-                                <strong>{{ number_format($wasfahFollowers) }}</strong>
+                                <strong
+                                    data-followers-count
+                                    data-followers-value="{{ $wasfahFollowers }}"
+                                >{{ number_format($wasfahFollowers) }}</strong>
                                 <span>{{ __('chef.hero.stats.wasfah_followers') }}</span>
                             </div>
                             <div class="chef-meta-card chef-meta-card--platforms">
@@ -1249,9 +1492,20 @@
                         <div class="chef-profile-hero__actions">
                             @if (! $isOwner)
                                 @auth
-                                    <button type="button" class="chef-follow-btn" data-follow-button>
-                                        <i class="fa-solid fa-plus" data-follow-icon></i>
-                                        <span data-follow-label>{{ __('chef.hero.buttons.follow') }}</span>
+                                    <button
+                                        type="button"
+                                        class="chef-follow-btn{{ $isFollowing ? ' is-following' : '' }}"
+                                        data-follow-button
+                                        data-follow-url="{{ $followRoutes['follow'] }}"
+                                        data-unfollow-url="{{ $followRoutes['unfollow'] }}"
+                                    >
+                                        <i
+                                            class="fa-solid {{ $isFollowing ? 'fa-check' : 'fa-plus' }}"
+                                            data-follow-icon
+                                        ></i>
+                                        <span data-follow-label>
+                                            {{ $isFollowing ? __('chef.hero.buttons.following') : __('chef.hero.buttons.follow') }}
+                                        </span>
                                     </button>
                                 @else
                                     <a href="{{ route('login') }}" class="chef-follow-btn">
@@ -1282,6 +1536,105 @@
                     </div>
                 </div>
             </section>
+
+            @if ($recordingEntries->isNotEmpty())
+                <section class="chef-recordings-section">
+                    <div class="chef-recordings-header">
+                        <div>
+                            <span class="chef-recordings-eyebrow">
+                                <i class="fa-solid fa-video"></i>
+                                {{ __('chef.recordings.eyebrow') }}
+                            </span>
+                            <h2>{{ __('chef.recordings.title') }}</h2>
+                            <p>{{ __('chef.recordings.description', ['name' => $chef->name]) }}</p>
+                        </div>
+                        <a href="{{ $publicWorkshopsUrl }}" class="chef-recordings-link">
+                            {{ __('chef.recordings.view_all') }}
+                            <i class="fa-solid {{ $arrowLongIcon }}"></i>
+                        </a>
+                    </div>
+                    <div class="chef-recordings-grid">
+                        @foreach ($recordingEntries as $entry)
+                            @php
+                                $previewUrl = $entry['preview_url'] ?? null;
+                                $watchUrl = $entry['watch_url'] ?? null;
+                                $isDirectVideo = $entry['is_direct_video'] ?? false;
+                                $poster = $entry['poster'] ?? asset('image/logo.webp');
+                                $badgeLabel = $entry['badge'] ?? __('chef.recordings.badges.available');
+                            @endphp
+                            <article class="chef-recording-card">
+                                <div class="chef-recording-card__media">
+                                    @if ($previewUrl)
+                                        <iframe
+                                            src="{{ $previewUrl }}"
+                                            loading="lazy"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowfullscreen
+                                            title="{{ $entry['title'] }}"
+                                        ></iframe>
+                                    @elseif ($isDirectVideo)
+                                        <video controls preload="metadata" playsinline poster="{{ $poster }}">
+                                            <source src="{{ $watchUrl }}">
+                                        </video>
+                                    @else
+                                        <div class="chef-recording-card__placeholder">
+                                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                                            <span>{{ __('chef.recordings.fallback_drive') }}</span>
+                                        </div>
+                                    @endif
+                                    <span class="chef-recording-card__badge">
+                                        <i class="fa-solid fa-circle-play"></i>
+                                        {{ $badgeLabel }}
+                                    </span>
+                                </div>
+                                <div class="chef-recording-card__body">
+                                    <div class="chef-recording-card__meta">
+                                        <span>
+                                            <i class="fa-solid fa-calendar-day"></i>
+                                            {{ $entry['date_label'] ?? '' }}
+                                        </span>
+                                        <span>
+                                            <i class="fa-solid fa-location-dot"></i>
+                                            {{ $entry['location_label'] ?? '' }}
+                                        </span>
+                                    </div>
+                                    <h3 class="chef-recording-card__title">{{ $entry['title'] }}</h3>
+                                    @if (! empty($entry['excerpt']))
+                                        <p class="chef-recording-card__excerpt">{{ $entry['excerpt'] }}</p>
+                                    @endif
+                                    <div class="chef-recording-card__actions">
+                                        @if ($watchUrl)
+                                            <a
+                                                href="{{ $watchUrl }}"
+                                                target="_blank"
+                                                rel="noopener"
+                                                class="chef-recording-card__cta is-primary"
+                                            >
+                                                <i class="fa-solid fa-play"></i>
+                                                {{ __('chef.recordings.cta.watch') }}
+                                            </a>
+                                        @endif
+                                        @if (! empty($entry['details_url']))
+                                            <a
+                                                href="{{ $entry['details_url'] }}"
+                                                class="chef-recording-card__cta is-muted"
+                                            >
+                                                {{ __('chef.workshops.view_details') }}
+                                                <i class="fa-solid {{ $arrowIcon }}"></i>
+                                            </a>
+                                        @else
+                                            <span class="chef-recording-card__cta is-muted">
+                                                {{ __('chef.workshops.view_details') }}
+                                                <i class="fa-solid {{ $arrowIcon }}"></i>
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
 
             <section class="chef-impact">
                 <div class="chef-impact__header">
@@ -1343,7 +1696,7 @@
                                     {{ __('chef.workshops.description', ['name' => $chef->name]) }}
                                 </p>
                             </div>
-                            <a href="{{ route('workshops') }}" class="chef-workshops-link">
+                            <a href="{{ $publicWorkshopsUrl }}" class="chef-workshops-link">
                                 {{ __('chef.workshops.view_all') }}
                                 <i class="fa-solid {{ $arrowLongIcon }}"></i>
                             </a>
@@ -1369,7 +1722,7 @@
                                             ? __('chef.workshops.online_live')
                                             : ($workshop->location ?: __('chef.workshops.location_tbd'));
                                         $priceLabel = $workshop->formatted_price
-                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
+                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'USD'));
                                         $levelLabels = [
                                             'beginner' => __('chef.workshops.levels.beginner'),
                                             'intermediate' => __('chef.workshops.levels.intermediate'),
@@ -1392,7 +1745,7 @@
                                     @endphp
                                     <article class="chef-workshop-card">
                                         <div class="chef-workshop-card__media">
-                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' => $workshop->title]) }}">
+                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' => $workshop->title]) }}" loading="lazy">
                                             <span class="{{ $badgeClass }}">{{ $badgeLabel }}</span>
                                         </div>
                                         <div class="chef-workshop-card__body">
@@ -1476,7 +1829,7 @@
                                             ? __('chef.workshops.online_live')
                                             : ($workshop->location ?: __('chef.workshops.location_tbd'));
                                         $priceLabel = $workshop->formatted_price
-                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
+                                            ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'USD'));
                                         $levelLabels = [
                                             'beginner' => __('chef.workshops.levels.beginner'),
                                             'intermediate' => __('chef.workshops.levels.intermediate'),
@@ -1486,7 +1839,7 @@
                                     @endphp
                                     <article class="chef-workshop-card">
                                         <div class="chef-workshop-card__media">
-                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' => $workshop->title]) }}">
+                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' => $workshop->title]) }}" loading="lazy">
                                             <span class="chef-workshop-card__badge is-closed">{{ __('chef.workshops.badges.completed') }}</span>
                                         </div>
                                         <div class="chef-workshop-card__body">
@@ -1558,7 +1911,7 @@
                                 @foreach ($publicRecipes as $recipe)
                                     <article class="chef-recipe-card">
                                         <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="chef-recipe-card__cover">
-                                            <img src="{{ $recipe->image_url ?? asset('image/Brownies.png') }}" alt="{{ $recipe->title }}">
+                                            <img src="{{ $recipe->image_url ?? asset('image/brownies.webp') }}" alt="{{ $recipe->title }}" loading="lazy">
                                             @if ($recipe->category)
                                                 <span class="chef-recipe-card__tag">
                                                     <i class="fa-solid fa-tag"></i>
@@ -1606,7 +1959,7 @@
                                     @foreach ($exclusiveRecipes as $recipe)
                                         <article class="chef-recipe-card">
                                             <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="chef-recipe-card__cover">
-                                                <img src="{{ $recipe->image_url ?? asset('image/Brownies.png') }}" alt="{{ $recipe->title }}">
+                                                <img src="{{ $recipe->image_url ?? asset('image/brownies.webp') }}" alt="{{ $recipe->title }}" loading="lazy">
                                                 <span class="chef-recipe-card__tag">
                                                     <i class="fa-solid fa-lock"></i>
                                                     {{ __('chef.recipes.private_tag') }}
@@ -1656,7 +2009,7 @@
                                 <div class="swiper-slide">
                                     <article class="chef-popular-card">
                                         <a href="{{ route('recipe.show', ['recipe' => $recipe->slug]) }}" class="chef-popular-card__cover">
-                                            <img src="{{ $recipe->image_url ?? asset('image/Brownies.png') }}" alt="{{ $recipe->title }}">
+                                            <img src="{{ $recipe->image_url ?? asset('image/brownies.webp') }}" alt="{{ $recipe->title }}" loading="lazy">
                                         </a>
                                         <div class="chef-popular-card__body">
                                             <h3 class="chef-popular-card__title">{{ $recipe->title }}</h3>
@@ -1693,13 +2046,16 @@
 
 @push('scripts')
     @php
-        $chefTranslations = array(
-            'buttons' => array(
-                'follow' => __('chef.hero.buttons.follow'),
-                'following' => __('chef.hero.buttons.following'),
-            ),
-        );
-    @endphp
+    $chefTranslations = array(
+        'buttons' => array(
+            'follow' => __('chef.hero.buttons.follow'),
+            'following' => __('chef.hero.buttons.following'),
+        ),
+        'follow' => array(
+            'error' => __('chef.follow.errors.generic'),
+        ),
+    );
+@endphp
     <script>
         const chefTranslations = @json($chefTranslations);
         document.addEventListener('DOMContentLoaded', function () {
@@ -1726,6 +2082,10 @@
             if (followButton) {
                 const followLabel = followButton.querySelector('[data-follow-label]');
                 const followIcon = followButton.querySelector('[data-follow-icon]');
+                const followersCounter = document.querySelector('[data-followers-count]');
+                const numberFormatter = new Intl.NumberFormat(document.documentElement.lang || 'ar');
+                const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
                 const states = {
                     follow: {
                         icon: 'fa-plus',
@@ -1737,8 +2097,8 @@
                     },
                 };
 
-                followButton.addEventListener('click', () => {
-                    const isFollowing = followButton.classList.toggle('is-following');
+                const updateFollowState = (isFollowing) => {
+                    followButton.classList.toggle('is-following', isFollowing);
                     const state = isFollowing ? states.following : states.follow;
 
                     if (followLabel) {
@@ -1749,7 +2109,82 @@
                         followIcon.classList.remove('fa-plus', 'fa-check');
                         followIcon.classList.add(state.icon);
                     }
+                };
+
+                const updateFollowersCount = (value) => {
+                    if (!followersCounter) {
+                        return;
+                    }
+
+                    followersCounter.dataset.followersValue = value;
+                    followersCounter.textContent = numberFormatter.format(value);
+                };
+
+                const initialFollowersValue = followersCounter
+                    ? Number(followersCounter.dataset.followersValue || followersCounter.textContent.replace(/[^0-9.]/g, ''))
+                    : NaN;
+
+                if (!Number.isNaN(initialFollowersValue)) {
+                    updateFollowersCount(initialFollowersValue);
+                }
+
+                followButton.addEventListener('click', async () => {
+                    const followUrl = followButton.dataset.followUrl;
+                    const unfollowUrl = followButton.dataset.unfollowUrl;
+
+                    if (!followUrl || !unfollowUrl) {
+                        return;
+                    }
+
+                    if (followButton.dataset.loading === 'true') {
+                        return;
+                    }
+
+                    const isFollowing = followButton.classList.contains('is-following');
+                    const targetUrl = isFollowing ? unfollowUrl : followUrl;
+                    const method = isFollowing ? 'DELETE' : 'POST';
+
+                    followButton.dataset.loading = 'true';
+                    followButton.disabled = true;
+
+                    try {
+                        const response = await fetch(targetUrl, {
+                            method,
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
+                            },
+                            body: method === 'POST' ? '{}' : undefined,
+                        });
+
+                        let payload = {};
+
+                        try {
+                            payload = await response.json();
+                        } catch (error) {
+                            payload = {};
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(payload.message || chefTranslations.follow.error);
+                        }
+
+                        updateFollowState(Boolean(payload.is_following));
+
+                        if (typeof payload.followers_count === 'number') {
+                            updateFollowersCount(payload.followers_count);
+                        }
+                    } catch (error) {
+                        console.error('Follow toggle failed:', error);
+                        alert(error.message || chefTranslations.follow.error);
+                    } finally {
+                        followButton.dataset.loading = 'false';
+                        followButton.disabled = false;
+                    }
                 });
+
+                updateFollowState(followButton.classList.contains('is-following'));
             }
 
             const swiperElement = document.querySelector('.chef-popular-swiper');
@@ -1775,4 +2210,6 @@
         });
     </script>
 @endpush
+
+
 

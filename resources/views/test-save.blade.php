@@ -27,10 +27,10 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach(App\Models\Recipe::with('category')->limit(6)->get() as $recipe)
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="{{ $recipe->image_url ?: asset('image/logo.png') }}" 
+                    <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}" 
                          alt="{{ $recipe->title }}" 
                          class="w-full h-48 object-cover"
-                         onerror="this.src='{{ asset('image/logo.png') }}';">
+                         onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                     
                     <div class="p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $recipe->title }}</h3>
@@ -112,3 +112,5 @@
     </script>
 </body>
 </html>
+
+

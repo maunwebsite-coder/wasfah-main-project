@@ -27,6 +27,17 @@ class WorkshopLinkSecurityService
         );
     }
 
+    public function makeParticipantLaunchUrl(WorkshopBooking $booking, ?Carbon $expiresAt = null): string
+    {
+        $expires = $expiresAt ?? $this->expiryFromConfig('participant_launch_ttl');
+
+        return $this->urlGenerator->temporarySignedRoute(
+            'bookings.launch',
+            $expires,
+            ['booking' => $booking->public_code],
+        );
+    }
+
     public function makeParticipantStatusUrl(WorkshopBooking $booking, ?Carbon $expiresAt = null): string
     {
         $expires = $expiresAt ?? $this->expiryFromConfig('participant_status_ttl');

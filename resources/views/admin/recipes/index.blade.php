@@ -201,8 +201,21 @@
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">إدارة الوصفات</h1>
                     <p class="text-gray-600">إدارة وإضافة وتعديل الوصفات</p>
                 </div>
-                <div class="mt-4 md:mt-0">
-                    <a href="{{ route('admin.recipes.create') }}" class="btn-primary">
+                <div class="mt-4 md:mt-0 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    @php $pendingRecipesCount = $approvalPendingCount ?? 0; @endphp
+                    <form method="POST" action="{{ route('admin.recipes.approve-all') }}" class="w-full sm:w-auto"
+                          onsubmit="return confirm('هل أنت متأكد من اعتماد جميع الوصفات قيد المراجعة دفعة واحدة؟');">
+                        @csrf
+                        <button type="submit" class="btn-success w-full inline-flex items-center justify-center gap-2 font-semibold {{ $pendingRecipesCount === 0 ? 'opacity-70' : '' }}">
+                            <i class="fas fa-check-double ml-2"></i>
+                            اعتماد جميع الوصفات مرة واحدة
+                            <span class="text-xs bg-white/20 text-white rounded-full px-2 py-0.5">({{ number_format($pendingRecipesCount) }})</span>
+                        </button>
+                        @if($pendingRecipesCount === 0)
+                            <p class="text-xs text-gray-500 text-center mt-1">لا توجد وصفات قيد المراجعة حالياً</p>
+                        @endif
+                    </form>
+                    <a href="{{ route('admin.recipes.create') }}" class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 text-center">
                         <i class="fas fa-plus ml-2"></i>
                         إضافة وصفة جديدة
                     </a>
@@ -277,7 +290,7 @@
                                     $servings = (int) ($recipe->servings ?? 0);
                                     $imageSrc = $recipe->image
                                         ? Storage::disk('public')->url($recipe->image)
-                                        : ($recipe->image_url ?: asset('image/logo.png'));
+                                        : ($recipe->image_url ?: asset('image/logo.webp'));
                                     $ownerName = $recipe->chef?->name ?? ($recipe->author ?: 'فريق وصفة');
                                     $ownerSubtitle = $recipe->chef ? 'شيف مسجل' : 'فريق وصفة';
                                 @endphp
@@ -289,7 +302,7 @@
                                                     src="{{ $imageSrc }}" 
                                                     alt="{{ $recipe->title }}" 
                                                     class="recipe-thumbnail"
-                                                    onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                                    onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                                                 @if($difficultyLabel)
                                                     <span class="difficulty-badge">
                                                         {{ $difficultyLabel }}
@@ -411,3 +424,5 @@
     </div>
 </div>
 @endsection
+
+

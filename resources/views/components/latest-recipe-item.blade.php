@@ -3,9 +3,11 @@
 <li>
     <a href="{{ route('recipe.show', $recipe->slug) }}" class="latest-recipe-mini">
         <div class="latest-recipe-thumb">
-            <img src="{{ $recipe->image_url ?: asset('image/logo.png') }}"
+            <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}"
                  alt="{{ $recipe->title }}"
-                 onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                 width="56"
+                 height="56"
+                 onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
         </div>
         <div class="latest-recipe-info">
             <h3 class="latest-recipe-title line-clamp-2">
@@ -31,3 +33,5 @@
         </div>
     </a>
 </li>
+
+

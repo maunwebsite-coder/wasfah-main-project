@@ -1,34 +1,57 @@
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { constants as zlibConstants } from 'node:zlib';
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const pwaManifest = JSON.parse(
     readFileSync(new URL('./public/manifest.webmanifest', import.meta.url), 'utf-8'),
 );
 
+const require = createRequire(path.join(process.cwd(), 'package.json'));
+let viteCompression;
+
+try {
+    ({ default: viteCompression } = require('vite-plugin-compression'));
+} catch (error) {
+    console.warn('vite-plugin-compression not available, skipping asset compression.', error.message);
+}
+
+const buildCompressionPlugins = () => {
+    if (!viteCompression) {
+        return [];
+    }
+
+    return [
+        viteCompression({
+            algorithm: 'brotliCompress',
+            ext: '.br',
+            include: [/\.(js|css|mjs|json|html|svg)$/i],
+            compressionOptions: {
+                params: {
+                    [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+                    [zlibConstants.BROTLI_PARAM_QUALITY]: 11,
+                },
+            },
+        }),
+        viteCompression({
+            algorithm: 'gzip',
+            ext: '.gz',
+            include: [/\.(js|css|mjs|json|html|svg)$/i],
+            compressionOptions: { level: zlibConstants.Z_BEST_COMPRESSION },
+        }),
+    ];
+};
 
 export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css', 
+                'resources/css/app.css',
+                'resources/css/non-critical.css',
                 'resources/js/app.js',
-                'resources/js/header.js',
-                'resources/js/mobile-menu.js',
-                'resources/js/save-recipe.js',
-                'resources/js/made-recipe.js',
-                'resources/js/share-recipe.js',
-                'resources/js/workshops.js',
-                'resources/js/search.js',
-                'resources/js/script.js',
-                'resources/js/recipe.js',
-                'resources/js/recipe-save-button.js',
-                'resources/js/rating.js',
-                'resources/js/notification-manager.js',
-                'resources/js/confirmation-modal.js',
-                'resources/js/whatsapp-booking.js',
             ],
             refresh: true,
         }),
@@ -76,5 +99,20 @@ export default defineConfig({
                 ],
             },
         }),
+        ...buildCompressionPlugins(),
     ],
+    build: {
+        // Ensure Laravel can resolve assets without relying on the dev server
+        manifest: 'manifest.json',
+        rollupOptions: {
+            output: {
+                entryFileNames: 'assets/[name]-[hash].js',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                manualChunks: {
+                    'vendor-realtime': ['laravel-echo', 'pusher-js'],
+                },
+            },
+        },
+    },
 });

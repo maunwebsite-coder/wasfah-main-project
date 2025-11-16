@@ -424,7 +424,7 @@
                                         <div class="flex items-center gap-4">
                                             <div class="h-14 w-14 overflow-hidden rounded-xl border border-gray-100 bg-gray-100">
                                                 @if ($recipe->image)
-                                                    <img src="{{ Storage::disk('public')->url($recipe->image) }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover">
+                                                    <img src="{{ Storage::disk('public')->url($recipe->image) }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover" loading="lazy">
                                                 @else
                                                     <div class="flex h-full w-full items-center justify-center text-gray-300">
                                                         <i class="fas fa-utensils"></i>
@@ -510,3 +510,4 @@
     </div>
 </div>
 @endsection
+

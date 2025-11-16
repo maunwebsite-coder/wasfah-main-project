@@ -77,6 +77,144 @@
 </style>
 @endpush
 
+@php
+    $financialStatusMeta = [
+        'pending' => [
+            'label' => 'بانتظار التقسيم',
+            'class' => 'bg-gray-100 text-gray-700',
+        ],
+        'distributed' => [
+            'label' => 'تم توزيع العوائد',
+            'class' => 'bg-emerald-100 text-emerald-700',
+        ],
+        'void' => [
+            'label' => 'معلق/ملغي',
+            'class' => 'bg-rose-100 text-rose-700',
+        ],
+    ];
+
+    $paymentStatusMeta = [
+        'pending' => [
+            'label' => 'في انتظار التحصيل',
+            'icon' => 'fas fa-hourglass-half',
+            'badge' => 'bg-amber-50 text-amber-700 border border-amber-100',
+            'chip' => 'bg-amber-100 text-amber-700',
+            'description' => 'لم يتم اعتماد الدفع بعد. يوصى بمراجعة التحويلات أو التواصل مع العميل قبل تحديث الحالة.',
+            'action' => 'تحقق من سجل التحويل البنكي أو منصة الدفع ثم قم بتحديث الحالة عبر زر "تحديث حالة الدفع".',
+        ],
+        'paid' => [
+            'label' => 'مدفوع بالكامل',
+            'icon' => 'fas fa-check-circle',
+            'badge' => 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+            'chip' => 'bg-emerald-100 text-emerald-700',
+            'description' => 'تم تحصيل المبلغ ويمكن إطلاق عملية توزيع العوائد أو إعادة مزامنتها عند الحاجة.',
+            'action' => 'راجع ملف التحويل وتأكد من اكتمال توزيع النسب. في حال وجود خلل اضغط على إعادة المزامنة من لوحة المالية.',
+        ],
+        'refunded' => [
+            'label' => 'تم الاسترداد',
+            'icon' => 'fas fa-undo',
+            'badge' => 'bg-rose-50 text-rose-700 border border-rose-100',
+            'chip' => 'bg-rose-100 text-rose-700',
+            'description' => 'قيمة الحجز أُعيدت للعميل. يجب إيقاف أي توزيعات مالية مرتبطة بهذه العملية.',
+            'action' => 'وثّق سبب الاسترجاع في الملاحظات وأبلغ فريق المالية لإلغاء الحوالات التي تمت سابقاً.',
+        ],
+    ];
+
+    $currentPaymentMeta = $paymentStatusMeta[$booking->payment_status] ?? $paymentStatusMeta['pending'];
+
+    $shareTypeMeta = [
+        'chef' => [
+            'label' => 'الشيف',
+            'icon' => 'fas fa-utensils',
+            'class' => 'text-orange-600',
+        ],
+        'partner' => [
+            'label' => 'الشريك',
+            'icon' => 'fas fa-handshake',
+            'class' => 'text-blue-600',
+        ],
+        'admin' => [
+            'label' => 'الإدارة',
+            'icon' => 'fas fa-shield-alt',
+            'class' => 'text-gray-700',
+        ],
+    ];
+
+    $sharePurposeMeta = [
+        'chef' => 'عائد الشيف مقابل التحضير والتنفيذ المباشر للورشة.',
+        'partner' => 'عمولة الشريك التجاري أو الإحالة نظير تحقيق المبيعات.',
+        'admin' => 'حصة المنصة لتغطية التشغيل، التسويق، والدعم اللوجستي.',
+    ];
+
+    $shareStatusMeta = [
+        'distributed' => [
+            'label' => 'تم التوزيع',
+            'class' => 'bg-emerald-100 text-emerald-700',
+        ],
+        'pending' => [
+            'label' => 'بانتظار المعالجة',
+            'class' => 'bg-amber-100 text-amber-700',
+        ],
+        'cancelled' => [
+            'label' => 'ملغى',
+            'class' => 'bg-rose-100 text-rose-700',
+        ],
+    ];
+
+    $shareProgressPalette = [
+        'chef' => 'bg-orange-400',
+        'partner' => 'bg-blue-400',
+        'admin' => 'bg-gray-500',
+    ];
+
+    $totalSharePercentage = round((float) $revenueShares->sum('percentage'), 2);
+    $shareRemainder = round(100 - $totalSharePercentage, 2);
+    $shareProgressBaseline = $totalSharePercentage > 0 ? max(100, $totalSharePercentage) : 100;
+
+    if ($totalSharePercentage >= 99.5 && $totalSharePercentage <= 100.5) {
+        $shareIntegrityMeta = [
+            'state' => 'balanced',
+            'label' => 'النسب متوازنة',
+            'class' => 'text-emerald-600',
+        ];
+    } elseif ($totalSharePercentage < 99.5) {
+        $shareIntegrityMeta = [
+            'state' => 'incomplete',
+            'label' => 'النسب لا تصل إلى 100%',
+            'class' => 'text-amber-600',
+        ];
+    } else {
+        $shareIntegrityMeta = [
+            'state' => 'overflow',
+            'label' => 'النسب تتجاوز 100%',
+            'class' => 'text-rose-600',
+        ];
+    }
+
+    $paymentJourneySteps = [
+        [
+            'label' => 'تسجيل الطلب',
+            'icon' => 'fas fa-ticket-alt',
+            'complete' => true,
+            'hint' => $booking->created_at?->format('Y-m-d H:i'),
+        ],
+        [
+            'label' => 'تحصيل المبلغ',
+            'icon' => 'fas fa-credit-card',
+            'complete' => $booking->payment_status === 'paid',
+            'hint' => $booking->payment_status === 'paid'
+                ? ($booking->confirmed_at?->format('Y-m-d H:i') ?? 'تمت المراجعة')
+                : 'بانتظار التأكيد',
+        ],
+        [
+            'label' => 'توزيع النسب',
+            'icon' => 'fas fa-chart-pie',
+            'complete' => $booking->financial_status === \App\Models\WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED,
+            'hint' => $booking->financial_split_at?->format('Y-m-d H:i') ?? 'لم يتم بعد',
+        ],
+    ];
+@endphp
+
 @section('content')
 <div class="min-h-screen bg-gray-50 py-6">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -160,6 +298,25 @@
                                 </dd>
                             </div>
                             <div>
+                                <dt class="text-sm font-medium text-gray-500">حالة التوزيع المالي</dt>
+                                <dd class="mt-1">
+                                    @php
+                                        $financialMeta = $financialStatusMeta[$booking->financial_status] ?? null;
+                                    @endphp
+                                    @if($financialMeta)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $financialMeta['class'] }}">
+                                            <i class="fas fa-coins ml-1"></i>
+                        {{ $financialMeta['label'] }}
+                                        </span>
+                                    @endif
+                                    @if($booking->financial_split_at)
+                                        <div class="mt-1 text-xs text-gray-500">
+                                            آخر توزيع: {{ $booking->financial_split_at->format('Y-m-d H:i') }}
+                                        </div>
+                                    @endif
+                                </dd>
+                            </div>
+                            <div>
                                 <dt class="text-sm font-medium text-gray-500">المبلغ</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ number_format($booking->payment_amount, 2) }} {{ $booking->workshop->currency }}</dd>
                             </div>
@@ -186,6 +343,239 @@
                             <dt class="text-sm font-medium text-gray-500">ملاحظات</dt>
                             <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{{ $booking->notes }}</dd>
                         </div>
+                        @endif
+                </div>
+            </div>
+                <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">مركز إدارة الدفعات</h3>
+                            <p class="mt-1 text-sm text-gray-500">ملخص جاهز لحالة الدفع، مسارها الزمني، والتوصية التالية.</p>
+                        </div>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $currentPaymentMeta['badge'] }}">
+                            <i class="{{ $currentPaymentMeta['icon'] }} ml-1"></i>
+                            {{ $currentPaymentMeta['label'] }}
+                        </span>
+                    </div>
+                    <div class="px-4 py-5 sm:p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="p-4 border border-gray-100 rounded-lg bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-xs uppercase tracking-wide text-gray-500">حالة الدفع</p>
+                                        <p class="text-lg font-semibold text-gray-900">{{ $currentPaymentMeta['label'] }}</p>
+                                    </div>
+                                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full {{ $currentPaymentMeta['chip'] }}">
+                                        <i class="{{ $currentPaymentMeta['icon'] }}"></i>
+                                    </span>
+                                </div>
+                                <p class="mt-3 text-sm text-gray-600 leading-relaxed">{{ $currentPaymentMeta['description'] }}</p>
+                            </div>
+                            <div class="p-4 border border-gray-100 rounded-lg bg-white">
+                                <p class="text-xs uppercase tracking-wide text-gray-500">قناة التحصيل</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ $booking->payment_method ?? 'غير محدد' }}</p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    مرجع التحويل:
+                                    <span class="font-semibold text-gray-700">{{ $booking->payment_reference ?? '—' }}</span>
+                                </p>
+                                <div class="mt-4">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">المبلغ المحصل</p>
+                                    <p class="text-2xl font-bold text-gray-900">{{ number_format($booking->payment_amount, 2) }} {{ $booking->workshop->currency }}</p>
+                                </div>
+                            </div>
+                            <div class="p-4 border border-gray-100 rounded-lg bg-white">
+                                @php
+                                    $currentFinancialMeta = $financialStatusMeta[$booking->financial_status] ?? null;
+                                @endphp
+                                <p class="text-xs uppercase tracking-wide text-gray-500">وضع التوزيع المالي</p>
+                                <p class="text-lg font-semibold text-gray-900">
+                                    {{ $currentFinancialMeta['label'] ?? 'غير محدد' }}
+                                </p>
+                                @if($booking->financial_split_at)
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        آخر تحديث: {{ $booking->financial_split_at->format('Y-m-d H:i') }}
+                                    </p>
+                                @endif
+                                <div class="mt-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $currentFinancialMeta['class'] ?? 'bg-gray-100 text-gray-600' }}">
+                                        <i class="fas fa-coins ml-1"></i>
+                                        {{ $currentFinancialMeta['label'] ?? 'بانتظار المراجعة' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900 mb-3">تتبع حالة الدفعة</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                @foreach($paymentJourneySteps as $step)
+                                    <div class="flex items-center gap-3 p-3 rounded-lg border {{ $step['complete'] ? 'border-emerald-100 bg-emerald-50' : 'border-gray-100 bg-white' }}">
+                                        <span class="flex items-center justify-center w-10 h-10 rounded-full {{ $step['complete'] ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500' }}">
+                                            <i class="{{ $step['icon'] }}"></i>
+                                        </span>
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">{{ $step['label'] }}</p>
+                                            <p class="text-xs text-gray-500">{{ $step['hint'] }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-dashed border-gray-200 bg-white p-4">
+                            <div class="flex items-start">
+                                <span class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-50 text-amber-600">
+                                    <i class="fas fa-bolt"></i>
+                                </span>
+                                <div class="mr-3">
+                                    <p class="text-sm font-semibold text-gray-900">الإجراء المقترح الآن</p>
+                                    <p class="mt-1 text-sm text-gray-600 leading-relaxed">{{ $currentPaymentMeta['action'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">توزيع العوائد</h3>
+                            <p class="mt-1 text-sm text-gray-500">تفاصيل الحصة المالية لكل طرف بعد اعتماد الحجز.</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:space-x-3 sm:space-x-reverse sm:items-center gap-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border border-gray-200 {{ $shareIntegrityMeta['class'] }}">
+                                <i class="fas fa-balance-scale ml-1"></i>
+                                {{ $shareIntegrityMeta['label'] }}
+                            </span>
+                            @if($booking->financial_status === \App\Models\WorkshopBooking::FINANCIAL_STATUS_PENDING)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-600">
+                                    <i class="fas fa-hourglass-half ml-1"></i>
+                                    لم يتم التوزيع بعد
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 sm:p-6">
+                        @if($revenueShares->isEmpty())
+                            <div class="text-sm text-gray-500">
+                                لم يتم إنشاء أي سجلات توزيع بعد. قم بتأكيد الحجز وتحديث حالة الدفع إلى مدفوع ليتم التوزيع تلقائياً.
+                            </div>
+                        @else
+                            <div class="mb-6">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm font-semibold text-gray-900">ملخص سريع للنسب</p>
+                                    <span class="text-xs font-semibold {{ $shareIntegrityMeta['class'] }}">
+                                        {{ number_format($totalSharePercentage, 2) }}% موزعة
+                                    </span>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="h-3 rounded-full bg-gray-100 flex overflow-hidden">
+                                        @foreach($revenueShares as $share)
+                                            @php
+                                                $segmentWidth = max(0, min(100, ((float) $share->percentage / $shareProgressBaseline) * 100));
+                                                $segmentClass = $shareProgressPalette[$share->recipient_type] ?? 'bg-gray-400';
+                                            @endphp
+                                            <div class="h-full {{ $segmentClass }}" style="width: {{ $segmentWidth }}%;"></div>
+                                        @endforeach
+                                        @if($shareRemainder > 0)
+                                            @php
+                                                $remainderWidth = max(0, min(100, ($shareRemainder / $shareProgressBaseline) * 100));
+                                            @endphp
+                                            <div class="h-full bg-gray-200" style="width: {{ $remainderWidth }}%;"></div>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center justify-between text-xs text-gray-500 mt-2">
+                                        <span>المجموع الحالي: {{ number_format($totalSharePercentage, 2) }}%</span>
+                                        <span>الهدف: 100%</span>
+                                    </div>
+                                </div>
+                                @if($shareIntegrityMeta['state'] !== 'balanced')
+                                    <div class="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md p-3 flex items-start">
+                                        <i class="fas fa-exclamation-triangle ml-2 mt-0.5"></i>
+                                        <span>تأكد من ضبط نسب التوزيع لتصل إلى 100% قبل اعتماد تحويل العوائد.</span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-right font-semibold text-gray-600">الدور</th>
+                                            <th class="px-4 py-3 text-right font-semibold text-gray-600">المستفيد</th>
+                                            <th class="px-4 py-3 text-right font-semibold text-gray-600">الغرض المالي</th>
+                                            <th class="px-4 py-3 text-right font-semibold text-gray-600">النسبة</th>
+                                            <th class="px-4 py-3 text-right font-semibold text-gray-600">المبلغ</th>
+                                            <th class="px-4 py-3 text-right font-semibold text-gray-600">الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-100">
+                                        @foreach($revenueShares as $share)
+                                            @php
+                                                $typeMeta = $shareTypeMeta[$share->recipient_type] ?? null;
+                                                $statusMeta = $shareStatusMeta[$share->status] ?? null;
+                                                $recipientName = optional($share->recipient)->name;
+                                                $shareMeta = $share->meta ?? [];
+                                            @endphp
+                                            <tr>
+                                                <td class="px-4 py-3 font-semibold text-gray-900">
+                                                    @if($typeMeta)
+                                                        <span class="{{ $typeMeta['class'] }} inline-flex items-center gap-2">
+                                                            <i class="{{ $typeMeta['icon'] }}"></i>
+                                                            {{ $typeMeta['label'] }}
+                                                        </span>
+                                                    @else
+                                                        {{ ucfirst($share->recipient_type) }}
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-gray-700">
+                                                    @if($recipientName)
+                                                        {{ $recipientName }}
+                                                    @elseif($share->recipient_type === 'admin')
+                                                        إدارة المنصة
+                                                    @else
+                                                        غير محدد
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-gray-600">
+                                                    {{ $sharePurposeMeta[$share->recipient_type] ?? '—' }}
+                                                    @if($share->recipient_type === 'partner' && ! empty($shareMeta['referral_commission_id']))
+                                                        <div class="text-xs text-blue-600 mt-1">
+                                                            عمولة إحالة #{{ $shareMeta['referral_commission_id'] }}
+                                                        </div>
+                                                    @endif
+                                                    @if(isset($shareMeta['cancel_reason']) && $share->status === \App\Models\BookingRevenueShare::STATUS_CANCELLED)
+                                                        @php
+                                                            $cancelReason = str_replace('_', ' ', $shareMeta['cancel_reason']);
+                                                        @endphp
+                                                        <div class="text-xs text-rose-500 mt-1">
+                                                            سبب الإلغاء: {{ $cancelReason }}
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-gray-900 font-semibold">
+                                                    {{ number_format($share->percentage, 2) }}%
+                                                </td>
+                                                <td class="px-4 py-3 text-gray-900 font-semibold">
+                                                    {{ number_format($share->amount, 2) }} {{ $share->currency }}
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($statusMeta)
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusMeta['class'] }}">
+                                                            {{ $statusMeta['label'] }}
+                                                        </span>
+                                                    @endif
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        @if($share->distributed_at)
+                                                            تم في {{ $share->distributed_at->format('Y-m-d H:i') }}
+                                                        @elseif($share->cancelled_at)
+                                                            أُلغي في {{ $share->cancelled_at->format('Y-m-d H:i') }}
+                                                        @else
+                                                            بانتظار التفعيل
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         @endif
                     </div>
                 </div>

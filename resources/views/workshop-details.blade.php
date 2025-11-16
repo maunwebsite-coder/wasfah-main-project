@@ -1,19 +1,106 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', $workshop->title . ' - موقع وصفة')
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $textAlignClass = $isRtl ? 'text-right' : 'text-left';
+    $textAlignOppositeClass = $isRtl ? 'text-left' : 'text-right';
+    $arrowIcon = $isRtl ? 'fa-arrow-left' : 'fa-arrow-right';
+    $notSpecifiedLabel = __('workshops.details.not_specified');
+    $levelLabels = [
+        'beginner' => __('workshops.details.sidebar.levels.beginner'),
+        'advanced' => __('workshops.details.sidebar.levels.advanced'),
+    ];
+    $difficultyLabels = [
+        'easy' => __('workshops.details.recipes.difficulty.easy'),
+        'medium' => __('workshops.details.recipes.difficulty.medium'),
+        'hard' => __('workshops.details.recipes.difficulty.hard'),
+    ];
+@endphp
+
+@section('title', $workshop->title . ' - ' . __('workshops.details.title_suffix'))
 
 @push('styles')
 <style>
+    .workshop-details-wrapper {
+        font-family: 'Cairo', 'Tajawal', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #0f172a;
+    }
+
+    html[dir="ltr"] .workshop-details-wrapper .text-right {
+        text-align: left;
+    }
+
+    html[dir="ltr"] .workshop-details-wrapper .justify-end {
+        justify-content: flex-start;
+    }
+
     .workshop-hero {
-        background: linear-gradient(to right, #f59e0b, #ea580c);
+        position: relative;
+        isolation: isolate;
+        background: linear-gradient(120deg, #f59e0b, #ea580c 60%, #c2410c);
         color: white;
         border-radius: 1.5rem;
         margin: 2rem auto 0 auto;
         max-width: 1200px;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    }
+
+    .workshop-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.25), transparent 55%);
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .workshop-hero .grid > * {
+        position: relative;
+        z-index: 1;
     }
     
+    .workshop-hero-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 0.75rem 1rem;
+    }
+
+    .workshop-hero-details > div {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 1rem;
+        padding: 0.85rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .workshop-hero-details i {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.25);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .workshop-hero-details span.font-medium {
+        font-size: 0.95rem;
+        letter-spacing: 0.01em;
+    }
+
+    .workshop-hero-meta-label {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0.2rem;
+    }
+
     /* Add margin to prevent edge sticking */
     .workshop-hero-container {
         padding: 0 1rem;
@@ -198,7 +285,33 @@
         }
         
         .workshop-hero-details {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        
+        .workshop-hero-details > div {
+            padding: 0.85rem 0.95rem;
+            gap: 0.75rem;
+        }
+
+        .workshop-hero-details i {
+            width: 2rem;
+            height: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .workshop-hero-details span.font-medium {
+            font-size: 0.95rem;
+        }
+
+        .workshop-hero-meta-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+        }
+
+        .workshop-hero-details .hero-detail--secondary {
+            display: none;
         }
         
         .workshop-image {
@@ -449,103 +562,493 @@
         font-size: 1.1rem;
         box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
     }
+
+    .booking-card {
+        padding: 0;
+        overflow: hidden;
+        border: 1px solid rgba(249, 115, 22, 0.15);
+        border-radius: 1.75rem;
+        box-shadow: 0 25px 45px rgba(15, 23, 42, 0.08);
+        background: #fff;
+        width: 100%;
+        max-width: 520px;
+        margin-inline: auto;
+    }
+
+    .booking-card-header {
+        background: radial-gradient(circle at top right, rgba(254, 215, 170, 0.85), rgba(249, 115, 22, 0.95));
+        padding: clamp(1.5rem, 2.8vw, 2.25rem);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: clamp(1rem, 2.5vw, 1.5rem);
+        color: #fff;
+        flex-wrap: wrap;
+    }
+
+    .booking-card-eyebrow {
+        font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 0.5rem;
+    }
+
+    .booking-card-title {
+        font-size: clamp(1.25rem, 2vw, 1.75rem);
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .booking-card-subtitle {
+        margin-top: 0.5rem;
+        font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .booking-status-pill {
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+        padding: 0.35rem 1.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: clamp(0.75rem, 1.4vw, 0.95rem);
+        white-space: nowrap;
+    }
+
+    .booking-card-highlight {
+        padding: clamp(1.25rem, 2.6vw, 2rem) clamp(1.25rem, 2.6vw, 2.25rem) clamp(1rem, 2vw, 1.5rem);
+        background: linear-gradient(120deg, rgba(254, 249, 195, 0.8), rgba(255, 247, 237, 0.65));
+    }
+
+    .booking-price-label {
+        font-size: clamp(0.75rem, 1.3vw, 0.9rem);
+        color: #92400e;
+    }
+
+    .booking-price {
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 800;
+        color: #ea580c;
+        margin: 0.35rem 0;
+    }
+
+    .booking-price-hint {
+        font-size: clamp(0.75rem, 1.3vw, 0.85rem);
+        color: #78350f;
+    }
+
+    .booking-highlight-meta {
+        margin-top: 1.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: clamp(0.75rem, 2vw, 1rem);
+    }
+
+    .booking-meta-label {
+        font-size: clamp(0.7rem, 1.1vw, 0.8rem);
+        color: #92400e;
+        letter-spacing: 0.05em;
+    }
+
+    .booking-meta-value {
+        font-size: clamp(1rem, 1.8vw, 1.15rem);
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 0.35rem;
+    }
+
+    .booking-card-body {
+        padding: clamp(1.25rem, 2.6vw, 2rem) clamp(1.25rem, 2.6vw, 2.25rem) 0;
+    }
+
+    .booking-methods-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .booking-info-card {
+        border: 1px solid #f1f5f9;
+        border-radius: 1.25rem;
+        padding: clamp(0.75rem, 2vw, 1rem);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: clamp(0.75rem, 1.8vw, 0.85rem);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        text-align: right;
+    }
+
+    .booking-info-card:hover {
+        border-color: rgba(249, 115, 22, 0.4);
+        box-shadow: 0 15px 25px rgba(15, 23, 42, 0.08);
+    }
+
+    .booking-info-icon {
+        width: clamp(2.5rem, 3vw, 3rem);
+        height: clamp(2.5rem, 3vw, 3rem);
+        border-radius: 0.9rem;
+        background: linear-gradient(135deg, #fed7aa, #fb923c);
+        color: #9a3412;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(1rem, 1.6vw, 1.2rem);
+        box-shadow: 0 10px 20px rgba(249, 115, 22, 0.25);
+        margin-left: 0.75rem;
+    }
+
+    .booking-info-label {
+        font-size: clamp(0.75rem, 1.2vw, 0.85rem);
+        color: #64748b;
+        margin-bottom: 0.15rem;
+    }
+
+    .booking-info-value {
+        font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .booking-card-actions {
+        padding: clamp(1.25rem, 2.6vw, 2rem) clamp(1.25rem, 2.6vw, 2.25rem) clamp(1.75rem, 3vw, 2.5rem);
+        border-top: 1px solid #f1f5f9;
+        background: #fff;
+    }
+
+    .booking-action-hint {
+        margin-top: 0.75rem;
+        font-size: clamp(0.8rem, 1.3vw, 0.9rem);
+        color: #6b7280;
+        text-align: center;
+        line-height: 1.55;
+    }
+
+    .floating-booking-bar {
+        position: fixed;
+        left: 50%;
+        bottom: 1rem;
+        transform: translateX(-50%);
+        width: min(620px, calc(100% - 2.5rem));
+        z-index: 60;
+        display: none;
+        align-items: center;
+        gap: 1.25rem;
+        padding: 1rem 1.5rem;
+        border-radius: 1.5rem;
+        background: #fff;
+        box-shadow: 0 30px 65px rgba(15, 23, 42, 0.25);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        margin-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .floating-booking-price {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 0;
+    }
+
+    .floating-booking-price-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #a16207;
+    }
+
+    .floating-booking-price-value {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .floating-booking-meta {
+        font-size: 0.85rem;
+        color: #475569;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .floating-booking-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.9rem 1.5rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #fb923c, #ea580c);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        min-width: 160px;
+        box-shadow: 0 18px 35px rgba(249, 115, 22, 0.35);
+    }
+
+    .floating-booking-btn:focus-visible {
+        outline: 3px solid rgba(249, 115, 22, 0.35);
+        outline-offset: 3px;
+    }
+
+    html[dir="rtl"] .floating-booking-bar {
+        flex-direction: row-reverse;
+        text-align: right;
+    }
+
+    html[dir="rtl"] .floating-booking-btn i {
+        transform: rotate(180deg);
+    }
+
+    html[dir="rtl"] .floating-booking-price {
+        align-items: flex-end;
+    }
+
+    @media (max-width: 1024px) {
+        .floating-booking-bar {
+            display: flex;
+        }
+
+        .floating-booking-meta {
+            font-size: 0.8rem;
+        }
+
+        .workshop-details-wrapper {
+            padding-bottom: 6.25rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .booking-card-header,
+        .booking-card-highlight,
+        .booking-card-body,
+        .booking-card-actions {
+            padding: 1.5rem;
+        }
+
+        .booking-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .booking-card-title {
+            font-size: 1.5rem;
+        }
+
+        .booking-highlight-meta {
+            grid-template-columns: 1fr;
+        }
+
+        .floating-booking-bar {
+            bottom: calc(4.5rem + env(safe-area-inset-bottom, 0));
+            padding: 0.75rem 1.25rem;
+        }
+
+        .floating-booking-btn {
+            padding: 0.7rem 1.35rem;
+            min-width: 145px;
+        }
+    }
     
 </style>
 @endpush
 
 @section('content')
 @php
+    $notSpecifiedLabel = $notSpecifiedLabel ?? __('workshops.details.not_specified');
     $showAdminMetrics = auth()->check() && auth()->user()->isAdmin();
+    $stripePublicKey = config('services.stripe.public_key');
+    $stripeEnabled = $stripePublicKey && config('services.stripe.secret_key');
+    $onlinePaymentsEnabled = $stripeEnabled;
+    $whatsappBookingEnabled = data_get($whatsappBookingConfig ?? [], 'enabled', false);
+    $whatsappBookingPayload = [
+        'isLoggedIn' => data_get($whatsappBookingConfig ?? [], 'isLoggedIn', false),
+        'whatsappNumber' => data_get($whatsappBookingConfig ?? [], 'number'),
+        'bookingEndpoint' => data_get($whatsappBookingConfig ?? [], 'bookingEndpoint'),
+        'bookingNotes' => data_get($whatsappBookingConfig ?? [], 'notes'),
+        'loginUrl' => data_get($whatsappBookingConfig ?? [], 'loginUrl'),
+        'registerUrl' => data_get($whatsappBookingConfig ?? [], 'registerUrl'),
+        'user' => data_get($whatsappBookingConfig ?? [], 'user', []),
+    ];
+    $whatsappPriceLabel = trim($workshop->formatted_price ?? ($workshop->price.' '.$workshop->currency));
+    $whatsappDateLabel = $workshop->start_date
+        ? $workshop->start_date->format('d/m/Y h:i A')
+        : $notSpecifiedLabel;
+    $whatsappDeadlineLabel = $workshop->registration_deadline
+        ? $workshop->registration_deadline->format('d/m/Y')
+        : $notSpecifiedLabel;
+    $whatsappInstructorLabel = $workshop->instructor ?? $notSpecifiedLabel;
+    $whatsappLocationLabel = $workshop->is_online
+        ? __('workshops.labels.online_workshop')
+        : ($workshop->location ?? $notSpecifiedLabel);
+    $whatsappTopicsLabel = $workshop->what_you_will_learn
+        ? (string) \Illuminate\Support\Str::of($workshop->what_you_will_learn)->stripTags()->squish()
+        : $notSpecifiedLabel;
+    $whatsappRequirementsLabel = $workshop->requirements
+        ? (string) \Illuminate\Support\Str::of($workshop->requirements)->stripTags()->squish()
+        : $notSpecifiedLabel;
+    $whatsappDurationLabel = $workshop->duration
+        ? $workshop->formatted_duration
+        : $notSpecifiedLabel;
+    $legalTermsUrl = config('legal.terms_url') ?: route('legal.terms');
+    $whatsappTermsLabel = __('workshops.whatsapp.terms_fallback', ['url' => $legalTermsUrl]);
+    $isWorkshopFull = $workshop->max_participants && $workshop->bookings_count >= $workshop->max_participants;
+    $userBookedViaWhatsapp = (bool) ($userBooking?->is_whatsapp_booking ?? false);
+    $whatsappPendingApproval = $userBookedViaWhatsapp && ($userBooking?->status !== 'confirmed');
+    $whatsappButtonAvailable = $whatsappBookingEnabled
+        && !$workshop->is_completed
+        && $workshop->is_registration_open
+        && !$isWorkshopFull
+        && (empty($userBooking) || $userBookedViaWhatsapp);
+    $showFloatingBookingButton = !$userBooking
+        && !$workshop->is_completed
+        && $workshop->is_registration_open
+        && !($isWorkshopFull || $workshop->is_fully_booked);
+    $workshopDateLabel = $workshop->start_date ? $workshop->start_date->format('d/m/Y') : $notSpecifiedLabel;
+    $workshopStartTimeLabel = $workshop->start_date ? $workshop->start_date->format('g:i A') : $notSpecifiedLabel;
+    $workshopEndTimeLabel = $workshop->end_date ? $workshop->end_date->format('g:i A') : $notSpecifiedLabel;
+    $workshopStartDateTimeLabel = $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : $notSpecifiedLabel;
+    $workshopEndDateTimeLabel = $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : $notSpecifiedLabel;
+    $workshopStartIso = optional($workshop->start_date)->toIso8601String();
+    $workshopEndIso = optional($workshop->end_date)->toIso8601String();
+    $workshopDeadlineLabel = $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : $notSpecifiedLabel;
+    $workshopLocationLabel = $whatsappLocationLabel;
+    $bookingStatusPill = [
+        'label' => __('workshops.details.booking_status.open'),
+        'classes' => 'bg-white/20 text-white border-white/30',
+    ];
+    if ($workshop->is_completed) {
+        $bookingStatusPill = [
+            'label' => __('workshops.details.booking_status.completed'),
+            'classes' => 'bg-gray-900/30 text-white border-white/20',
+        ];
+    } elseif ($isWorkshopFull || $workshop->is_fully_booked) {
+        $bookingStatusPill = [
+            'label' => __('workshops.details.booking_status.full'),
+            'classes' => 'bg-rose-100 text-rose-700 border-rose-200',
+        ];
+    } elseif (! $workshop->is_registration_open) {
+        $bookingStatusPill = [
+            'label' => __('workshops.details.booking_status.closed'),
+            'classes' => 'bg-amber-100 text-amber-700 border-amber-200',
+        ];
+    } elseif ($userBooking) {
+        $bookingStatusPill = [
+            'label' => __('workshops.details.booking_status.booked'),
+            'classes' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        ];
+    }
 @endphp
-<div class="min-h-screen" style="background-color: #f3f4f6;">
+<div class="workshop-details-wrapper min-h-screen" style="background-color: #f3f4f6;">
     <!-- Workshop Hero Section -->
     <section class="workshop-hero-container">
         <div class="workshop-hero">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            <!-- Workshop Info -->
-            <div class="p-8 lg:p-12 text-white flex flex-col justify-center workshop-hero-content">
-                <div class="mb-6">
-                    <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-block mb-4">
-                        @if($workshop->is_featured)
-                            <i class="fas fa-star text-yellow-300 mr-2"></i> ورشة مميزة
-                        @else
-                            ورشة عمل
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                <!-- Workshop Info -->
+                <div class="p-8 lg:p-12 text-white flex flex-col justify-center workshop-hero-content">
+                    <div class="mb-8 space-y-4">
+                        <span class="bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full inline-flex items-center gap-2">
+                            @if($workshop->is_featured)
+                                <i class="fas fa-star text-yellow-300"></i>
+                                {{ __('workshops.details.hero.featured_badge') }}
+                            @else
+                                {{ __('workshops.details.hero.default_badge') }}
+                            @endif
+                        </span>
+                        <h1 class="text-3xl lg:text-4xl font-bold leading-tight workshop-hero-title">
+                            {{ $workshop->title }}
+                        </h1>
+                        @if(! empty($workshop->description))
+                            <p class="text-lg text-amber-100 leading-relaxed workshop-hero-description">
+                                {{ $workshop->description }}
+                            </p>
                         @endif
-                    </span>
-                    <h1 class="text-3xl lg:text-4xl font-bold mb-4 leading-tight workshop-hero-title">
-                        {{ $workshop->title }}
-                    </h1>
-                    <p class="text-lg text-amber-100 mb-6 leading-relaxed workshop-hero-description">
-                        {{ $workshop->description }}
-                    </p>
+                    </div>
+
+                    <!-- Compact Hero Details -->
+                    <div class="mb-8 workshop-hero-details">
+                        <div class="text-amber-100 hero-detail hero-detail--primary">
+                            <i class="fas fa-calendar-day"></i>
+                            <div>
+                                <span class="workshop-hero-meta-label">{{ __('workshops.details.hero.date_label') }}</span>
+                                <span class="font-medium">{{ $workshopDateLabel }}</span>
+                            </div>
+                        </div>
+                        <div class="text-amber-100 hero-detail hero-detail--primary">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <span class="workshop-hero-meta-label">{{ __('workshops.details.booking_card.hours_label') }}</span>
+                                <span class="font-medium">
+                                    {{ $workshopStartTimeLabel }} - {{ $workshopEndTimeLabel }}
+                                    @if($workshopStartIso)
+                                        <span
+                                            class="block text-sm text-amber-200 font-normal mt-1"
+                                            data-local-time
+                                            data-source-time="{{ $workshopStartIso }}"
+                                            data-label="{{ __('workshops.details.timezones.viewer_label') }}"
+                                            data-template="{{ __('workshops.details.timezones.viewer_timezone_template') }}"
+                                            data-fallback-timezone="{{ __('workshops.details.timezones.viewer_timezone_fallback') }}"
+                                            data-placeholder="{{ __('workshops.details.timezones.viewer_placeholder') }}"
+                                            data-locale="{{ app()->getLocale() }}"
+                                            data-format="datetime-full"
+                                        >{{ __('workshops.details.timezones.viewer_placeholder') }}</span>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-amber-100 hero-detail hero-detail--primary">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <div>
+                                <span class="workshop-hero-meta-label">{{ __('workshops.details.hero.instructor_label') }}</span>
+                                <span class="font-medium">{{ $workshop->instructor ?? $notSpecifiedLabel }}</span>
+                            </div>
+                        </div>
+                        <div class="text-amber-100 hero-detail hero-detail--primary">
+                            <i class="fas {{ $workshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }}"></i>
+                            <div>
+                                <span class="workshop-hero-meta-label">{{ __('workshops.details.hero.format_label') }}</span>
+                                <span class="font-medium">{{ $workshop->is_online ? __('workshops.labels.online_workshop') : ($workshop->location ?? __('workshops.labels.offline_workshop')) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2">
+                        <div class="text-3xl lg:text-4xl font-bold text-white">
+                            {{ $workshop->formatted_price }}
+                        </div>
+                        <a href="#booking-methods"
+                           class="inline-flex items-center justify-center gap-3 px-8 py-3 rounded-full bg-white/15 hover:bg-white/25 text-white font-semibold text-lg transition sm:w-auto"
+                           data-scroll-target="#booking-methods"
+                           data-scroll-fallback="#workshop-booking">
+                            <span>{{ __('workshops.details.booking_card.title') }}</span>
+                            <i class="fas {{ $arrowIcon }} text-sm"></i>
+                        </a>
+                    </div>
                 </div>
-                
-                <!-- Workshop Details -->
-                <div class="space-y-3 mb-8 workshop-hero-details">
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas fa-calendar-alt w-5 text-center ml-3"></i>
-                        <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
-                    </div>
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas fa-play-circle w-5 text-center ml-3"></i>
-                        <span class="font-medium">البداية: {{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
-                    </div>
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas fa-stop-circle w-5 text-center ml-3"></i>
-                        <span class="font-medium">النهاية: {{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
-                    </div>
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas {{ $workshop->is_online ? 'fa-video' : 'fa-map-marker-alt' }} w-5 text-center ml-3"></i>
-                        <span class="font-medium">{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}</span>
-                    </div>
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas fa-user w-5 text-center ml-3"></i>
-                        <span class="font-medium">مع {{ $workshop->instructor }}</span>
-                    </div>
-                    <div class="flex items-center text-amber-100">
-                        <i class="fas fa-clock w-5 text-center ml-3"></i>
-                        <span class="font-medium">{{ $workshop->formatted_duration }}</span>
-                    </div>
-                    @if($showAdminMetrics)
-                        <div class="flex items-center text-amber-100">
-                            <i class="fas fa-users w-5 text-center ml-3"></i>
-                            <span class="font-medium">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</span>
+
+                <!-- Workshop Image -->
+                <div class="relative h-64 lg:h-auto overflow-hidden">
+                    <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=' . urlencode(__('workshops.labels.featured_placeholder_text')) }}" 
+                         alt="{{ $workshop->title }}" 
+                         class="workshop-image w-full h-full object-cover"
+                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
+                    @if($workshop->is_fully_booked)
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span class="text-white text-2xl font-bold bg-red-500 px-6 py-3 rounded-full">
+                                {{ __('workshops.details.booking_status.full') }}
+                            </span>
                         </div>
                     @endif
                 </div>
-                
-                <!-- Price and Rating -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-6 border-t border-amber-200/30">
-                    <div class="text-3xl font-bold text-white">
-                        {{ $workshop->formatted_price }}
-                    </div>
-                    <div class="flex items-center text-white">
-                        <div class="flex items-center mr-3">
-                            <i class="fas fa-star text-yellow-300 mr-1"></i>
-                            <span class="font-bold text-xl text-white">{{ (float)$workshop->rating }}</span>
-                        </div>
-                        <span class="text-amber-100 font-medium">({{ (int)$workshop->reviews_count }} تقييم)</span>
-                    </div>
-                </div>
             </div>
-            
-            <!-- Workshop Image -->
-            <div class="relative h-64 lg:h-auto overflow-hidden">
-                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=ورشة+فاخرة' }}" 
-                     alt="{{ $workshop->title }}" 
-                     class="workshop-image w-full h-full object-cover"
-                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';"
-                     loading="lazy">
-                <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
-                @if($workshop->is_fully_booked)
-                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span class="text-white text-2xl font-bold bg-red-500 px-6 py-3 rounded-full">
-                            اكتمل العدد
-                        </span>
-                    </div>
-                @endif
-            </div>
-        </div>
         </div>
     </section>
 
@@ -562,7 +1065,7 @@
                                 <div class="info-icon ml-4">
                                     <i class="fas fa-info-circle"></i>
                                 </div>
-                                حول الورشة
+                                {{ __('workshops.details.sections.about') }}
                             </h2>
                             <div class="prose prose-lg max-w-none text-gray-700 text-right leading-relaxed workshop-content-text">
                                 {!! $workshop->content !!}
@@ -575,7 +1078,7 @@
                                     <div class="info-icon ml-4">
                                         <i class="fas fa-graduation-cap"></i>
                                     </div>
-                                    ماذا ستتعلم
+                                    {{ __('workshops.details.sections.learn') }}
                                 </h2>
                                 <div class="prose prose-lg max-w-none text-gray-700 text-right leading-relaxed workshop-content-text">
                                     {!! $workshop->what_you_will_learn !!}
@@ -589,7 +1092,7 @@
                                     <div class="info-icon ml-4">
                                         <i class="fas fa-list-check"></i>
                                     </div>
-                                    المتطلبات
+                                    {{ __('workshops.details.sections.requirements') }}
                                 </h2>
                                 <div class="prose prose-lg max-w-none text-gray-700 text-right leading-relaxed workshop-content-text">
                                     {!! $workshop->requirements !!}
@@ -603,7 +1106,7 @@
                                     <div class="info-icon ml-4">
                                         <i class="fas fa-tools"></i>
                                     </div>
-                                    المواد المطلوبة
+                                    {{ __('workshops.details.sections.materials') }}
                                 </h2>
                                 <div class="prose prose-lg max-w-none text-gray-700 text-right leading-relaxed workshop-content-text">
                                     {!! $workshop->materials_needed !!}
@@ -617,17 +1120,20 @@
                                     <div class="info-icon ml-4">
                                         <i class="fas fa-utensils"></i>
                                     </div>
-                                    وصفات الورشة
+                                    {{ __('workshops.details.sections.recipes') }}
                                 </h2>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     @foreach($workshop->recipes as $recipe)
+                                        @php
+                                            $recipeMinutes = (int) ($recipe->prep_time ?? 0) + (int) ($recipe->cook_time ?? 0);
+                                        @endphp
                                         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                                             <a href="{{ route('recipe.show', $recipe->slug) }}" class="block group">
                                                 <div class="relative overflow-hidden">
-                                                    <img src="{{ $recipe->image_url ?: 'https://placehold.co/400x300/f87171/FFFFFF?text=وصفة' }}" 
+                                                    <img src="{{ $recipe->image_url ?: 'https://placehold.co/400x300/f87171/FFFFFF?text=' . urlencode(__('workshops.details.recipes.placeholder')) }}" 
                                                          alt="{{ $recipe->title }}" 
                                                          class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                                         onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';" loading="lazy">
                                                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                                     <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                         <div class="bg-white/90 backdrop-blur-sm rounded-full p-2">
@@ -645,15 +1151,19 @@
                                                     <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
                                                         <div class="flex items-center">
                                                             <i class="fas fa-clock text-orange-500 ml-1"></i>
-                                                            <span>{{ $recipe->prep_time + $recipe->cook_time }} دقيقة</span>
+                                                            <span>{{ __('workshops.details.recipes.minutes', ['count' => $recipeMinutes]) }}</span>
                                                         </div>
                                                         <div class="flex items-center">
                                                             <i class="fas fa-users text-orange-500 ml-1"></i>
-                                                            <span>{{ $recipe->servings }} حصة</span>
+                                                            <span>
+                                                                {{ $recipe->servings
+                                                                    ? __('workshops.details.recipes.servings', ['count' => (int) $recipe->servings])
+                                                                    : $notSpecifiedLabel }}
+                                                            </span>
                                                         </div>
                                                         <div class="flex items-center">
                                                             <i class="fas fa-signal text-orange-500 ml-1"></i>
-                                                            <span>{{ $recipe->difficulty === 'easy' ? 'سهل' : ($recipe->difficulty === 'medium' ? 'متوسط' : 'صعب') }}</span>
+                                                            <span>{{ $difficultyLabels[$recipe->difficulty] ?? $difficultyLabels['medium'] }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="flex items-center justify-between">
@@ -662,8 +1172,8 @@
                                                             <span class="text-sm font-medium">{{ $recipe->author }}</span>
                                                         </div>
                                                         <span class="text-orange-500 font-semibold">
-                                                            <i class="fas fa-arrow-left text-xs ml-1"></i>
-                                                            عرض الوصفة
+                                                            <i class="fas {{ $arrowIcon }} text-xs {{ $isRtl ? 'mr-1' : 'ml-1' }}"></i>
+                                                            {{ __('workshops.details.recipes.view') }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -677,22 +1187,22 @@
 
                     <!-- Sidebar -->
                     <div class="space-y-8 workshop-sidebar">
-                        <div class="sidebar-card p-8 booking-section">
+                        <div class="sidebar-card p-8" id="workshop-summary">
                             <h3 class="text-2xl font-bold text-gray-900 mb-6 text-right flex items-center">
                                 <div class="info-icon ml-4">
-                                    <i class="fas fa-calendar-check"></i>
+                                    <i class="fas fa-clipboard-list"></i>
                                 </div>
-                                احجز مقعدك الآن
+                                {{ __('workshops.details.booking_card.summary.title') }}
                             </h3>
-                            
-                            <div class="space-y-6 mb-8">
+
+                            <div class="space-y-4">
                                 <div class="info-item">
                                     <div class="info-icon">
-                                        <i class="fas fa-tag"></i>
+                                        <i class="fas fa-calendar-day"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-sm text-gray-500">السعر</p>
-                                        <p class="text-2xl font-bold text-orange-500">{{ $workshop->formatted_price }}</p>
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.booking_card.summary.date') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $workshopDateLabel }}</p>
                                     </div>
                                 </div>
                                 <div class="info-item">
@@ -700,100 +1210,283 @@
                                         <i class="fas fa-clock"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-sm text-gray-500">آخر موعد للتسجيل</p>
-                                        <p class="text-lg font-semibold text-gray-900">{{ $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد' }}</p>
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.booking_card.summary.start_time') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $workshopStartTimeLabel }} - {{ $workshopEndTimeLabel }}</p>
                                     </div>
                                 </div>
-                                @if($showAdminMetrics)
-                                    <div class="info-item">
-                                        <div class="info-icon">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm text-gray-500">عدد المشاركين</p>
-                                            <p class="text-lg font-semibold text-gray-900">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</p>
-                                        </div>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-map-marker-alt"></i>
                                     </div>
-                                @endif
-                            </div>
-
-                            @if($workshop->is_completed)
-                                <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
-                                    <i class="fas fa-check-circle ml-2"></i>
-                                    الورشة مكتملة
-                                </button>
-                            @elseif($userBooking)
-                                <button class="w-full bg-green-500 text-white font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button" disabled>
-                                    <i class="fas fa-check ml-2 booking-button-icon"></i>
-                                    <span class="booking-button-label">تم الحجز بالفعل</span>
-                                </button>
-                            @elseif($workshop->is_fully_booked)
-                                <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
-                                    <i class="fas fa-times-circle ml-2"></i>
-                                    الورشة مكتملة
-                                </button>
-                            @elseif(!$workshop->is_registration_open)
-                                <button class="w-full bg-yellow-400 text-yellow-800 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
-                                    <i class="fas fa-clock ml-2"></i>
-                                    انتهى التسجيل
-                                </button>
-                            @else
-                                <button id="unifiedBookingBtn" class="booking-btn w-full text-white.font-bold py-4 px-6 rounded-xl text-lg booking-button bg-green-500 hover:bg-green-600.transition-all duration-300 transform hover:scale-105">
-                                    <i class="fab fa-whatsapp ml-2 booking-button-icon"></i>
-                                    <span class="booking-button-label">احجز الآن</span>
-                                </button>
-                            @endif
-                        </div>
-
-                        <div class="instructor-card bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                            <h3 class="text-2xl font-bold text-gray-900 mb-6 text-right">عن المدرب</h3>
-                            
-                            <div class="text-center">
-                                <img src="{{ $workshop->instructor_avatar }}" alt="{{ $workshop->instructor }}" 
-                                     class="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2 border-orange-500 instructor-avatar">
-                                <h4 class="text-xl font-bold text-gray-900 mb-2 instructor-name">{{ $workshop->instructor }}</h4>
-                                @if($workshop->instructor_bio)
-                                    <p class="text-gray-600 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg instructor-bio">
-                                        {{ $workshop->instructor_bio }}
-                                    </p>
-                                @endif
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.booking_card.summary.location') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $workshopLocationLabel }}</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.booking_card.summary.instructor') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $workshop->instructor ?? $notSpecifiedLabel }}</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.booking_card.summary.cost') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $workshop->formatted_price }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="sidebar-card p-8">
+                        <div id="workshop-booking" class="sidebar-card booking-section booking-card">
+                            <div class="booking-card-header text-right w-full">
+                                <div class="w-full">
+                                    <p class="booking-card-eyebrow">{{ __('workshops.details.booking_card.eyebrow') }}</p>
+                                    <h3 class="booking-card-title flex items-center gap-3 justify-end">
+                                        <i class="fas fa-calendar-check text-white text-xl"></i>
+                                        <span>{{ __('workshops.details.booking_card.title') }}</span>
+                                    </h3>
+                                    <p class="booking-card-subtitle">{{ __('workshops.details.booking_card.subtitle') }}</p>
+                                </div>
+                                <span class="booking-status-pill shrink-0 {{ $bookingStatusPill['classes'] }}">
+                                    <i class="fas fa-circle text-xs"></i>
+                                    {{ $bookingStatusPill['label'] }}
+                                </span>
+                            </div>
+                            <div class="booking-card-highlight text-right">
+                                <div>
+                                    <span class="booking-price-label">{{ __('workshops.details.booking_card.price_label') }}</span>
+                                    <p class="booking-price">{{ $workshop->formatted_price }}</p>
+                                    <p class="booking-price-hint">{{ __('workshops.details.booking_card.price_hint') }}</p>
+                                </div>
+                                <div class="booking-highlight-meta text-right">
+                                    <div>
+                                        <span class="booking-meta-label">{{ __('workshops.details.booking_card.deadline_label') }}</span>
+                                        <p class="booking-meta-value">{{ $workshopDeadlineLabel }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="booking-meta-label">{{ __('workshops.details.hero.duration_label') }}</span>
+                                        <p class="booking-meta-value">{{ $workshop->formatted_duration ?: $notSpecifiedLabel }}</p>
+                                    </div>
+                                    @if($showAdminMetrics)
+                                        <div>
+                                            <span class="booking-meta-label">{{ __('workshops.details.booking_card.confirmed_label') }}</span>
+                                            <p class="booking-meta-value">{{ $workshop->bookings_count }}/{{ $workshop->max_participants ?? '—' }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="booking-card-body text-right">
+                                <div class="booking-info-card text-right">
+                                    <div class="booking-info-icon">
+                                        <i class="fas fa-door-open"></i>
+                                    </div>
+                                    <div>
+                                        <p class="booking-info-label">{{ __('workshops.details.booking_card.join_label') }}</p>
+                                        <p class="booking-info-value">{{ $workshop->is_online ? __('workshops.labels.online_workshop') : __('workshops.labels.offline_workshop') }}</p>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            {{ $workshop->is_online ? __('workshops.details.booking_card.join_hint_online') : __('workshops.details.booking_card.join_hint_offline') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="booking-card-actions" id="booking-methods">
+                                <div id="booking-primary-action">
+                                @if($workshop->is_completed)
+                                    <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
+                                        <i class="fas fa-check-circle ml-2"></i>
+                                        {{ __('workshops.details.booking_card.cta_completed') }}
+                                    </button>
+                                @elseif($userBooking)
+                                    @if($userBooking->status === 'confirmed')
+                                        @if($workshop->is_online && $workshop->meeting_link && $userBooking->public_code)
+                                            <a href="{{ $userBooking->secure_join_url }}" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl text-lg booking-button flex items-center justify-center gap-2">
+                                                <i class="fas fa-video ml-2"></i>
+                                                <span>{{ __('workshops.details.booking_card.cta_join') }}</span>
+                                            </a>
+                                            <p class="booking-action-hint">
+                                                {{ __('workshops.details.booking_card.join_room_hint') }}
+                                            </p>
+                                        @else
+                                            <button class="w-full bg-green-500 text-white font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button" disabled>
+                                                <i class="fas fa-check ml-2 booking-button-icon"></i>
+                                                <span class="booking-button-label">{{ __('workshops.details.booking_card.cta_confirmed') }}</span>
+                                            </button>
+                                            <p class="booking-action-hint">
+                                                {{ __('workshops.details.booking_card.confirmation_hint') }}
+                                            </p>
+                                        @endif
+                                    @else
+                                        <button class="w-full bg-yellow-400 text-yellow-900 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button" disabled>
+                                            <i class="fas fa-hourglass-half ml-2 booking-button-icon"></i>
+                                            <span class="booking-button-label">{{ __('workshops.details.booking_card.cta_pending') }}</span>
+                                        </button>
+                                        <p class="booking-action-hint">
+                                            {{ __('workshops.details.booking_card.pending_hint') }}
+                                        </p>
+                                    @endif
+                                @elseif($workshop->is_fully_booked)
+                                    <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
+                                        <i class="fas fa-times-circle ml-2"></i>
+                                        {{ __('workshops.details.booking_card.cta_full') }}
+                                    </button>
+                                @elseif(! $workshop->is_registration_open)
+                                    <button class="w-full bg-yellow-400 text-yellow-800 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
+                                        <i class="fas fa-clock ml-2"></i>
+                                        {{ __('workshops.details.booking_card.cta_closed') }}
+                                    </button>
+                                @else
+                                    @guest
+                                        <button class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 px-6 rounded-xl text-lg booking-button transition-all duration-300 transform hover:scale-105"
+                                                onclick="showLoginRequiredModal({{ $workshop->id }})">
+                                            <i class="fas fa-sign-in-alt ml-2"></i>
+                                            {{ __('workshops.details.booking_card.login_required') }}
+                                        </button>
+                                        <p class="booking-action-hint">
+                                            {{ __('workshops.details.booking_card.login_hint') }}
+                                        </p>
+                                    @else
+                                        @if(! $onlinePaymentsEnabled)
+                                            <div class="bg-yellow-50 border border-yellow-100 rounded-2xl p-5 text-right">
+                                                <p class="text-yellow-900 font-semibold mb-1">{{ __('workshops.details.booking_card.payments_disabled_title') }}</p>
+                                                <p class="text-sm text-yellow-800">{{ __('workshops.details.booking_card.payments_disabled_hint') }}</p>
+                                            </div>
+                                        @else
+                                            <div class="space-y-6 text-right">
+                                                <div class="booking-methods-grid" id="booking-methods-grid">
+                                                    @if($stripeEnabled && ! $userBookedViaWhatsapp)
+                                                    <div class="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm space-y-5" id="stripe-checkout-card">
+                                                        <div class="flex items-center justify-between mb-2">
+                                                            <div>
+                                                                <p class="text-sm text-gray-500">{{ __('workshops.stripe.label') }}</p>
+                                                                <p class="text-lg font-bold text-gray-900">{{ __('workshops.stripe.title') }}</p>
+                                                            </div>
+                                                            <div class="text-indigo-500">
+                                                                <i class="fas fa-credit-card text-2xl"></i>
+                                                            </div>
+                                                        </div>
+                                                        <p class="text-sm text-gray-500">
+                                                            {{ __('workshops.stripe.description') }}
+                                                        </p>
+                                                        <div class="space-y-4">
+                                                            <div id="stripe-wallet-section" class="hidden rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-3">
+                                                                <div class="flex items-center justify-between text-sm text-indigo-900 font-semibold">
+                                                                    <span>{{ __('workshops.stripe.wallet_label') }}</span>
+                                                                    <span class="text-xs font-normal text-indigo-500">{{ __('workshops.stripe.wallet_hint') }}</span>
+                                                                </div>
+                                                                <div id="stripe-wallet-button" class="min-h-[48px] flex items-center justify-center"></div>
+                                                                <p id="stripe-wallet-hint" class="hidden text-xs text-gray-500 text-center">
+                                                                    {{ __('workshops.stripe.wallet_hint') }}
+                                                                </p>
+                                                                <p id="stripe-wallet-unavailable" class="hidden text-xs text-amber-600 text-center">
+                                                                    {{ __('workshops.stripe.wallet_unavailable') }}
+                                                                </p>
+                                                            </div>
+                                                            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-inner">
+                                                                <div id="stripe-payment-element" class="min-h-[140px]"></div>
+                                                            </div>
+                                                            <p id="stripe-card-errors" class="hidden text-sm text-red-600 text-center" role="alert"></p>
+                                                            <p id="stripe-success-message" class="hidden text-sm text-green-600 text-center" role="status"></p>
+                                                            <button type="button"
+                                                                    id="stripe-submit-button"
+                                                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl booking-button flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                                                <span id="stripe-submit-label">{{ __('workshops.stripe.pay_button') }}</span>
+                                                                <span id="stripe-submit-spinner" class="hidden items-center justify-center gap-2 text-sm">
+                                                                    <i class="fas fa-spinner fa-spin ml-1"></i>
+                                                                    {{ __('workshops.stripe.processing') }}
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    @if($whatsappButtonAvailable)
+                                                        <div class="rounded-2xl border border-green-100 bg-white p-6 shadow-sm space-y-4">
+                                                            <div class="js-whatsapp-pending-alert {{ $whatsappPendingApproval ? '' : 'hidden' }} rounded-2xl border border-amber-200 bg-amber-50/60 p-3 text-right flex items-start gap-3" data-workshop-id="{{ $workshop->id }}">
+                                                                <span class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                                                                    <i class="fas fa-hourglass-half"></i>
+                                                                </span>
+                                                                <div class="flex-1">
+                                                                    <p class="text-sm font-semibold text-amber-800">{{ __('workshops.whatsapp.pending_badge') }}</p>
+                                                                    <p class="text-xs text-amber-700 mt-1">{{ __('workshops.whatsapp.pending_helper') }}</p>
+                                                                </div>
+                                                            </div>
+                                                            <p class="text-sm font-semibold text-gray-900 text-right flex items-center justify-end gap-2">
+                                                                <span class="js-whatsapp-section-label"
+                                                                      data-default-label="{{ __('workshops.whatsapp.button') }}"
+                                                                      data-followup-label="{{ __('workshops.whatsapp.followup_title') }}">
+                                                                    {{ $userBookedViaWhatsapp ? __('workshops.whatsapp.followup_title') : __('workshops.whatsapp.button') }}
+                                                            </span>
+                                                            <i class="fab fa-whatsapp text-green-500 text-lg"></i>
+                                                        </p>
+                                                            <div class="js-whatsapp-booking-section {{ $userBookedViaWhatsapp ? 'hidden' : '' }}" data-workshop-id="{{ $workshop->id }}">
+                                                                <button type="button"
+                                                                        class="w-full bg-white border border-green-200 text-green-700 font-bold py-3.5 px-4 rounded-xl booking-button flex items-center justify-center gap-2 js-whatsapp-booking"
+                                                                        data-workshop-id="{{ $workshop->id }}"
+                                                                        data-title="{{ e($workshop->title) }}"
+                                                                        data-price="{{ $whatsappPriceLabel }}"
+                                                                        data-date="{{ $whatsappDateLabel }}"
+                                                                        data-instructor="{{ $whatsappInstructorLabel }}"
+                                                                        data-location="{{ $whatsappLocationLabel }}"
+                                                                        data-deadline="{{ $whatsappDeadlineLabel }}"
+                                                                        data-topics="{{ e($whatsappTopicsLabel) }}"
+                                                                        data-requirements="{{ e($whatsappRequirementsLabel) }}"
+                                                                        data-duration="{{ e($whatsappDurationLabel) }}"
+                                                                        data-terms="{{ e($whatsappTermsLabel) }}">
+                                                                    <i class="fab fa-whatsapp text-xl booking-button-icon"></i>
+                                                                    <span class="booking-button-label">{{ __('workshops.whatsapp.button') }}</span>
+                                                                </button>
+                                                                <p class="text-xs text-gray-500 text-center">{{ __('workshops.whatsapp.helper') }}</p>
+                                                                <p class="text-xs text-amber-600 text-center">{{ __('workshops.whatsapp.note') }}</p>
+                                                            </div>
+                                                            <div class="js-whatsapp-inquiry-section {{ $userBookedViaWhatsapp ? '' : 'hidden' }} space-y-2" data-workshop-id="{{ $workshop->id }}">
+                                                                <button type="button"
+                                                                        class="w-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold py-3.5 px-4 rounded-xl booking-button flex items-center justify-center gap-2 js-whatsapp-inquiry-button"
+                                                                        data-workshop-id="{{ $workshop->id }}"
+                                                                        data-workshop-title="{{ e($workshop->title) }}"
+                                                                        data-booking-code="{{ optional($userBooking)->public_code ?? '' }}">
+                                                                    <i class="fas fa-comments text-xl booking-button-icon"></i>
+                                                                    <span class="booking-button-label">{{ __('workshops.whatsapp.inquiry_button') }}</span>
+                                                                </button>
+                                                                <p class="text-xs text-gray-500 text-center">{{ __('workshops.whatsapp.inquiry_helper') }}</p>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endguest
+                                @endif
+                                </div>
+                                @livewire('bookings.whatsapp-booking-verification', [
+                                    'workshopId' => $workshop->id,
+                                    'initialHasWhatsappBooking' => $userBookedViaWhatsapp,
+                                    'initialBookingId' => optional($userBooking)->id,
+                                    'stripeElementId' => 'stripe-checkout-card',
+                                ], key('whatsapp-verification-'.$workshop->id))
+                            </div>
+                        </div>
+                        <div class="sidebar-card p-8" id="additional-details">
                             <h3 class="text-2xl font-bold text-gray-900 mb-6 text-right flex items-center">
                                 <div class="info-icon ml-4">
                                     <i class="fas fa-info-circle"></i>
                                 </div>
-                                تفاصيل إضافية
+                                {{ __('workshops.details.sidebar.title') }}
                             </h3>
                             
                             <div class="space-y-4">
                                 <div class="info-item">
                                     <div class="info-icon">
-                                        <i class="fas fa-play-circle"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-gray-500">تاريخ البداية</p>
-                                        <p class="font-semibold text-gray-900">{{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}</p>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon">
-                                        <i class="fas fa-stop-circle"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-gray-500">تاريخ النهاية</p>
-                                        <p class="font-semibold text-gray-900">{{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}</p>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-icon">
                                         <i class="fas fa-tag"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-sm text-gray-500">الفئة</p>
-                                        <p class="font-semibold text-gray-900">{{ $workshop->category }}</p>
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.sidebar.category') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $workshop->category ?? $notSpecifiedLabel }}</p>
                                     </div>
                                 </div>
                                 <div class="info-item">
@@ -801,8 +1494,8 @@
                                         <i class="fas fa-signal"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-sm text-gray-500">المستوى</p>
-                                        <p class="font-semibold text-gray-900">{{ $workshop->level === 'beginner' ? 'مبتدئ' : 'متقدم' }}</p>
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.sidebar.level') }}</p>
+                                        <p class="font-semibold text-gray-900">{{ $levelLabels[$workshop->level] ?? $levelLabels['beginner'] }}</p>
                                     </div>
                                 </div>
                                 <div class="info-item">
@@ -810,7 +1503,7 @@
                                         <i class="fas fa-eye"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-sm text-gray-500">المشاهدات</p>
+                                        <p class="text-sm text-gray-500">{{ __('workshops.details.sidebar.views') }}</p>
                                         <p class="font-semibold text-gray-900">{{ $workshop->views_count }}</p>
                                     </div>
                                 </div>
@@ -820,7 +1513,7 @@
                                             <i class="fas fa-map-marker-alt"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <p class="text-sm text-gray-500">العنوان</p>
+                                            <p class="text-sm text-gray-500">{{ __('workshops.details.sidebar.address') }}</p>
                                             <p class="font-semibold text-gray-900">{{ $workshop->address }}</p>
                                         </div>
                                     </div>
@@ -838,7 +1531,7 @@
             <div class="container mx-auto px-4">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
-                        <h2 class="text-4xl font-bold text-gray-900 mb-4 related-workshops-title">قد تعجبك أيضاً</h2>
+                        <h2 class="text-4xl font-bold text-gray-900 mb-4 related-workshops-title">{{ __('workshops.details.related.title') }}</h2>
                         <div class="w-24 h-1 bg-gradient-to-r from-orange-500 to-orange-600 mx-auto rounded-full"></div>
                     </div>
                     
@@ -850,21 +1543,21 @@
                             <div class="related-workshop bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col {{ $isFull ? 'opacity-70' : '' }} related-workshop-card">
                                 <a href="{{ route('workshop.show', $related->slug) }}" class="block group">
                                     <div class="relative overflow-hidden">
-                                        <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
+                                        <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=' . urlencode(__('workshops.labels.card_placeholder_text')) }}" 
                                              alt="{{ $related->title }}" 
                                              class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 related-workshop-image"
-                                             onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';" loading="lazy">
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         @if($isFull)
-                                            <span class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">مكتمل</span>
+                                            <span class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">{{ __('workshops.details.related.badge_full') }}</span>
                                         @elseif($related->is_online)
-                                            <span class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">أونلاين</span>
+                                            <span class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">{{ __('workshops.labels.online_short') }}</span>
                                         @else
-                                            <span class="absolute top-3 left-3 bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">حضوري</span>
+                                            <span class="absolute top-3 left-3 bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">{{ __('workshops.labels.onsite_short') }}</span>
                                         @endif
                                         <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                             <div class="bg-white/90 backdrop-blur-sm rounded-full p-2">
-                                                <i class="fas fa-arrow-left text-orange-500"></i>
+                                                <i class="fas {{ $arrowIcon }} text-orange-500"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -885,7 +1578,7 @@
                                         </div>
                                         <a href="{{ route('workshop.show', $related->slug) }}" 
                                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-300 related-workshop-button">
-                                            التفاصيل <i class="fas fa-arrow-left mr-1"></i>
+                                            {{ __('workshops.details.related.details') }} <i class="fas {{ $arrowIcon }} {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -897,366 +1590,665 @@
         </section>
     @endif
 </div>
+
+@if($showFloatingBookingButton)
+    <div class="floating-booking-bar" role="region" aria-label="{{ __('workshops.details.booking_card.title') }}">
+        <div class="floating-booking-price">
+            <span class="floating-booking-price-label">{{ __('workshops.details.booking_card.price_label') }}</span>
+            <span class="floating-booking-price-value">{{ $workshop->formatted_price }}</span>
+            <span class="floating-booking-meta">
+                @if($workshop->max_participants)
+                    {{ $workshop->bookings_count }}/{{ $workshop->max_participants }} {{ __('workshops.labels.participants') }}
+                @else
+                    {{ $workshopDateLabel }} · {{ $workshopStartTimeLabel }}
+                @endif
+            </span>
+        </div>
+        <a
+            href="#stripe-checkout-card"
+            class="floating-booking-btn"
+            aria-label="{{ __('workshops.cards.button_book') }}"
+            data-scroll-target="#stripe-checkout-card"
+            data-scroll-fallback="#workshop-booking"
+        >
+            <span>{{ __('workshops.cards.button_book') }}</span>
+            <i class="fas {{ $arrowIcon }}" aria-hidden="true"></i>
+        </a>
+    </div>
+@endif
 @endsection
+
+@if($stripeEnabled)
+    @push('scripts')
+        <script src="https://js.stripe.com/v3/"></script>
+    @endpush
+@endif
 
 @push('scripts')
 <script>
-function initWorkshopDetailsBooking() {
-    // الزر الموحد للحجز
-    const unifiedBookingBtn = document.getElementById('unifiedBookingBtn');
-    if (unifiedBookingBtn) {
-        unifiedBookingBtn.addEventListener('click', function() {
-            // التحقق من حالة تسجيل الدخول
-            const isLoggedIn = @json(auth()->check());
-            
-            if (isLoggedIn) {
-                // المستخدم مسجل دخول - حفظ الحجز + إرسال واتساب
-                unifiedBooking();
-            } else {
-                // المستخدم غير مسجل دخول - توجيه لتسجيل الدخول مع معرف الورشة
-                showLoginRequiredModal({{ $workshop->id }});
+const csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+const bookingCsrfToken = csrfMetaTag ? csrfMetaTag.getAttribute('content') : null;
+
+const bookingConfig = {
+    workshopId: {{ $workshop->id }},
+    workshop: {
+        title: @json($workshop->title),
+        price: @json((float) $workshop->price),
+        currency: @json(strtoupper($workshop->currency ?? config('finance.default_currency', 'USD'))),
+    },
+    stripe: {
+        enabled: @json((bool) $stripeEnabled),
+        publishableKey: @json($stripePublicKey),
+        createIntentUrl: "{{ $stripeEnabled ? route('payments.stripe.intent') : '' }}",
+        confirmUrl: "{{ $stripeEnabled ? route('payments.stripe.confirm') : '' }}",
+        paymentCountry: @json(config('services.stripe.payment_country', 'SA')),
+        messages: {
+            disabled: @json(__('workshops.stripe.disabled')),
+            genericError: @json(__('workshops.stripe.generic_error')),
+            initError: @json(__('workshops.stripe.init_error')),
+            validationError: @json(__('workshops.stripe.validation_error')),
+            successMessage: @json(__('workshops.stripe.success_message')),
+            notReady: @json(__('workshops.stripe.not_ready')),
+            intentError: @json(__('workshops.stripe.intent_error')),
+            walletUnavailable: @json(__('workshops.stripe.wallet_unavailable')),
+        },
+    },
+};
+
+const workshopMessages = {
+    unexpected: @json(__('workshops.details.messages.unexpected_error')),
+    paymentSuccess: @json(__('workshops.details.messages.payment_success')),
+    stripeError: @json(__('workshops.details.messages.stripe_error')),
+    stripeCancelled: @json(__('workshops.details.messages.stripe_cancelled')),
+    joinLinkReady: @json(__('workshops.details.messages.join_link_ready')),
+    joinLinkAction: @json(__('workshops.details.messages.join_link_action')),
+};
+
+const bookingUi = {
+    joinLabel: @json(__('workshops.details.booking_card.cta_join')),
+    joinHint: @json(__('workshops.details.booking_card.join_room_hint')),
+    joinButtonClasses: 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl text-lg booking-button flex items-center justify-center gap-2',
+    joinIconClasses: 'fas fa-video ml-2',
+};
+
+const loginModalTexts = {
+    title: @json(__('workshops.details.modal.title')),
+    description: @json(__('workshops.details.modal.description')),
+    hint: @json(__('workshops.details.modal.hint')),
+    login: @json(__('workshops.details.modal.login')),
+    register: @json(__('workshops.details.modal.register')),
+};
+
+let stripeInstance = null;
+let stripeElements = null;
+let stripePaymentElement = null;
+let stripeClientSecret = null;
+let stripePaymentIntentId = null;
+let stripeInitAttempts = 0;
+let stripeEventsBound = false;
+let stripeElementReady = false;
+let stripeIsLoading = false;
+let stripePaymentRequest = null;
+let stripeWalletElement = null;
+let stripeWalletReady = false;
+let stripeIntentAmount = null;
+let stripeIntentCurrency = null;
+const STRIPE_MAX_INIT_ATTEMPTS = 5;
+let loginModalKeyListener = null;
+
+function getJsonHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': bookingCsrfToken,
+    };
+}
+
+function handleJsonResponse(response) {
+    return response.text().then(text => {
+        let data = {};
+        let errorMessage = null;
+
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (error) {
+                console.warn('Failed to parse JSON response', error);
             }
-        });
-    }
-
-    // الحجز الموحد (للمستخدمين المسجلين)
-    function unifiedBooking() {
-        showBookingConfirmation();
-    }
-
-    // دالة تأكيد الحجز الجميلة
-    function showBookingConfirmation() {
-        // إزالة أي modal سابق
-        const existingModal = document.getElementById('booking-confirmation-modal');
-        if (existingModal) {
-            existingModal.remove();
         }
 
-        // إنشاء modal التأكيد
-        const modalHTML = `
-            <div id="booking-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300">
-                    <div class="text-center">
-                        <!-- الأيقونة -->
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-calendar-check text-green-600 text-2xl"></i>
-                        </div>
-                        
-                        <!-- العنوان -->
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">تأكيد الحجز</h3>
-                        <p class="text-gray-600 mb-6">هل أنت متأكد من حجز هذه الورشة؟</p>
-                        
-                        <!-- تفاصيل الورشة -->
-                        <div class="bg-gray-50 rounded-lg p-4 mb-6 text-right">
-                            <h4 class="font-semibold text-gray-900 mb-2">{{ $workshop->title }}</h4>
-                            <div class="space-y-1 text-sm text-gray-600">
-                                <div class="flex justify-between">
-                                    <span>التاريخ:</span>
-                                    <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>تاريخ البداية:</span>
-                                    <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>تاريخ النهاية:</span>
-                                    <span class="font-medium">{{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>المدرب:</span>
-                                    <span class="font-medium">{{ $workshop->instructor }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>المكان:</span>
-                                    <span class="font-medium">{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>السعر:</span>
-                                    <span class="font-medium text-green-600">{{ $workshop->formatted_price }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- الأزرار -->
-                        <div class="flex gap-3">
-                            <button onclick="confirmBooking()" 
-                                    class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
-                                <i class="fas fa-check ml-2"></i>
-                                نعم، احجز الآن
-                            </button>
-                            <button onclick="closeBookingConfirmation()" 
-                                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center">
-                                <i class="fas fa-times ml-2"></i>
-                                إلغاء
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // إضافة modal للصفحة
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    }
-
-    // دالة تأكيد الحجز
-    function confirmBooking() {
-        closeBookingConfirmation();
-        
-        // حفظ الحجز في قاعدة البيانات
-        fetch('{{ route("bookings.store") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                workshop_id: {{ $workshop->id }},
-                notes: 'حجز موحد - واتساب + قاعدة بيانات'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // إرسال رسالة الواتساب
-                sendWhatsAppMessage();
-                
-                // إظهار رسالة نجاح
-                showCustomAlert('تم حفظ الحجز في النظام وإرسال رسالة الواتساب! يمكنك الآن الدخول إلى حسابك الشخصي لرؤية الورشات المحجوزة.', 'success');
-                
-                // إعادة تحميل الصفحة
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            } else {
-                if (data.message && data.message.includes('حجز')) {
-                    setBookingButtonToBooked();
-                    showCustomAlert('تم حجز هذه الورشة بالفعل.', 'success');
-                } else {
-                    showCustomAlert('خطأ في حفظ الحجز: ' + data.message, 'error');
+        if (!response.ok) {
+            if (data && data.errors) {
+                const firstErrorGroup = Object.values(data.errors)[0];
+                if (Array.isArray(firstErrorGroup) && firstErrorGroup.length > 0) {
+                    errorMessage = firstErrorGroup[0];
                 }
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showCustomAlert('حدث خطأ أثناء حفظ الحجز', 'error');
-        });
+
+            const message = errorMessage || data.message || workshopMessages.unexpected;
+            const error = new Error(message);
+            error.payload = data;
+            throw error;
+        }
+
+        return data;
+    });
+}
+
+function updateBookingPrimaryAction(joinUrl) {
+    if (!joinUrl) {
+        return false;
     }
 
-    function setBookingButtonToBooked() {
-        const button = document.getElementById('unifiedBookingBtn');
-        if (!button) {
+    const primaryAction = document.getElementById('booking-primary-action');
+
+    if (!primaryAction) {
+        return false;
+    }
+
+    const button = document.createElement('a');
+    button.href = joinUrl;
+    button.className = bookingUi.joinButtonClasses;
+    button.innerHTML = `
+        <i class="${bookingUi.joinIconClasses}"></i>
+        <span>${bookingUi.joinLabel}</span>
+    `;
+
+    primaryAction.innerHTML = '';
+    primaryAction.appendChild(button);
+
+    const hint = document.createElement('p');
+    hint.className = 'booking-action-hint';
+    hint.textContent = bookingUi.joinHint;
+    primaryAction.appendChild(hint);
+
+    return true;
+}
+
+function scheduleBookingStatusRefresh(delay = 2500) {
+    const refreshDelay = Number.isFinite(delay) ? delay : Number(delay);
+    const finalDelay = Number.isFinite(refreshDelay) && refreshDelay >= 0 ? refreshDelay : 2500;
+
+    if (window.__bookingStatusRefreshTimer__) {
+        clearTimeout(window.__bookingStatusRefreshTimer__);
+    }
+
+    window.__bookingStatusRefreshTimer__ = window.setTimeout(() => {
+        window.location.reload();
+    }, finalDelay);
+}
+
+function handlePaymentSuccess(payload) {
+    const baseMessage = payload.message || workshopMessages.paymentSuccess;
+    let alertMessage = baseMessage;
+
+    if (payload.join_url) {
+        const joinNotice = workshopMessages.joinLinkReady || '';
+        const joinActionLabel = workshopMessages.joinLinkAction || '';
+        const joinLink = payload.join_url;
+
+        alertMessage += `
+            <span class="block mt-2 text-xs font-semibold">${joinNotice}</span>
+            <a class="mt-2 inline-flex items-center gap-2 rounded-md bg-white/80 px-3 py-1.5 text-xs font-semibold text-green-700 underline hover:text-green-900"
+               href="${joinLink}"
+               target="_blank"
+               rel="noopener noreferrer">
+                <i class="fas fa-link"></i>
+                ${joinActionLabel}
+            </a>
+        `;
+
+        showCustomAlert(alertMessage, 'success');
+        const actionUpdated = updateBookingPrimaryAction(joinLink);
+
+        if (!actionUpdated) {
+            scheduleBookingStatusRefresh();
+        }
+
+        return;
+    }
+
+    showCustomAlert(alertMessage, 'success');
+
+    const redirectTarget = payload.redirect_url;
+
+    if (redirectTarget) {
+        setTimeout(() => {
+            window.location.href = redirectTarget;
+        }, 1200);
+    } else {
+        setTimeout(() => window.location.reload(), 1500);
+    }
+}
+
+function updateStripeButtonState() {
+    const button = document.getElementById('stripe-submit-button');
+
+    if (!button) {
+        return;
+    }
+
+    const disabled = stripeIsLoading || !stripeElementReady;
+    button.disabled = disabled;
+    button.classList.toggle('opacity-50', disabled);
+    button.classList.toggle('cursor-not-allowed', disabled);
+}
+
+function toggleStripeLoading(isLoading) {
+    stripeIsLoading = isLoading;
+    const button = document.getElementById('stripe-submit-button');
+    const spinner = document.getElementById('stripe-submit-spinner');
+    const label = document.getElementById('stripe-submit-label');
+
+    updateStripeButtonState();
+
+    if (spinner) {
+        spinner.classList.toggle('hidden', !isLoading);
+        spinner.classList.toggle('flex', isLoading);
+    }
+
+    if (label) {
+        label.classList.toggle('hidden', isLoading);
+    }
+}
+
+function showStripeError(message) {
+    const errorEl = document.getElementById('stripe-card-errors');
+
+    if (!errorEl) {
+        return;
+    }
+
+    if (!message) {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+        return;
+    }
+
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+}
+
+function setStripeSuccess(message) {
+    const successEl = document.getElementById('stripe-success-message');
+
+    if (!successEl) {
+        return;
+    }
+
+    if (!message) {
+        successEl.classList.add('hidden');
+        successEl.textContent = '';
+        return;
+    }
+
+    successEl.textContent = message;
+    successEl.classList.remove('hidden');
+}
+
+function hideStripeWalletSection() {
+    const walletSection = document.getElementById('stripe-wallet-section');
+    const walletUnavailable = document.getElementById('stripe-wallet-unavailable');
+
+    if (walletSection) {
+        walletSection.classList.add('hidden');
+    }
+
+    if (walletUnavailable) {
+        walletUnavailable.classList.add('hidden');
+    }
+}
+
+function resetStripeWalletElements() {
+    if (stripeWalletElement) {
+        try {
+            stripeWalletElement.unmount();
+        } catch (error) {
+            console.warn('Failed to unmount wallet element', error);
+        }
+    }
+
+    stripePaymentRequest = null;
+    stripeWalletElement = null;
+    stripeWalletReady = false;
+    hideStripeWalletSection();
+}
+
+async function fetchStripeIntent() {
+    if (!bookingConfig.stripe.createIntentUrl) {
+        throw new Error(bookingConfig.stripe.messages.disabled);
+    }
+
+    return fetch(bookingConfig.stripe.createIntentUrl, {
+        method: 'POST',
+        headers: getJsonHeaders(),
+        body: JSON.stringify({
+            workshop_id: bookingConfig.workshopId,
+        }),
+    }).then(handleJsonResponse);
+}
+
+async function initializeStripeCheckout(forceRecreate = false) {
+    if (!bookingConfig.stripe.enabled) {
+        return;
+    }
+
+    const container = document.getElementById('stripe-payment-element');
+
+    if (!container) {
+        return;
+    }
+
+    resetStripeWalletElements();
+
+    if (!bookingConfig.stripe.publishableKey) {
+        container.innerHTML = `<p class="text-sm text-red-500 text-center">${bookingConfig.stripe.messages.disabled}</p>`;
+        return;
+    }
+
+    if (typeof Stripe === 'undefined') {
+        if (stripeInitAttempts < STRIPE_MAX_INIT_ATTEMPTS) {
+            stripeInitAttempts += 1;
+            setTimeout(() => initializeStripeCheckout(forceRecreate), 500);
             return;
         }
 
-        button.disabled = true;
-        button.dataset.isBooked = 'true';
-        button.classList.add('cursor-not-allowed', 'bg-green-500', 'text-white');
-        button.classList.remove('hover:bg-green-600', 'transform', 'hover:scale-105');
+        container.innerHTML = `<p class="text-sm text-red-500 text-center">${bookingConfig.stripe.messages.initError}</p>`;
+        return;
+    }
 
-        const icon = button.querySelector('.booking-button-icon');
-        if (icon) {
-            const hadTextXl = icon.classList.contains('text-xl');
-            icon.className = 'fas fa-check ml-2 booking-button-icon';
-            if (hadTextXl) {
-                icon.classList.add('text-xl');
-            }
+    if (!stripeInstance || forceRecreate) {
+        stripeInstance = Stripe(bookingConfig.stripe.publishableKey);
+    }
+
+    if (stripePaymentElement) {
+        try {
+            stripePaymentElement.unmount();
+        } catch (error) {
+            console.warn('Failed to unmount Stripe element', error);
+        }
+        stripePaymentElement = null;
+    }
+
+    stripeElementReady = false;
+    updateStripeButtonState();
+    toggleStripeLoading(true);
+    showStripeError('');
+    setStripeSuccess('');
+
+    try {
+        const payload = await fetchStripeIntent();
+        stripeClientSecret = payload.client_secret || null;
+        stripePaymentIntentId = payload.payment_intent_id || null;
+
+        if (!stripeClientSecret) {
+            throw new Error(bookingConfig.stripe.messages.genericError);
         }
 
-        const label = button.querySelector('.booking-button-label');
-        if (label) {
-            label.textContent = 'تم الحجز بالفعل';
-        } else {
-            button.textContent = 'تم الحجز بالفعل';
+        stripeElements = stripeInstance.elements({
+            clientSecret: stripeClientSecret,
+        });
+
+        stripePaymentElement = stripeElements.create('payment', { layout: 'tabs' });
+
+        stripePaymentElement.on('ready', () => {
+            stripeElementReady = true;
+            updateStripeButtonState();
+            toggleStripeLoading(false);
+        });
+
+        stripePaymentElement.on('loaderror', (event) => {
+            console.error('Stripe element load error', event);
+            stripeElementReady = false;
+            updateStripeButtonState();
+            showStripeError(event.error?.message || bookingConfig.stripe.messages.genericError);
+        });
+
+        stripePaymentElement.mount('#stripe-payment-element');
+
+        stripeIntentAmount = payload.amount ?? null;
+        stripeIntentCurrency = payload.currency ?? bookingConfig.workshop.currency;
+        await setupStripeWalletButton();
+    } catch (error) {
+        console.error(error);
+        showStripeError(error.message || bookingConfig.stripe.messages.genericError);
+        stripeElementReady = false;
+        updateStripeButtonState();
+    } finally {
+        if (!stripeElementReady) {
+            toggleStripeLoading(false);
         }
     }
-
-    // دالة إغلاق modal التأكيد
-    function closeBookingConfirmation() {
-        const modal = document.getElementById('booking-confirmation-modal');
-        if (modal) {
-            modal.remove();
-        }
-    }
-
-    // دالة تأكيد الحجز عبر الواتساب (للمستخدمين غير المسجلين)
-    function showWhatsAppConfirmation() {
-        // إزالة أي modal سابق
-        const existingModal = document.getElementById('whatsapp-confirmation-modal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
-        // الحصول على تفاصيل الورشة
-        const workshopTitle = @json($workshop->title);
-        const workshopPrice = @json($workshop->formatted_price);
-        const workshopDate = @json($workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد');
-        const workshopInstructor = @json($workshop->instructor_name ?? $workshop->instructor ?? 'غير محدد');
-        const workshopLocation = @json($workshop->location ?? ($workshop->is_online ? 'ورشة أونلاين' : 'غير محدد'));
-        const workshopDeadline = @json($workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد');
-
-        // إنشاء modal التأكيد الجميل
-        const modalHTML = `
-            <div id="whatsapp-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
-                    <div class="text-center">
-                        <!-- الأيقونة -->
-                        <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <i class="fab fa-whatsapp text-white text-3xl"></i>
-                        </div>
-                        
-                        <!-- العنوان -->
-                        <h3 class="text-2xl font-bold text-gray-900 mb-4">تأكيد الحجز عبر الواتساب</h3>
-                        
-                        <!-- الرسالة -->
-                        <div class="bg-green-50 border border-green-200 rounded-2xl p-6 mb-6">
-                            <p class="text-gray-700 text-lg leading-relaxed">
-                                سيتم إرسال طلب الحجز عبر الواتساب
-                            </p>
-                            <p class="text-gray-600 text-sm mt-2">
-                                هل تريد المتابعة؟
-                            </p>
-                        </div>
-                        
-                        <!-- تفاصيل الورشة -->
-                        <div class="bg-gray-50 rounded-2xl p-4 mb-6 text-right">
-                            <h4 class="font-semibold text-gray-900 mb-2">${workshopTitle}</h4>
-                            <div class="space-y-1 text-sm text-gray-600">
-                                <p><i class="fas fa-calendar-alt text-blue-500 ml-2"></i> ${workshopDate}</p>
-                                <p><i class="fas fa-user text-purple-500 ml-2"></i> ${workshopInstructor}</p>
-                                <p><i class="fas fa-map-marker-alt text-red-500 ml-2"></i> ${workshopLocation}</p>
-                                <p><i class="fas fa-tag text-green-500 ml-2"></i> ${workshopPrice} دينار أردني</p>
-                            </div>
-                        </div>
-                        
-                        <!-- الأزرار -->
-                        <div class="flex space-x-4 space-x-reverse">
-                            <button onclick="closeWhatsAppConfirmation()" 
-                                    class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                                <i class="fas fa-times ml-2"></i>
-                                إلغاء
-                            </button>
-                            <button onclick="confirmWhatsAppBooking()" 
-                                    class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 shadow-lg">
-                                <i class="fab fa-whatsapp ml-2"></i>
-                                متابعة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // إضافة تأثير الظهور
-        const modal = document.getElementById('whatsapp-confirmation-modal');
-        modal.style.opacity = '0';
-        modal.style.transform = 'scale(0.9)';
-        
-        setTimeout(() => {
-            modal.style.opacity = '1';
-            modal.style.transform = 'scale(1)';
-        }, 10);
-    }
-
-    // دالة إغلاق modal الواتساب
-    function closeWhatsAppConfirmation() {
-        const modal = document.getElementById('whatsapp-confirmation-modal');
-        if (modal) {
-            modal.style.opacity = '0';
-            modal.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                modal.remove();
-            }, 200);
-        }
-    }
-
-    // دالة تأكيد الحجز عبر الواتساب
-    function confirmWhatsAppBooking() {
-        closeWhatsAppConfirmation();
-        sendWhatsAppMessage();
-    }
-
-    // جعل الدوال متاحة عالمياً
-    window.confirmBooking = confirmBooking;
-    window.closeBookingConfirmation = closeBookingConfirmation;
-    window.showBookingConfirmation = showBookingConfirmation;
-    window.unifiedBooking = unifiedBooking;
-    window.whatsappOnlyBooking = whatsappOnlyBooking;
-    window.sendWhatsAppMessage = sendWhatsAppMessage;
-    window.showCustomAlert = showCustomAlert;
-    window.closeCustomAlert = closeCustomAlert;
-    window.showWhatsAppConfirmation = showWhatsAppConfirmation;
-    window.closeWhatsAppConfirmation = closeWhatsAppConfirmation;
-    window.confirmWhatsAppBooking = confirmWhatsAppBooking;
-
-    // الحجز عبر الواتساب فقط (للمستخدمين غير المسجلين)
-    function whatsappOnlyBooking() {
-        showWhatsAppConfirmation();
-    }
-
-    // إرسال رسالة الواتساب
-    function sendWhatsAppMessage() {
-        // إنشاء رسالة الواتساب مع تفاصيل الورشة
-        const workshopTitle = @json($workshop->title);
-        const workshopPrice = @json($workshop->formatted_price);
-        const workshopDate = @json($workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد');
-        const workshopStartDate = @json($workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد');
-        const workshopEndDate = @json($workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد');
-        const workshopInstructor = @json($workshop->instructor ?? 'غير محدد');
-        const workshopLocation = @json($workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية'));
-        const registrationDeadline = @json($workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : 'غير محدد');
-        
-        // معلومات المستخدم
-        const userName = @json(auth()->check() ? auth()->user()->name : 'مستخدم');
-        const userPhone = @json(auth()->check() && auth()->user()->phone ? auth()->user()->phone : 'غير محدد');
-        const userEmail = @json(auth()->check() ? auth()->user()->email : 'غير محدد');
-        
-        // إنشاء رسالة الواتساب
-        const whatsappMessage = `مرحباً! أريد حجز مقعد في الورشة التالية:
-
-🏆 *${workshopTitle}*
-
-📅 التاريخ: ${workshopDate}
-🕐 تاريخ البداية: ${workshopStartDate}
-🕐 تاريخ النهاية: ${workshopEndDate}
-👨‍🏫 المدرب: ${workshopInstructor}
-📍 المكان: ${workshopLocation}
-💰 السعر: ${workshopPrice}
-⏰ آخر موعد للتسجيل: ${registrationDeadline}
-
-📋 *معلوماتي الشخصية:*
-👤 الاسم: ${userName}
-📞 الهاتف: ${userPhone}
-📧 البريد الإلكتروني: ${userEmail}
-
-يرجى تأكيد الحجز وتوضيح طريقة الدفع. شكراً!
-
-💡 *ملاحظة:* تم حفظ الحجز في نظامنا تلقائياً.`;
-
-        // تشفير الرسالة للواتساب
-        const encodedMessage = encodeURIComponent(whatsappMessage);
-        
-        // رقم الواتساب
-        const whatsappNumber = "962790553680";
-        
-        // فتح الواتساب
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
 }
 
-// دالة عرض التنبيه المخصص
+async function setupStripeWalletButton() {
+    const walletSection = document.getElementById('stripe-wallet-section');
+    const walletUnavailable = document.getElementById('stripe-wallet-unavailable');
+    const walletHint = document.getElementById('stripe-wallet-hint');
+
+    if (!walletSection) {
+        return;
+    }
+
+    hideStripeWalletSection();
+
+    if (!window.PaymentRequest || !stripeInstance || !stripeElements || !stripeClientSecret) {
+        walletUnavailable?.classList.remove('hidden');
+        return;
+    }
+
+    if (!stripeIntentAmount || !stripeIntentCurrency) {
+        walletUnavailable?.classList.remove('hidden');
+        return;
+    }
+
+    const paymentRequestAllowedCountries = [
+        'AE', 'AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CI', 'CR', 'CY', 'CZ', 'DE', 'DK', 'DO',
+        'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'GT', 'HK', 'HR', 'HU', 'ID', 'IE', 'IN', 'IT',
+        'JP', 'LI', 'LT', 'LU', 'LV', 'MT', 'MX', 'MY', 'NL', 'NO', 'NZ', 'PE', 'PH', 'PL', 'PT',
+        'RO', 'SE', 'SG', 'SI', 'SK', 'SN', 'TH', 'TT', 'US', 'UY',
+    ];
+    const configuredPaymentCountry = (bookingConfig.stripe.paymentCountry || '').toUpperCase();
+    const paymentCountry = paymentRequestAllowedCountries.includes(configuredPaymentCountry)
+        ? configuredPaymentCountry
+        : 'AE';
+
+    const paymentRequest = stripeInstance.paymentRequest({
+        country: paymentCountry,
+        currency: (stripeIntentCurrency || bookingConfig.workshop.currency || 'USD').toLowerCase(),
+        total: {
+            label: bookingConfig.workshop.title || 'Workshop booking',
+            amount: stripeIntentAmount,
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+    });
+
+    const paymentRequestButton = stripeElements.create('paymentRequestButton', {
+        paymentRequest,
+        style: {
+            paymentRequestButton: {
+                type: 'default',
+                theme: 'dark',
+                height: '48px',
+            },
+        },
+    });
+
+    try {
+        const result = await paymentRequest.canMakePayment();
+
+        if (!result) {
+            walletUnavailable?.classList.remove('hidden');
+            return;
+        }
+    } catch (error) {
+        console.warn('PaymentRequest not available', error);
+        walletUnavailable?.classList.remove('hidden');
+        return;
+    }
+
+    paymentRequest.on('paymentmethod', async (event) => {
+        toggleStripeLoading(true);
+        showStripeError('');
+
+        try {
+            const confirmResult = await stripeInstance.confirmCardPayment(
+                stripeClientSecret,
+                {
+                    payment_method: event.paymentMethod.id,
+                },
+                {
+                    handleActions: false,
+                }
+            );
+
+            if (confirmResult.error) {
+                event.complete('fail');
+                throw new Error(confirmResult.error.message || bookingConfig.stripe.messages.genericError);
+            }
+
+            let paymentIntent = confirmResult.paymentIntent;
+
+            event.complete('success');
+
+            if (paymentIntent && paymentIntent.status === 'requires_action') {
+                const nextStep = await stripeInstance.confirmCardPayment(stripeClientSecret);
+
+                if (nextStep.error) {
+                    throw new Error(nextStep.error.message || bookingConfig.stripe.messages.genericError);
+                }
+
+                paymentIntent = nextStep.paymentIntent;
+            }
+
+            await finalizeStripeIntent(paymentIntent?.id || stripePaymentIntentId);
+        } catch (error) {
+            console.error(error);
+            event.complete('fail');
+            showStripeError(error.message || bookingConfig.stripe.messages.genericError);
+        } finally {
+            toggleStripeLoading(false);
+        }
+    });
+
+    paymentRequestButton.mount('#stripe-wallet-button');
+    walletSection.classList.remove('hidden');
+    walletHint?.classList.remove('hidden');
+    walletUnavailable?.classList.add('hidden');
+
+    stripePaymentRequest = paymentRequest;
+    stripeWalletElement = paymentRequestButton;
+    stripeWalletReady = true;
+}
+
+async function finalizeStripeIntent(intentId) {
+    if (!intentId) {
+        throw new Error(bookingConfig.stripe.messages.intentError || bookingConfig.stripe.messages.genericError);
+    }
+
+    if (!bookingConfig.stripe.confirmUrl) {
+        throw new Error(bookingConfig.stripe.messages.disabled);
+    }
+
+    const payload = await fetch(bookingConfig.stripe.confirmUrl, {
+        method: 'POST',
+        headers: getJsonHeaders(),
+        body: JSON.stringify({
+            workshop_id: bookingConfig.workshopId,
+            payment_intent_id: intentId,
+        }),
+    }).then(handleJsonResponse);
+
+    setStripeSuccess(payload.message || bookingConfig.stripe.messages.successMessage);
+    handlePaymentSuccess(payload);
+    return payload;
+}
+
+async function submitStripePayment(event) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    if (!bookingConfig.stripe.enabled) {
+        return;
+    }
+
+    if (!bookingConfig.stripe.confirmUrl) {
+        showStripeError(bookingConfig.stripe.messages.disabled);
+        return;
+    }
+
+    if (!stripeInstance || !stripeElements || !stripePaymentElement || !stripeClientSecret) {
+        await initializeStripeCheckout(true);
+    }
+
+    if (!stripeInstance || !stripeElements || !stripePaymentElement) {
+        showStripeError(bookingConfig.stripe.messages.initError);
+        return;
+    }
+
+    toggleStripeLoading(true);
+    showStripeError('');
+    setStripeSuccess('');
+
+    try {
+        if (!stripeElementReady) {
+            throw new Error(bookingConfig.stripe.messages.notReady);
+        }
+
+        const { error, paymentIntent } = await stripeInstance.confirmPayment({
+            elements: stripeElements,
+            redirect: 'if_required',
+            confirmParams: {
+                return_url: window.location.href,
+            },
+        });
+
+        if (error) {
+            throw new Error(error.message || bookingConfig.stripe.messages.genericError);
+        }
+
+        const intentId = paymentIntent?.id || stripePaymentIntentId;
+
+        await finalizeStripeIntent(intentId);
+    } catch (error) {
+        console.error(error);
+        showStripeError(error.message || bookingConfig.stripe.messages.genericError);
+    } finally {
+        toggleStripeLoading(false);
+    }
+}
+
+function bindStripeEvents() {
+    if (stripeEventsBound) {
+        return;
+    }
+
+    const button = document.getElementById('stripe-submit-button');
+
+    if (button) {
+        button.addEventListener('click', submitStripePayment);
+        stripeEventsBound = true;
+    }
+}
+
+function initWorkshopDetailsBooking() {
+    if (bookingConfig.stripe.enabled) {
+        bindStripeEvents();
+        initializeStripeCheckout();
+    }
+}
+
+// Custom alert helper
 function showCustomAlert(message, type = 'info') {
-    // إزالة أي تنبيهات سابقة
     const existingAlert = document.getElementById('custom-alert');
     if (existingAlert) {
         existingAlert.remove();
     }
 
-    // تحديد الألوان والأيقونات حسب النوع
     let bgColor, textColor, icon, borderColor;
-    switch(type) {
+    switch (type) {
         case 'success':
             bgColor = 'bg-green-50';
             textColor = 'text-green-800';
@@ -1282,7 +2274,6 @@ function showCustomAlert(message, type = 'info') {
             borderColor = 'border-blue-200';
     }
 
-    // إنشاء التنبيه
     const alertHTML = `
         <div id="custom-alert" class="fixed top-4 right-4 z-50 max-w-sm w-full mx-4 transform transition-all duration-300 ease-in-out">
             <div class="${bgColor} ${borderColor} border-l-4 rounded-lg shadow-lg p-4">
@@ -1305,10 +2296,8 @@ function showCustomAlert(message, type = 'info') {
         </div>
     `;
 
-    // إضافة التنبيه للصفحة
     document.body.insertAdjacentHTML('beforeend', alertHTML);
 
-    // إظهار التنبيه مع تأثير
     setTimeout(() => {
         const alert = document.getElementById('custom-alert');
         if (alert) {
@@ -1317,13 +2306,12 @@ function showCustomAlert(message, type = 'info') {
         }
     }, 100);
 
-    // إزالة التنبيه تلقائياً بعد 5 ثوان
     setTimeout(() => {
         closeCustomAlert();
     }, 5000);
 }
 
-// دالة إغلاق التنبيه
+// Remove the alert with a subtle animation
 function closeCustomAlert() {
     const alert = document.getElementById('custom-alert');
     if (alert) {
@@ -1335,56 +2323,51 @@ function closeCustomAlert() {
     }
 }
 
-// دالة عرض modal تسجيل الدخول المطلوب
+window.showCustomAlert = showCustomAlert;
+window.closeCustomAlert = closeCustomAlert;
+
+// Prompt unauthenticated users to sign in before booking
 function showLoginRequiredModal(workshopId = null) {
-    // إزالة أي modal سابق
     const existingModal = document.getElementById('login-required-modal');
     if (existingModal) {
         existingModal.remove();
     }
 
-    // تخزين معرف الورشة للعودة إليها بعد تسجيل الدخول
     if (workshopId) {
         localStorage.setItem('pending_workshop_booking', workshopId);
     }
 
-    // إنشاء modal تسجيل الدخول المطلوب
     const modalHTML = `
         <div id="login-required-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeLoginRequiredModal(event)">
             <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 relative" onclick="event.stopPropagation()">
-                <!-- زر الإغلاق في الزاوية العلوية -->
                 <button onclick="closeLoginRequiredModal()" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100">
                     <i class="fas fa-times text-xl"></i>
                 </button>
                 
                 <div class="text-center">
-                    <!-- الأيقونة -->
                     <div class="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                         <i class="fas fa-user-lock text-white text-3xl"></i>
                     </div>
                     
-                    <!-- العنوان -->
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">تسجيل الدخول مطلوب</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">${loginModalTexts.title}</h3>
                     
-                    <!-- الرسالة -->
                     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6">
                         <p class="text-gray-700 text-lg leading-relaxed">
-                            يجب تسجيل الدخول أولاً لحجز الورشة
+                            ${loginModalTexts.description}
                         </p>
                         <p class="text-gray-600 text-sm mt-2">
-                            سجل دخولك أو أنشئ حساب جديد للمتابعة
+                            ${loginModalTexts.hint}
                         </p>
                     </div>
                     
-                    <!-- الأزرار -->
                     <div class="flex flex-col sm:flex-row gap-3">
                         <button onclick="redirectToLoginWithWorkshop()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
-                            <i class="fas fa-sign-in-alt ml-2"></i>
-                            تسجيل الدخول
+                            <i class="fas fa-sign-in-alt {{ $isRtl ? 'ml-2' : 'mr-2' }}"></i>
+                            ${loginModalTexts.login}
                         </button>
                         <button onclick="redirectToRegisterWithWorkshop()" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
-                            <i class="fas fa-user-plus ml-2"></i>
-                            إنشاء حساب
+                            <i class="fas fa-user-plus {{ $isRtl ? 'ml-2' : 'mr-2' }}"></i>
+                            ${loginModalTexts.register}
                         </button>
                     </div>
                 </div>
@@ -1392,36 +2375,39 @@ function showLoginRequiredModal(workshopId = null) {
         </div>
     `;
 
-    // إضافة modal للصفحة
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // إضافة مستمع حدث للضغط على مفتاح Escape
-    document.addEventListener('keydown', function(event) {
+
+    if (loginModalKeyListener) {
+        document.removeEventListener('keydown', loginModalKeyListener);
+    }
+
+    loginModalKeyListener = function(event) {
         if (event.key === 'Escape') {
             closeLoginRequiredModal();
         }
-    });
+    };
+
+    document.addEventListener('keydown', loginModalKeyListener);
 }
 
-// دالة إغلاق modal تسجيل الدخول المطلوب
+// Close the login modal, optionally when the backdrop is clicked
 function closeLoginRequiredModal(event) {
-    // إذا كان الحدث من النقر على الخلفية، أغلق الـ modal
-    if (event && event.target.id === 'login-required-modal') {
-        const modal = document.getElementById('login-required-modal');
-        if (modal) {
-            modal.remove();
-        }
+    if (event && event.target && event.target.id !== 'login-required-modal') {
         return;
     }
-    
-    // إغلاق الـ modal في جميع الحالات الأخرى
+
     const modal = document.getElementById('login-required-modal');
     if (modal) {
         modal.remove();
     }
+
+    if (loginModalKeyListener) {
+        document.removeEventListener('keydown', loginModalKeyListener);
+        loginModalKeyListener = null;
+    }
 }
 
-// دالة التوجيه لتسجيل الدخول مع معرف الورشة
+// Redirect helper when the user wants to sign in
 function redirectToLoginWithWorkshop() {
     const workshopId = localStorage.getItem('pending_workshop_booking');
     if (workshopId) {
@@ -1431,7 +2417,7 @@ function redirectToLoginWithWorkshop() {
     }
 }
 
-// دالة التوجيه للتسجيل مع معرف الورشة
+// Redirect helper when the user wants to register
 function redirectToRegisterWithWorkshop() {
     const workshopId = localStorage.getItem('pending_workshop_booking');
     if (workshopId) {
@@ -1441,18 +2427,141 @@ function redirectToRegisterWithWorkshop() {
     }
 }
 
-// جعل الدوال متاحة عالمياً
+// Expose helpers globally for inline handlers
 window.closeLoginRequiredModal = closeLoginRequiredModal;
 window.showLoginRequiredModal = showLoginRequiredModal;
 window.redirectToLoginWithWorkshop = redirectToLoginWithWorkshop;
 window.redirectToRegisterWithWorkshop = redirectToRegisterWithWorkshop;
+
+function handleWorkshopHideStripeEvent(event) {
+    if (typeof bookingConfig === 'undefined') {
+        return;
+    }
+
+    const detail = event?.detail || {};
+    const targetId = detail.elementId || 'stripe-checkout-card';
+    const targetWorkshopId = Number(detail.workshopId || detail.workshop_id || 0);
+
+    if (Number(bookingConfig.workshopId) && targetWorkshopId && targetWorkshopId !== Number(bookingConfig.workshopId)) {
+        return;
+    }
+
+    const target = document.getElementById(targetId);
+
+    if (!target) {
+        return;
+    }
+
+    target.classList.add('hidden', 'opacity-0', 'pointer-events-none');
+    target.setAttribute('aria-hidden', 'true');
+}
+
+function registerWorkshopHideStripeListener() {
+    if (window.__workshopHideStripeListenerRegistered) {
+        return;
+    }
+
+    window.addEventListener('workshop-hide-stripe', handleWorkshopHideStripeEvent);
+    window.__workshopHideStripeListenerRegistered = true;
+}
+
+if (window.Livewire) {
+    registerWorkshopHideStripeListener();
+} else {
+    document.addEventListener('livewire:init', registerWorkshopHideStripeListener, { once: true });
+}
+
+function scrollToElementWithOffset(element) {
+    if (!element) {
+        return false;
+    }
+
+    const header = document.querySelector('[data-sticky-header]');
+    const headerOffset = header ? header.getBoundingClientRect().height : 96;
+    const scrollTarget = element.getBoundingClientRect().top + window.pageYOffset - (headerOffset + 24);
+
+    window.scrollTo({
+        top: Math.max(scrollTarget, 0),
+        behavior: 'smooth',
+    });
+
+    return true;
+}
+
+function handleScrollTriggerClick(event) {
+    const trigger = event.currentTarget;
+
+    if (!trigger) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const targetSelector = trigger.getAttribute('data-scroll-target');
+    const fallbackSelector = trigger.getAttribute('data-scroll-fallback');
+    const hrefSelector = trigger.getAttribute('href');
+
+    const target =
+        (targetSelector ? document.querySelector(targetSelector) : null) ||
+        (fallbackSelector ? document.querySelector(fallbackSelector) : null) ||
+        (hrefSelector ? document.querySelector(hrefSelector) : null);
+
+    if (!scrollToElementWithOffset(target) && hrefSelector && hrefSelector.startsWith('#')) {
+        window.location.hash = hrefSelector;
+    }
+}
+
+function initFloatingBookingBarScroll() {
+    if (window.__floatingBookingBarScrollInitialized) {
+        return;
+    }
+
+    const triggers = document.querySelectorAll('[data-scroll-target]');
+
+    if (!triggers.length) {
+        return;
+    }
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener('click', handleScrollTriggerClick);
+    });
+
+    window.__floatingBookingBarScrollInitialized = true;
+}
+
+function bootWorkshopDetailsScripts() {
+    initWorkshopDetailsBooking();
+    initFloatingBookingBarScroll();
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWorkshopDetailsBooking);
+    document.addEventListener('DOMContentLoaded', bootWorkshopDetailsScripts);
 } else {
-    initWorkshopDetailsBooking();
+    bootWorkshopDetailsScripts();
 }
 </script>
 @endpush
+
+@if($whatsappBookingEnabled)
+    @push('scripts')
+        <script>
+(function bootstrapWhatsAppBooking(config) {
+    if (window.WhatsAppBooking) {
+        window.WhatsAppBooking.configure(config);
+        window.WhatsAppBooking.initButtons();
+        window.WhatsAppBooking.initInquiryButtons();
+        return;
+    }
+
+    window.__WHATSAPP_BOOKING_PENDING__ = window.__WHATSAPP_BOOKING_PENDING__ || [];
+    window.__WHATSAPP_BOOKING_PENDING__.push(function(instance) {
+        instance.configure(config);
+        instance.initButtons();
+        instance.initInquiryButtons();
+    });
+})(@json($whatsappBookingPayload));
+        </script>
+    @endpush
+@endif
+
 

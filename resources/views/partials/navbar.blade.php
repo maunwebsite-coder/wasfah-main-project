@@ -18,6 +18,7 @@
     $accountMenuCopy = $navCopy['account_menu'] ?? [];
     $accountMenuLinks = $accountMenuCopy['links'] ?? [];
     $authUser = Auth::user();
+    $desktopSearchHasQuery = trim(old('q', request('q'))) !== '';
     $guestPlaceholder = $mobileBannerCopy['guest'] ?? 'ضيفنا العزيز';
     $mobileGreeting = __('navbar.mobile_banner.greeting', ['name' => $authUser?->name ?? $guestPlaceholder]);
     $chefLinkData = null;
@@ -54,7 +55,7 @@
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-orange-100 shadow-sm">
     <div class="h-1 w-full bg-gradient-to-l from-orange-500 via-rose-500 to-amber-400 hidden md:block"></div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between gap-4 py-3 md:py-4 header-container">
             <div class="flex items-center gap-4 min-w-0">
                 <a href="{{ route('home') }}" class="flex items-center gap-3 text-slate-800">
@@ -113,36 +114,27 @@
 
             <div class="hidden md:flex flex-1 items-center justify-end gap-5 text-slate-600 header-nav">
                 @if($showNavbarSearch)
-                    <div id="search-container" data-expanded="false" class="navbar-search relative flex-1 max-w-xl group">
-                        <input id="search-input"
-                               dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
-                               type="text"
-                               placeholder="{{ $navCopy['search']['placeholder'] }}"
-                               value="{{ old('q', request('q')) }}"
-                               autocomplete="off"
-                               spellcheck="false"
-                               class="navbar-search-input w-full rounded-full border border-slate-200 bg-slate-50 pr-12 pl-5 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 shadow-inner transition-all duration-200 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 group-hover:bg-white">
-                        <button id="search-submit"
-                                type="button"
-                                aria-controls="search-input"
-                                aria-expanded="false"
-                                class="navbar-search-button flex h-11 w-11 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition-colors duration-200 hover:text-orange-500 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <span class="sr-only">{{ $navCopy['search']['open'] }}</span>
-                        </button>
-                    </div>
+                    <button id="desktopSearchToggle"
+                            type="button"
+                            aria-controls="search-container"
+                            aria-expanded="{{ $desktopSearchHasQuery ? 'true' : 'false' }}"
+                            class="desktop-search-toggle group flex h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                        <i class="fas fa-search text-base"></i>
+                        <span class="hidden text-sm font-semibold text-slate-600 group-hover:text-orange-600 xl:inline">
+                            {{ $navCopy['search']['open'] }}
+                        </span>
+                        <span class="sr-only xl:hidden">{{ $navCopy['search']['open'] }}</span>
+                    </button>
                 @endif
 
                 <nav class="flex items-center gap-2 text-sm font-medium text-slate-600" aria-label="{{ $navCopy['account_nav_label'] }}">
-                    <a href="{{ route('saved.index') }}" class="relative flex items-center gap-2 rounded-full border border-transparent bg-white px-3 py-2 text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                    <a href="{{ route('saved.index') }}" class="relative flex items-center gap-2 rounded-full border border-transparent bg-white px-3 py-2 text-[13px] text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
                         <i class="fas fa-bookmark text-base"></i>
-                        <span class="hidden xl:inline">{{ $navCopy['saved']['label'] }}</span>
+                        <span class="hidden text-[13px] xl:inline">{{ $navCopy['saved']['label'] }}</span>
                         <span id="saved-count" class="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px]">0</span>
                     </a>
 
-                    <a href="{{ route('partnership') }}" class="hidden lg:inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-600 transition-all duration-200 hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                    <a href="{{ route('partnership') }}" class="hidden lg:inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-600 transition-all duration-200 hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-200">
                         <i class="fas fa-handshake-angle text-base"></i>
                         <span>{{ $navCopy['partnership_cta'] }}</span>
                     </a>
@@ -152,40 +144,38 @@
                             <button id="notification-bell" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200" onclick="toggleNotificationDropdown()" aria-expanded="false" aria-haspopup="true">
                                 <i class="fas fa-bell text-base"></i>
                                 <span id="notification-count" data-notification-badge aria-live="polite" aria-atomic="true" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center hidden min-w-[20px]" aria-hidden="true">0</span>
-                                <span class="sr-only">عرض الإشعارات</span>
+                                <span class="sr-only">{{ data_get($notificationDropdownCopy, 'sr_label', 'عرض الإشعارات') }}</span>
                             </button>
 
-                            <div id="notification-dropdown" class="absolute right-0 top-full mt-4 w-[22rem] overflow-hidden rounded-[32px] border border-white/60 bg-white/95 text-sm text-slate-600 shadow-[0_35px_60px_rgba(15,23,42,0.18)] ring-1 ring-black/5 backdrop-blur-xl z-50 hidden">
-                                <div class="relative overflow-hidden border-b border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 text-white">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="space-y-1">
-                                            <p class="text-[11px] font-semibold uppercase tracking-[0.4em] text-white/50">{{ data_get($notificationDropdownCopy, 'title', 'الإشعارات') }}</p>
-                                            <p class="text-base font-bold leading-snug">{{ data_get($notificationDropdownCopy, 'subtitle', 'كل تنبيهات حجوزاتك في مكان واحد') }}</p>
-                                            <p id="notification-unread-summary" class="text-xs text-white/70">{{ data_get($notificationDropdownCopy, 'unread_summary.zero', 'لا إشعارات جديدة') }}</p>
+                            <div id="notification-dropdown" class="absolute right-0 top-full mt-4 w-[24rem] text-sm text-slate-600 z-50 hidden">
+                                <div class="rounded-[28px] border border-slate-100 bg-white/95 p-4 shadow-[0_26px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl space-y-4">
+                                    <div class="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-inner shadow-slate-100/70">
+                                        <div>
+                                            <p class="text-[11px] font-semibold uppercase tracking-[0.4em] text-slate-400">{{ data_get($notificationDropdownCopy, 'title', 'الإشعارات') }}</p>
+                                            <p class="text-sm font-semibold text-slate-900">{{ data_get($notificationDropdownCopy, 'subtitle', 'كل تنبيهات حجوزاتك في مكان واحد') }}</p>
                                         </div>
-                                        <div class="flex flex-col gap-2 text-[11px] font-semibold">
-                                            <button id="mark-all-read-btn" class="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-white/10 px-3 py-1 text-white transition hover:bg-white/20">
-                                                <i class="fas fa-check-double text-xs"></i>
-                                                {{ data_get($notificationDropdownCopy, 'mark_all', 'تحديد الكل كمقروء') }}
-                                            </button>
-                                            <a href="{{ route('notifications.index') }}" class="inline-flex items-center gap-1 text-white/80 transition hover:text-white">
-                                                <span>{{ data_get($notificationDropdownCopy, 'view_all_short', 'عرض الكل') }}</span>
-                                                <i class="fas {{ app()->isLocale('ar') ? 'fa-arrow-left' : 'fa-arrow-right' }} text-xs"></i>
-                                            </a>
+                                        <button id="mark-all-read-btn" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-orange-200 hover:text-orange-600">
+                                            <i class="fas fa-check-double text-orange-500 text-xs"></i>
+                                            {{ data_get($notificationDropdownCopy, 'mark_all', 'تحديد الكل كمقروء') }}
+                                        </button>
+                                    </div>
+                                    <div id="notification-list" class="notification-scroll max-h-72 space-y-3 overflow-y-auto pr-1">
+                                        <div class="relative overflow-hidden rounded-3xl border border-dashed border-slate-200/70 bg-white/95 px-5 py-6 text-center shadow-sm">
+                                            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-orange-500 shadow-inner">
+                                                <i class="fas fa-spinner fa-spin text-xl"></i>
+                                            </div>
+                                            <div class="mt-3 space-y-1">
+                                                <p class="text-sm font-semibold text-slate-900">{{ data_get($notificationDropdownCopy, 'loading_title', 'نجلب لك آخر التحديثات') }}</p>
+                                                <p class="text-xs text-slate-500">{{ data_get($notificationDropdownCopy, 'loading_message', 'لحظات وسيتم عرض أحدث إشعاراتك.') }}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div id="notification-list" class="notification-scroll max-h-80 space-y-3 overflow-y-auto bg-white px-4 py-4">
-                                    <div class="rounded-2xl border border-dashed border-orange-200/60 bg-orange-50/60 px-5 py-6 text-center text-slate-500 shadow-inner">
-                                        <i class="fas fa-spinner fa-spin text-xl mb-2 text-orange-500"></i>
-                                        <p>{{ data_get($notificationDropdownCopy, 'loading', 'جاري تحميل الإشعارات...') }}</p>
+                                    <div class="rounded-2xl bg-white px-4 py-3 text-center shadow-inner shadow-slate-100/70">
+                                        <a href="{{ route('notifications.index') }}" class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-orange-100 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-200 hover:bg-white">
+                                            <span>{{ data_get($notificationDropdownCopy, 'view_all', 'عرض جميع الإشعارات') }}</span>
+                                            <i class="fas {{ app()->isLocale('ar') ? 'fa-arrow-left' : 'fa-arrow-right' }}"></i>
+                                        </a>
                                     </div>
-                                </div>
-                                <div class="border-t border-slate-100 bg-white/90 px-4 py-3">
-                                    <a href="{{ route('notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-orange-600 transition hover:text-orange-700">
-                                        <span>{{ data_get($notificationDropdownCopy, 'view_all', 'عرض جميع الإشعارات') }}</span>
-                                        <i class="fas {{ app()->isLocale('ar') ? 'fa-arrow-left' : 'fa-arrow-right' }}"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -198,8 +188,8 @@
                                 aria-expanded="false"
                                 aria-controls="user-menu-dropdown">
                                 <div class="flex flex-col leading-tight">
-                                    <span class="text-[11px] font-medium text-orange-500">{{ data_get($accountMenuCopy, 'greeting', 'أهلاً بك') }}</span>
-                                    <span class="text-sm font-semibold">{{ $authUser->name }}</span>
+                                    <span class="text-[10px] font-medium text-orange-500">{{ data_get($accountMenuCopy, 'greeting', 'أهلاً بك') }}</span>
+                                    <span class="text-[13px] font-semibold">{{ $authUser->name }}</span>
                                 </div>
                                 <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white text-orange-500 shadow-inner">
                                     <i class="fas fa-chevron-down text-xs transition"></i>
@@ -266,6 +256,40 @@
                 </nav>
             </div>
         </div>
+
+        @if($showNavbarSearch)
+            <div class="desktop-search-layer hidden md:block">
+                <div id="search-container"
+                     data-expanded="{{ $desktopSearchHasQuery ? 'true' : 'false' }}"
+                     class="desktop-search-flyout navbar-search{{ $desktopSearchHasQuery ? ' search-expanded' : '' }}">
+                    <div class="desktop-search-flyout-inner">
+                        <button id="search-submit"
+                                type="button"
+                                aria-controls="search-input"
+                                aria-label="{{ data_get($navCopy, 'search.submit', 'بدء البحث') }}"
+                                class="desktop-search-action flex h-10 w-10 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition hover:border-orange-200 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                            <i class="fas fa-search text-lg"></i>
+                        </button>
+                        <input id="search-input"
+                               dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
+                               type="text"
+                               placeholder="{{ $navCopy['search']['placeholder'] }}"
+                               value="{{ old('q', request('q')) }}"
+                               autocomplete="off"
+                               spellcheck="false"
+                               aria-hidden="{{ $desktopSearchHasQuery ? 'false' : 'true' }}"
+                               @unless($desktopSearchHasQuery) hidden @endunless
+                               class="navbar-search-input flex-1 bg-transparent text-base text-slate-800 placeholder:text-slate-400 focus:outline-none">
+                        <button type="button"
+                                id="desktopSearchClose"
+                                aria-label="{{ data_get($navCopy, 'search.close', 'إغلاق البحث') }}"
+                                class="desktop-search-close flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-slate-400 transition hover:border-slate-200 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-200">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 
     <div id="mobileMenu" class="mobile-menu hidden border-t border-orange-100 bg-white/95 shadow-lg backdrop-blur md:hidden" style="display: none;">
@@ -506,9 +530,7 @@
                            spellcheck="false"
                            class="w-full rounded-2xl border border-slate-200 bg-slate-50 pr-12 pl-5 py-3 text-lg text-slate-700 placeholder:text-slate-400 transition-all duration-200 focus:border-orange-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
                     <button id="mobile-search-submit" class="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-transparent bg-white text-slate-500 shadow-sm transition hover:text-orange-500 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
+                        <i class="fas fa-paper-plane text-base"></i>
                         <span class="sr-only">بدء البحث</span>
                     </button>
                 </div>

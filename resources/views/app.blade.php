@@ -3,25 +3,50 @@
     $isRtl = $isRtl ?? ($currentLocale === 'ar');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $currentLocale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<html lang="{{ $currentLocale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" style="margin:0;padding:0;">
 <head>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'موقع وصفة')</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Swiper.js for slider -->
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css"/>
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js" defer></script>
-
+    <title>@yield('title', 'Wasfah Platform')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700&display=swap" />
+    </noscript>
+    <link rel="preload" as="style" href="https://unpkg.com/swiper/swiper-bundle.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    </noscript>
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    </noscript>
+    <link rel="preload" as="image" href="{{ asset('image/logo.webp') }}" type="image/webp" fetchpriority="high">
+    @stack('preloads')
+    @php
+        $vite = app(\Illuminate\Foundation\Vite::class);
+        $isViteHot = \App\Support\ViteHot::shouldUseHotReload();
+    @endphp
+
+    @if ($isViteHot)
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        @php
+            $appCss = $vite->asset('resources/css/app.css');
+        @endphp
+        <link rel="stylesheet" href="{{ $appCss }}">
+        @vite(['resources/js/app.js'])
+    @endif
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js" defer></script>
 
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
     body {
         font-family: 'Tajawal', sans-serif;
         background-color: #f8f8f8;
@@ -75,21 +100,28 @@
         background: transparent;
     }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script>
         window.__APP_LOCALE = "{{ $currentLocale }}";
         window.__CONTENT_TRANSLATIONS = @json($globalContentTranslations ?? []);
     </script>
     @stack('styles')
 </head>
-<body class="bg-gray-100 font-sans" data-user-id="@auth{{ Auth::id() }}@endauth">
+<body class="bg-gray-100 font-sans" data-user-id="@auth{{ Auth::id() }}@endauth" style="margin:0;padding:0;">
 
     <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center space-x-2 rtl:space-x-reverse">
                 <a href="{{ route('home') }}" class="flex items-center">
-                    <img src="{{ asset('image/logo.png') }}" alt="Logo" class="h-12 w-auto inline">
+                    <x-optimized-picture
+                        base="image/logo"
+                        :widths="[96, 192, 384]"
+                        alt="Logo"
+                        class="h-12 w-auto inline"
+                        :lazy="false"
+                        fetchpriority="high"
+                        sizes="96px"
+                    />
                 </a>
             </div>
             <div class="flex items-center space-x-4 rtl:space-x-reverse md:hidden">
@@ -100,7 +132,7 @@
             </div>
             <div class="hidden md:flex items-center md:space-x-4 rtl:space-x-reverse text-gray-600">
                 <div class="relative w-auto md:w-64">
-                    <input dir="rtl" type="text" placeholder="ابحث عن وصفة" class="w-full pl-4 pr-10 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                    <input dir="{{ $isRtl ? 'rtl' : 'ltr' }}" type="text" placeholder="Search for a recipe" class="w-full pl-4 pr-10 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
                 <nav class="flex items-center space-x-4 rtl:space-x-reverse text-gray-600">
@@ -125,28 +157,32 @@
                                 aria-labelledby="user-menu-button">
                                 <a href="{{ route('profile') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
                                     <i class="fas fa-user text-orange-500"></i>
-                                    <span class="font-semibold">ملفي الشخصي</span>
+                                        <span class="font-semibold">My profile</span>
                                 </a>
                                 @if(Auth::user()->isAdmin())
                                     <a href="{{ route('admin.admin-area') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
                                         <i class="fas fa-crown text-orange-500"></i>
-                                        <span class="font-semibold">منطقة الإدمن</span>
+                                        <span class="font-semibold">Admin area</span>
+                                    </a>
+                                    <a href="{{ route('admin.finance.dashboard') }}" class="flex items-center gap-2 px-4 py-2 transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
+                                        <i class="fas fa-file-invoice-dollar text-orange-500"></i>
+                                        <span class="font-semibold">Finance hub</span>
                                     </a>
                                 @endif
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button id="logout-btn" type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-left transition hover:bg-orange-50 hover:text-orange-600" role="menuitem">
                                         <i class="fas fa-sign-out-alt text-orange-500"></i>
-                                        <span class="font-semibold">تسجيل الخروج</span>
+                                        <span class="font-semibold">Log out</span>
                                     </button>
                                 </form>
                             </div>
                         </div>
                     @endauth
                     @guest
-                        <a href="{{ route('login') }}" class="hover:text-orange-500 transition-colors">تسجيل الدخول</a>
+                        <a href="{{ route('login') }}" class="hover:text-orange-500 transition-colors">Log in</a>
                     @endguest
-                    <a href="#" class="hover:text-orange-500 transition-colors">تواصل معنا</a>
+                    <a href="#" class="hover:text-orange-500 transition-colors">Contact us</a>
                 </nav>
             </div>
         </div>
@@ -155,17 +191,21 @@
                 @auth
                     <a href="#" class="-m-3 flex items-center p-3 focus:outline-offset-2"><span class="ml-4 rtl:mr-4 text-base font-semibold text-gray-900">{{ Auth::user()->name }}</span></a>
                     <div class="mt-2 space-y-2">
-                        <a href="#" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50">ملفي الشخصي</a>
+                        <a href="#" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50">My profile</a>
+                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('admin.admin-area') }}" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50">Admin area</a>
+                            <a href="{{ route('admin.finance.dashboard') }}" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50">Finance hub</a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <a href="#" id="logout-btn-mobile" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50" onclick="event.preventDefault(); this.closest('form').submit();">تسجيل الخروج</a>
+                            <a href="#" id="logout-btn-mobile" class="block rounded-lg py-2 pl-6 pr-3 text-sm font-semibold leading-7 text-gray-900 hover:bg-gray-50" onclick="event.preventDefault(); this.closest('form').submit();">Log out</a>
                         </form>
                     </div>
                 @endauth
                 @guest
-                    <a href="{{ route('login') }}" class="hover:text-orange-500 transition-colors">تسجيل الدخول</a>
+                    <a href="{{ route('login') }}" class="hover:text-orange-500 transition-colors">Log in</a>
                 @endguest
-                <a href="#" class="hover:text-orange-500 transition-colors">تواصل معنا</a>
+                <a href="#" class="hover:text-orange-500 transition-colors">Contact us</a>
             </nav>
         </div>
     </header>
@@ -174,10 +214,10 @@
     <!-- <nav class="bg-white border-t border-gray-200 shadow-sm ">
         <div class="container mx-auto px-4 py-3">
             <ul class="flex justify-center space-x-8 rtl:space-x-reverse text-gray-700 font-semibold">
-                <li><a href="{{ route('home') }}" class="hover:text-orange-500 transition-colors">الرئيسية</a></li>
-                <li><a href="#" class="hover:text-orange-500 transition-colors">ورشات</a></li>
-                <li><a href="#" class="hover:text-orange-500 transition-colors">ادوات الشيف</a></li>
-                <li><a href="#" class="hover:text-orange-500 transition-colors">أصناف الحلويات</a></li>
+                <li><a href="{{ route('home') }}" class="hover:text-orange-500 transition-colors">Home</a></li>
+                <li><a href="#" class="hover:text-orange-500 transition-colors">Workshops</a></li>
+                <li><a href="#" class="hover:text-orange-500 transition-colors">Chef tools</a></li>
+                <li><a href="#" class="hover:text-orange-500 transition-colors">Dessert recipes</a></li>
             </ul>
         </div>
     </nav> -->
@@ -190,7 +230,6 @@
     <!-- Footer -->
     @include('layouts.partials.footer')
 
-    @vite(['resources/js/script.js', 'resources/js/header.js'])
     @stack('scripts')
 </body>
 </html>

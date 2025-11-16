@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use App\Models\Tool;
+use App\Support\ImageUploadConstraints;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -259,7 +260,9 @@ class RecipeController extends Controller
      */
     private function validateRecipe(Request $request, ?int $recipeId = null): array
     {
-        return $request->validate([
+        $imageRule = array_merge(['nullable'], ImageUploadConstraints::rules());
+
+        $rules = [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category_id' => ['nullable', 'exists:categories,category_id'],
@@ -268,11 +271,11 @@ class RecipeController extends Controller
             'servings' => ['nullable', 'integer', 'min:0'],
             'difficulty' => ['nullable', Rule::in(['easy', 'medium', 'hard'])],
             'image_url' => ['nullable', 'url'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
-            'image_2' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
-            'image_3' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
-            'image_4' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
-            'image_5' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
+            'image' => $imageRule,
+            'image_2' => $imageRule,
+            'image_3' => $imageRule,
+            'image_4' => $imageRule,
+            'image_5' => $imageRule,
             'steps' => ['nullable', 'array'],
             'steps.*' => ['nullable', 'string', 'max:1000'],
             'tools' => ['nullable', 'array'],
@@ -282,9 +285,37 @@ class RecipeController extends Controller
             'ingredients.*.amount' => ['nullable', 'string', 'max:255'],
             'visibility' => ['required', Rule::in([Recipe::VISIBILITY_PUBLIC, Recipe::VISIBILITY_PRIVATE])],
             'submit_action' => ['required', Rule::in(['draft', 'submit'])],
-        ], [
-            'submit_action.in' => 'حدث خطأ في اختيار حالة الحفظ، يرجى المحاولة مرة أخرى.',
-        ]);
+        ];
+
+        $messages = array_merge(
+            ImageUploadConstraints::messagesFor([
+                'image' => [
+                    'ar' => 'الصورة الرئيسية',
+                    'en' => 'primary image',
+                ],
+                'image_2' => [
+                    'ar' => 'الصورة الثانية',
+                    'en' => 'image 2',
+                ],
+                'image_3' => [
+                    'ar' => 'الصورة الثالثة',
+                    'en' => 'image 3',
+                ],
+                'image_4' => [
+                    'ar' => 'الصورة الرابعة',
+                    'en' => 'image 4',
+                ],
+                'image_5' => [
+                    'ar' => 'الصورة الخامسة',
+                    'en' => 'image 5',
+                ],
+            ]),
+            [
+                'submit_action.in' => 'حدث خطأ في اختيار حالة الحفظ، يرجى المحاولة مرة أخرى.',
+            ]
+        );
+
+        return $request->validate($rules, $messages);
     }
 
     /**

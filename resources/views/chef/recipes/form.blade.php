@@ -232,7 +232,7 @@
                            class="h-5 w-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
-                            <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" class="h-full w-full object-cover">
+                            <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" class="h-full w-full object-cover" loading="lazy">
                         </div>
                         <span class="text-gray-700 text-sm font-medium truncate" title="{{ $tool->name }}">
                             {{ Str::limit($tool->name, 24) }}
@@ -273,7 +273,7 @@
 
                             @if ($isEdit && $recipe->{$field})
                                 <div class="mt-3 flex items-center gap-4">
-                                    <img src="{{ Storage::disk('public')->url($recipe->{$field}) }}" alt="{{ __('chef.recipe_form.sections.media.current_alt') }}" class="h-20 w-20 rounded-lg object-cover border border-gray-200">
+                                    <img src="{{ Storage::disk('public')->url($recipe->{$field}) }}" alt="{{ __('chef.recipe_form.sections.media.current_alt') }}" class="h-20 w-20 rounded-lg object-cover border border-gray-200" loading="lazy">
                                     <label class="inline-flex items-center gap-2 text-sm text-red-500">
                                         <input type="checkbox" name="remove_images[]" value="{{ $field }}" class="h-4 w-4 rounded border-gray-300 text-red-500 focus:ring-red-400">
                                         {{ __('chef.recipe_form.sections.media.remove_current') }}
@@ -418,3 +418,4 @@
         </script>
     @endpush
 @endonce
+

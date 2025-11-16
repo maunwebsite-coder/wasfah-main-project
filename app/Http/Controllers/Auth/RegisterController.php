@@ -213,6 +213,7 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $verification->name,
             'email' => $verification->email,
+            'google_email' => $verification->role === User::ROLE_CHEF ? $verification->email : null,
             'password' => $verification->password_hash,
             'provider' => null,
             'provider_id' => null,
@@ -333,6 +334,7 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'google_email' => $role === User::ROLE_CHEF ? $data['email'] : null,
             'password' => Hash::make($data['password']),
             'provider' => null,
             'provider_id' => null,

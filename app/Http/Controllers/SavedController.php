@@ -91,31 +91,6 @@ class SavedController extends Controller
     }
 
     /**
-     * Get saved tools count
-     */
-    public function count(): JsonResponse
-    {
-        // فقط للمستخدمين المسجلين
-        if (!auth()->check()) {
-            return response()->json(['count' => 0]);
-        }
-
-        $userId = auth()->id();
-        $count = SavedTool::forUser($userId)->count();
-
-        // Debug log
-        \Log::info('Saved count request', [
-            'user_id' => $userId,
-            'count' => $count,
-            'auth_check' => auth()->check()
-        ]);
-
-        return response()->json([
-            'count' => $count
-        ]);
-    }
-
-    /**
      * Get saved tools status
      */
     public function status(): JsonResponse

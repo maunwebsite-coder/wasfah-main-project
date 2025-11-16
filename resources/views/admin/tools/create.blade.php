@@ -496,7 +496,7 @@ function updateImagePreview(primaryUrl, galleryUrls = []) {
     previewDiv.classList.remove('hidden');
     const slides = images.map(url => `
         <div class="w-24 h-24 rounded-lg overflow-hidden border flex-shrink-0 bg-white">
-            <img src="${url}" alt="معاينة الصورة" class="w-full h-full object-cover">
+            <img src="${url}" alt="معاينة الصورة" class="w-full h-full object-cover" loading="lazy">
         </div>
     `).join('');
 

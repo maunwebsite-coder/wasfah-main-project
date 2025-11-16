@@ -25,7 +25,7 @@ class LinkPageController extends Controller
 
         $heroImageUrl = $page->hero_image_path
             ? Storage::disk('public')->url($page->hero_image_path)
-            : ($page->avatar_url ?? asset('image/logo.png'));
+            : ($page->avatar_url ?? asset('image/logo.webp'));
 
         $linkPresets = [
             [
@@ -142,3 +142,4 @@ class LinkPageController extends Controller
         return $value;
     }
 }
+

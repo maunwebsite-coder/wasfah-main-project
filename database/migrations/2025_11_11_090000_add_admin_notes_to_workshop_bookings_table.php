@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('workshop_bookings', 'admin_notes')) {
+            return;
+        }
+
         Schema::table('workshop_bookings', function (Blueprint $table) {
             $table->text('admin_notes')->nullable()->after('cancellation_reason');
         });
@@ -15,6 +19,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasColumn('workshop_bookings', 'admin_notes')) {
+            return;
+        }
+
         Schema::table('workshop_bookings', function (Blueprint $table) {
             $table->dropColumn('admin_notes');
         });

@@ -122,12 +122,15 @@ class WorkshopController extends Controller
                 ->all();
         }
 
+        $whatsappBookingConfig = $this->buildWhatsappBookingConfig();
+
         return view('workshops', compact(
             'workshops',
             'featuredWorkshop',
             'categories',
             'levels',
-            'bookedWorkshopIds'
+            'bookedWorkshopIds',
+            'whatsappBookingConfig'
         ));
     }
 
@@ -143,6 +146,11 @@ class WorkshopController extends Controller
 
         if (!$workshop) {
             return $this->renderWorkshopNotFoundResponse($slug);
+        }
+
+        if ($currentRoute = request()->route()) {
+            // Share the resolved workshop instance with the route so helpers (e.g. breadcrumbs) can access it.
+            $currentRoute->setParameter('workshop', $workshop);
         }
 
         // الحصول على عنوان IP للمستخدم
@@ -186,7 +194,9 @@ class WorkshopController extends Controller
                 ->first();
         }
 
-        return view('workshop-details', compact('workshop', 'relatedWorkshops', 'userBooking'));
+        $whatsappBookingConfig = $this->buildWhatsappBookingConfig();
+
+        return view('workshop-details', compact('workshop', 'relatedWorkshops', 'userBooking', 'whatsappBookingConfig'));
     }
 
     /**
@@ -258,7 +268,9 @@ class WorkshopController extends Controller
             $workshops = $fallbackBuilder()->get();
         }
 
-        return view('workshops', compact('workshops'))->with('searchQuery', $query);
+        $whatsappBookingConfig = $this->buildWhatsappBookingConfig();
+
+        return view('workshops', compact('workshops', 'whatsappBookingConfig'))->with('searchQuery', $query);
     }
 
     /**
@@ -362,5 +374,29 @@ class WorkshopController extends Controller
             ['\\\\', '\\%', '\\_'],
             $value
         );
+    }
+
+    protected function buildWhatsappBookingConfig(): array
+    {
+        $rawNumber = (string) config('services.whatsapp_booking.number', '');
+        $digitsOnly = preg_replace('/\D+/', '', $rawNumber);
+
+        $enabled = (bool) config('services.whatsapp_booking.enabled', false) && !empty($digitsOnly);
+        $user = auth()->user();
+
+        return [
+            'enabled' => $enabled,
+            'number' => $digitsOnly,
+            'notes' => (string) config('services.whatsapp_booking.notes', 'WhatsApp booking'),
+            'isLoggedIn' => auth()->check(),
+            'bookingEndpoint' => route('bookings.store'),
+            'loginUrl' => route('login'),
+            'registerUrl' => route('register'),
+            'user' => [
+                'name' => $user?->name ?? __('workshops.labels.unspecified'),
+                'phone' => data_get($user, 'phone') ?? data_get($user, 'mobile') ?? __('workshops.labels.unspecified'),
+                'email' => $user?->email ?? __('workshops.labels.unspecified'),
+            ],
+        ];
     }
 }

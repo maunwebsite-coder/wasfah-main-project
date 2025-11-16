@@ -7,6 +7,7 @@ use App\Models\Workshop;
 use App\Models\WorkshopBooking;
 use App\Models\User;
 use App\Models\Notification;
+use App\Support\NotificationCopy;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -56,6 +57,7 @@ class ManualBookingController extends Controller
             'payment_status' => $request->payment_status,
             'payment_method' => $request->payment_method,
             'payment_amount' => $request->payment_amount,
+            'payment_currency' => $workshop->currency,
             'notes' => $request->notes,
             'confirmed_at' => $request->status === 'confirmed' ? now() : null,
         ]);
@@ -65,16 +67,14 @@ class ManualBookingController extends Controller
         $workshop = Workshop::find($request->workshop_id);
         $workshopSlug = $workshop?->slug;
         $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
-        $workshopUrl = $workshopSlug
-            ? route('workshop.show', ['workshop' => $workshopSlug])
-            : route('workshops');
-        
         if ($request->status === 'confirmed') {
+            [$title, $message] = NotificationCopy::bookingConfirmed($booking, $workshop);
+
             Notification::createNotification(
                 $request->user_id,
                 'workshop_confirmed',
-                'تم تأكيد حجز الورشة',
-                "تم تأكيد حجز ورشة '{$workshop->title}' بنجاح! يمكنك الآن الدخول إلى ملفك الشخصي لمتابعة تفاصيل الورشة",
+                $title,
+                $message,
                 [
                     'workshop_id' => $workshop->id, 
                     'booking_id' => $booking->id,
@@ -83,27 +83,14 @@ class ManualBookingController extends Controller
                     'action_url' => $bookingShowUrl,
                 ]
             );
-            
-            // إشعار إضافي: ترحيب بالورشة
-            Notification::createNotification(
-                $request->user_id,
-                'general',
-                'مرحباً بك في ورشة ' . $workshop->title,
-                "نحن متحمسون لرؤيتك في ورشة '{$workshop->title}'! تأكد من الوصول في الوقت المحدد.",
-                [
-                    'workshop_id' => $workshop->id,
-                    'workshop_slug' => $workshopSlug,
-                    'workshop_title' => $workshop->title,
-                    'action_url' => $workshopUrl,
-                ]
-            );
-            
         } elseif ($request->status === 'pending') {
+            [$title, $message] = NotificationCopy::bookingPending($booking, $workshop);
+
             Notification::createNotification(
                 $request->user_id,
                 'workshop_booking',
-                'تم إنشاء حجز الورشة',
-                "تم إنشاء حجز ورشة '{$workshop->title}' بنجاح. يرجى التحقق من ملفك الشخصي لمتابعة حالة الحجز: {$profileUrl}",
+                $title,
+                $message,
                 [
                     'workshop_id' => $workshop->id, 
                     'booking_id' => $booking->id,
@@ -112,18 +99,20 @@ class ManualBookingController extends Controller
                     'action_url' => $bookingShowUrl,
                 ]
             );
-            
-            // إشعار إضافي: معلومات مهمة
+        } elseif ($request->status === 'cancelled') {
+            [$title, $message] = NotificationCopy::bookingCancelled($booking, null, $workshop);
+
             Notification::createNotification(
                 $request->user_id,
-                'general',
-                'معلومات مهمة عن الورشة',
-                "يرجى مراجعة تفاصيل ورشة '{$workshop->title}' في ملفك الشخصي. سنقوم بتأكيد الحجز قريباً وإرسال جميع التفاصيل المطلوبة.",
+                'workshop_cancelled',
+                $title,
+                $message,
                 [
-                    'workshop_id' => $workshop->id,
+                    'workshop_id' => $workshop->id, 
+                    'booking_id' => $booking->id,
                     'workshop_slug' => $workshopSlug,
-                    'workshop_title' => $workshop->title,
-                    'action_url' => $workshopUrl,
+                    'profile_url' => $profileUrl,
+                    'action_url' => $bookingShowUrl,
                 ]
             );
         }
@@ -185,6 +174,7 @@ class ManualBookingController extends Controller
             'booking_date' => now(),
             'payment_status' => 'pending',
             'payment_amount' => $request->payment_amount,
+            'payment_currency' => $workshop->currency,
             'notes' => $request->notes . ' (حجز عبر الواتساب)',
         ]);
 
@@ -192,47 +182,19 @@ class ManualBookingController extends Controller
         $profileUrl = route('profile');
         $workshopSlug = $workshop->slug;
         $bookingShowUrl = route('bookings.show', ['booking' => $booking->id]);
-        $workshopUrl = route('workshop.show', ['workshop' => $workshopSlug]);
+        [$title, $message] = NotificationCopy::bookingPending($booking, $workshop);
 
         Notification::createNotification(
             $user->id,
             'workshop_booking',
-            'تم إنشاء حجز الورشة',
-            "تم إنشاء حجز ورشة '{$workshop->title}' بنجاح. يرجى التحقق من ملفك الشخصي لمتابعة حالة الحجز: {$profileUrl}",
+            $title,
+            $message,
             [
                 'workshop_id' => $workshop->id, 
                 'booking_id' => $booking->id,
                 'workshop_slug' => $workshopSlug,
                 'profile_url' => $profileUrl,
                 'action_url' => $bookingShowUrl,
-            ]
-        );
-        
-        // إشعار إضافي: ترحيب جديد
-        Notification::createNotification(
-            $user->id,
-            'general',
-            'مرحباً بك في موقع وصفة!',
-            "نرحب بك في مجتمع وصفة! نحن متحمسون لرؤيتك في ورشة '{$workshop->title}'. استكشف موقعنا واكتشف المزيد من الوصفات والأدوات.",
-            [
-                'workshop_id' => $workshop->id,
-                'workshop_slug' => $workshopSlug,
-                'workshop_title' => $workshop->title,
-                'action_url' => $workshopUrl,
-            ]
-        );
-        
-        // إشعار إضافي: نصائح للورشة
-        Notification::createNotification(
-            $user->id,
-            'general',
-            'نصائح للاستعداد للورشة',
-            "للاستعداد لورشة '{$workshop->title}'، تأكد من إحضار الأدوات المطلوبة والوصول قبل 10 دقائق من بداية الورشة.",
-            [
-                'workshop_id' => $workshop->id,
-                'workshop_slug' => $workshopSlug,
-                'workshop_title' => $workshop->title,
-                'action_url' => $workshopUrl,
             ]
         );
 

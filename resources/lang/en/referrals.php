@@ -1,0 +1,68 @@
+<?php
+
+return [
+    'title' => 'Referral Program',
+    'hero' => [
+        'badge' => 'Partners Program',
+        'welcome' => 'Welcome, :name 👋',
+        'description' => 'Share your personal link to grow the Wasfah community and earn :rate% commission from every participant who books workshops through the chefs you invite.',
+        'link_label' => 'Personal invite link',
+        'copy_button' => 'Copy link',
+        'copy_feedback' => 'Link copied to clipboard ✅',
+        'copy_error' => 'Unable to copy the link, please copy it manually.',
+    ],
+    'stats' => [
+        'registered_users' => 'Registered users',
+        'registered_chefs' => ':count of them are chefs',
+        'ready_commissions' => 'Commissions ready to withdraw',
+        'ready_bookings' => ':count paid bookings',
+        'total_paid' => 'Total paid out',
+        'total_paid_hint' => 'Up to today',
+        'active_chefs' => 'Active chefs',
+        'active_chefs_hint' => 'Currently running workshops',
+    ],
+    'chefs' => [
+        'badge' => 'Top chefs',
+        'title' => 'Chefs who registered through you',
+        'count' => ':count chefs',
+        'activity' => 'Active workshops: :workshops • Paid bookings: :bookings',
+        'revenue_label' => 'Your revenue from their workshops',
+        'empty' => 'No chef has registered with your link yet. Share it with your community to start earning.',
+    ],
+    'commissions_summary' => [
+        'badge' => 'Commission status',
+        'title' => 'Quick summary',
+        'ready' => 'Amounts ready',
+        'paid' => 'Amounts paid out',
+        'cancelled' => 'Rejected / cancelled commissions',
+        'total' => 'Total invoiced bookings',
+        'note' => 'Our operations team will reach out regularly to transfer the ready amounts.',
+    ],
+    'recent' => [
+        'badge' => 'Recently registered',
+        'title' => 'Latest sign-ups from your link',
+        'nameless' => 'User without a name',
+        'empty' => 'Once people join through your link you will see them here.',
+    ],
+    'history' => [
+        'badge' => 'Commission log',
+        'title' => 'Paid bookings details',
+        'count' => ':count records',
+        'table' => [
+            'workshop' => 'Workshop',
+            'chef' => 'Chef',
+            'participant' => 'Participant',
+            'share' => 'Partner share',
+            'status' => 'Commission status',
+            'due_date' => 'Due date',
+            'rate' => '(:rate%)',
+        ],
+        'empty' => 'No commissions have been recorded yet. Once participants book the chefs you invited, their details will appear here.',
+    ],
+    'statuses' => [
+        'ready' => 'Ready to transfer',
+        'paid' => 'Paid out',
+        'cancelled' => 'Cancelled',
+        'pending' => 'Under review',
+    ],
+];

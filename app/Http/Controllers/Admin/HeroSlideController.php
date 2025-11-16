@@ -346,8 +346,8 @@ class HeroSlideController extends Controller
                 'title' => 'ورشات حلويات احترافية',
                 'description' => 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.',
                 'image_alt' => 'ورشة عمل للحلويات الاحترافية',
-                'desktop_image_path' => asset('image/wterm.png'),
-                'mobile_image_path' => asset('image/wterm.png'),
+                'desktop_image_path' => asset('image/wterm.webp'),
+                'mobile_image_path' => asset('image/wterm.webp'),
                 'features' => [
                     'جلسات تفاعلية محدودة العدد',
                     'ملفات تطبيقية وشهادة حضور',
@@ -374,8 +374,8 @@ class HeroSlideController extends Controller
                 'title' => 'أنشئ ورشتك على وصفة',
                 'description' => 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق للشيفات.',
                 'image_alt' => 'شيف يطلق ورشته الخاصة',
-                'desktop_image_path' => asset('image/wterm.png'),
-                'mobile_image_path' => asset('image/wterm.png'),
+                'desktop_image_path' => asset('image/wterm.webp'),
+                'mobile_image_path' => asset('image/wterm.webp'),
                 'features' => [
                     'لوحة تحكم لإدارة الجلسات والمدفوعات',
                     'رابط تسجيل مباشر للمتدربين',
@@ -447,8 +447,8 @@ class HeroSlideController extends Controller
                 'title' => 'مكتبة وصفات عالمية',
                 'description' => 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.',
                 'image_alt' => 'حلى براونيز فاخرة',
-                'desktop_image_path' => asset('image/Brownies.png'),
-                'mobile_image_path' => asset('image/Brownies.png'),
+                'desktop_image_path' => asset('image/brownies.webp'),
+                'mobile_image_path' => asset('image/brownies.webp'),
                 'features' => [
                     'تصنيفات حسب المستوى والمناسبة',
                     'حفظ ومزامنة وصفاتك المفضلة',
@@ -502,3 +502,5 @@ class HeroSlideController extends Controller
             ->with('error', $message);
     }
 }
+
+

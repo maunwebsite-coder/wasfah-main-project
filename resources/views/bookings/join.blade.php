@@ -1,1392 +1,265 @@
 @extends('layouts.app')
 
-@section('title', 'غرفة ورشة: ' . $workshop->title)
+@section('title', __('bookings.join.meta_title', ['workshop' => $workshop->title]))
 
 @push('styles')
 <style>
-    :root {
-        --jitsi-viewport-height: 100vh;
-        --jitsi-viewport-width: 100vw;
-    }
-
-    .jitsi-shell {
-        position: relative;
-    }
-
-    .jitsi-wrapper {
-        min-height: 72vh;
-        height: clamp(620px, 78vh, 980px);
-        border-radius: 1.5rem;
-        overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(249, 115, 22, 0.25);
-    }
-
-    @media (max-width: 640px) {
-        .jitsi-wrapper {
-            min-height: 65vh;
-            border-radius: 1rem;
-        }
-    }
-
-    .session-lock-overlay {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-        padding: 2.5rem 1.5rem;
-        background: linear-gradient(135deg, rgba(255, 247, 237, 0.94), rgba(254, 215, 170, 0.94));
-        z-index: 40;
-        text-align: center;
-        backdrop-filter: blur(14px);
-        color: #7c2d12;
-    }
-
-    .session-lock-overlay .lock-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 4.5rem;
-        height: 4.5rem;
-        border-radius: 9999px;
-        background: rgba(234, 88, 12, 0.12);
-        color: #ea580c;
-        font-size: 1.75rem;
-        box-shadow: 0 20px 45px -15px rgba(234, 88, 12, 0.45);
-    }
-
-    .session-lock-overlay h2 {
-        font-size: 1.35rem;
-        font-weight: 700;
-    }
-
-    .session-lock-overlay p {
-        font-size: 0.95rem;
-        line-height: 1.6;
-        color: rgba(120, 53, 15, 0.85);
-        max-width: 28rem;
-    }
-
-    .session-lock-overlay .lock-since {
-        font-size: 0.75rem;
-        color: rgba(124, 45, 18, 0.7);
-    }
-
-    body.mobile-fullscreen-active {
-        overflow: hidden;
-    }
-
-    .mobile-fullscreen-target.mobile-fullscreen-active {
-        position: fixed !important;
-        inset: 0 !important;
-        width: var(--jitsi-viewport-width, 100vw) !important;
-        height: var(--jitsi-viewport-height, 100vh) !important;
-        border-radius: 0 !important;
-        z-index: 999 !important;
-        background-color: #000 !important;
-    }
-
-    .jitsi-safe-area {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-        box-sizing: border-box;
-        background: inherit;
-    }
-
-    #jitsi-container {
-        width: 100%;
-        height: 100%;
+    body {
+        background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 33%, #f1f5f9 100%);
+        min-height: 100vh;
     }
 
     footer {
         display: none !important;
     }
 
-    @media (max-width: 768px) {
-        header.sticky.top-0 {
-            display: none !important;
-        }
+    .booking-shell {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
     }
 
+    .booking-card, .tips-card {
+        border-radius: 1.5rem;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: #fff;
+        box-shadow: 0 30px 80px -60px rgba(15, 23, 42, 0.4);
+        padding: 2.25rem;
+    }
+
+    .tips-card {
+        background: linear-gradient(120deg, rgba(252, 211, 77, 0.18), rgba(248, 250, 252, 0.85));
+        border-color: rgba(251, 146, 60, 0.25);
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.8rem;
+        border-radius: 999px;
+        font-weight: 600;
+        transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    .action-btn.primary {
+        background: linear-gradient(120deg, #f97316, #f43f5e);
+        color: #fff;
+        box-shadow: 0 18px 40px rgba(249, 115, 22, 0.35);
+    }
+
+    .action-btn.secondary {
+        border: 1px solid rgba(15, 23, 42, 0.15);
+        color: #0f172a;
+    }
+
+    .action-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-badge.ready {
+        background: rgba(34, 197, 94, 0.15);
+        color: #15803d;
+    }
+
+    .status-badge.pending {
+        background: rgba(251, 191, 36, 0.15);
+        color: #92400e;
+    }
+
+    .status-badge.locked {
+        background: rgba(239, 68, 68, 0.15);
+        color: #b91c1c;
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 py-10 text-slate-800">
-    <div class="mx-auto max-w-7xl px-4">
-        @if (session('success') || session('error'))
-            <div class="mb-6 rounded-3xl border {{ session('success') ? 'border-orange-200 bg-orange-500/10 text-orange-700' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-6 py-4 text-sm shadow-lg">
-                {{ session('success') ?? session('error') }}
-            </div>
-        @endif
-
-        @if ($workshop->meeting_started_at)
-            <div class="jitsi-shell mb-10" id="jitsi-shell">
-                <div class="jitsi-wrapper bg-black relative mobile-fullscreen-target">
-                    <div class="jitsi-safe-area">
-                        <div class="jitsi-node" id="jitsi-container"></div>
-                    </div>
-                    <livewire:bookings.meeting-lock-overlay
-                        :booking-code="$booking->public_code"
-                        :workshop-id="$workshop->id"
-                        :initial-started-at="$meetingStartedAtIso"
-                        :initial-locked-at="$meetingLockedAtIso"
-                        :initial-locked="$isMeetingLocked"
-                    />
-                </div>
-            </div>
-        @endif
-
-        <div
-            id="joinCancellationNotice"
-            class="mt-6 hidden rounded-3xl border border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-700 shadow-lg"
-            role="alert"
-            aria-live="polite"
-            tabindex="-1"
-        >
-            تم إيقاف الانضمام للجلسة الآن. يمكنك العودة لاحقاً من صفحة حجوزاتك والانضمام عندما تكون مستعداً.
+<div class="booking-shell">
+    <div class="booking-card space-y-6">
+        <div class="space-y-3">
+            <p class="uppercase tracking-[0.4em] text-xs text-orange-500/70">{{ __('bookings.join.header.label') }}</p>
+            <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">{{ $workshop->title }}</h1>
+            <p class="text-slate-600 text-sm leading-relaxed max-w-3xl">
+                {{ __('bookings.join.header.description', ['workshop' => $workshop->title]) }}
+            </p>
         </div>
 
-        <section class="mt-10 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.9fr)]">
-            <div class="space-y-4">
-                <div>
-                    <p class="text-sm uppercase tracking-[0.3em] text-orange-500">جلسة مباشرة</p>
-                    <h1 class="mt-2 text-3xl font-bold sm:text-4xl">{{ $workshop->title }}</h1>
-                </div>
-                <p class="text-sm leading-relaxed text-slate-600">
-                    تأكد من اتصالك بالإنترنت، ثم اسمح للمتصفح بالوصول إلى الميكروفون والكاميرا عند فتح الغرفة. ستظهر لك عناصر التحكم داخل البث عند الضغط على زر الانضمام.
+        <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p class="text-xs uppercase tracking-widest text-slate-400">{{ __('bookings.join.details.date_time') }}</p>
+                <p class="mt-2 text-lg font-semibold text-slate-800">
+                    {{ optional($workshop->start_date)->locale(app()->getLocale())->translatedFormat('d F Y • h:i a') ?? __('bookings.join.details.soon') }}
                 </p>
-                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600">
-                    @if ($hostName)
-                        <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <i class="fas fa-chalkboard-teacher text-orange-500"></i>
-                            مع المضيف: {{ $hostName }}
-                        </span>
-                    @endif
-                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
-                        <i class="fas fa-clock text-orange-500"></i>
-                        المدة: {{ $workshop->duration }} دقيقة تقريباً
-                    </span>
-                    @if ($workshop->confirmed_bookings_count)
-                        <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
-                            <i class="fas fa-users text-orange-500"></i>
-                            {{ number_format($workshop->confirmed_bookings_count) }} مشارك مؤكد
-                        </span>
-                    @endif
-                    <span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-slate-700 shadow-sm">
-                        <i class="fas fa-shield-alt text-orange-500"></i>
-                        دخول آمن عبر وصفة
-                    </span>
-                </div>
             </div>
-
-            <div class="rounded-3xl border border-orange-200 bg-white p-5 shadow-xl" id="countdownCard" @if ($startsAtIso) data-starts-at="{{ $startsAtIso }}" @endif>
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.4em] text-orange-500">موعد الورشة</p>
-                        <p class="mt-2 text-lg font-semibold text-slate-900">
-                            {{ optional($workshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a') ?: 'سيتم تحديده من قبل الشيف' }}
-                        </p>
-                    </div>
-                    <span id="countdownBadge" class="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 transition-colors">
-                        {{ $startsAtIso ? 'جاهزون تقريباً' : 'موعد مرن' }}
-                    </span>
-                </div>
-                <p id="countdownLabel" class="mt-4 text-sm leading-relaxed text-slate-600">
-                    {{ $startsAtIso ? 'يتم تحديث الوقت المتبقي تلقائياً.' : 'سيقوم الشيف بفتح الغرفة عندما يحين الوقت، ترقّب إشعار الانضمام.' }}
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p class="text-xs uppercase tracking-widest text-slate-400">{{ __('bookings.join.details.host_name') }}</p>
+                <p class="mt-2 text-lg font-semibold text-slate-800">
+                    {{ $hostName ?? $workshop->instructor ?? __('bookings.join.details.default_host') }}
                 </p>
-                @if ($workshop->meeting_started_at)
-                    <p class="mt-4 flex items-center gap-2 rounded-2xl border border-orange-200/70 bg-orange-50 px-4 py-3 text-xs text-orange-700">
-                        <i class="fas fa-broadcast-tower text-orange-500"></i>
-                        تم فتح الغرفة قبل {{ $workshop->meeting_started_at->locale('ar')->diffForHumans() }}. انقر زر الانضمام داخل البث للمشاركة مباشرة.
-                    </p>
-                @endif
             </div>
-        </section>
-
-        @if ($workshop->meeting_started_at)
-            <div class="mt-8 rounded-3xl border border-orange-200 bg-orange-500/10 px-6 py-4 text-sm text-orange-700 shadow-xl">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <span class="flex items-center gap-2 text-orange-600">
-                        <i class="fas fa-check-circle text-orange-500"></i>
-                        الغرفة مفتوحة الآن – يمكنك الانضمام متى ما شئت.
-                    </span>
-                    <span class="text-xs text-orange-600/80">
-                        إذا انقطع الاتصال، فقط أعد تحديث الصفحة وسيستمر البث تلقائياً.
-                    </span>
-                </div>
-            </div>
-
-            <div class="mt-6 rounded-3xl border border-orange-100 bg-orange-50 px-5 py-4 text-xs text-orange-700 shadow">
-                <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-700">
-                    <i class="fas fa-info-circle text-orange-500"></i>
-                    تذكير سريع بالضبط الصوتي
-                </h3>
-                <ul class="mt-3 space-y-2 leading-relaxed">
-                    <li>• استخدم سماعات أو كتم الميكروفون عند عدم التحدث لتقليل الضوضاء.</li>
-                    <li>• يمكنك تبديل العرض إلى طريقة الشبكة عبر زر <strong>عرض المربعات</strong> أسفل البث.</li>
-                    <li>• إذا لم تسمع الصوت، افتح إعدادات Jitsi (رمز الترس) واختر الجهاز الصحيح.</li>
-                </ul>
-            </div>
-        @else
-            <div class="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-                <div id="waitingCard" class="rounded-3xl border border-orange-200 bg-white/90 px-6 py-10 text-slate-700 shadow-xl">
-                    <div class="flex flex-col gap-8">
-                        <div class="rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-white p-6 shadow-inner">
-                            <div class="flex flex-wrap items-center gap-4">
-                                <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white text-orange-500 shadow-lg shadow-orange-200">
-                                    <i class="fas fa-door-closed text-2xl"></i>
-                                </div>
-                                <div class="space-y-1">
-                                    <p class="text-xs uppercase tracking-[0.35em] text-orange-500">بانتظار عودة المضيف</p>
-                                    <h3 class="text-2xl font-semibold text-slate-900">الغرفة ستفتح بمجرد دخول الشيف.</h3>
-                                </div>
-                            </div>
-                            <p class="mt-4 text-sm leading-relaxed text-slate-600">
-                                أبقِ هذه الصفحة مفتوحة وسنُظهر لك زر الانضمام حالما يبدأ البث. في الأثناء تأكد من السماعات، الميكروفون، واستقرار الإنترنت لديك.
-                            </p>
-                        </div>
-
-                        <div class="flex flex-col items-center gap-4 rounded-3xl border border-orange-100 bg-white/90 px-6 py-8 text-center shadow">
-                            <span class="relative inline-flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.9),_rgba(251,146,60,0.18)_75%)]">
-                                <span class="absolute inset-2 rounded-full border-[6px] border-dotted border-orange-500/80 opacity-90"></span>
-                                <span class="h-3 w-3 rounded-full bg-orange-500 shadow-[0_0_18px_rgba(249,115,22,0.6)]"></span>
-                            </span>
-                            <p class="text-sm font-semibold text-orange-600">انتظر الشيف ليدخل الاجتماع</p>
-                            <a
-                                href="https://wasfah.ae/bookings/1"
-                                class="inline-flex items-center justify-center gap-2 rounded-full border border-orange-200 px-5 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
-                            >
-                                <i class="fas fa-arrow-right"></i>
-                                العودة إلى صفحة الحجز
-                            </a>
-                        </div>
-
-                        <div class="rounded-3xl border border-orange-100 bg-white/95 p-6 shadow">
-                            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <p class="text-xs uppercase tracking-[0.35em] text-orange-500">موعد الانطلاق</p>
-                                    <p class="mt-2 text-lg font-semibold text-slate-900">
-                                        {{ optional($workshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a') ?: 'سيتم تحديده من قبل الشيف' }}
-                                    </p>
-                                </div>
-                                <div class="flex flex-col items-center gap-2 text-sm sm:items-end">
-                                    <span id="waitingCountdownBadge" class="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 transition-colors">
-                                        {{ $startsAtIso ? 'جاهزون تقريباً' : 'بانتظار إشارة الشيف' }}
-                                    </span>
-                                    <span id="waitingCountdownLabel" class="text-xs text-slate-500 text-center sm:text-right">
-                                        {{ $startsAtIso ? 'يتم احتساب الوقت المتبقي.' : 'سنرسل تحديثاً فور فتح الغرفة.' }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 grid gap-3 text-xs text-slate-600 sm:grid-cols-2">
-                                @if ($hostName)
-                                    <div class="rounded-2xl border border-orange-50 bg-white/80 p-4">
-                                        <p class="text-[11px] uppercase tracking-[0.3em] text-orange-400">المضيف</p>
-                                        <p class="mt-2 text-sm font-semibold text-slate-900">{{ $hostName }}</p>
-                                    </div>
-                                @endif
-                                <div class="rounded-2xl border border-orange-50 bg-white/80 p-4">
-                                    <p class="text-[11px] uppercase tracking-[0.3em] text-orange-400">المدة التقريبية</p>
-                                    <p class="mt-2 text-sm font-semibold text-slate-900">{{ $workshop->duration }} دقيقة</p>
-                                </div>
-                                @if ($workshop->confirmed_bookings_count)
-                                    <div class="rounded-2xl border border-orange-50 bg-white/80 p-4">
-                                        <p class="text-[11px] uppercase tracking-[0.3em] text-orange-400">عدد المؤكدين</p>
-                                        <p class="mt-2 text-sm font-semibold text-slate-900">
-                                            {{ number_format($workshop->confirmed_bookings_count) }} مشارك
-                                        </p>
-                                    </div>
-                                @endif
-                                <div class="rounded-2xl border border-orange-50 bg-white/80 p-4">
-                                    <p class="text-[11px] uppercase tracking-[0.3em] text-orange-400">نظام الدخول</p>
-                                    <p class="mt-2 text-sm font-semibold text-slate-900">دخول آمن عبر وصفة</p>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 flex flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                                <div id="pollStatusHint">
-                                    يتم التحقق من حالة الغرفة كل بضع ثوانٍ...
-                                </div>
-                                <button
-                                    type="button"
-                                    id="manualRefreshButton"
-                                    class="inline-flex items-center justify-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
-                                >
-                                    <i class="fas fa-sync"></i>
-                                    تحديث الحالة
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4 text-xs text-slate-600">
-                    <div class="rounded-3xl border border-orange-100 bg-white/95 p-5 shadow">
-                        <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-600">
-                            <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
-                                <i class="fas fa-check-square"></i>
-                            </span>
-                            تأكد من جهوزيتك الآن
-                        </h3>
-                        <ul class="mt-3 space-y-2 leading-relaxed">
-                            <li>• أغلق التطبيقات التي تستهلك الإنترنت (تحميلات، بث فيديو، ...).</li>
-                            <li>• جرّب سماعات أو ميكروفوناً خارجياً إذا توفر لتحصل على صوت أوضح.</li>
-                            <li>• افتح الإضاءة أمامك إذا كنت ستشارك الكاميرا لتظهر بوضوح.</li>
-                        </ul>
-                    </div>
-                    <div class="rounded-3xl border border-orange-100 bg-white/95 p-5 shadow">
-                        <h3 class="flex items-center gap-2 text-sm font-semibold text-orange-600">
-                            <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
-                                <i class="fas fa-life-ring"></i>
-                            </span>
-                            في حال تأخر فتح الغرفة
-                        </h3>
-                        <ul class="mt-3 space-y-2 leading-relaxed">
-                            <li>• أعد تحديث الصفحة بعد مرور بضع دقائق.</li>
-                            <li>• تحقق من بريدك الإلكتروني أو رسائلك من وصفة لأي تحديث من فريق الدعم.</li>
-                            <li>• إن استمر الانتظار، تواصل مع الدعم من خلال صفحة المساعدة في حسابك.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <div class="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-600">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                        <i class="fas fa-user"></i>
-                    </span>
-                    <div>
-                        <p class="text-xs uppercase tracking-wider text-slate-500">اسمك في الغرفة</p>
-                        <p class="font-semibold text-slate-900" id="participantNameLabel">{{ $participantName }}</p>
-                        @if ($shouldPromptForDisplayName)
-                            <button
-                                type="button"
-                                id="editDisplayNameBtn"
-                                class="mt-1 inline-flex items-center gap-1 rounded-full border border-orange-200 px-3 py-1 text-xs text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
-                            >
-                                <i class="fas fa-pen"></i>
-                                تعديل الاسم
-                            </button>
-                        @endif
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                        <i class="fas fa-heading"></i>
-                    </span>
-                    <div>
-                        <p class="text-xs uppercase tracking-wider text-slate-500">عنوان العرض</p>
-                        <p
-                            class="font-semibold text-slate-900"
-                            id="meetingSubjectLabel"
-                            data-placeholder="لم يتم تحديد عنوان بعد"
-                        >
-                            {{ $workshop->title }}
-                        </p>
-                        <button
-                            type="button"
-                            id="editMeetingSubjectBtn"
-                            class="mt-1 inline-flex items-center gap-1 rounded-full border border-orange-200 px-3 py-1 text-xs text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
-                        >
-                            <i class="fas fa-pen-to-square"></i>
-                            أدخل عنوان العرض
-                        </button>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                        <i class="fas fa-bell"></i>
-                    </span>
-                    <div>
-                        <p class="text-xs uppercase tracking-wider text-slate-500">هل تحتاج تذكيراً؟</p>
-                        @auth
-                            <p class="text-xs text-slate-500">ستجد رابط الورشة دائماً داخل صفحة حجوزاتك في وصفة.</p>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p class="text-xs uppercase tracking-widest text-slate-400">{{ __('bookings.join.details.meeting_status') }}</p>
+                <p class="mt-2">
+                    <span id="participantStatusBadge" class="status-badge {{ $meetingLocked ? 'locked' : ($meetingStarted ? 'ready' : 'pending') }}">
+                        @if ($meetingLocked)
+                            <i class="fas fa-lock"></i> {{ __('bookings.join.status.badges.locked') }}
+                        @elseif ($meetingStarted)
+                            <i class="fas fa-circle-check"></i> {{ __('bookings.join.status.badges.ready') }}
                         @else
-                            <p class="text-xs text-slate-500">
-                                احفظ هذا الرابط في ملاحظاتك للانضمام بسرعة عند بدء الورشة.
-                            </p>
-                        @endauth
-                    </div>
-                </div>
+                            <i class="fas fa-clock"></i> {{ __('bookings.join.status.badges.pending') }}
+                        @endif
+                    </span>
+                </p>
             </div>
-            @auth
-                <a
-                    href="{{ route('bookings.show', $booking) }}"
-                    class="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
-                >
-                    <i class="fas fa-arrow-right"></i>
-                    العودة إلى تفاصيل الحجز
-                </a>
+        </div>
+
+        <div class="space-y-2">
+            <p class="text-xs uppercase tracking-widest text-slate-400">{{ __('bookings.join.secure.label') }}</p>
+            <div class="rounded-2xl bg-slate-900/5 border border-slate-100 p-4 text-sm text-slate-700">
+                <span class="font-semibold text-slate-900 block">{{ __('bookings.join.secure.title') }}</span>
+                <span>{{ __('bookings.join.secure.description') }}</span>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            <button type="button" class="action-btn primary" id="joinMeetButton" data-launch="{{ $secureLaunchUrl }}" @if(!$meetingStarted || $meetingLocked) disabled @endif>
+                <i class="fab fa-google"></i>
+                {{ __('bookings.join.actions.join') }}
+            </button>
+            <button type="button" class="action-btn secondary" id="refreshMeetingStatus">
+                <i class="fas fa-rotate-right"></i>
+                {{ __('bookings.join.actions.refresh') }}
+            </button>
+        </div>
+
+        <div id="statusMessage" class="rounded-2xl border p-4 text-sm {{ $meetingLocked ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-amber-200 bg-amber-50 text-amber-700' }}">
+            @if ($meetingLocked)
+                {{ __('bookings.join.status.messages.locked') }}
+            @elseif (!$meetingStarted)
+                {{ __('bookings.join.status.messages.pending') }}
             @else
-                <span class="text-xs text-slate-500">
-                    احتفظ بهذا الرابط لديك للعودة إلى الغرفة متى ما احتجت.
-                </span>
-            @endauth
+                {{ __('bookings.join.status.messages.ready') }}
+            @endif
         </div>
     </div>
-    <div
-        id="joinConfirmationModal"
-        class="fixed inset-0 z-[1200] hidden items-center justify-center bg-slate-900/60 p-4 opacity-0 transition-opacity duration-200"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="joinConfirmationTitle"
-        aria-hidden="true"
-    >
-        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl">
-            <button
-                type="button"
-                class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
-                data-action="close"
-            >
-                <span class="sr-only">إغلاق</span>
-                <i class="fas fa-times text-lg"></i>
-            </button>
-            <div class="flex flex-col items-center gap-4 px-8 pt-10 pb-8 text-center">
-                <span class="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-3xl text-orange-500">
-                    <i class="fas fa-video"></i>
-                </span>
-                <div class="space-y-3">
-                    <h2 id="joinConfirmationTitle" class="text-2xl font-semibold text-slate-900">جاهز للانضمام إلى الجلسة؟</h2>
-                    <p class="text-sm leading-relaxed text-slate-600">
-                        سيبدأ البث مباشرة بعد المتابعة. تأكد من ارتداء سماعة أو التواجد في مكان هادئ وتجهيز الكاميرا والميكروفون إن رغبت.
-                    </p>
-                </div>
-            </div>
-            <div class="flex flex-col gap-2 rounded-b-3xl border-t border-slate-100 bg-slate-50 px-8 py-6 sm:flex-row sm:justify-end">
-                <button
-                    type="button"
-                    class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 sm:w-auto"
-                    data-action="cancel"
-                >
-                    <i class="fas fa-clock"></i>
-                    ليس الآن
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition hover:from-orange-600 hover:to-amber-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 sm:w-auto"
-                    data-action="confirm"
-                >
-                    <i class="fas fa-door-open"></i>
-                    انضم الآن
-                </button>
-            </div>
-        </div>
+
+    <div class="tips-card space-y-4">
+        <h2 class="text-2xl font-semibold text-slate-900">{{ __('bookings.join.tips.title') }}</h2>
+        <ul class="space-y-2 text-sm leading-relaxed text-slate-700">
+            <li class="flex gap-3"><i class="fas fa-circle text-xs text-orange-500 mt-1.5"></i> {{ __('bookings.join.tips.items.signin') }}</li>
+            <li class="flex gap-3"><i class="fas fa-circle text-xs text-orange-500 mt-1.5"></i> {{ __('bookings.join.tips.items.gear') }}</li>
+            <li class="flex gap-3"><i class="fas fa-circle text-xs text-orange-500 mt-1.5"></i> {{ __('bookings.join.tips.items.focus') }}</li>
+            <li class="flex gap-3"><i class="fas fa-circle text-xs text-orange-500 mt-1.5"></i> {{ __('bookings.join.tips.items.support') }}</li>
+        </ul>
     </div>
 </div>
-
-@if ($shouldPromptForDisplayName)
-    <div
-        id="displayNameModal"
-        class="fixed inset-0 z-40 hidden flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur"
-    >
-        <div class="w-full max-w-md rounded-3xl bg-white/95 p-6 text-slate-800 shadow-2xl">
-            <h3 class="text-lg font-semibold text-slate-900">اختر اسمك للغرفة</h3>
-            <p class="mt-2 text-sm text-slate-600">
-                سيظهر هذا الاسم للمشاركين الآخرين داخل الورشة. يمكنك تغييره لاحقاً في أي وقت.
-            </p>
-            <form id="displayNameForm" class="mt-5 space-y-4">
-                <div>
-                    <label
-                        for="displayNameInput"
-                        class="block text-xs font-semibold uppercase tracking-[0.35em] text-slate-500"
-                    >
-                        اسم العرض
-                    </label>
-                    <input
-                        id="displayNameInput"
-                        type="text"
-                        name="display_name"
-                        required
-                        maxlength="60"
-                        class="mt-3 w-full rounded-2xl border border-slate-300 bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-sm transition focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200"
-                        placeholder="مثال: ضيف وصفة"
-                        autocomplete="off"
-                    >
-                </div>
-                <button
-                    type="submit"
-                    class="w-full rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
-                >
-                    ابدأ الانضمام
-                </button>
-            </form>
-        </div>
-    </div>
-@endif
 @endsection
 
 @push('scripts')
-<script src="{{ $embedConfig['external_api_url'] }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const startsAtIso = @json($startsAtIso);
-        const countdownCard = document.getElementById('countdownCard');
-        const countdownLabel = document.getElementById('countdownLabel');
-        const countdownBadge = document.getElementById('countdownBadge');
-        const shouldPromptForDisplayName = @json($shouldPromptForDisplayName);
-        const fallbackGuestName = @json($guestDisplayName);
-        const participantEmail = @json($participantEmail);
-        const participantNameLabel = document.getElementById('participantNameLabel');
-        const editDisplayNameBtn = document.getElementById('editDisplayNameBtn');
-        const displayNameModal = document.getElementById('displayNameModal');
-        const displayNameForm = document.getElementById('displayNameForm');
-        const displayNameInput = document.getElementById('displayNameInput');
-        const meetingSubjectLabel = document.getElementById('meetingSubjectLabel');
-        const editMeetingSubjectBtn = document.getElementById('editMeetingSubjectBtn');
-        let participantName = @json($participantName);
-        const defaultMeetingSubject = @json($workshop->title ?? '');
-        let currentMeetingSubject = defaultMeetingSubject ? String(defaultMeetingSubject) : '';
-        let pendingSubjectUpdate = null;
-        let pendingDisplayNameResolve = null;
-        let apiInstance = null;
-        let onViewportChange = null;
-        let jitsiContainer = null;
-        let jitsiInitialHeight = 640;
-        const statusUrl = @json($secureStatusUrl ?? $booking->secure_status_url);
-        const meetingStartedAtIso = @json($meetingStartedAtIso);
-        const hint = document.getElementById('pollStatusHint');
-        const refreshButton = document.getElementById('manualRefreshButton');
-        let nextPollTimeout = null;
-        const meetingStarted = Boolean(meetingStartedAtIso);
-        const joinCancellationNotice = document.getElementById('joinCancellationNotice');
-        const joinModal = document.getElementById('joinConfirmationModal');
-        let joinModalTriggeredMeetingClose = false;
-        const cancellationMessage = 'لن يتم الانضمام الآن. يمكنك إعادة المحاولة من صفحة حجوزاتك.';
-        const bookingDetailsUrl = @json(route('bookings.show', $booking));
-        let hasRedirectedToBookingDetails = false;
-        const mobileViewportQuery = window.matchMedia('(max-width: 768px)');
-        const tabletViewportQuery = window.matchMedia('(max-width: 1024px)');
-        const shortHeightViewportQuery = window.matchMedia('(max-height: 540px)');
-        const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
-        const mobileAutoFullscreenEnabled = false;
-        const computeAutoFullscreenPreference = () => {
-            if (!mobileAutoFullscreenEnabled) {
-                return false;
-            }
-            const hasCoarsePointer = coarsePointerQuery.matches;
-            const narrowWidth = mobileViewportQuery.matches;
-            const compactTabletWidth = tabletViewportQuery.matches && hasCoarsePointer;
-            const shortLandscapeHeight = shortHeightViewportQuery.matches && hasCoarsePointer;
-            return narrowWidth || compactTabletWidth || shortLandscapeHeight;
+        const joinButton = document.getElementById('joinMeetButton');
+        const refreshButton = document.getElementById('refreshMeetingStatus');
+        const statusBadge = document.getElementById('participantStatusBadge');
+        const statusMessage = document.getElementById('statusMessage');
+        const launchUrl = joinButton?.dataset.launch;
+        const statusUrl = @json($secureStatusUrl);
+        const translations = {
+            badges: {
+                locked: @json(__('bookings.join.status.badges.locked')),
+                ready: @json(__('bookings.join.status.badges.ready')),
+                pending: @json(__('bookings.join.status.badges.pending')),
+            },
+            messages: {
+                locked: @json(__('bookings.join.status.messages.locked')),
+                ready: @json(__('bookings.join.status.messages.ready')),
+                pending: @json(__('bookings.join.status.messages.pending')),
+            },
         };
-        let shouldAutoFullscreen = computeAutoFullscreenPreference();
 
-        const viewportSizing = (() => {
-            const root = document.documentElement;
-            const update = () => {
-                const viewport = window.visualViewport;
-                const height = viewport ? viewport.height : window.innerHeight;
-                const width = viewport ? viewport.width : window.innerWidth;
-                root.style.setProperty('--jitsi-viewport-height', `${height}px`);
-                root.style.setProperty('--jitsi-viewport-width', `${width}px`);
-                if (typeof onViewportChange === 'function') {
-                    try {
-                        onViewportChange(width, height);
-                    } catch (error) {
-                        console.warn('Viewport sizing listener failed', error);
-                    }
-                }
-            };
-            const scheduleUpdate = (delay = 0) => {
-                if (delay > 0) {
-                    window.setTimeout(update, delay);
-                    return;
-                }
-                if (typeof requestAnimationFrame === 'function') {
-                    requestAnimationFrame(update);
-                } else {
-                    update();
-                }
-            };
+        let meetingStarted = @json($meetingStarted);
+        let meetingLocked = @json($meetingLocked);
 
-            update();
-
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', update);
-                window.visualViewport.addEventListener('scroll', update);
-            }
-
-            window.addEventListener('orientationchange', () => scheduleUpdate(250));
-            window.addEventListener('resize', () => scheduleUpdate(150));
-
-            return { update };
-        })();
-
-        const bodyFullscreenClass = 'mobile-fullscreen-active';
-        const targetFullscreenClass = 'mobile-fullscreen-active';
-
-        const fullscreenController = (() => {
-            let mode = 'none'; // none | css | native | pending-native
-
-            const getContainer = () => document.querySelector('.mobile-fullscreen-target');
-
-            const getIframe = () => {
-                if (apiInstance?.getIFrame) {
-                    try {
-                        return apiInstance.getIFrame();
-                    } catch {
-                        // ignore access errors until iframe is ready
-                    }
-                }
-                return getContainer()?.querySelector('iframe') ?? null;
-            };
-
-            const addClasses = () => {
-                document.body.classList.add(bodyFullscreenClass);
-                getContainer()?.classList.add(targetFullscreenClass);
-            };
-
-            const removeClasses = () => {
-                document.body.classList.remove(bodyFullscreenClass);
-                getContainer()?.classList.remove(targetFullscreenClass);
-            };
-
-            const requestNative = () => {
-                const element = getIframe() ?? getContainer();
-                if (!element) {
-                    return false;
-                }
-
-                const request =
-                    element.requestFullscreen ||
-                    element.webkitRequestFullscreen ||
-                    element.mozRequestFullScreen ||
-                    element.msRequestFullscreen;
-
-                if (!request) {
-                    return false;
-                }
-
-                try {
-                    const result = request.call(element);
-                    addClasses();
-                    mode = 'pending-native';
-
-                    if (result && typeof result.then === 'function') {
-                        result.then(
-                            () => {
-                                mode = 'native';
-                            },
-                            () => {
-                                mode = 'none';
-                                applyFallback();
-                            },
-                        );
-                    } else {
-                        mode = 'native';
-                    }
-
-                    return true;
-                } catch {
-                    return false;
-                }
-            };
-
-            const applyFallback = () => {
-                addClasses();
-                mode = 'css';
-            };
-
-            const ensure = (fromGesture = false) => {
-                viewportSizing.update();
-                if (!shouldAutoFullscreen) {
-                    exit();
-                    return;
-                }
-
-                if (mode === 'native' || mode === 'pending-native') {
-                    addClasses();
-                    return;
-                }
-
-                if (requestNative()) {
-                    return;
-                }
-
-                if (fromGesture || mode !== 'css') {
-                    applyFallback();
-                }
-            };
-
-            const exitNative = () => {
-                if (document.fullscreenElement) {
-                    const exit =
-                        document.exitFullscreen ||
-                        document.webkitExitFullscreen ||
-                        document.mozCancelFullScreen ||
-                        document.msExitFullscreen;
-                    if (exit) {
-                        try {
-                            exit.call(document);
-                        } catch {
-                            // ignore
-                        }
-                    }
-                }
-            };
-
-            const exit = () => {
-                if (mode === 'native' || mode === 'pending-native') {
-                    exitNative();
-                }
-                removeClasses();
-                mode = 'none';
-            };
-
-            document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement && mode === 'native') {
-                    if (shouldAutoFullscreen) {
-                        applyFallback();
-                    } else {
-                        exit();
-                    }
-                }
-            });
-
-            return {
-                ensureFromGesture: () => ensure(true),
-                ensure: () => ensure(false),
-                exit,
-            };
-        })();
-
-        const syncFullscreenPreference = (force = false) => {
-            const nextPreference = computeAutoFullscreenPreference();
-            if (!force && nextPreference === shouldAutoFullscreen) {
-                if (nextPreference) {
-                    fullscreenController.ensure();
-                }
+        const updateUI = () => {
+            if (!statusBadge || !statusMessage) {
                 return;
             }
 
-            shouldAutoFullscreen = nextPreference;
-            if (shouldAutoFullscreen) {
-                fullscreenController.ensure();
+            statusBadge.classList.remove('ready', 'pending', 'locked');
+
+            if (meetingLocked) {
+                statusBadge.classList.add('locked');
+                statusBadge.innerHTML = '<i class="fas fa-lock"></i> ' + translations.badges.locked;
+                statusMessage.className = 'rounded-2xl border border-rose-200 bg-rose-50 text-sm text-rose-700 p-4';
+                statusMessage.textContent = translations.messages.locked;
+                joinButton.disabled = true;
+                return;
+            }
+
+            if (meetingStarted) {
+                statusBadge.classList.add('ready');
+                statusBadge.innerHTML = '<i class="fas fa-circle-check"></i> ' + translations.badges.ready;
+                statusMessage.className = 'rounded-2xl border border-emerald-200 bg-emerald-50 text-sm text-emerald-700 p-4';
+                statusMessage.textContent = translations.messages.ready;
+                joinButton.disabled = false;
             } else {
-                fullscreenController.exit();
+                statusBadge.classList.add('pending');
+                statusBadge.innerHTML = '<i class="fas fa-clock"></i> ' + translations.badges.pending;
+                statusMessage.className = 'rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-700 p-4';
+                statusMessage.textContent = translations.messages.pending;
+                joinButton.disabled = true;
             }
         };
 
-        const registerViewportPreferenceListener = (query) => {
-            if (!query) {
+        const pollStatus = async () => {
+            if (!statusUrl || meetingLocked) {
                 return;
             }
 
-            const handler = () => syncFullscreenPreference();
-            if (typeof query.addEventListener === 'function') {
-                query.addEventListener('change', handler);
-            } else if (typeof query.addListener === 'function') {
-                query.addListener(handler);
+            try {
+                const response = await fetch(statusUrl, { headers: { 'Accept': 'application/json' } });
+                const data = await response.json();
+                meetingStarted = Boolean(data.meeting_started);
+                meetingLocked = Boolean(data.meeting_locked);
+                updateUI();
+            } catch (error) {
+                console.warn('Failed to poll meeting status', error);
             }
         };
 
-        [mobileViewportQuery, tabletViewportQuery, shortHeightViewportQuery, coarsePointerQuery].forEach(registerViewportPreferenceListener);
-
-        window.addEventListener('orientationchange', () => {
-            window.setTimeout(() => syncFullscreenPreference(true), 160);
+        joinButton?.addEventListener('click', () => {
+            if (!launchUrl || joinButton.disabled) {
+                return;
+            }
+            window.open(launchUrl, '_blank', 'noopener,noreferrer');
         });
-
-        if (meetingStarted && shouldAutoFullscreen) {
-            fullscreenController.ensure();
-        }
-
-        window.addEventListener('beforeunload', fullscreenController.exit);
-        window.addEventListener('pagehide', fullscreenController.exit);
-
-        function resizeJitsi() {
-            if (!jitsiContainer) {
-                return;
-            }
-
-            const measuredWidth = jitsiContainer.offsetWidth || 0;
-            const fallbackWidth = window.visualViewport?.width ?? window.innerWidth ?? 0;
-            const width = measuredWidth || fallbackWidth || (typeof screen !== 'undefined' ? screen.width : 0);
-            const height = jitsiContainer.offsetHeight || jitsiInitialHeight;
-
-            if (apiInstance && typeof apiInstance.resize === 'function') {
-                try {
-                    apiInstance.resize(width, height);
-                } catch (error) {
-                    console.warn('Failed to resize Jitsi iframe', error);
-                }
-            }
-        }
-
-        onViewportChange = () => {
-            resizeJitsi();
-        };
-
-        const redirectToBookingDetails = () => {
-            if (hasRedirectedToBookingDetails || !bookingDetailsUrl) {
-                return;
-            }
-
-            hasRedirectedToBookingDetails = true;
-            fullscreenController.exit();
-            window.location.assign(bookingDetailsUrl);
-        };
-
-        const updateMeetingSubjectLabel = (subject) => {
-            const value = (subject || '').trim();
-            currentMeetingSubject = value;
-
-            if (!meetingSubjectLabel) {
-                return;
-            }
-
-            if (value) {
-                meetingSubjectLabel.textContent = value;
-                meetingSubjectLabel.classList.remove('opacity-60');
-            } else {
-                const placeholder = meetingSubjectLabel.dataset?.placeholder || '';
-                meetingSubjectLabel.textContent = placeholder;
-                meetingSubjectLabel.classList.add('opacity-60');
-            }
-        };
-        updateMeetingSubjectLabel(currentMeetingSubject);
-
-        const updateParticipantNameLabel = (name) => {
-            if (participantNameLabel) {
-                participantNameLabel.textContent = name;
-            }
-        };
-
-        const closeDisplayNameModal = () => {
-            displayNameModal?.classList.add('hidden');
-        };
-
-        const openDisplayNameModal = () => {
-            if (!displayNameModal) {
-                return;
-            }
-
-            displayNameModal.classList.remove('hidden');
-
-            if (displayNameInput) {
-                const initialValue = participantName && participantName !== fallbackGuestName ? participantName : '';
-                displayNameInput.value = initialValue;
-                setTimeout(() => displayNameInput.focus(), 50);
-            }
-        };
-
-        const resolveDisplayName = (name) => {
-            participantName = name;
-            updateParticipantNameLabel(participantName);
-
-            if (apiInstance) {
-                apiInstance.executeCommand('displayName', participantName);
-            }
-
-            if (pendingDisplayNameResolve) {
-                pendingDisplayNameResolve(participantName);
-                pendingDisplayNameResolve = null;
-            }
-        };
-
-        if (editMeetingSubjectBtn) {
-            editMeetingSubjectBtn.addEventListener('click', () => {
-                const initialValue = currentMeetingSubject || '';
-                const input = window.prompt('أدخل عنوان العرض', initialValue);
-
-                if (input === null) {
-                    return;
-                }
-
-                const trimmed = input.trim();
-
-                if (!trimmed && currentMeetingSubject && !window.confirm('سيتم مسح عنوان العرض الحالي. هل ترغب بالمتابعة؟')) {
-                    return;
-                }
-
-                if (trimmed === currentMeetingSubject) {
-                    return;
-                }
-
-                if (!apiInstance) {
-                    pendingSubjectUpdate = trimmed;
-                    updateMeetingSubjectLabel(trimmed);
-                    return;
-                }
-
-                try {
-                    apiInstance.executeCommand('subject', trimmed);
-                    updateMeetingSubjectLabel(trimmed);
-                } catch (error) {
-                    console.error('Failed to update meeting subject via API', error);
-                    alert('تعذر تحديث عنوان العرض. يرجى المحاولة لاحقاً.');
-                }
-            });
-        }
-
-        displayNameForm?.addEventListener('submit', (event) => {
-            event.preventDefault();
-
-            const value = displayNameInput?.value?.trim() ?? '';
-            if (!value) {
-                displayNameInput?.focus();
-                return;
-            }
-
-            closeDisplayNameModal();
-            resolveDisplayName(value);
-        });
-
-        editDisplayNameBtn?.addEventListener('click', (event) => {
-            event.preventDefault();
-            pendingDisplayNameResolve = null;
-            openDisplayNameModal();
-        });
-
-        const promptForDisplayName = () => {
-            if (!shouldPromptForDisplayName) {
-                return Promise.resolve(participantName);
-            }
-
-            if (participantName && participantName !== fallbackGuestName) {
-                return Promise.resolve(participantName);
-            }
-
-            return new Promise((resolve) => {
-                pendingDisplayNameResolve = resolve;
-
-                if (displayNameModal?.classList.contains('hidden')) {
-                    openDisplayNameModal();
-                } else if (displayNameInput) {
-                    setTimeout(() => displayNameInput.focus(), 50);
-                }
-            });
-        };
-
-        updateParticipantNameLabel(participantName || fallbackGuestName);
-
-        if (shouldPromptForDisplayName && (!participantName || participantName === fallbackGuestName)) {
-            openDisplayNameModal();
-        }
-
-        const setupCountdown = (targetIso, labelElement, badgeElement, options = {}) => {
-            if (!targetIso || !labelElement || !badgeElement) {
-                return;
-            }
-
-            const targetDate = new Date(targetIso);
-            if (Number.isNaN(targetDate.getTime())) {
-                return;
-            }
-
-            const { futureBadge = 'جاهزون تقريباً', lateBadge = 'تخطينا الموعد', soonBadge = 'اقترب الوقت' } = options;
-            const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' });
-
-            const setBadgeState = (state) => {
-                badgeElement.classList.remove(
-                    'bg-orange-100', 'text-orange-700',
-                    'bg-amber-100', 'text-amber-700',
-                    'bg-rose-100', 'text-rose-600'
-                );
-
-                if (state === 'upcoming') {
-                    badgeElement.classList.add('bg-orange-100', 'text-orange-700');
-                } else if (state === 'soon') {
-                    badgeElement.classList.add('bg-amber-100', 'text-amber-700');
-                } else {
-                    badgeElement.classList.add('bg-rose-100', 'text-rose-600');
-                }
-            };
-
-            const getRelativeParts = (diffSeconds) => {
-                const units = [
-                    { limit: 60, inSeconds: 1, name: 'second' },
-                    { limit: 3600, inSeconds: 60, name: 'minute' },
-                    { limit: 86400, inSeconds: 3600, name: 'hour' },
-                    { limit: Infinity, inSeconds: 86400, name: 'day' },
-                ];
-
-                const absolute = Math.abs(diffSeconds);
-                for (const unit of units) {
-                    if (absolute < unit.limit) {
-                        const value = Math.round(diffSeconds / unit.inSeconds);
-                        return { value, unit: unit.name };
-                    }
-                }
-                return { value: 0, unit: 'minute' };
-        };
-
-        const updateCountdown = () => {
-            const now = new Date();
-            const diffMs = targetDate.getTime() - now.getTime();
-                const diffSeconds = diffMs / 1000;
-
-                if (Math.abs(diffSeconds) < 45) {
-                    labelElement.textContent = diffMs >= 0
-                        ? 'اقترب الوقت! استعد للانضمام فور فتح الغرفة.'
-                        : 'تجاوزنا الموعد الأساسي. يرجى الاستمرار في المتابعة، فسيتم فتح الغرفة قريباً.';
-                    badgeElement.textContent = diffMs >= 0 ? soonBadge : lateBadge;
-                    setBadgeState(diffMs >= 0 ? 'soon' : 'late');
-                    return;
-                }
-
-                const { value, unit } = getRelativeParts(diffSeconds);
-                const relative = rtf.format(value, unit);
-
-                if (diffSeconds > 0) {
-                    labelElement.textContent = `تبدأ ${relative}`;
-                    badgeElement.textContent = diffSeconds < 3600 ? soonBadge : futureBadge;
-                    setBadgeState(diffSeconds < 3600 ? 'soon' : 'upcoming');
-                } else {
-                    labelElement.textContent = `بدأت ${relative}`;
-                    badgeElement.textContent = lateBadge;
-                    setBadgeState('late');
-                }
-            };
-
-            updateCountdown();
-            setInterval(updateCountdown, 60000);
-        };
-
-        const clearScheduledPoll = () => {
-            if (nextPollTimeout) {
-                clearTimeout(nextPollTimeout);
-                nextPollTimeout = null;
-            }
-        };
-
-        const schedulePoll = (delay = 8000) => {
-            clearScheduledPoll();
-
-            if (!statusUrl) {
-                return;
-            }
-
-            nextPollTimeout = setTimeout(() => pollStatus(), delay);
-        };
-
-        const setHint = (message) => {
-            if (hint) {
-                hint.textContent = message;
-            }
-        };
-
-        const pollStatus = (manual = false) => {
-            if (!statusUrl) {
-                return;
-            }
-
-            if (manual) {
-                setHint('جارٍ التحقق من حالة الغرفة...');
-            }
-
-            fetch(statusUrl, { headers: { 'Accept': 'application/json' } })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('status-check-failed');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const remoteStarted = Boolean(data.meeting_started);
-
-                    if (!remoteStarted) {
-                        if (meetingStarted) {
-                            window.location.reload();
-                            return;
-                        }
-
-                        setHint('لا توجد إشارة حالياً. سنعيد المحاولة تلقائياً.');
-                        schedulePoll(8000);
-                        return;
-                    }
-
-                    window.location.reload();
-                })
-                .catch(() => {
-                    if (hint) {
-                        setHint('تعذر التحقق مؤقتاً، ستتم إعادة المحاولة تلقائياً.');
-                    }
-                    schedulePoll(12000);
-                });
-        };
-
-        setupCountdown(startsAtIso, countdownLabel, countdownBadge);
-
-        const waitingCountdownLabel = document.getElementById('waitingCountdownLabel');
-        const waitingCountdownBadge = document.getElementById('waitingCountdownBadge');
-        setupCountdown(startsAtIso, waitingCountdownLabel, waitingCountdownBadge, {
-            soonBadge: 'اقترب الوقت',
-            lateBadge: 'بانتظار الشيف',
-        });
-
-        const requestJoinConfirmation = () => {
-            if (joinCancellationNotice) {
-                joinCancellationNotice.classList.add('hidden');
-            }
-            joinModalTriggeredMeetingClose = false;
-
-            const fallbackConfirmation = 'هل ترغب في الانضمام إلى الجلسة الآن؟';
-
-            if (!joinModal) {
-                return Promise.resolve(window.confirm(fallbackConfirmation));
-            }
-
-            return new Promise((resolve) => {
-                const previouslyFocused = (document.activeElement && typeof document.activeElement.focus === 'function')
-                    ? document.activeElement
-                    : null;
-                const confirmButton = joinModal.querySelector('[data-action="confirm"]');
-                const cancelButton = joinModal.querySelector('[data-action="cancel"]');
-                const closeButton = joinModal.querySelector('[data-action="close"]');
-                let resolved = false;
-
-                const finish = (result, { skipFullscreenExit = false } = {}) => {
-                    if (resolved) {
-                        return;
-                    }
-                    resolved = true;
-
-                    joinModal.classList.remove('opacity-100');
-                    joinModal.classList.add('opacity-0');
-                    joinModal.setAttribute('aria-hidden', 'true');
-
-                    joinModal.removeEventListener('pointerdown', blockBackdropInteraction);
-                    joinModal.removeEventListener('click', blockBackdropInteraction);
-                    window.removeEventListener('keydown', handleKeydown);
-                    confirmButton?.removeEventListener('click', handleConfirm);
-                    cancelButton?.removeEventListener('click', handleCancel);
-                    closeButton?.removeEventListener('click', handleCancel);
-
-                    setTimeout(() => {
-                        joinModal.classList.add('hidden');
-                        joinModal.classList.remove('flex');
-                        previouslyFocused?.focus?.();
-                    }, 220);
-
-                    if (!result && !skipFullscreenExit) {
-                        fullscreenController.exit();
-                    }
-
-                    resolve(result);
-                };
-
-                const handleConfirm = () => {
-                    fullscreenController.ensureFromGesture();
-                    finish(true);
-                };
-                const handleCancel = () => {
-                    joinModalTriggeredMeetingClose = true;
-                    redirectToBookingDetails();
-                    finish(false, { skipFullscreenExit: true });
-                };
-                const handleKeydown = (event) => {
-                    if (event.key === 'Escape') {
-                        event.preventDefault();
-                        finish(false);
-                    }
-                };
-                const blockBackdropInteraction = (event) => {
-                    if (event.target === joinModal) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                };
-
-                joinModal.classList.remove('hidden');
-                joinModal.classList.add('flex');
-                joinModal.setAttribute('aria-hidden', 'false');
-
-                requestAnimationFrame(() => {
-                    joinModal.classList.remove('opacity-0');
-                    joinModal.classList.add('opacity-100');
-                    (confirmButton || cancelButton || closeButton)?.focus();
-                });
-
-                confirmButton?.addEventListener('click', handleConfirm);
-                cancelButton?.addEventListener('click', handleCancel);
-                closeButton?.addEventListener('click', handleCancel);
-                joinModal.addEventListener('pointerdown', blockBackdropInteraction);
-                joinModal.addEventListener('click', blockBackdropInteraction);
-                window.addEventListener('keydown', handleKeydown);
-            });
-        };
-
-        @if ($workshop->meeting_started_at)
-            const initializeMeeting = async () => {
-                const confirmed = await requestJoinConfirmation();
-                if (!confirmed) {
-                    if (joinModalTriggeredMeetingClose) {
-                        return;
-                    }
-                    if (joinCancellationNotice) {
-                        joinCancellationNotice.classList.remove('hidden');
-                        joinCancellationNotice.focus?.();
-                    } else {
-                        alert(cancellationMessage);
-                    }
-                    return;
-                }
-
-                fullscreenController.ensure();
-
-                jitsiContainer = document.getElementById('jitsi-container');
-
-                if (typeof JitsiMeetExternalAPI === 'undefined' || !jitsiContainer) {
-                    alert('تعذر تحميل غرفة الاجتماع. يرجى إعادة تحديث الصفحة أو التحقق من الاتصال.');
-                    return;
-                }
-
-                participantName = (await promptForDisplayName()) || fallbackGuestName;
-                updateParticipantNameLabel(participantName);
-
-                const domain = @json($embedConfig['domain']);
-                const jaasJwt = @json($embedConfig['jwt'] ?? null);
-                const embedProvider = @json($embedConfig['provider'] ?? null);
-                jitsiInitialHeight = jitsiContainer.offsetHeight || jitsiInitialHeight || 640;
-                const initialHeight = jitsiInitialHeight;
-
-                const baseToolbarButtons = [
-                    'microphone',
-                    'camera',
-                    'chat',
-                    'raisehand',
-                    'fullscreen',
-                    'tileview',
-                    'subject',
-                    'settings',
-                    'e2ee',
-                    'hangup',
-                ];
-                const mobileToolbarButtons = [
-                    'microphone',
-                    'camera',
-                    'raisehand',
-                    'fullscreen',
-                    'subject',
-                    'settings',
-                    'chat',
-                    'hangup',
-                ];
-                const isMobileToolbar = window.matchMedia('(max-width: 768px)').matches;
-                const toolbarButtons = isMobileToolbar ? mobileToolbarButtons : baseToolbarButtons;
-
-                const options = {
-                    roomName: @json($embedConfig['room']),
-                    parentNode: jitsiContainer,
-                    width: '100%',
-                    height: initialHeight,
-                    lang: 'ar',
-                    configOverwrite: {
-                        prejoinPageEnabled: false,
-                        prejoinConfig: {
-                            enabled: false,
-                            hideDisplayName: true,
-                            hideExtraJoinButtons: ['microsoft', 'google', 'email', 'call-in'],
-                        },
-                        requireDisplayName: false,
-                        enableWelcomePage: false,
-                        enableClosePage: false,
-                        enableUserRolesBasedOnToken: @json((($embedConfig['provider'] ?? null) === 'jaas') && (bool) config('services.jitsi.allow_participant_subject_edit', true)),
-                        disableDeepLinking: true,
-                        startWithAudioMuted: true,
-                        startWithVideoMuted: true,
-                        disableReactions: true,
-                        disableInviteFunctions: true,
-                        disableSelfViewSettings: true,
-                        disableRemoteMute: true,
-                        remoteVideoMenu: {
-                            disableKick: true,
-                            disableGrantModerator: true,
-                            disableDemote: true,
-                        },
-                        toolbarButtons,
-                    },
-                    interfaceConfigOverwrite: {
-                        SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-                        LANG_DETECTION: false,
-                        DEFAULT_REMOTE_DISPLAY_NAME: 'مشارك',
-                        DEFAULT_LOCAL_DISPLAY_NAME: participantName || 'أنا',
-                        FILM_STRIP_MAX_HEIGHT: 120,
-                        SETTINGS_SECTIONS: ['devices'],
-                        TOOLBAR_BUTTONS: toolbarButtons,
-                    },
-                };
-
-                const userInfo = {};
-                if (participantName) {
-                    userInfo.displayName = participantName;
-                }
-                if (participantEmail) {
-                    userInfo.email = participantEmail;
-                }
-                if (Object.keys(userInfo).length > 0) {
-                    options.userInfo = userInfo;
-                }
-
-                if (embedProvider === 'jaas') {
-                    options.jwt = jaasJwt ? jaasJwt : 'your_token_here';
-                }
-
-                apiInstance = new JitsiMeetExternalAPI(domain, options);
-                fullscreenController.ensure();
-
-                if (pendingSubjectUpdate !== null) {
-                    try {
-                        apiInstance.executeCommand('subject', pendingSubjectUpdate);
-                    } catch (error) {
-                        console.error('Failed to apply pending subject update', error);
-                    } finally {
-                        pendingSubjectUpdate = null;
-                    }
-                }
-
-                apiInstance.addListener('videoConferenceJoined', () => {
-                    fullscreenController.ensure();
-                    resizeJitsi();
-                });
-
-                fullscreenController.ensure();
-
-                const handleMeetingClosure = () => {
-                    fullscreenController.exit();
-                    window.removeEventListener('resize', resizeJitsi);
-                    redirectToBookingDetails();
-                };
-
-                apiInstance.addListener('videoConferenceLeft', handleMeetingClosure);
-                apiInstance.addListener('readyToClose', handleMeetingClosure);
-
-                window.addEventListener('resize', resizeJitsi);
-                viewportSizing.update();
-                resizeJitsi();
-
-                if (typeof apiInstance.addListener === 'function') {
-                    apiInstance.addListener('subjectChanged', event => {
-                        if (event && typeof event.subject !== 'undefined') {
-                            updateMeetingSubjectLabel(event.subject);
-                        }
-                    });
-                }
-            };
-
-            initializeMeeting();
-        @endif
 
         refreshButton?.addEventListener('click', () => {
-            clearScheduledPoll();
-            pollStatus(true);
+            pollStatus();
         });
 
-        if (!meetingStarted && statusUrl) {
-            schedulePoll(5000);
-        }
+        updateUI();
 
+        if (statusUrl && !meetingStarted && !meetingLocked) {
+            setInterval(pollStatus, 7000);
+        }
     });
 </script>
 @endpush

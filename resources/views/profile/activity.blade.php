@@ -107,9 +107,9 @@
                             <div class="flex gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-3 shadow-sm">
                                 <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-gray-100">
                                     <img
-                                        src="{{ $recipe->image_url ?? $recipe->image ?? asset('image/Brownies.png') }}"
+                                        src="{{ $recipe->image_url ?? $recipe->image ?? asset('image/brownies.webp') }}"
                                         alt="{{ $recipe->title }}"
-                                        class="h-full w-full object-cover"
+                                        class="h-full w-full object-cover" loading="lazy"
                                     >
                                 </div>
                                 <div class="flex-1">
@@ -148,9 +148,9 @@
                             <div class="flex gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-3 shadow-sm">
                                 <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-gray-100">
                                     <img
-                                        src="{{ $recipe->image_url ?? $recipe->image ?? asset('image/Brownies.png') }}"
+                                        src="{{ $recipe->image_url ?? $recipe->image ?? asset('image/brownies.webp') }}"
                                         alt="{{ $recipe->title }}"
-                                        class="h-full w-full object-cover"
+                                        class="h-full w-full object-cover" loading="lazy"
                                     >
                                 </div>
                                 <div class="flex-1">
@@ -236,3 +236,5 @@
         </div>
     </div>
 @endsection
+
+

@@ -79,9 +79,11 @@
         'workshop_type',
         'price_range',
         'payment_method',
+        'payment_currency',
         'booking_count',
         'workshop_date_from',
         'workshop_date_to',
+        'financial_status',
     ]);
 
     $paymentMeta = [
@@ -98,10 +100,72 @@
             'class' => 'bg-purple-100 text-purple-700',
         ],
     ];
+
+    $financialStatusMeta = [
+        \App\Models\WorkshopBooking::FINANCIAL_STATUS_PENDING => [
+            'label' => 'بانتظار التوزيع',
+            'class' => 'bg-slate-100 text-slate-700',
+        ],
+        \App\Models\WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED => [
+            'label' => 'تم التوزيع',
+            'class' => 'bg-emerald-100 text-emerald-700',
+        ],
+        \App\Models\WorkshopBooking::FINANCIAL_STATUS_VOID => [
+            'label' => 'معلق أو ملغي',
+            'class' => 'bg-rose-100 text-rose-700',
+        ],
+    ];
+
+    $financialStatusFilters = [
+        [
+            'label' => 'الكل',
+            'value' => null,
+            'hint' => 'عرض جميع الحالات المالية',
+        ],
+        [
+            'label' => 'بانتظار التوزيع',
+            'value' => \App\Models\WorkshopBooking::FINANCIAL_STATUS_PENDING,
+            'hint' => 'الحجوزات التي لم يتم توزيع مبالغها بعد',
+        ],
+        [
+            'label' => 'تم التوزيع',
+            'value' => \App\Models\WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED,
+            'hint' => 'الحجوزات التي تم تقسيم عوائدها تلقائياً',
+        ],
+        [
+            'label' => 'معلق أو ملغي',
+            'value' => \App\Models\WorkshopBooking::FINANCIAL_STATUS_VOID,
+            'hint' => 'الحجوزات التي تم إيقاف توزيعها',
+        ],
+    ];
+
+    $defaultCurrency = config('finance.default_currency', 'USD');
+    $currencyOptions = $currencyOptions ?? \App\Support\Currency::all();
+    $shareTotals = $stats['share_totals'] ?? ['chef' => 0, 'partner' => 0, 'admin' => 0];
+    $paidCurrencies = $stats['paid_currencies'] ?? [];
+
+    $statusCards[] = [
+        'label' => 'مدفوعات مؤكدة',
+        'value' => $stats['paid_amount'] ?? 0,
+        'formatted' => number_format($stats['paid_amount'] ?? 0, 2) . ' ' . $defaultCurrency,
+        'icon' => 'fa-wallet',
+        'gradient' => 'from-emerald-500 to-lime-500',
+        'description' => 'إجمالي المبالغ المدفوعة حتى الآن',
+        'percentage' => null,
+    ];
+
+    $statusCards[] = [
+        'label' => 'حجوزات موزعة مالياً',
+        'value' => $stats['financial']['distributed'] ?? 0,
+        'formatted' => number_format($stats['financial']['distributed'] ?? 0),
+        'icon' => 'fa-coins',
+        'gradient' => 'from-cyan-500 to-blue-500',
+        'description' => 'عدد الحجوزات التي تم تقسيم حصصها',
+        'percentage' => null,
+    ];
 @endphp
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
 <style>
 #confirmationModal,
 #alertModal,
@@ -501,6 +565,91 @@
             @endforeach
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500">حصة المنصة</p>
+                    <p class="mt-2 text-2xl font-bold text-gray-900">{{ number_format($shareTotals['admin'] ?? 0, 2) }} {{ $defaultCurrency }}</p>
+                    <p class="mt-1 text-xs text-gray-500">تشمل الرسوم التشغيلية والتقنية</p>
+                </div>
+                <span class="h-12 w-12 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-xl"></i>
+                </span>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500">صافي الشيفات</p>
+                    <p class="mt-2 text-2xl font-bold text-gray-900">{{ number_format($shareTotals['chef'] ?? 0, 2) }} {{ $defaultCurrency }}</p>
+                    <p class="mt-1 text-xs text-gray-500">يتم تحويله بعد انتهاء الورشات</p>
+                </div>
+                <span class="h-12 w-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
+                    <i class="fas fa-utensils text-xl"></i>
+                </span>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500">عمولات الشركاء</p>
+                    <p class="mt-2 text-2xl font-bold text-gray-900">{{ number_format($shareTotals['partner'] ?? 0, 2) }} {{ $defaultCurrency }}</p>
+                    <p class="mt-1 text-xs text-gray-500">يتم تتبعها عبر لوحة برنامج الإحالة</p>
+                </div>
+                <span class="h-12 w-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                    <i class="fas fa-handshake text-xl"></i>
+                </span>
+            </div>
+        </div>
+
+        @if(!empty($paidCurrencies))
+            <div class="bg-white border border-indigo-100 rounded-2xl p-6 mb-8 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-globe text-indigo-500 ml-2"></i>
+                            توزيع المدفوعات حسب العملة
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            راقب العملات المستخدمة في الحجوزات المدفوعة لضمان جاهزية التحويلات المالية وإصدار الفواتير بالعملة الصحيحة.
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold">
+                        <i class="fas fa-money-bill-wave"></i>
+                        {{ count($paidCurrencies) }} عملة نشطة
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    @foreach($paidCurrencies as $currencyStat)
+                        @php
+                            $currencyCode = strtoupper($currencyStat['currency']);
+                            $meta = $currencyOptions[$currencyCode] ?? ['label' => $currencyCode, 'symbol' => $currencyCode];
+                        @endphp
+                        <div class="border border-gray-100 rounded-xl p-4 bg-gradient-to-br from-white to-indigo-50/40">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-500">{{ $meta['label'] ?? $currencyCode }}</p>
+                                    <p class="text-2xl font-bold text-gray-900 mt-1">
+                                        {{ number_format($currencyStat['total_amount'], 2) }}
+                                        <span class="text-base text-gray-500">{{ $meta['symbol'] ?? $currencyCode }}</span>
+                                    </p>
+                                </div>
+                                <span class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                    <i class="fas fa-coins"></i>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm text-gray-500">
+                                <span class="inline-flex items-center gap-1">
+                                    <i class="fas fa-receipt text-indigo-500"></i>
+                                    {{ number_format($currencyStat['total_bookings']) }} حجوزات
+                                </span>
+                                <span class="inline-flex items-center gap-1">
+                                    <i class="fas fa-exchange-alt text-gray-400"></i>
+                                    ≈ {{ number_format($currencyStat['total_amount_usd'] ?? 0, 2) }} {{ $defaultCurrency }}
+                                </span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if(isset($followUpBookings) && $followUpBookings->isNotEmpty())
             <div class="bg-white border border-amber-100 rounded-xl p-6 mb-8 shadow-sm">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -604,7 +753,7 @@
                     @endforeach
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
                         <select id="statusSelect" name="status" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -622,6 +771,19 @@
                             <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>في الانتظار</option>
                             <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>مدفوعة</option>
                             <option value="refunded" {{ request('payment_status') == 'refunded' ? 'selected' : '' }}>مستردة</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">التوزيع المالي</label>
+                        <select name="financial_status" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">جميع الحالات المالية</option>
+                            @foreach($financialStatusFilters as $filter)
+                                @continue(is_null($filter['value']))
+                                <option value="{{ $filter['value'] }}" {{ request('financial_status') == $filter['value'] ? 'selected' : '' }}>
+                                    {{ $filter['label'] }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -667,11 +829,11 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">نطاق السعر</label>
                             <select name="price_range" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">جميع الأسعار</option>
-                                <option value="0-50" {{ request('price_range') == '0-50' ? 'selected' : '' }}>0 - 50 دينار أردني</option>
-                                <option value="50-100" {{ request('price_range') == '50-100' ? 'selected' : '' }}>50 - 100 دينار أردني</option>
-                                <option value="100-200" {{ request('price_range') == '100-200' ? 'selected' : '' }}>100 - 200 دينار أردني</option>
-                                <option value="200-500" {{ request('price_range') == '200-500' ? 'selected' : '' }}>200 - 500 دينار أردني</option>
-                                <option value="500+" {{ request('price_range') == '500+' ? 'selected' : '' }}>أكثر من 500 دينار أردني</option>
+                                <option value="0-50" {{ request('price_range') == '0-50' ? 'selected' : '' }}>0 - 50 دولار أمريكي</option>
+                                <option value="50-100" {{ request('price_range') == '50-100' ? 'selected' : '' }}>50 - 100 دولار أمريكي</option>
+                                <option value="100-200" {{ request('price_range') == '100-200' ? 'selected' : '' }}>100 - 200 دولار أمريكي</option>
+                                <option value="200-500" {{ request('price_range') == '200-500' ? 'selected' : '' }}>200 - 500 دولار أمريكي</option>
+                                <option value="500+" {{ request('price_range') == '500+' ? 'selected' : '' }}>أكثر من 500 دولار أمريكي</option>
                             </select>
                         </div>
 
@@ -682,6 +844,17 @@
                                 @foreach($paymentMethods as $method)
                                     <option value="{{ $method }}" {{ request('payment_method') == $method ? 'selected' : '' }}>
                                         {{ $method }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">عملة الدفع</label>
+                            <select name="payment_currency" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">جميع العملات</option>
+                                @foreach($currencyOptions as $code => $currency)
+                                    <option value="{{ $code }}" {{ strtoupper(request('payment_currency')) == $code ? 'selected' : '' }}>
+                                        {{ $currency['label'] ?? $code }}
                                     </option>
                                 @endforeach
                             </select>
@@ -766,7 +939,7 @@
         </div>
 
         <!-- مؤشرات الفلاتر النشطة -->
-        @if(request()->hasAny(['status', 'payment_status', 'workshop_id', 'date_from', 'date_to', 'search', 'workshop_type', 'price_range', 'payment_method', 'booking_count', 'workshop_date_from', 'workshop_date_to', 'sort_by', 'sort_direction']))
+        @if(request()->hasAny(['status', 'payment_status', 'financial_status', 'workshop_id', 'date_from', 'date_to', 'search', 'workshop_type', 'price_range', 'payment_method', 'payment_currency', 'booking_count', 'workshop_date_from', 'workshop_date_to', 'sort_by', 'sort_direction']))
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
@@ -787,6 +960,27 @@
                 @if(request('payment_status'))
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         الدفع: {{ request('payment_status') == 'pending' ? 'في الانتظار' : (request('payment_status') == 'paid' ? 'مدفوعة' : 'مستردة') }}
+                    </span>
+                @endif
+                @if(request('payment_currency'))
+                    @php
+                        $selectedCurrency = strtoupper(request('payment_currency'));
+                        $currencyLabel = $currencyOptions[$selectedCurrency]['label'] ?? $selectedCurrency;
+                    @endphp
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        العملة: {{ $currencyLabel }}
+                    </span>
+                @endif
+                @if(request('financial_status'))
+                    @php
+                        $financialFilterLabel = match (request('financial_status')) {
+                            \App\Models\WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED => 'تم التوزيع',
+                            \App\Models\WorkshopBooking::FINANCIAL_STATUS_VOID => 'معلق أو ملغي',
+                            default => 'بانتظار التوزيع',
+                        };
+                    @endphp
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        التوزيع: {{ $financialFilterLabel }}
                     </span>
                 @endif
                 @if(request('workshop_id'))
@@ -811,7 +1005,7 @@
                 @endif
                 @if(request('price_range'))
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-                        السعر: {{ request('price_range') == '0-50' ? '0-50 دينار أردني' : (request('price_range') == '50-100' ? '50-100 دينار أردني' : (request('price_range') == '100-200' ? '100-200 دينار أردني' : (request('price_range') == '200-500' ? '200-500 دينار أردني' : 'أكثر من 500 دينار أردني'))) }}
+                        السعر: {{ request('price_range') == '0-50' ? '0-50 دولار أمريكي' : (request('price_range') == '50-100' ? '50-100 دولار أمريكي' : (request('price_range') == '100-200' ? '100-200 دولار أمريكي' : (request('price_range') == '200-500' ? '200-500 دولار أمريكي' : 'أكثر من 500 دولار أمريكي'))) }}
                     </span>
                 @endif
                 @if(request('payment_method'))
@@ -888,6 +1082,10 @@
                                         حالة الدفع
                                     </th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        <i class="fas fa-coins ml-2"></i>
+                                        التوزيع المالي
+                                    </th>
+                                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                         <i class="fas fa-money-bill-wave ml-2"></i>
                                         المبلغ
                                     </th>
@@ -903,6 +1101,24 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($bookings as $booking)
+                                    @php
+                                        $financialBadge = $financialStatusMeta[$booking->financial_status] ?? null;
+                                        $chefShare = optional($booking->revenueShares->firstWhere('recipient_type', 'chef'));
+                                        $partnerShare = optional($booking->revenueShares->firstWhere('recipient_type', 'partner'));
+                                        $adminShare = optional($booking->revenueShares->firstWhere('recipient_type', 'admin'));
+                                        $shareCurrency = $chefShare->currency
+                                            ?? $partnerShare->currency
+                                            ?? $adminShare->currency
+                                            ?? ($booking->payment_currency ?? $defaultCurrency);
+                                        $invoice = optional($booking->invoice);
+                                        $invoiceStatusMeta = [
+                                            'draft' => ['label' => 'فاتورة مسودة', 'class' => 'bg-slate-100 text-slate-700'],
+                                            'issued' => ['label' => 'فاتورة صادرة', 'class' => 'bg-amber-100 text-amber-700'],
+                                            'paid' => ['label' => 'فاتورة مدفوعة', 'class' => 'bg-emerald-100 text-emerald-700'],
+                                            'void' => ['label' => 'فاتورة ملغاة', 'class' => 'bg-rose-100 text-rose-700'],
+                                        ];
+                                        $invoiceBadge = $invoice ? ($invoiceStatusMeta[$invoice->status] ?? $invoiceStatusMeta['draft']) : null;
+                                    @endphp
                                     <tr id="booking-row-{{ $booking->id }}" class="activity-item hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200" data-admin-note="{{ base64_encode($booking->admin_notes ?? '') }}" data-user-name="{{ e(optional($booking->user)->name ?? 'مستخدم') }}" data-workshop-title="{{ e(optional($booking->workshop)->title ?? 'غير محددة') }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
@@ -976,13 +1192,49 @@
                                                 </span>
                                             @endif
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            @if($financialBadge)
+                                                <span class="{{ $financialBadge['class'] }} inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                                    <i class="fas fa-balance-scale ml-1 text-[11px]"></i>
+                                                    {{ $financialBadge['label'] }}
+                                                </span>
+                                            @endif
+                                            <div class="mt-2 text-xs text-gray-600 space-y-1">
+                                                <div class="flex items-center justify-end gap-1 text-orange-600">
+                                                    <i class="fas fa-utensils text-[11px]"></i>
+                                                    <span>الشيف: {{ number_format($chefShare->amount ?? 0, 2) }} {{ $shareCurrency }}</span>
+                                                </div>
+                                                <div class="flex items-center justify-end gap-1 text-blue-600">
+                                                    <i class="fas fa-handshake text-[11px]"></i>
+                                                    <span>الشريك: {{ number_format($partnerShare->amount ?? 0, 2) }} {{ $shareCurrency }}</span>
+                                                </div>
+                                                <div class="flex items-center justify-end gap-1 text-slate-600">
+                                                    <i class="fas fa-shield-alt text-[11px]"></i>
+                                                    <span>الإدارة: {{ number_format($adminShare->amount ?? 0, 2) }} {{ $shareCurrency }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-bold text-gray-900">
-                                                {{ number_format($booking->payment_amount, 2) }} {{ $booking->workshop->currency }}
+                                            <div class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <span>
+                                {{ number_format($booking->payment_amount, 2) }}
+                                {{ strtoupper($booking->payment_currency ?? $defaultCurrency) }}
+                            </span>
+                                                @if($invoiceBadge)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $invoiceBadge['class'] }}">
+                                                        <i class="fas fa-file-invoice ml-1 text-[10px]"></i>
+                                                        {{ $invoiceBadge['label'] }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                <i class="fas fa-exchange-alt text-[10px]"></i>
+                                                ≈ {{ number_format($booking->payment_amount_usd ?? 0, 2) }} {{ $defaultCurrency }}
+                                                <span class="text-gray-400">/ سعر الصرف {{ number_format($booking->payment_exchange_rate ?? 1, 6) }}</span>
                                             </div>
                                             @if($booking->payment_method)
-                                                <div class="text-xs text-gray-500">
-                                                    <i class="fas fa-credit-card ml-1"></i>
+                                                <div class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                                    <i class="fas fa-credit-card"></i>
                                                     {{ $booking->payment_method }}
                                                 </div>
                                             @endif
@@ -1002,6 +1254,12 @@
                                                     <i class="fas fa-eye ml-1"></i>
                                                     عرض
                                                 </a>
+                                                @if($invoice)
+                                                    <a href="{{ route('admin.finance.invoices.show', $invoice) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors duration-200">
+                                                        <i class="fas fa-file-invoice ml-1"></i>
+                                                        الفاتورة
+                                                    </a>
+                                                @endif
                                                 <button onclick="openAdminNoteModal({{ $booking->id }})" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 transition-colors duration-200">
                                                     <i class="fas fa-sticky-note ml-1"></i>
                                                     ملاحظة
@@ -1035,7 +1293,7 @@
                     </div>
                 @else
                     <div class="text-center py-16">
-                        @if(request()->hasAny(['status', 'payment_status', 'workshop_id', 'date_from', 'date_to', 'search', 'workshop_type', 'price_range', 'payment_method', 'booking_count', 'workshop_date_from', 'workshop_date_to', 'sort_by', 'sort_direction']))
+                        @if(request()->hasAny(['status', 'payment_status', 'financial_status', 'workshop_id', 'date_from', 'date_to', 'search', 'workshop_type', 'price_range', 'payment_method', 'booking_count', 'workshop_date_from', 'workshop_date_to', 'sort_by', 'sort_direction']))
                             <div class="mx-auto w-24 h-24 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-6">
                                 <i class="fas fa-search text-blue-500 text-3xl"></i>
                             </div>

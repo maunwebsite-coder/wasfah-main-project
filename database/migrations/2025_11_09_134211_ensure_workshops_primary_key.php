@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         if ($this->hasPrimaryKey()) {
             return;
         }
@@ -28,6 +32,10 @@ return new class extends Migration
 
     private function hasPrimaryKey(): bool
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return true;
+        }
+
         return DB::table('information_schema.table_constraints')
             ->where('table_schema', DB::getDatabaseName())
             ->where('table_name', 'workshops')

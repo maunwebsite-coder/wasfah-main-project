@@ -20,6 +20,10 @@ class EnhancedImageUploadService
         int $maxHeight = 1920
     ): array {
         try {
+            $gdAvailable = extension_loaded('gd')
+                && function_exists('imagecreatetruecolor')
+                && function_exists('imagecreatefromstring');
+
             if (!$file->isValid()) {
                 return [
                     'success' => false,
@@ -49,12 +53,25 @@ class EnhancedImageUploadService
             $maxKilobytes = (int) config('content_moderation.image.max_kilobytes', 2048);
             $maxBytes = $maxKilobytes * 1024;
 
+            if (!$gdAvailable) {
+                Log::warning('GD extension not available, storing workshop image without compression.', [
+                    'directory' => $directory,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                ]);
+
+                return self::storeWithoutCompression($file, $directory, 'gd_extension_missing');
+            }
+
             $prepared = self::compressUploadedFile($file, $maxBytes, $quality, $maxWidth, $maxHeight);
             if (!$prepared['success']) {
-                return [
-                    'success' => false,
-                    'error' => $prepared['error'] ?? 'تعذر تجهيز الصورة للحفظ.',
-                ];
+                Log::warning('Image compression failed, falling back to direct storage.', [
+                    'error' => $prepared['error'] ?? null,
+                    'directory' => $directory,
+                    'file_name' => $file->getClientOriginalName(),
+                ]);
+
+                return self::storeWithoutCompression($file, $directory, 'compression_failed', $prepared['error'] ?? null);
             }
 
             $uploadFile = $prepared['file'];
@@ -114,24 +131,6 @@ class EnhancedImageUploadService
         $extension = self::guessExtension($file);
         $mimeType = $file->getMimeType();
 
-        if (!extension_loaded('gd') || !function_exists('imagewebp')) {
-            if ($file->getSize() > $maxBytes) {
-                return [
-                    'success' => false,
-                    'error' => 'امتداد GD غير متوفر لضغط الصور، وحجم الصورة يتجاوز الحد المسموح.',
-                ];
-            }
-
-            return [
-                'success' => true,
-                'file' => $file,
-                'size' => $file->getSize(),
-                'extension' => $extension,
-                'mime' => $mimeType,
-                'was_compressed' => false,
-            ];
-        }
-
         $attempts = self::compressionAttempts($file, $quality, $maxWidth, $maxHeight);
         $lastError = null;
 
@@ -181,6 +180,55 @@ class EnhancedImageUploadService
             'success' => false,
             'error' => $lastError ?? 'تعذر ضغط الصورة لتتناسب مع الحجم المسموح (2 ميجابايت).',
         ];
+    }
+
+    /**
+     * حفظ الصورة بدون ضغط عند عدم توفر GD أو عند فشل الضغط.
+     */
+    protected static function storeWithoutCompression(
+        UploadedFile $file,
+        string $directory,
+        string $reason,
+        ?string $details = null
+    ): array {
+        try {
+            $extension = self::guessExtension($file);
+            $filename = Str::uuid() . '.' . $extension;
+
+            $storedPath = Storage::disk('public')->putFileAs($directory, $file, $filename);
+
+            if ($storedPath) {
+                return [
+                    'success' => true,
+                    'path' => $storedPath,
+                    'compressed' => false,
+                    'fallback_used' => true,
+                    'fallback_reason' => $reason,
+                    'fallback_details' => $details,
+                    'original_size' => $file->getSize(),
+                    'compressed_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                    'note' => 'تم حفظ الصورة بدون ضغط بسبب نقص إمكانيات الخادم.',
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => 'تعذر حفظ الصورة بدون ضغط.',
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Failed to store image without compression', [
+                'error' => $e->getMessage(),
+                'reason' => $reason,
+                'details' => $details,
+                'file_name' => $file->getClientOriginalName(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'حدث خطأ أثناء حفظ الصورة بدون ضغط.',
+            ];
+        }
     }
 
     /**

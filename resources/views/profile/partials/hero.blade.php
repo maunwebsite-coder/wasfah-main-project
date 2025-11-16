@@ -18,7 +18,7 @@
         <div class="relative">
             <div class="w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white text-4xl font-bold flex items-center justify-center shadow-xl ring-8 ring-white/60">
                 @if ($avatarUrl)
-                    <img src="{{ $avatarUrl }}" alt="صورة الملف الشخصي" class="w-full h-full rounded-full object-cover">
+                    <img src="{{ $avatarUrl }}" alt="صورة الملف الشخصي" class="w-full h-full rounded-full object-cover" loading="lazy">
                 @else
                     {{ mb_substr($user->name, 0, 1) }}
                 @endif

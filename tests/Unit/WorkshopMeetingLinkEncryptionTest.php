@@ -52,6 +52,30 @@ class WorkshopMeetingLinkEncryptionTest extends TestCase
         $this->assertNull($workshop->getRawOriginal('meeting_link'));
         $this->assertNull($workshop->getRawOriginal('meeting_link_cipher'));
         $this->assertNull($workshop->meeting_link);
+        $this->assertNull($workshop->meeting_code);
+    }
+
+    public function test_meeting_code_is_captured_from_google_meet_link(): void
+    {
+        $user = User::factory()->create();
+
+        $workshop = Workshop::create(array_merge(
+            $this->baseWorkshopAttributes($user),
+            [
+                'meeting_link' => 'https://meet.google.com/abc-defg-hij?authuser=2',
+                'start_date' => Carbon::now()->addDay(),
+                'end_date' => Carbon::now()->addDay()->addHours(2),
+            ],
+        ));
+
+        $this->assertSame('abc-defg-hij', $workshop->meeting_code);
+    }
+
+    public function test_extract_meeting_code_helper_supports_lookup_links(): void
+    {
+        $code = Workshop::extractMeetingCode('https://meet.google.com/lookup/fake-code-123');
+
+        $this->assertSame('fake-code-123', $code);
     }
 
     protected function baseWorkshopAttributes(User $user): array
@@ -68,7 +92,7 @@ class WorkshopMeetingLinkEncryptionTest extends TestCase
             'duration' => 90,
             'max_participants' => 25,
             'price' => 200.00,
-            'currency' => 'JOD',
+            'currency' => 'USD',
             'image' => null,
             'images' => null,
             'location' => 'Online',

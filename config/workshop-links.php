@@ -14,6 +14,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Participant Meeting Launch Link Lifetime (minutes)
+    |--------------------------------------------------------------------------
+    |
+    | Determines how long the signed redirect link that opens the external
+    | meeting provider remains valid.
+    |
+    */
+    'participant_launch_ttl' => env('WORKSHOP_LINK_LAUNCH_TTL', 90),
+
+    /*
+    |--------------------------------------------------------------------------
     | Participant Status Polling Link Lifetime (minutes)
     |--------------------------------------------------------------------------
     |
@@ -34,4 +45,16 @@ return [
     |
     */
     'allow_same_email_multi_device' => env('WORKSHOP_ALLOW_SAME_EMAIL_MULTI_DEVICE', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow Hosts To Override Auto-Generated Meeting Links
+    |--------------------------------------------------------------------------
+    |
+    | When true, chefs can disable the automatic Google Meet generation and
+    | provide their own meeting link. Disable this in environments where you
+    | want all workshops to use the centrally managed Meet credentials.
+    |
+    */
+    'allow_host_meeting_link_override' => env('WORKSHOP_ALLOW_HOST_MEETING_OVERRIDE', true),
 ];

@@ -96,7 +96,7 @@ class ReferralCommission extends Model
 
     public function getCurrencySymbolAttribute(): string
     {
-        $currency = $this->currency ?: (string) config('referrals.default_currency', 'JOD');
+        $currency = $this->currency ?: (string) config('referrals.default_currency', 'USD');
 
         return data_get(config('referrals.currencies', []), "{$currency}.symbol", $currency);
     }

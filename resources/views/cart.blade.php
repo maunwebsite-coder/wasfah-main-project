@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'سلة التسوق - موقع وصفة')
+@section('title', 'Shopping cart - Wasfah')
 
 @push('styles')
 <style>
@@ -53,13 +53,13 @@
         <div class="max-w-6xl mx-auto">
             <!-- Header -->
             <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">سلة التسوق</h1>
-                <p class="text-gray-600">إدارة منتجاتك المختارة</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Shopping cart</h1>
+                <p class="text-gray-600">Manage your selected items</p>
                 <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div class="flex items-start">
                         <i class="fas fa-info-circle text-blue-500 mt-1 ml-2"></i>
                         <div class="text-sm text-blue-700">
-                            <strong>ملاحظة:</strong> السعر للوحدة الواحدة يبقى ثابتاً عند تغيير الكمية. فقط المجموع الإجمالي يتغير.
+                            <strong>Note:</strong> The unit price stays fixed when you change the quantity. Only the total amount changes.
                         </div>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                             <div class="p-6 border-b border-gray-200 bg-gray-50">
                                 <h2 class="text-lg font-semibold text-gray-900">
-                                    المنتجات المختارة ({{ $cartItems->count() }})
+                                    Selected products ({{ $cartItems->count() }})
                                 </h2>
                             </div>
                             
@@ -85,7 +85,7 @@
                                             <div class="flex justify-center mb-3">
                                                 <img src="{{ $item->tool->image_url }}" 
                                                      alt="{{ $item->tool->name }}" 
-                                                     class="w-24 h-24 object-cover rounded-lg">
+                                                     class="w-24 h-24 object-cover rounded-lg" loading="lazy" decoding="async" width="96" height="96">
                                             </div>
                                             
                                             <!-- Product Details -->
@@ -106,9 +106,9 @@
                                                 </div>
                                                 
                                                 <div class="mb-3">
-                                                    <div class="text-xs text-gray-600 mb-1">السعر للوحدة الواحدة:</div>
+                                                    <div class="text-xs text-gray-600 mb-1">Unit price:</div>
                                                     <div class="text-lg font-bold text-orange-600" data-unit-price="{{ $item->price }}">
-                                                        {{ number_format($item->price, 2) }} درهم إماراتي
+                                                        {{ number_format($item->price, 2) }} AED
                                                     </div>
                                                 </div>
                                             </div>
@@ -120,16 +120,16 @@
                                                    target="_blank"
                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-center group">
                                                     <i class="fab fa-amazon ml-2 group-hover:scale-110 transition-transform duration-300"></i>
-                                                    <span>متابعة الشراء على Amazon</span>
+                                                    <span>Continue shopping on Amazon</span>
                                                     <i class="fas fa-external-link-alt mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>
                                                 </a>
                                                 @endif
                                                 
                                                 <button class="remove-btn w-full bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-xs font-medium px-3 py-2 rounded-lg border border-red-200 hover:border-red-300 transition-all duration-200 flex items-center justify-center" 
                                                         data-cart-id="{{ $item->id }}"
-                                                        title="حذف المنتج من السلة">
+                                                        title="Remove product from the cart">
                                                     <i class="fas fa-trash ml-2"></i>
-                                                    حذف
+                                                    Remove
                                                 </button>
                                             </div>
                                         </div>
@@ -140,7 +140,7 @@
                                             <div class="flex-shrink-0">
                                                 <img src="{{ $item->tool->image_url }}" 
                                                      alt="{{ $item->tool->name }}" 
-                                                     class="w-20 h-20 object-cover rounded-lg">
+                                                     class="w-20 h-20 object-cover rounded-lg" loading="lazy" decoding="async" width="80" height="80">
                                             </div>
                                             
                                             <!-- Product Details -->
@@ -163,9 +163,9 @@
                                                 </div>
                                                 
                                                 <div class="mb-3">
-                                                    <div class="text-sm text-gray-600 mb-1">السعر للوحدة الواحدة:</div>
+                                                    <div class="text-sm text-gray-600 mb-1">Unit price:</div>
                                                     <div class="text-lg font-bold text-orange-600" data-unit-price="{{ $item->price }}">
-                                                        {{ number_format($item->price, 2) }} درهم إماراتي
+                                                        {{ number_format($item->price, 2) }} AED
                                                     </div>
                                                 </div>
                                                 
@@ -179,16 +179,16 @@
                                                    target="_blank"
                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-center group">
                                                     <i class="fab fa-amazon ml-2 group-hover:scale-110 transition-transform duration-300"></i>
-                                                    <span>متابعة الشراء على Amazon</span>
+                                                    <span>Continue shopping on Amazon</span>
                                                     <i class="fas fa-external-link-alt mr-2 group-hover:translate-x-1 transition-transform duration-300"></i>
                                                 </a>
                                                 @endif
                                                 
                                                 <button class="remove-btn bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-sm font-medium px-3 py-2 rounded-lg border border-red-200 hover:border-red-300 transition-all duration-200 flex items-center" 
                                                         data-cart-id="{{ $item->id }}"
-                                                        title="حذف المنتج من السلة">
+                                                        title="Remove product from the cart">
                                                     <i class="fas fa-trash ml-2"></i>
-                                                    حذف
+                                                    Remove
                                                 </button>
                                             </div>
                                         </div>
@@ -201,25 +201,25 @@
                     <!-- Order Summary -->
                     <div class="lg:col-span-1">
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 sticky top-4">
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">ملخص الطلب</h3>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Order summary</h3>
                             
                             <div class="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                                 <div class="flex justify-between text-xs sm:text-sm">
-                                    <span class="text-gray-600">عدد المنتجات:</span>
-                                    <span class="font-medium">{{ $cartItems->sum('quantity') }} منتج</span>
+                                    <span class="text-gray-600">Total quantity:</span>
+                                    <span class="font-medium">{{ $cartItems->sum('quantity') }} items</span>
                                 </div>
                                 <div class="flex justify-between text-xs sm:text-sm">
-                                    <span class="text-gray-600">عدد العناصر:</span>
-                                    <span class="font-medium">{{ $cartItems->count() }} عنصر</span>
+                                    <span class="text-gray-600">Unique items:</span>
+                                    <span class="font-medium">{{ $cartItems->count() }} items</span>
                                 </div>
                                 <div class="flex justify-between text-xs sm:text-sm">
-                                    <span class="text-gray-600">المجموع الفرعي:</span>
-                                    <span class="font-medium">{{ number_format($total, 2) }} درهم إماراتي</span>
+                                    <span class="text-gray-600">Subtotal:</span>
+                                    <span class="font-medium">{{ number_format($total, 2) }} AED</span>
                                 </div>
                                 <hr class="my-2 sm:my-3">
                                 <div class="flex justify-between text-base sm:text-lg font-bold">
-                                    <span>المجموع الكلي:</span>
-                                    <span class="text-orange-600">{{ number_format($total, 2) }} درهم إماراتي</span>
+                                    <span>Total:</span>
+                                    <span class="text-orange-600">{{ number_format($total, 2) }} AED</span>
                                 </div>
                             </div>
                             
@@ -228,7 +228,7 @@
                                 <button id="clear-cart" 
                                         class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-3 sm:px-4 rounded-lg transition-colors text-xs sm:text-sm">
                                     <i class="fas fa-trash ml-1 sm:ml-2"></i>
-                                    مسح السلة
+                                    Clear cart
                                 </button>
                             </div>
                         </div>
@@ -240,12 +240,12 @@
                     <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <i class="fas fa-shopping-cart text-4xl text-gray-400"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">سلة التسوق فارغة</h3>
-                    <p class="text-gray-600 mb-6">لم تقم بإضافة أي منتجات إلى السلة بعد</p>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h3>
+                    <p class="text-gray-600 mb-6">You have not added any products yet.</p>
                     <a href="{{ route('tools') }}" 
                        class="inline-flex items-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
                         <i class="fas fa-arrow-right ml-2"></i>
-                        تصفح المنتجات
+                        Browse products
                     </a>
                 </div>
             @endif
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear cart
     document.getElementById('clear-cart')?.addEventListener('click', function() {
         console.log('Clear cart button clicked'); // Debug log
-        if (confirm('هل أنت متأكد من مسح السلة بالكامل؟')) {
+        if (confirm('Are you sure you want to clear the entire cart?')) {
             console.log('User confirmed clear cart'); // Debug log
             clearCart();
         } else {
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (!csrfToken) {
             console.error('CSRF token not found');
-            showToast('خطأ في الأمان', 'error');
+            showToast('Security error', 'error');
             return;
         }
         
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Clear cart data:', data); // Debug log
             if (data.success) {
-                showToast('تم مسح السلة بالكامل', 'success');
+                showToast('Cart cleared successfully', 'success');
                 // Update cart count
                 if (window.loadCartCount) {
                     window.loadCartCount();
@@ -338,12 +338,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     location.reload();
                 }, 1000);
             } else {
-                showToast(data.message || 'حدث خطأ أثناء مسح السلة', 'error');
+                showToast(data.message || 'An error occurred while clearing the cart', 'error');
             }
         })
         .catch(error => {
             console.error('Error clearing cart:', error);
-            showToast('حدث خطأ أثناء مسح السلة', 'error');
+            showToast('An error occurred while clearing the cart', 'error');
         });
     }
     
@@ -359,8 +359,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalEls = document.querySelectorAll('.text-orange-600');
             totalEls.forEach(el => {
                 // Only update if it's NOT a unit price (unit prices have data-unit-price attribute)
-                if (el.textContent.includes('درهم') && !el.hasAttribute('data-unit-price')) {
-                    el.textContent = parseFloat(data.cart_total).toFixed(2) + ' درهم إماراتي';
+                if (el.textContent.includes('AED') && !el.hasAttribute('data-unit-price')) {
+                    el.textContent = parseFloat(data.cart_total).toFixed(2) + ' AED';
                 }
             });
         }
@@ -369,8 +369,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.cart_count !== undefined) {
             const itemCountEls = document.querySelectorAll('.text-lg.font-bold.text-gray-900');
             itemCountEls.forEach(el => {
-                if (el.textContent.includes('منتج')) {
-                    el.textContent = data.cart_count + ' منتج';
+                if (el.textContent.includes('items')) {
+                    el.textContent = data.cart_count + ' items';
                 }
             });
         }
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update product count in header
         const productCountEl = document.querySelector('h2.text-lg.font-semibold.text-gray-900');
         if (productCountEl && data.cart_count !== undefined) {
-            productCountEl.textContent = `المنتجات المختارة (${data.cart_count})`;
+            productCountEl.textContent = `Selected products (${data.cart_count})`;
         }
         
         // Show success message
@@ -425,3 +425,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+

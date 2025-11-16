@@ -8,7 +8,7 @@
             <div class="bg-white rounded-3xl shadow-lg border border-orange-100 p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
                 <div class="w-32 h-32 rounded-full border-4 border-orange-100 overflow-hidden shadow-md flex items-center justify-center bg-orange-50 text-orange-600 text-3xl font-bold">
                     @if ($avatarUrl)
-                        <img src="{{ $avatarUrl }}" alt="صورة الشيف {{ $chef->name }}" class="w-full h-full object-cover">
+                        <img src="{{ $avatarUrl }}" alt="صورة الشيف {{ $chef->name }}" class="w-full h-full object-cover" loading="lazy" decoding="async" width="128" height="128">
                     @else
                         {{ mb_substr($chef->name ?? 'شيف', 0, 1) }}
                     @endif
@@ -91,7 +91,7 @@
                                                 : 'سيتم التحديد لاحقاً';
                                             $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
                                             $priceLabel = $workshop->formatted_price
-                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
+                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'USD'));
                                             $deadlineLabel = $workshop->registration_deadline
                                                 ? $workshop->registration_deadline->copy()->locale('ar')->translatedFormat('j F Y')
                                                 : null;
@@ -99,7 +99,7 @@
                                         @endphp
                                         <div class="rounded-2xl border border-orange-100 bg-white shadow-sm overflow-hidden flex flex-col">
                                             <div class="h-44 bg-orange-100">
-                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover">
+                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover" loading="lazy" decoding="async" width="640" height="352">
                                             </div>
                                             <div class="p-5 space-y-3 flex-1 flex flex-col">
                                                 <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-orange-600">
@@ -168,11 +168,11 @@
                                                 : 'موعد غير محدد';
                                             $locationLabel = $workshop->is_online ? 'أونلاين مباشر' : ($workshop->location ?: 'سيتم التحديد لاحقاً');
                                             $priceLabel = $workshop->formatted_price
-                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'JOD'));
+                                                ?? (number_format((float) ($workshop->price ?? 0), 2) . ' ' . ($workshop->currency ?? 'USD'));
                                         @endphp
                                         <div class="rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden flex flex-col">
                                             <div class="h-44 bg-gray-200">
-                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover opacity-90">
+                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover opacity-90" loading="lazy" decoding="async" width="640" height="352">
                                             </div>
                                             <div class="p-5 space-y-3 flex-1 flex flex-col">
                                                 <div class="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-white px-3 py-1 rounded-full w-max">
@@ -228,7 +228,7 @@
                         @foreach ($publicRecipes as $recipe)
                             <a href="{{ route('recipe.show', ['recipe' => $recipe->slug ?? $recipe->recipe_id]) }}" class="group rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
                                 @if (!empty($recipe->image_url))
-                                    <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="w-full h-48 object-cover">
+                                    <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="w-full h-48 object-cover" loading="lazy" decoding="async" width="640" height="384">
                                 @endif
                                 <div class="p-5 space-y-2">
                                     <h3 class="font-semibold text-lg text-gray-900 group-hover:text-orange-600 transition">{{ $recipe->title }}</h3>
@@ -254,7 +254,7 @@
                         @foreach ($exclusiveRecipes as $recipe)
                             <div class="rounded-2xl bg-orange-900 text-white shadow-lg overflow-hidden">
                                 @if (!empty($recipe->image_url))
-                                    <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="w-full h-44 object-cover opacity-80">
+                                    <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="w-full h-44 object-cover opacity-80" loading="lazy" decoding="async" width="640" height="352">
                                 @endif
                                 <div class="p-5 space-y-2">
                                     <h3 class="font-semibold text-lg">{{ $recipe->title }}</h3>
@@ -294,3 +294,4 @@
         </div>
     </div>
 @endsection
+

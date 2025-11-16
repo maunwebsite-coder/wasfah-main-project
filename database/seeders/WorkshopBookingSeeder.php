@@ -24,7 +24,7 @@ class WorkshopBookingSeeder extends Seeder
         // إنشاء حجوزات متنوعة
         $statuses = ['pending', 'confirmed', 'cancelled'];
         $paymentStatuses = ['pending', 'paid', 'refunded'];
-        $paymentMethods = ['cash', 'bank_transfer', 'credit_card', 'paypal'];
+        $paymentMethods = ['cash', 'bank_transfer', 'credit_card'];
 
         for ($i = 0; $i < 25; $i++) {
             $workshop = $workshops->random();
@@ -51,6 +51,7 @@ class WorkshopBookingSeeder extends Seeder
                 'payment_status' => $paymentStatus,
                 'payment_method' => $paymentStatus === 'paid' ? $paymentMethods[array_rand($paymentMethods)] : null,
                 'payment_amount' => $workshop->price,
+                'payment_currency' => $workshop->currency,
                 'notes' => $this->getRandomNotes(),
                 'confirmed_at' => $status === 'confirmed' ? $bookingDate->addHours(rand(1, 24)) : null,
                 'cancelled_at' => $status === 'cancelled' ? $bookingDate->addDays(rand(1, 7)) : null,

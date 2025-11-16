@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BookingRevenueShare;
 use App\Models\User;
 use App\Models\Recipe;
 use App\Models\Workshop;
@@ -96,14 +97,45 @@ class DashboardController extends Controller
 
         // إحصائيات الإيرادات (من الورشات)
         $totalRevenue = WorkshopBooking::where('status', 'confirmed')
-                                      ->join('workshops', 'workshop_bookings.workshop_id', '=', 'workshops.id')
-                                      ->sum('workshops.price');
+                                      ->where('payment_status', 'paid')
+                                      ->sum('payment_amount');
 
         $monthlyRevenue = WorkshopBooking::where('status', 'confirmed')
+                                        ->where('payment_status', 'paid')
                                         ->whereMonth('workshop_bookings.created_at', now()->month)
                                         ->whereYear('workshop_bookings.created_at', now()->year)
-                                        ->join('workshops', 'workshop_bookings.workshop_id', '=', 'workshops.id')
-                                        ->sum('workshops.price');
+                                        ->sum('payment_amount');
+
+        $currentMonthRange = [now()->copy()->startOfMonth(), now()->copy()->endOfMonth()];
+        $shareBaseQuery = BookingRevenueShare::query()
+            ->where('status', BookingRevenueShare::STATUS_DISTRIBUTED);
+
+        $platformRevenue = (clone $shareBaseQuery)
+            ->where('recipient_type', BookingRevenueShare::TYPE_ADMIN)
+            ->sum('amount');
+
+        $platformMonthlyRevenue = (clone $shareBaseQuery)
+            ->where('recipient_type', BookingRevenueShare::TYPE_ADMIN)
+            ->whereBetween('distributed_at', $currentMonthRange)
+            ->sum('amount');
+
+        $chefPayoutTotal = (clone $shareBaseQuery)
+            ->where('recipient_type', BookingRevenueShare::TYPE_CHEF)
+            ->sum('amount');
+
+        $chefMonthlyPayout = (clone $shareBaseQuery)
+            ->where('recipient_type', BookingRevenueShare::TYPE_CHEF)
+            ->whereBetween('distributed_at', $currentMonthRange)
+            ->sum('amount');
+
+        $partnerPayoutTotal = (clone $shareBaseQuery)
+            ->where('recipient_type', BookingRevenueShare::TYPE_PARTNER)
+            ->sum('amount');
+
+        $partnerMonthlyPayout = (clone $shareBaseQuery)
+            ->where('recipient_type', BookingRevenueShare::TYPE_PARTNER)
+            ->whereBetween('distributed_at', $currentMonthRange)
+            ->sum('amount');
 
         // إحصائيات الأسبوع الماضي
         $lastWeekUsers = User::where('created_at', '>=', now()->subWeek())->count();
@@ -209,7 +241,8 @@ class DashboardController extends Controller
             'totalBookings', 'confirmedBookings', 'pendingBookings',
             'totalInteractions', 'savedRecipes', 'madeRecipes', 'totalRatings', 'averageRating',
             'totalTools', 'activeTools', 'totalCategories',
-            'totalRevenue', 'monthlyRevenue',
+            'totalRevenue', 'monthlyRevenue', 'platformRevenue', 'platformMonthlyRevenue',
+            'chefPayoutTotal', 'chefMonthlyPayout', 'partnerPayoutTotal', 'partnerMonthlyPayout',
             'lastWeekUsers', 'lastWeekRecipes', 'lastWeekBookings',
             'popularRecipes', 'popularWorkshops', 'activeUsers', 'monthlyGrowth',
             'todayUsers', 'todayRecipes', 'todayBookings', 'todayRevenue',
@@ -303,6 +336,7 @@ class DashboardController extends Controller
 
         $currentRevenue = $this->sumRevenueBetween($currentStart, $currentEnd, $workshopMode);
         $previousRevenue = $this->sumRevenueBetween($previousStart, $previousEnd, $workshopMode);
+        $currencyCode = config('finance.default_currency', 'USD');
 
         $modeLabel = $this->workshopModeOptions()[$workshopMode] ?? $this->workshopModeOptions()['all'];
 
@@ -315,6 +349,7 @@ class DashboardController extends Controller
                 'description' => 'ضمن ' . $periodContext['label'],
                 'icon' => 'fa-users',
                 'unit' => '',
+                'is_currency' => false,
             ],
             [
                 'key' => 'recipes',
@@ -324,6 +359,7 @@ class DashboardController extends Controller
                 'description' => 'تمت إضافتها خلال المدة المحددة',
                 'icon' => 'fa-book-open',
                 'unit' => '',
+                'is_currency' => false,
             ],
             [
                 'key' => 'bookings',
@@ -333,6 +369,7 @@ class DashboardController extends Controller
                 'description' => $modeLabel,
                 'icon' => 'fa-calendar-check',
                 'unit' => '',
+                'is_currency' => false,
             ],
             [
                 'key' => 'revenue',
@@ -341,7 +378,8 @@ class DashboardController extends Controller
                 'change' => $this->calculateDeltaBetween($currentRevenue, $previousRevenue),
                 'description' => 'صافي المدفوعات المؤكدة',
                 'icon' => 'fa-coins',
-                'unit' => 'ر.س',
+                'unit' => $currencyCode,
+                'is_currency' => true,
             ],
         ];
     }
@@ -386,11 +424,12 @@ class DashboardController extends Controller
         $query = DB::table('workshop_bookings')
             ->join('workshops', 'workshop_bookings.workshop_id', '=', 'workshops.id')
             ->where('workshop_bookings.status', 'confirmed')
+            ->where('workshop_bookings.payment_status', 'paid')
             ->whereBetween('workshop_bookings.created_at', [$start, $end]);
 
         $this->applyWorkshopModeConstraint($query, $workshopMode);
 
-        return (float) $query->sum('workshops.price');
+        return (float) $query->sum('workshop_bookings.payment_amount');
     }
 
     private function collectDailyAggregate(string $table, string $dateColumn, Carbon $start, Carbon $end, ?callable $callback = null, string $aggregate = 'count', string $aggregateColumn = '*'): array
@@ -437,11 +476,12 @@ class DashboardController extends Controller
             $end,
             function (QueryBuilder $query) use ($workshopMode) {
                 $query->join('workshops', 'workshop_bookings.workshop_id', '=', 'workshops.id')
-                      ->where('workshop_bookings.status', 'confirmed');
+                      ->where('workshop_bookings.status', 'confirmed')
+                      ->where('workshop_bookings.payment_status', 'paid');
                 $this->applyWorkshopModeConstraint($query, $workshopMode);
             },
             'sum',
-            'workshops.price'
+            'workshop_bookings.payment_amount'
         );
 
         $stats = [];

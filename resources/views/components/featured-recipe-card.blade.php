@@ -5,10 +5,12 @@
         <!-- Front of the card -->
         <div class="card-front">
             <div class="relative h-full">
-                <img src="{{ $recipe->image_url ?: asset('image/logo.png') }}" 
+                <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}" 
                      alt="{{ $recipe->title }}" 
                      class="w-full h-full object-cover"
-                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                     width="600"
+                     height="800"
+                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                 
                 <!-- Overlay with recipe info -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-between p-6">
@@ -107,3 +109,5 @@
         </div>
     </div>
 </div>
+
+

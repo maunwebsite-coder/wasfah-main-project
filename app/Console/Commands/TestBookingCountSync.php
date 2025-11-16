@@ -74,6 +74,7 @@ class TestBookingCountSync extends Command
             'booking_date' => now(),
             'payment_status' => 'pending',
             'payment_amount' => $workshop->price,
+            'payment_currency' => $workshop->currency,
             'notes' => 'اختبار مزامنة العدد',
         ]);
         

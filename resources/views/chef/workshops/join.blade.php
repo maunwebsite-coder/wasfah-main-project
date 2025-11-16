@@ -114,8 +114,6 @@
     $startDateIso = optional($workshop->start_date)->toIso8601String();
     $confirmedCount = $workshop->confirmed_bookings_count ?? $workshop->bookings_count ?? 0;
     $recentParticipantsCount = is_countable($recentParticipants) ? count($recentParticipants) : 0;
-    $recordingSyncUrl = route('chef.workshops.recording', $workshop);
-    $hasRecordingLink = !empty($workshop->recording_url);
 @endphp
 <div class="host-shell">
     <div class="host-card space-y-6">
@@ -201,67 +199,6 @@
             </button>
         </div>
 
-        <div class="mt-6 rounded-2xl border border-slate-100 bg-white/85 p-4 shadow-inner">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex-1">
-                    <p class="text-xs uppercase tracking-widest text-slate-500">{{ __('chef.dashboard.workshops.host_room.recording.label') }}</p>
-                    <p class="mt-1 text-sm text-slate-600">{{ __('chef.dashboard.workshops.host_room.recording.description') }}</p>
-                </div>
-                <button
-                    type="button"
-                    id="syncRecordingButton"
-                    class="action-btn secondary w-full sm:w-auto {{ $recordingSyncEnabled ? '' : 'opacity-60 cursor-not-allowed' }}"
-                    data-sync-url="{{ $recordingSyncUrl }}"
-                    data-enabled="{{ $recordingSyncEnabled ? '1' : '0' }}"
-                    @unless($recordingSyncEnabled) disabled @endunless
-                >
-                    <span class="inline-flex items-center gap-2" data-state="default">
-                        <i class="fas fa-cloud-arrow-down"></i>
-                        {{ __('chef.dashboard.workshops.host_room.recording.sync') }}
-                    </span>
-                    <span class="inline-flex items-center gap-2 hidden" data-state="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        {{ __('chef.dashboard.workshops.host_room.recording.syncing') }}
-                    </span>
-                </button>
-            </div>
-            @unless($recordingSyncEnabled)
-                <p class="mt-2 text-xs text-rose-600">{{ __('chef.dashboard.workshops.host_room.recording.disabled_hint') }}</p>
-            @endunless
-            <p
-                id="recordingStatusText"
-                class="mt-3 text-sm font-medium {{ $hasRecordingLink ? 'text-emerald-600' : 'text-slate-600' }}"
-                role="status"
-                aria-live="polite"
-                data-error-text="{{ __('chef.dashboard.workshops.host_room.recording.status_error') }}"
-                data-ready-text="{{ __('chef.dashboard.workshops.host_room.recording.status_ready') }}"
-                data-missing-text="{{ __('chef.dashboard.workshops.host_room.recording.status_missing') }}"
-                data-has-recording="{{ $hasRecordingLink ? '1' : '0' }}"
-            >
-                {{ $hasRecordingLink ? __('chef.dashboard.workshops.host_room.recording.status_ready') : __('chef.dashboard.workshops.host_room.recording.status_missing') }}
-            </p>
-            <div class="mt-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-600" id="recordingLinkWrapper">
-                <div id="recordingLinkContent" class="{{ $hasRecordingLink ? 'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between' : 'hidden' }}">
-                    <div>
-                        <p class="text-xs uppercase tracking-widest text-slate-500">{{ __('chef.dashboard.workshops.host_room.recording.current_label') }}</p>
-                        <p class="mt-1 break-all text-sm text-slate-900" id="recordingLinkText">{{ $workshop->recording_url }}</p>
-                    </div>
-                    <a
-                        id="recordingLinkAnchor"
-                        href="{{ $workshop->recording_url ?? '#' }}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-slate-800"
-                    >
-                        <i class="fas fa-play"></i>
-                        {{ __('chef.recordings.cta.watch') }}
-                    </a>
-                </div>
-                <p id="recordingEmptyMessage" class="{{ $hasRecordingLink ? 'hidden' : '' }} text-sm text-slate-500">
-                    {{ __('chef.dashboard.workshops.host_room.recording.missing_label') }}
-                </p>
-            </div>
-        </div>
     </div>
 
     <div class="participants-card space-y-5">
@@ -305,15 +242,6 @@
         const statusBadge = document.getElementById('hostMeetingStatus');
         const startUrl = @json(route('chef.workshops.start', $workshop));
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const recordingButton = document.getElementById('syncRecordingButton');
-        const recordingDefaultState = recordingButton?.querySelector('[data-state="default"]');
-        const recordingLoadingState = recordingButton?.querySelector('[data-state="loading"]');
-        const recordingStatusText = document.getElementById('recordingStatusText');
-        const recordingLinkContent = document.getElementById('recordingLinkContent');
-        const recordingLinkText = document.getElementById('recordingLinkText');
-        const recordingLinkAnchor = document.getElementById('recordingLinkAnchor');
-        const recordingEmptyMessage = document.getElementById('recordingEmptyMessage');
-        const recordingStatusClasses = ['text-slate-600', 'text-emerald-600', 'text-rose-600'];
 
         const markMeetingStarted = () => {
             if (!startUrl || !csrfToken) {
@@ -345,138 +273,15 @@
             if (!statusBadge) {
                 return;
             }
-
             statusBadge.classList.remove('ready', 'pending', 'locked');
             statusBadge.classList.add(state);
             statusBadge.innerHTML = label;
-        };
-
-        const setRecordingStatus = (message, variant = 'muted') => {
-            if (!recordingStatusText) {
-                return;
-            }
-
-            recordingStatusText.textContent = message;
-            recordingStatusClasses.forEach((cls) => recordingStatusText.classList.remove(cls));
-
-            if (variant === 'success') {
-                recordingStatusText.classList.add('text-emerald-600');
-            } else if (variant === 'error') {
-                recordingStatusText.classList.add('text-rose-600');
-            } else {
-                recordingStatusText.classList.add('text-slate-600');
-            }
-        };
-
-        const toggleRecordingButtonState = (isLoading) => {
-            if (!recordingButton) {
-                return;
-            }
-
-            const disabled = recordingButton.dataset.enabled === '0';
-            recordingButton.disabled = isLoading || disabled;
-
-            if (recordingDefaultState && recordingLoadingState) {
-                if (isLoading) {
-                    recordingDefaultState.classList.add('hidden');
-                    recordingLoadingState.classList.remove('hidden');
-                } else {
-                    recordingDefaultState.classList.remove('hidden');
-                    recordingLoadingState.classList.add('hidden');
-                }
-            }
-        };
-
-        const showRecordingLink = (url) => {
-            if (!url) {
-                return;
-            }
-
-            if (recordingLinkContent) {
-                recordingLinkContent.classList.remove('hidden');
-            }
-
-            if (recordingLinkText) {
-                recordingLinkText.textContent = url;
-            }
-
-            if (recordingLinkAnchor) {
-                recordingLinkAnchor.href = url;
-            }
-
-            if (recordingEmptyMessage) {
-                recordingEmptyMessage.classList.add('hidden');
-            }
         };
 
         refreshButton?.addEventListener('click', () => {
             window.location.reload();
         });
 
-        recordingButton?.addEventListener('click', () => {
-            if (recordingButton.dataset.enabled === '0') {
-                return;
-            }
-
-            const syncUrl = recordingButton.dataset.syncUrl;
-
-            if (!syncUrl || !csrfToken) {
-                return;
-            }
-
-            toggleRecordingButtonState(true);
-
-            fetch(syncUrl, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify({}),
-                credentials: 'same-origin',
-            })
-                .then(async (response) => {
-                    let payload = {};
-
-                    try {
-                        payload = await response.json();
-                    } catch (error) {
-                        payload = {};
-                    }
-
-                    if (!response.ok || !payload.success) {
-                        const fallback = payload.message || recordingStatusText?.dataset.errorText || '';
-                        setRecordingStatus(fallback, 'error');
-                        return;
-                    }
-
-                    if (payload.recording_url) {
-                        showRecordingLink(payload.recording_url);
-                    }
-
-                    const successMessage = payload.message || recordingStatusText?.dataset.readyText || '';
-                    setRecordingStatus(successMessage, 'success');
-                })
-                .catch(() => {
-                    const fallback = recordingStatusText?.dataset.errorText || '';
-                    setRecordingStatus(fallback, 'error');
-                })
-                .finally(() => {
-                    toggleRecordingButtonState(false);
-                });
-        });
-
-        if (recordingStatusText) {
-            const initialVariant = recordingStatusText.dataset.hasRecording === '1' ? 'success' : 'muted';
-            const defaultMessage = initialVariant === 'success'
-                ? (recordingStatusText.dataset.readyText || recordingStatusText.textContent)
-                : (recordingStatusText.dataset.missingText || recordingStatusText.textContent);
-
-            setRecordingStatus(defaultMessage, initialVariant);
-        }
-
-        toggleRecordingButtonState(false);
         markMeetingStarted();
     });
 </script>

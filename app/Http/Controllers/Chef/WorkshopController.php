@@ -14,6 +14,7 @@ use App\Services\GoogleMeetService;
 use App\Services\WorkshopMeetingAttendeeSyncService;
 use App\Support\ImageUploadConstraints;
 use App\Support\HostMeetRedirectLinkFactory;
+use App\Support\NotificationCopy;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
@@ -243,7 +244,6 @@ class WorkshopController extends Controller
             'recentParticipants' => $recentParticipants,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
             'hostRedirectUrl' => HostMeetRedirectLinkFactory::make($workshop),
-            'recordingSyncEnabled' => $this->googleDriveService->isEnabled(),
         ]);
     }
 
@@ -761,24 +761,25 @@ class WorkshopController extends Controller
         }
 
         $workshop->loadMissing('chef');
-        $chefName = $workshop->chef?->name ?? 'أحد الشيفات';
+        $chefName = $workshop->chef?->name ?? 'One of our chefs';
         $reviewUrl = route('admin.workshops.show', $workshop);
+        [$title, $message] = NotificationCopy::workshopReviewRequired($chefName, $workshop);
 
         foreach ($adminIds as $adminId) {
             Notification::createNotification(
                 $adminId,
                 'workshop_review_required',
-                'ورشة جديدة بانتظار المراجعة',
-                "قام {$chefName} بتسجيل ورشة '{$workshop->title}' وهي بانتظار مراجعتك قبل التفعيل.",
+                $title,
+                $message,
                 [
-                'workshop_id' => $workshop->id,
-                'workshop_slug' => $workshop->slug,
-                'review_url' => $reviewUrl,
-                'chef_id' => $workshop->user_id,
-                'action_url' => $reviewUrl,
-            ]
-        );
-    }
+                    'workshop_id' => $workshop->id,
+                    'workshop_slug' => $workshop->slug,
+                    'review_url' => $reviewUrl,
+                    'chef_id' => $workshop->user_id,
+                    'action_url' => $reviewUrl,
+                ]
+            );
+        }
     }
 
     protected function workshopRequiresAdminReview(Workshop $workshop): bool

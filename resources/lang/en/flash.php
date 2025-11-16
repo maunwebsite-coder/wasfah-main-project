@@ -121,7 +121,7 @@ return [
             'device_mismatch' => "You can't open the workshop link from a different device. Please contact support to update your access.",
             'room_loading_failed' => "We couldn't load the meeting room because of an unexpected error. Please try again later or contact support.",
             'no_active_link' => 'This workshop does not have an active meeting link yet.',
-            'invalid_meeting_type' => "The current meeting link is not a Jitsi link, so the admin room can't be opened.",
+            'invalid_meeting_type' => "The current meeting link isn't a Google Meet URL, so the admin room can't be opened here.",
         ],
         'referral' => [
             'partner_only' => 'This page is available only to referral partners.',

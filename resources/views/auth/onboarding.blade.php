@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'إكمال بيانات الشيف')
+@section('title', __('onboarding.page_title'))
 
 @push('styles')
 <style>
@@ -9,6 +9,10 @@
         border-radius: 1.5rem;
         box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
         border: 1px solid rgba(249, 115, 22, 0.08);
+    }
+    .onboarding-card[dir="rtl"] {
+        direction: rtl;
+        text-align: right;
     }
     .onboarding-header {
         background: linear-gradient(135deg, #f97316 0%, #fb923c 40%, #fcd34d 100%);
@@ -31,6 +35,23 @@
     .onboarding-content {
         padding: 2.5rem;
     }
+    .onboarding-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    .onboarding-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fffaf0;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
     .badge-tip {
         display: inline-flex;
         align-items: center;
@@ -48,6 +69,103 @@
         border-radius: 1rem;
         padding: 1.25rem;
         color: #7c2d12;
+    }
+    .benefit-card {
+        background: #fff7ed;
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        box-shadow: 0 8px 18px rgba(249, 115, 22, 0.12);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .benefit-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 9999px;
+        background: white;
+        color: #ea580c;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2);
+    }
+    .progress-steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+    .progress-step {
+        background: white;
+        border: 1px solid #ffe4d1;
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+    .progress-step__icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 9999px;
+        background: #fed7aa;
+        color: #9a3412;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 8px 15px rgba(249, 115, 22, 0.2);
+    }
+    .helper-checklist {
+        background: #fffaf4;
+        border: 1px solid #ffe4d1;
+        border-radius: 1rem;
+        padding: 1.25rem 1.5rem;
+    }
+    .checklist-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        color: #92400e;
+        font-size: 0.95rem;
+    }
+    .checklist-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        background: #f97316;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        margin-top: 0.15rem;
+    }
+    .checklist-item + .checklist-item {
+        margin-top: 0.5rem;
+    }
+    .form-section {
+        padding-top: 1.5rem;
+        border-top: 1px dashed #ffe0c2;
+        margin-top: 1.5rem;
+    }
+    .form-section:first-of-type {
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+    }
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #7c2d12;
+        margin-bottom: 0.35rem;
+    }
+    .form-section-hint {
+        font-size: 0.95rem;
+        color: #a16207;
+        margin-bottom: 1rem;
     }
     .input-label {
         font-size: 0.95rem;
@@ -103,6 +221,8 @@
 
 @section('content')
 @php
+    $locale = app()->getLocale();
+    $isRtl = str_starts_with($locale, 'ar');
     $availableCountries = $countries ?? [];
     $defaultCountryCode = 'SA';
     $selectedCountryCode = old('country_code', $user->country_code ?? $defaultCountryCode);
@@ -121,15 +241,31 @@
             $phoneInputValue = $fullPhone;
         }
     }
+    $steps = (array) trans('onboarding.steps');
+    $checklistItems = (array) trans('onboarding.checklist.items');
 @endphp
 <div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 py-10">
     <div class="container mx-auto px-4 max-w-5xl">
-        <div class="onboarding-card">
+        <div class="onboarding-card" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
             <div class="onboarding-header">
-                <h1 class="text-3xl font-bold mb-3">مرحباً بك في مجتمع شيف وصفة</h1>
+                <h1 class="text-3xl font-bold mb-3">{{ __('onboarding.header.title') }}</h1>
                 <p class="text-base md:text-lg text-orange-50/90 max-w-2xl leading-relaxed">
-                    نحتاج بعض المعلومات للتأكد من أنك شيف متخصص في عالم الطعام، ولديك حضور قوي على وسائل التواصل. هذه الخطوة تساعدنا في تقديم أفضل تجربة للمتابعين!
+                    {{ __('onboarding.header.subtitle') }}
                 </p>
+                <div class="onboarding-chips">
+                    <span class="onboarding-chip">
+                        <i class="fas fa-bolt"></i>
+                        {{ __('onboarding.header.chips.instant') }}
+                    </span>
+                    <span class="onboarding-chip">
+                        <i class="fas fa-shield-alt"></i>
+                        {{ __('onboarding.header.chips.secure') }}
+                    </span>
+                    <span class="onboarding-chip">
+                        <i class="fas fa-users"></i>
+                        {{ __('onboarding.header.chips.spotlight') }}
+                    </span>
+                </div>
             </div>
             <div class="onboarding-content">
                 @if (session('error'))
@@ -140,135 +276,181 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                     <div class="badge-tip">
                         <i class="fas fa-check-circle"></i>
-                        تتم الموافقة فورياً بعد إرسال هذا النموذج
+                        {{ __('onboarding.header.badge_tip') }}
                     </div>
                     <div class="text-sm text-gray-500">
-                        تم تسجيل الدخول بواسطة {{ $user->email }}
+                        {{ __('onboarding.header.signed_in_as', ['email' => $user->email]) }}
                     </div>
                 </div>
 
-                <div class="info-card mb-8">
-                    <h2 class="text-lg font-semibold mb-2 text-orange-800">لماذا نطلب هذه البيانات؟</h2>
-                    <ul class="list-disc list-inside text-sm space-y-1 text-orange-700/90">
-                        <li>نستخدم رقم جوالك للتواصل معك بشأن الحجوزات والورشات.</li>
-                        <li>روابطك الاجتماعية تساعد الزوار على معرفة أسلوبك بسرعة.</li>
-                        <li>الوصف التفصيلي يسهّل إبراز خبرتك داخل مجتمع وصفة.</li>
+                <div class="progress-steps mb-8">
+                    @foreach($steps as $index => $step)
+                        <div class="progress-step" @if($isRtl) dir="rtl" @endif>
+                            <div class="progress-step__icon">{{ $index + 1 }}</div>
+                            <p class="text-sm text-gray-700 font-semibold mb-1">{{ $step['title'] ?? '' }}</p>
+                            <p class="text-xs text-gray-500">{{ $step['body'] ?? '' }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="helper-checklist mb-10">
+                    <h3 class="text-base font-semibold text-orange-900 mb-2">{{ __('onboarding.checklist.title') }}</h3>
+                    <ul>
+                        @foreach($checklistItems as $item)
+                            <li class="checklist-item" @if($isRtl) dir="rtl" @endif>
+                                <span class="checklist-icon"><i class="fas fa-check"></i></span>
+                                {{ $item }}
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
 
                 <form method="POST" action="{{ route('onboarding.store') }}" class="space-y-6">
                     @csrf
-                    <div class="grid gap-6 md:grid-cols-2">
-                        <div>
-                            <label class="input-label">الدولة *</label>
-                            <select name="country_code" id="country-code" class="input-control">
-                                <option value="">اختر دولتك</option>
-                                @foreach($availableCountries as $code => $country)
-                                    <option value="{{ $code }}"
-                                            data-dial-code="{{ $country['dial_code'] }}"
-                                            {{ $code === $selectedCountryCode ? 'selected' : '' }}>
-                                        {{ $country['name'] }} ({{ $country['dial_code'] }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('country_code')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="input-label">رقم الجوال *</label>
-                            <div class="flex items-center gap-3">
-                                <span class="phone-prefix" id="dial-code-display">{{ $currentDialCode }}</span>
-                                <div class="flex-1">
-                                    <input type="text"
-                                           name="phone"
-                                           value="{{ $phoneInputValue }}"
-                                           class="input-control"
-                                           placeholder="مثال: 5XXXXXXXX">
+                    <div class="form-section">
+                        <h3 class="form-section-title">{{ __('onboarding.sections.contact.title') }}</h3>
+                        <p class="form-section-hint">{{ __('onboarding.sections.contact.hint') }}</p>
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <div>
+                                <label class="input-label">{{ __('onboarding.sections.contact.country_label') }}</label>
+                                <select name="country_code" id="country-code" class="input-control">
+                                    <option value="">{{ __('onboarding.sections.contact.country_placeholder') }}</option>
+                                    @foreach($availableCountries as $code => $country)
+                                        <option value="{{ $code }}"
+                                                data-dial-code="{{ $country['dial_code'] }}"
+                                                {{ $code === $selectedCountryCode ? 'selected' : '' }}>
+                                            {{ $country['name'] }} ({{ $country['dial_code'] }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('country_code')
+                                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="input-label">{{ __('onboarding.sections.contact.phone_label') }}</label>
+                                <div class="flex items-center gap-3">
+                                    <span class="phone-prefix" id="dial-code-display">{{ $currentDialCode }}</span>
+                                    <div class="flex-1">
+                                        <input type="text"
+                                               name="phone"
+                                               value="{{ $phoneInputValue }}"
+                                               class="input-control"
+                                               placeholder="{{ __('onboarding.sections.contact.phone_placeholder') }}">
+                                    </div>
                                 </div>
+                                <input type="hidden" name="phone_country_code" id="phone_country_code" value="{{ $currentDialCode }}">
+                                <p class="mt-2 text-xs text-gray-500">{{ __('onboarding.sections.contact.phone_note') }}</p>
+                                @error('phone')
+                                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
-                            <input type="hidden" name="phone_country_code" id="phone_country_code" value="{{ $currentDialCode }}">
-                            @error('phone')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div class="md:col-span-2">
-                            <div class="bg-orange-50 border border-orange-100 rounded-lg px-4 py-3 text-sm text-orange-700">
-                                يرجى توفير حساب إنستغرام أو قناة يوتيوب واحدة على الأقل حتى نتمكن من التحقق من خبرتك ونشاطك.
-                            </div>
-                        </div>
-                        <div>
-                            <label class="input-label">رابط حساب إنستغرام (اختياري)</label>
-                            <input type="url"
-                                   name="instagram_url"
-                                   value="{{ old('instagram_url', $user->instagram_url) }}"
-                                   class="input-control"
-                                   placeholder="https://www.instagram.com/username">
-                            @error('instagram_url')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="input-label">رابط قناة يوتيوب (اختياري)</label>
-                            <input type="url"
-                                   name="youtube_url"
-                                   value="{{ old('youtube_url', $user->youtube_url) }}"
-                                   class="input-control"
-                                   placeholder="https://www.youtube.com/channel/...">
-                            @error('youtube_url')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        @php
-                            $instagramOldValue = old('instagram_url', $user->instagram_url);
-                            $youtubeOldValue = old('youtube_url', $user->youtube_url);
-                            $showSocialRequiredError = ($errors->has('instagram_url') || $errors->has('youtube_url')) && empty($instagramOldValue) && empty($youtubeOldValue);
-                        @endphp
-                        @if($showSocialRequiredError)
-                            <div class="md:col-span-2">
-                                <p class="mt-1 text-sm text-red-500">
-                                    يرجى إدخال حساب إنستغرام أو قناة يوتيوب واحدة على الأقل.
-                                </p>
-                            </div>
-                        @endif
-                        <div>
-                            <label class="input-label">مجال التخصص *</label>
-                            <select name="chef_specialty_area" class="input-control">
-                                <option value="">اختر تخصصك الرئيسي</option>
-                                <option value="food" {{ old('chef_specialty_area', $user->chef_specialty_area) === 'food' ? 'selected' : '' }}>الطعام والطبخ</option>
-                            </select>
-                            @error('chef_specialty_area')
-                                <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
-
-                    <p class="text-xs text-gray-500">يكفي مشاركة رابط واحد (إنستغرام أو يوتيوب) للتعريف بنفسك.</p>
-
-                    <div>
-                        <label class="input-label">صف لنا خبرتك في عالم الطعام *</label>
-                        <textarea name="chef_specialty_description"
-                                  rows="5"
-                                  class="input-control"
-                                  placeholder="حدّثنا عن نوع المحتوى الذي تقدمه، إنجازاتك، والسبب الذي يجعل متابعيك يثقون بذوقك.">{{ old('chef_specialty_description', $user->chef_specialty_description) }}</textarea>
-                        @error('chef_specialty_description')
+                    <div class="md:col-span-2">
+                        <label class="input-label">{{ __('onboarding.sections.contact.google_email_label') }}</label>
+                        <input type="email"
+                               name="google_email"
+                               value="{{ old('google_email', $user->google_email) }}"
+                               class="input-control"
+                               placeholder="name@gmail.com">
+                        <p class="mt-2 text-xs text-gray-500">
+                            {{ __('onboarding.sections.contact.google_email_hint') }}
+                        </p>
+                        @error('google_email')
                             <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
+                    <div class="form-section">
+                        <h3 class="form-section-title">{{ __('onboarding.sections.social.title') }}</h3>
+                        <p class="form-section-hint">{{ __('onboarding.sections.social.hint') }}</p>
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <div>
+                                <label class="input-label">{{ __('onboarding.sections.social.instagram_label') }}</label>
+                                <input type="url"
+                                       name="instagram_url"
+                                       value="{{ old('instagram_url', $user->instagram_url) }}"
+                                       class="input-control"
+                                       placeholder="https://www.instagram.com/username">
+                                @error('instagram_url')
+                                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="input-label">{{ __('onboarding.sections.social.youtube_label') }}</label>
+                                <input type="url"
+                                       name="youtube_url"
+                                       value="{{ old('youtube_url', $user->youtube_url) }}"
+                                       class="input-control"
+                                       placeholder="https://www.youtube.com/channel/...">
+                                @error('youtube_url')
+                                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            @php
+                                $instagramOldValue = old('instagram_url', $user->instagram_url);
+                                $youtubeOldValue = old('youtube_url', $user->youtube_url);
+                                $showSocialRequiredError = ($errors->has('instagram_url') || $errors->has('youtube_url')) && empty($instagramOldValue) && empty($youtubeOldValue);
+                            @endphp
+                            @if($showSocialRequiredError)
+                                <div class="md:col-span-2">
+                                    <p class="mt-1 text-sm text-red-500">
+                                        {{ __('onboarding.sections.social.required_error') }}
+                                    </p>
+                                </div>
+                            @endif
+                            <div class="md:col-span-2">
+                                <div class="bg-orange-50 border border-orange-100 rounded-lg px-4 py-3 text-sm text-orange-700">
+                                    {{ __('onboarding.sections.social.public_notice') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">{{ __('onboarding.sections.bio.title') }}</h3>
+                        <p class="form-section-hint">{{ __('onboarding.sections.bio.hint') }}</p>
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <div>
+                                <label class="input-label">{{ __('onboarding.sections.bio.specialty_label') }}</label>
+                                <select name="chef_specialty_area" class="input-control">
+                                    <option value="">{{ __('onboarding.sections.bio.specialty_placeholder') }}</option>
+                                    <option value="food" {{ old('chef_specialty_area', $user->chef_specialty_area) === 'food' ? 'selected' : '' }}>
+                                        {{ __('onboarding.sections.bio.specialty_food') }}
+                                    </option>
+                                </select>
+                                @error('chef_specialty_area')
+                                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="md:col-span-2 md:col-start-1">
+                                <label class="input-label">{{ __('onboarding.sections.bio.description_label') }}</label>
+                                <textarea name="chef_specialty_description"
+                                          rows="5"
+                                          class="input-control"
+                                          placeholder="{{ __('onboarding.sections.bio.description_placeholder') }}">{{ old('chef_specialty_description', $user->chef_specialty_description) }}</textarea>
+                                @error('chef_specialty_description')
+                                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                        بمجرد إرسال هذه البيانات سيتم تفعيل حساب الشيف فوراً ويمكنك استخدام كل الأدوات المتقدمة.
+                        {{ __('onboarding.alerts.post_submit') }}
                     </div>
 
                     <div class="text-center pt-4">
                         <button type="submit" class="submit-btn">
-                            إكمال التسجيل كشيف
+                            {{ __('onboarding.submit.cta') }}
                         </button>
+                        <p class="text-xs text-gray-500 mt-2">{{ __('onboarding.submit.time_notice') }}</p>
                     </div>
                 </form>
-</div>
-</div>
-</div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 

@@ -56,6 +56,10 @@ return new class extends Migration
 
     protected function ensureIndexes(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $indexes = collect(DB::select("SHOW INDEX FROM `workshop_views`"))
             ->groupBy('Key_name');
 

@@ -6,15 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Recipe;
 use App\Models\Workshop;
 use App\Services\EnhancedImageUploadService;
-use App\Services\JitsiMeetingService;
+use App\Services\GoogleMeetService;
+use App\Services\WorkshopMeetingAttendeeSyncService;
+use App\Support\ImageUploadConstraints;
+use App\Support\HostMeetRedirectLinkFactory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class WorkshopController extends Controller
 {
-    public function __construct(protected JitsiMeetingService $jitsiMeetingService)
+    public function __construct(
+        protected GoogleMeetService $googleMeetService,
+        protected WorkshopMeetingAttendeeSyncService $meetingAttendeeSync
+    )
     {
         $this->middleware('auth');
         $this->middleware('admin');
@@ -123,7 +128,13 @@ class WorkshopController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(Workshop::validationRules());
+        $request->validate(
+            Workshop::validationRules(),
+            ImageUploadConstraints::messages('image', [
+                'ar' => 'صورة الورشة',
+                'en' => 'workshop image',
+            ])
+        );
 
         $workshop = new Workshop();
         $workshop->user_id = Auth::id();
@@ -190,6 +201,7 @@ class WorkshopController extends Controller
         }
 
         $workshop->save();
+        $this->meetingAttendeeSync->sync($workshop);
 
         // ربط الوصفات المختارة بالورشة
         if ($request->has('recipe_ids') && is_array($request->recipe_ids)) {
@@ -228,19 +240,18 @@ class WorkshopController extends Controller
                 ->with('error', 'هذه الورشة لا تحتوي على رابط اجتماع نشط بعد.');
         }
 
-        if ($workshop->meeting_provider !== 'jitsi') {
+        if ($workshop->meeting_provider !== 'google_meet') {
             return redirect()
                 ->route('admin.workshops.show', $workshop)
-                ->with('error', 'رابط الاجتماع الحالي ليس من نوع Jitsi، لذا لا يمكن فتح غرفة الإدارة.');
+                ->with('error', 'غرفة الإدارة متاحة فقط لاجتماعات Google Meet التي يتم توليدها من داخل النظام.');
         }
-
-        $embedConfig = $this->buildJitsiEmbedConfig($workshop);
 
         return view('admin.workshops.meeting', [
             'workshop' => $workshop,
-            'embedConfig' => $embedConfig,
             'user' => Auth::user(),
+            'meetingLink' => $workshop->meeting_link,
             'startsAtIso' => optional($workshop->start_date)->toIso8601String(),
+            'hostRedirectUrl' => HostMeetRedirectLinkFactory::make($workshop),
         ]);
     }
 
@@ -273,7 +284,13 @@ class WorkshopController extends Controller
         ]);
 
         try {
-            $request->validate(Workshop::validationRules($id));
+        $request->validate(
+            Workshop::validationRules($id),
+            ImageUploadConstraints::messages('image', [
+                'ar' => 'صورة الورشة',
+                'en' => 'workshop image',
+            ])
+        );
             \Log::info('Validation passed for workshop update', ['workshop_id' => $id]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed for workshop update', [
@@ -370,6 +387,7 @@ class WorkshopController extends Controller
         }
 
         $workshop->save();
+        $this->meetingAttendeeSync->sync($workshop);
         
         \Log::info('Workshop updated successfully', [
             'workshop_id' => $id,
@@ -411,18 +429,45 @@ class WorkshopController extends Controller
             }
         }
 
-        $meeting = $this->jitsiMeetingService->createMeeting(
-            $validated['title'],
-            Auth::id() ?? 0,
-            $startsAt
-        );
+        $attendees = [];
+        $adminUser = Auth::user();
+
+        if ($adminUser && method_exists($adminUser, 'preferredGoogleEmail')) {
+            $preferred = $adminUser->preferredGoogleEmail();
+
+            if ($preferred) {
+                $attendees[] = [
+                    'email' => $preferred,
+                    'displayName' => $adminUser->name,
+                    'organizer' => true,
+                ];
+            }
+        }
+
+        try {
+            $meeting = $this->googleMeetService->createMeeting(
+                $validated['title'],
+                Auth::id() ?? 0,
+                $startsAt,
+                null,
+                null,
+                $attendees
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذر إنشاء اجتماع Google Meet. يرجى التحقق من الإعدادات والمحاولة مجدداً.',
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'meeting_link' => $meeting['url'],
-            'room' => $meeting['room'],
-            'passcode' => $meeting['passcode'],
-            'provider' => $meeting['provider'] ?? 'jitsi',
+            'meeting_link' => $meeting['meeting_link'],
+            'event_id' => $meeting['event_id'] ?? null,
+            'starts_at' => optional($meeting['starts_at'] ?? null)?->toIso8601String(),
+            'provider' => $meeting['provider'] ?? 'google_meet',
         ]);
     }
 
@@ -499,56 +544,39 @@ class WorkshopController extends Controller
         if (!$workshop->is_online) {
             $workshop->meeting_link = null;
             $workshop->meeting_provider = 'manual';
-            $workshop->jitsi_room = null;
-            $workshop->jitsi_passcode = null;
             $workshop->location = $locationValue;
+            $workshop->meeting_code = null;
+            $workshop->meeting_event_id = null;
+            $workshop->meeting_calendar_id = null;
+            $workshop->meeting_conference_id = null;
             return;
         }
 
         $autoGenerate = $request->boolean('auto_generate_meeting');
         $meetingLinkInput = trim((string) ($request->meeting_link ?? ''));
-        $jitsiRoomInput = trim((string) ($request->jitsi_room ?? ''));
-        $jitsiPasscodeInput = trim((string) ($request->jitsi_passcode ?? ''));
 
-        if ($jitsiRoomInput === '' && $workshop->exists && $workshop->jitsi_room) {
-            $jitsiRoomInput = $workshop->jitsi_room;
-        }
-
-        if ($jitsiPasscodeInput === '' && $workshop->exists && $workshop->jitsi_passcode) {
-            $jitsiPasscodeInput = $workshop->jitsi_passcode;
-        }
-
-        if ($autoGenerate) {
-            if ($meetingLinkInput === '' || $jitsiRoomInput === '') {
-                $meeting = $this->generateAdminJitsiMeeting($workshop);
-                $meetingLinkInput = $meeting['url'];
-                $jitsiRoomInput = $meeting['room'];
-                $jitsiPasscodeInput = $meeting['passcode'];
-            }
-
-            $workshop->meeting_link = $meetingLinkInput;
-            $workshop->meeting_provider = 'jitsi';
-            $workshop->jitsi_room = $jitsiRoomInput !== '' ? $jitsiRoomInput : null;
-            $workshop->jitsi_passcode = $jitsiPasscodeInput !== '' ? $jitsiPasscodeInput : null;
-            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين عبر Jitsi Meet';
+        if ($autoGenerate || $meetingLinkInput === '') {
+            $meeting = $this->generateAdminGoogleMeetMeeting($workshop);
+            $workshop->meeting_link = $meeting['meeting_link'];
+            $workshop->meeting_provider = $meeting['provider'] ?? 'google_meet';
+            $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين عبر Google Meet';
+            $workshop->meeting_code = Workshop::extractMeetingCode($workshop->meeting_link);
+            $workshop->meeting_event_id = $meeting['event_id'] ?? null;
+            $workshop->meeting_calendar_id = $meeting['calendar_id'] ?? null;
+            $workshop->meeting_conference_id = $meeting['conference_id'] ?? null;
             return;
         }
 
         $workshop->meeting_link = $meetingLinkInput !== '' ? $meetingLinkInput : null;
         $workshop->meeting_provider = $this->detectMeetingProvider($workshop->meeting_link);
-
-        if ($workshop->meeting_provider === 'jitsi') {
-            $workshop->jitsi_room = $jitsiRoomInput !== '' ? $jitsiRoomInput : null;
-            $workshop->jitsi_passcode = $jitsiPasscodeInput !== '' ? $jitsiPasscodeInput : null;
-        } else {
-            $workshop->jitsi_room = null;
-            $workshop->jitsi_passcode = null;
-        }
-
         $workshop->location = $locationValue !== '' ? $locationValue : 'أونلاين';
+        $workshop->meeting_code = Workshop::extractMeetingCode($workshop->meeting_link);
+        $workshop->meeting_event_id = null;
+        $workshop->meeting_calendar_id = null;
+        $workshop->meeting_conference_id = null;
     }
 
-    protected function generateAdminJitsiMeeting(Workshop $workshop): array
+    protected function generateAdminGoogleMeetMeeting(Workshop $workshop): array
     {
         $startsAt = null;
 
@@ -562,85 +590,29 @@ class WorkshopController extends Controller
             }
         }
 
-        return $this->jitsiMeetingService->createMeeting(
-            $workshop->title ?: 'ورشة جديدة',
-            Auth::id() ?? 0,
-            $startsAt
-        );
-    }
+        $attendees = [];
 
-    protected function buildJitsiEmbedConfig(Workshop $workshop): array
-    {
-        $provider = $workshop->meeting_provider ?: config('services.jitsi.provider', 'meet');
+        $hostAttendee = $workshop->hostAttendeePayload();
 
-        if ($provider === 'jaas') {
-            $jaasConfig = config('services.jitsi.jaas', []);
-            $baseUrl = $jaasConfig['base_url'] ?? 'https://8x8.vc';
-            $parsedBase = parse_url($baseUrl);
-            $domain = $parsedBase['host'] ?? '8x8.vc';
-            $scheme = $parsedBase['scheme'] ?? 'https';
-            $appId = $jaasConfig['app_id'] ?? null;
-
-            if (!$appId) {
-                throw new \RuntimeException('JaaS app ID is not configured. Please set JITSI_JAAS_APP_ID.');
-            }
-
-            $roomSlug = trim($workshop->jitsi_room ?? '');
-            if ($roomSlug === '') {
-                $roomSlug = Str::slug($workshop->title . '-' . $workshop->id, '-');
-            }
-            $roomSlug = trim(str_replace(' ', '-', $roomSlug), '/');
-
-            $roomPath = "{$appId}/{$roomSlug}";
-            $tokenService = app(\App\Services\JitsiJaasTokenService::class);
-            $user = Auth::user();
-            $userContext = [
-                'name' => $user?->name,
-                'email' => $user?->email,
-            ];
-            $jwt = $tokenService->createModeratorToken($roomSlug, $userContext, $workshop->start_date);
-
-            return [
-                'provider' => 'jaas',
-                'domain' => $domain,
-                'room' => $roomPath,
-                'jwt' => $jwt,
-                'passcode' => $workshop->jitsi_passcode,
-                'external_api_url' => "{$scheme}://{$domain}/external_api.js",
-            ];
+        if ($hostAttendee) {
+            $attendees[] = $hostAttendee;
         }
 
-        $meetingUrl = $workshop->meeting_link;
-        $parsedMeeting = $meetingUrl ? parse_url($meetingUrl) : [];
-        $fallbackBase = parse_url(config('services.jitsi.base_url', 'https://meet.jit.si'));
-
-        $domain = $parsedMeeting['host']
-            ?? ($fallbackBase['host'] ?? 'meet.jit.si');
-
-        $scheme = $parsedMeeting['scheme']
-            ?? ($fallbackBase['scheme'] ?? 'https');
-
-        $room = $workshop->jitsi_room
-            ?? ltrim($parsedMeeting['path'] ?? '', '/')
-            ?? Str::slug($workshop->title . '-' . $workshop->id, '-');
-
-        $room = trim($room);
-
-        if (str_contains($room, '/')) {
-            $segments = array_filter(explode('/', $room));
-            $room = end($segments);
+        try {
+            return $this->googleMeetService->createMeeting(
+                $workshop->title ?: 'ورشة جديدة',
+                Auth::id() ?? 0,
+                $startsAt,
+                null,
+                null,
+                $attendees,
+                $hostAttendee
+            );
+        } catch (\Throwable $exception) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'meeting_link' => 'تعذر إنشاء اجتماع Google Meet، يرجى إدخال الرابط يدوياً أو المحاولة لاحقاً.',
+            ]);
         }
-
-        if (!$room) {
-            $room = Str::slug($workshop->title . '-' . $workshop->id, '-');
-        }
-
-        return [
-            'domain' => $domain,
-            'room' => $room,
-            'passcode' => $workshop->jitsi_passcode,
-            'external_api_url' => "{$scheme}://{$domain}/external_api.js",
-        ];
     }
 
     protected function detectMeetingProvider(?string $url): string
@@ -649,10 +621,10 @@ class WorkshopController extends Controller
             return 'manual';
         }
 
-        $jitsiBase = rtrim((string) config('services.jitsi.base_url'), '/');
+        $host = parse_url($url, PHP_URL_HOST);
 
-        if ($jitsiBase && Str::contains($url, $jitsiBase)) {
-            return 'jitsi';
+        if (is_string($host) && str_contains($host, 'meet.google.com')) {
+            return 'google_meet';
         }
 
         return 'manual';

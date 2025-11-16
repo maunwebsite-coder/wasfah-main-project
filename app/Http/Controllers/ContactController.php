@@ -18,7 +18,7 @@ class ContactController extends Controller
 
     public function sendMessage(Request $request)
     {
-        $subjectKeys = implode(',', array_keys(ContactMessage::SUBJECT_LABELS));
+        $subjectKeys = implode(',', ContactMessage::subjectKeys());
 
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
@@ -28,16 +28,7 @@ class ContactController extends Controller
             'subject' => "required|string|in:{$subjectKeys}",
             'message' => 'required|string|max:2000',
             'source' => 'nullable|string|max:100',
-        ], [
-            'first_name.required' => 'الاسم الأول مطلوب',
-            'last_name.required' => 'الاسم الأخير مطلوب',
-            'email.required' => 'البريد الإلكتروني مطلوب',
-            'email.email' => 'البريد الإلكتروني غير صحيح',
-            'subject.required' => 'الموضوع مطلوب',
-            'subject.in' => 'الرجاء اختيار موضوع صالح من القائمة.',
-            'message.required' => 'الرسالة مطلوبة',
-            'message.max' => 'الرسالة طويلة جداً (الحد الأقصى 2000 حرف)',
-        ]);
+        ], $this->validationMessages());
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -52,7 +43,7 @@ class ContactController extends Controller
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'subject' => $data['subject'],
-            'subject_label' => ContactMessage::SUBJECT_LABELS[$data['subject']] ?? $data['subject'],
+            'subject_label' => ContactMessage::subjectLabel($data['subject']),
             'message' => $data['message'],
             'status' => ContactMessage::STATUS_PENDING,
             'meta' => array_filter([
@@ -65,6 +56,50 @@ class ContactController extends Controller
         $this->notifyTeam($contactMessage);
 
         return back()->with('success', __('flash.success.contact.message_submitted'));
+    }
+
+    /**
+     * Localized validation messages for the contact form.
+     *
+     * @return array<string, string>
+     */
+    protected function validationMessages(): array
+    {
+        $messages = __('contact.form.validation');
+
+        $fallbacks = [
+            'first_name.required' => __('validation.required', [
+                'attribute' => __('contact.form.fields.first_name.label'),
+            ]),
+            'last_name.required' => __('validation.required', [
+                'attribute' => __('contact.form.fields.last_name.label'),
+            ]),
+            'email.required' => __('validation.required', [
+                'attribute' => __('contact.form.fields.email.label'),
+            ]),
+            'email.email' => __('validation.email', [
+                'attribute' => __('contact.form.fields.email.label'),
+            ]),
+            'subject.required' => __('validation.required', [
+                'attribute' => __('contact.form.fields.subject.label'),
+            ]),
+            'subject.in' => __('validation.in', [
+                'attribute' => __('contact.form.fields.subject.label'),
+            ]),
+            'message.required' => __('validation.required', [
+                'attribute' => __('contact.form.fields.message.label'),
+            ]),
+            'message.max' => __('validation.max.string', [
+                'attribute' => __('contact.form.fields.message.label'),
+                'max' => 2000,
+            ]),
+        ];
+
+        foreach ($fallbacks as $rule => $fallback) {
+            $fallbacks[$rule] = $messages[$rule] ?? $fallback;
+        }
+
+        return $fallbacks;
     }
 
     /**

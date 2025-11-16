@@ -27,7 +27,7 @@ class WorkshopSeeder extends Seeder
                 'duration' => 180, // 3 ساعات
                 'max_participants' => 15,
                 'price' => 150.00,
-                'currency' => 'JOD',
+                'currency' => 'USD',
                 'image' => 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
                 'images' => [
                     'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
@@ -46,7 +46,7 @@ class WorkshopSeeder extends Seeder
                 'what_you_will_learn' => 'تعلم صنع البقلاوة، الكنافة، القطايف، وأسرار الحلويات العربية',
                 'materials_needed' => 'جميع الأدوات والمكونات متوفرة في الورشة',
                 'is_active' => true,
-                'is_featured' => true,
+                'is_featured' => false,
                 'rating' => 4.8,
                 'reviews_count' => 25
             ],
@@ -62,7 +62,7 @@ class WorkshopSeeder extends Seeder
                 'duration' => 240, // 4 ساعات
                 'max_participants' => 12,
                 'price' => 200.00,
-                'currency' => 'JOD',
+                'currency' => 'USD',
                 'image' => 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
                 'images' => [
                     'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
@@ -80,7 +80,7 @@ class WorkshopSeeder extends Seeder
                 'what_you_will_learn' => 'صنع المعكرونة الطازجة، البيتزا، الريزوتو، والصلصات الإيطالية',
                 'materials_needed' => 'جميع المكونات متوفرة',
                 'is_active' => true,
-                'is_featured' => true,
+                'is_featured' => false,
                 'rating' => 4.9,
                 'reviews_count' => 18
             ],
@@ -96,7 +96,7 @@ class WorkshopSeeder extends Seeder
                 'duration' => 120, // ساعتان
                 'max_participants' => 30,
                 'price' => 80.00,
-                'currency' => 'JOD',
+                'currency' => 'USD',
                 'image' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
                 'images' => [
                     'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
@@ -131,7 +131,7 @@ class WorkshopSeeder extends Seeder
                 'duration' => 300, // 5 ساعات
                 'max_participants' => 10,
                 'price' => 180.00,
-                'currency' => 'JOD',
+                'currency' => 'USD',
                 'image' => 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop',
                 'images' => [
                     'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop',
@@ -165,7 +165,7 @@ class WorkshopSeeder extends Seeder
                 'duration' => 360, // 6 ساعات
                 'max_participants' => 8,
                 'price' => 300.00,
-                'currency' => 'JOD',
+                'currency' => 'USD',
                 'image' => 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',
                 'images' => [
                     'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',

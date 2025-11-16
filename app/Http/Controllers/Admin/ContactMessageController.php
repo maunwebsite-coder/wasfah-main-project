@@ -28,7 +28,7 @@ class ContactMessageController extends Controller
             $messagesQuery->where('status', $status);
         }
 
-        if ($subject !== 'all' && array_key_exists($subject, ContactMessage::SUBJECT_LABELS)) {
+        if ($subject !== 'all' && in_array($subject, ContactMessage::subjectKeys(), true)) {
             $messagesQuery->where('subject', $subject);
         }
 
@@ -68,7 +68,7 @@ class ContactMessageController extends Controller
             'searchTerm' => $search,
             'statusTotals' => $statusTotals,
             'perPage' => $perPage,
-            'subjectOptions' => ContactMessage::SUBJECT_LABELS,
+            'subjectOptions' => ContactMessage::subjectLabelOptions(),
         ]);
     }
 }

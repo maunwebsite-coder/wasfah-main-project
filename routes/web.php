@@ -433,6 +433,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/recipes', [App\Http\Controllers\Admin\RecipeController::class, 'index'])->name('recipes.index');
     Route::get('/recipes/create', [App\Http\Controllers\Admin\RecipeController::class, 'create'])->name('recipes.create');
     Route::post('/recipes', [App\Http\Controllers\Admin\RecipeController::class, 'store'])->name('recipes.store');
+    Route::post('/recipes/approve-all', [App\Http\Controllers\Admin\RecipeController::class, 'approveAll'])->name('recipes.approve-all');
     Route::post('/recipes/{recipe}/approve', [App\Http\Controllers\Admin\RecipeController::class, 'approve'])->name('recipes.approve');
     Route::post('/recipes/{recipe}/reject', [App\Http\Controllers\Admin\RecipeController::class, 'reject'])->name('recipes.reject');
     Route::get('/recipes/{recipe}', [App\Http\Controllers\Admin\RecipeController::class, 'show'])->name('recipes.show');

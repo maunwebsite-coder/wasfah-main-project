@@ -9,6 +9,7 @@ use App\Models\Ingredient;
 use App\Models\Tool;
 use App\Services\ImageCompressionService;
 use App\Services\SimpleImageCompressionService;
+use App\Support\ImageUploadConstraints;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -70,6 +71,35 @@ class RecipeController extends Controller
         
         return null;
     }
+
+    /**
+     * Localized validation messages for recipe image fields.
+     */
+    protected function recipeImageMessages(): array
+    {
+        return ImageUploadConstraints::messagesFor([
+            'image' => [
+                'ar' => 'الصورة الرئيسية',
+                'en' => 'primary image',
+            ],
+            'image_2' => [
+                'ar' => 'الصورة الثانية',
+                'en' => 'image 2',
+            ],
+            'image_3' => [
+                'ar' => 'الصورة الثالثة',
+                'en' => 'image 3',
+            ],
+            'image_4' => [
+                'ar' => 'الصورة الرابعة',
+                'en' => 'image 4',
+            ],
+            'image_5' => [
+                'ar' => 'الصورة الخامسة',
+                'en' => 'image 5',
+            ],
+        ]);
+    }
     public function index(Request $request)
     {
         $status = $request->query('status', 'all');
@@ -119,10 +149,18 @@ class RecipeController extends Controller
         ];
         $statusCounts['all'] = array_sum($statusCounts);
 
+        $approvalPendingCount = Recipe::query()
+            ->where(function ($query) {
+                $query->whereNull('status')
+                      ->orWhere('status', '!=', Recipe::STATUS_APPROVED);
+            })
+            ->count();
+
         return view('admin.recipes.index', [
             'recipes' => $recipes,
             'status' => $status,
             'statusCounts' => $statusCounts,
+            'approvalPendingCount' => $approvalPendingCount,
         ]);
     }
 
@@ -135,29 +173,34 @@ class RecipeController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'author' => 'nullable|string|max:255',
-            'prep_time' => 'nullable|integer|min:0',
-            'cook_time' => 'nullable|integer|min:0',
-            'servings' => 'nullable|integer|min:0',
-            'difficulty' => 'nullable|in:easy,medium,hard',
-            'image_url' => 'nullable|url',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_4' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_5' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'category_id' => 'nullable|exists:categories,category_id',
-            'steps' => 'nullable|array',
-            'steps.*' => 'nullable|string',
-            'ingredients' => 'nullable|array',
-            'ingredients.*.name' => 'nullable|string',
-            'ingredients.*.amount' => 'nullable|string',
-            'tools' => 'nullable|array',
-            'tools.*' => 'nullable|exists:tools,id',
-        ]);
+        $imageRule = array_merge(['nullable'], ImageUploadConstraints::rules());
+
+        $request->validate(
+            [
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'author' => 'nullable|string|max:255',
+                'prep_time' => 'nullable|integer|min:0',
+                'cook_time' => 'nullable|integer|min:0',
+                'servings' => 'nullable|integer|min:0',
+                'difficulty' => 'nullable|in:easy,medium,hard',
+                'image_url' => 'nullable|url',
+                'image' => $imageRule,
+                'image_2' => $imageRule,
+                'image_3' => $imageRule,
+                'image_4' => $imageRule,
+                'image_5' => $imageRule,
+                'category_id' => 'nullable|exists:categories,category_id',
+                'steps' => 'nullable|array',
+                'steps.*' => 'nullable|string',
+                'ingredients' => 'nullable|array',
+                'ingredients.*.name' => 'nullable|string',
+                'ingredients.*.amount' => 'nullable|string',
+                'tools' => 'nullable|array',
+                'tools.*' => 'nullable|exists:tools,id',
+            ],
+            $this->recipeImageMessages()
+        );
 
         // الصورة اختيارية - يمكن تركها فارغة
 
@@ -261,6 +304,33 @@ class RecipeController extends Controller
     }
 
     /**
+     * Approve all pending recipes in one action.
+     */
+    public function approveAll()
+    {
+        $pendingQuery = Recipe::query()->where(function ($query) {
+            $query->whereNull('status')
+                  ->orWhere('status', '!=', Recipe::STATUS_APPROVED);
+        });
+
+        $pendingCount = (clone $pendingQuery)->count();
+
+        if ($pendingCount === 0) {
+            return back()->with('error', 'لا توجد وصفات بحاجة للاعتماد حالياً.');
+        }
+
+        $timestamp = now();
+
+        $pendingQuery->update([
+            'status' => Recipe::STATUS_APPROVED,
+            'approved_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ]);
+
+        return back()->with('success', "تم اعتماد {$pendingCount} وصفة بنجاح.");
+    }
+
+    /**
      * Reject a recipe and return it to the chef for updates.
      */
     public function reject(Recipe $recipe)
@@ -306,29 +376,34 @@ class RecipeController extends Controller
             ]);
 
             // All fields are now optional
-            $request->validate([
-            'title' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'author' => 'nullable|string|max:255',
-            'prep_time' => 'nullable|integer|min:0',
-            'cook_time' => 'nullable|integer|min:0',
-            'servings' => 'nullable|integer|min:0',
-            'difficulty' => 'nullable|in:easy,medium,hard',
-            'image_url' => 'nullable|url',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_4' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'image_5' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'category_id' => 'nullable|exists:categories,category_id',
-            'steps' => 'nullable|array',
-            'steps.*' => 'nullable|string',
-            'ingredients' => 'nullable|array',
-            'ingredients.*.name' => 'nullable|string',
-            'ingredients.*.amount' => 'nullable|string',
-            'tools' => 'nullable|array',
-            'tools.*' => 'nullable|exists:tools,id',
-        ]);
+            $imageRule = array_merge(['nullable'], ImageUploadConstraints::rules());
+
+            $request->validate(
+                [
+                    'title' => 'nullable|string|max:255',
+                    'description' => 'nullable|string',
+                    'author' => 'nullable|string|max:255',
+                    'prep_time' => 'nullable|integer|min:0',
+                    'cook_time' => 'nullable|integer|min:0',
+                    'servings' => 'nullable|integer|min:0',
+                    'difficulty' => 'nullable|in:easy,medium,hard',
+                    'image_url' => 'nullable|url',
+                    'image' => $imageRule,
+                    'image_2' => $imageRule,
+                    'image_3' => $imageRule,
+                    'image_4' => $imageRule,
+                    'image_5' => $imageRule,
+                    'category_id' => 'nullable|exists:categories,category_id',
+                    'steps' => 'nullable|array',
+                    'steps.*' => 'nullable|string',
+                    'ingredients' => 'nullable|array',
+                    'ingredients.*.name' => 'nullable|string',
+                    'ingredients.*.amount' => 'nullable|string',
+                    'tools' => 'nullable|array',
+                    'tools.*' => 'nullable|exists:tools,id',
+                ],
+                $this->recipeImageMessages()
+            );
 
         // الصورة اختيارية - يمكن تركها فارغة
 

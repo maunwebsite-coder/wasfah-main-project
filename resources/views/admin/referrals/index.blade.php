@@ -4,7 +4,7 @@
 
 @section('content')
     @php
-        $defaultReferralCurrency = config('referrals.default_currency', 'JOD');
+        $defaultReferralCurrency = config('referrals.default_currency', 'USD');
         $defaultReferralSymbol = data_get(
             config('referrals.currencies', []),
             "{$defaultReferralCurrency}.symbol",

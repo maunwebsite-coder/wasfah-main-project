@@ -3,10 +3,22 @@
  * @description نظام البحث في الموقع - يتعامل مع البحث في الوصفات والورشات
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+const hasDocument = typeof document !== 'undefined';
+let navbarSearchModuleInitialized = false;
+
+function initNavbarSearchModule() {
+    if (!hasDocument || navbarSearchModuleInitialized) {
+        return;
+    }
+
+    navbarSearchModuleInitialized = true;
+
     // عناصر البحث
     const searchInput = document.getElementById('search-input');
     const searchSubmit = document.getElementById('search-submit');
+    const desktopSearchContainer = document.getElementById('search-container');
+    const desktopSearchToggle = document.getElementById('desktopSearchToggle');
+    const desktopSearchClose = document.getElementById('desktopSearchClose');
     const mobileSearchInput = document.getElementById('mobile-search-input');
     const mobileSearchSubmit = document.getElementById('mobile-search-submit');
     
@@ -23,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // تهيئة البحث
     initializeSearch();
+    setupDesktopSearchInteractions();
     
     function removeLoadingSkeletons() {
         // إزالة loading skeleton للبحث
@@ -45,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
             searchInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleSearch();
+                    handleSearch(e);
                 }
             });
             
@@ -94,7 +107,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function handleSearch() {
+    function handleSearch(event) {
+        if (desktopSearchContainer && !isDesktopSearchExpanded()) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            expandDesktopSearch();
+            return;
+        }
+
         const query = searchInput.value.trim();
         if (query) {
             performSearch(query);
@@ -106,6 +128,133 @@ document.addEventListener('DOMContentLoaded', function() {
         if (query) {
             performSearch(query);
         }
+    }
+
+    function setupDesktopSearchInteractions() {
+        if (!desktopSearchContainer || !searchInput) {
+            return;
+        }
+
+        const isExpanded = desktopSearchContainer.classList.contains('search-expanded');
+
+        desktopSearchContainer.dataset.expanded = isExpanded ? 'true' : 'false';
+        if (desktopSearchToggle) {
+            desktopSearchToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        } else if (searchSubmit) {
+            searchSubmit.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        }
+
+        if (isExpanded) {
+            showDesktopSearchInput();
+        } else {
+            hideDesktopSearchInput(true);
+        }
+
+        if (desktopSearchToggle) {
+            desktopSearchToggle.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (isDesktopSearchExpanded()) {
+                    collapseDesktopSearch(true);
+                } else {
+                    expandDesktopSearch();
+                }
+            });
+        }
+
+        if (desktopSearchClose) {
+            desktopSearchClose.addEventListener('click', (event) => {
+                event.preventDefault();
+                collapseDesktopSearch(true);
+            });
+        }
+
+        searchInput.addEventListener('focus', expandDesktopSearch);
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                searchInput.value = '';
+                collapseDesktopSearch(true);
+                removeExistingSuggestions();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (desktopSearchToggle && desktopSearchToggle.contains(event.target)) {
+                return;
+            }
+
+            if (!desktopSearchContainer.contains(event.target)) {
+                collapseDesktopSearch();
+            }
+        });
+    }
+
+    function expandDesktopSearch() {
+        if (!desktopSearchContainer || !searchInput) {
+            return;
+        }
+
+        if (desktopSearchContainer.classList.contains('search-expanded')) {
+            return;
+        }
+
+        desktopSearchContainer.classList.add('search-expanded');
+        desktopSearchContainer.dataset.expanded = 'true';
+        const expansionTrigger = desktopSearchToggle ?? searchSubmit;
+        expansionTrigger?.setAttribute('aria-expanded', 'true');
+        showDesktopSearchInput();
+
+        requestAnimationFrame(() => {
+            searchInput.focus();
+        });
+    }
+
+    function collapseDesktopSearch(force = false) {
+        if (!desktopSearchContainer || !searchInput) {
+            return;
+        }
+
+        if (!force && searchInput.value.trim().length > 0) {
+            return;
+        }
+
+        desktopSearchContainer.classList.remove('search-expanded');
+        desktopSearchContainer.dataset.expanded = 'false';
+        const expansionTrigger = desktopSearchToggle ?? searchSubmit;
+        expansionTrigger?.setAttribute('aria-expanded', 'false');
+        hideDesktopSearchInput(true);
+        removeExistingSuggestions();
+    }
+
+    function isDesktopSearchExpanded() {
+        return desktopSearchContainer && desktopSearchContainer.classList.contains('search-expanded');
+    }
+
+    function showDesktopSearchInput() {
+        if (!searchInput) {
+            return;
+        }
+
+        if (searchInput.hidden) {
+            searchInput.hidden = false;
+        }
+
+        searchInput.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideDesktopSearchInput(force = false) {
+        if (!searchInput) {
+            return;
+        }
+
+        if (!force && searchInput.value.trim().length > 0) {
+            searchInput.setAttribute('aria-hidden', 'false');
+            return;
+        }
+
+        searchInput.hidden = true;
+        searchInput.setAttribute('aria-hidden', 'true');
     }
     
     function performSearch(query) {
@@ -583,4 +732,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         });
     }
-});
+}
+
+function bootstrapNavbarSearchModule() {
+    if (!hasDocument) {
+        return;
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNavbarSearchModule, { once: true });
+    } else {
+        initNavbarSearchModule();
+    }
+}
+
+bootstrapNavbarSearchModule();

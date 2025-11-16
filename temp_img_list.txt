@@ -1,0 +1,59 @@
+resources/views/auth.blade.php:471:                        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google" loading="lazy">
+resources/views/cart.blade.php:86:                                                <img src="{{ $item->tool->image_url }}" 
+resources/views/cart.blade.php:141:                                                <img src="{{ $item->tool->image_url }}" 
+resources/views/chef/links/edit.blade.php:224:                                    <img src="{{ $heroPreviewDefault }}" alt="صورة الصفحة" class="h-full w-full object-cover" id="preview-hero-image" data-original="{{ $heroPreviewDefault }}" data-fallback="{{ $heroPlaceholder }}" loading="lazy">
+resources/views/chef/links/edit.blade.php:382:                                <img src="{{ $heroPreviewDefault }}" alt="معاينة صورة الغلاف" class="h-full w-full object-cover" id="preview-hero-image-clone" loading="lazy">
+resources/views/chef/profile-fallback.blade.php:11:                        <img src="{{ $avatarUrl }}" alt="صورة الشيف {{ $chef->name }}" class="w-full h-full object-cover" loading="lazy">
+resources/views/chef/profile-fallback.blade.php:102:                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover" loading="lazy">
+resources/views/chef/profile-fallback.blade.php:175:                                                <img src="{{ $coverImage }}" alt="ورشة {{ $workshop->title }}" class="w-full h-full object-cover opacity-90" loading="lazy">
+resources/views/chef/profile-fallback.blade.php:231:                                    <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="w-full h-48 object-cover" loading="lazy">
+resources/views/chef/profile-fallback.blade.php:257:                                    <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="w-full h-44 object-cover opacity-80" loading="lazy">
+resources/views/chef/public-profile.blade.php:1221:                        <img src="{{ $avatarUrl }}" alt="{{ __('chef.hero.avatar_alt', ['name' = loading="lazy"> $chef->name]) }}">
+resources/views/chef/public-profile.blade.php:1395:                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' = loading="lazy"> $workshop->title]) }}">
+resources/views/chef/public-profile.blade.php:1489:                                            <img src="{{ $coverImage }}" alt="{{ __('chef.workshops.image_alt', ['title' = loading="lazy"> $workshop->title]) }}">
+resources/views/chef/public-profile.blade.php:1561:                                            <img src="{{ $recipe->image_url ?? asset('image/brownies.webp') }}" alt="{{ $recipe->title }}" loading="lazy">
+resources/views/chef/public-profile.blade.php:1609:                                                <img src="{{ $recipe->image_url ?? asset('image/brownies.webp') }}" alt="{{ $recipe->title }}" loading="lazy">
+resources/views/chef/public-profile.blade.php:1659:                                            <img src="{{ $recipe->image_url ?? asset('image/brownies.webp') }}" alt="{{ $recipe->title }}" loading="lazy">
+resources/views/chef/public-workshops.blade.php:18:                        <img src="{{ $avatarUrl }}" alt="صورة {{ $chef->name }}" class="h-full w-full object-cover" loading="lazy">
+resources/views/chef/recipes/form.blade.php:235:                            <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" class="h-full w-full object-cover" loading="lazy">
+resources/views/chef/recipes/form.blade.php:276:                                    <img src="{{ Storage::disk('public')->url($recipe->{$field}) }}" alt="{{ __('chef.recipe_form.sections.media.current_alt') }}" class="h-20 w-20 rounded-lg object-cover border border-gray-200" loading="lazy">
+resources/views/chef/recipes/index.blade.php:427:                                                    <img src="{{ Storage::disk('public')->url($recipe->image) }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover" loading="lazy">
+resources/views/chef/workshops/form.blade.php:354:                    <img src="{{ $coverImageUrl }}" alt="{{ __('chef.workshop_form.sections.image.preview_alt') }}" class="mx-auto h-40 w-full rounded-2xl object-cover" loading="lazy">
+resources/views/chef/workshops/index.blade.php:157:                                    <img src="{{ $coverImage }}"
+resources/views/chef-links/show.blade.php:292:            <img src="{{ $page->avatar_url ?? asset('image/logo.webp') }}" alt="{{ $imageAlt }}" class="hero-image" loading="lazy">
+resources/views/components/featured-recipe-card.blade.php:8:                <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}" 
+resources/views/components/latest-recipe-item.blade.php:6:            <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}"
+resources/views/components/optimized-picture.blade.php:79:    <img src="{{ $fallbackSrc }}" alt="{{ $alt }}" {{ $imgAttributes }}>
+resources/views/home.blade.php:1513:                                                    <img
+resources/views/home.blade.php:1691:                    <img src="{{ $featuredWorkshop->image ? asset('storage/' . $featuredWorkshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=Premium+Workshop' }}" 
+resources/views/home.blade.php:1783:                                        <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" loading="lazy" onerror="this.src='{{ asset('image/logo.webp') }}'">
+resources/views/home.blade.php:1992:                                            <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=Workshop' }}" 
+resources/views/links.blade.php:596:                    <img src="{{ $upcomingWorkshop['image'] }}" alt="{{ __('links.upcoming.image_alt') }}" loading="lazy">
+resources/views/links.blade.php:613:                            <img src="{{ $selection['image'] }}" alt="{{ $selection['alt'] }}" loading="lazy">
+resources/views/pages/partials/tips-page.blade.php:55:                    <img src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=1200&auto=format&fit=crop"
+resources/views/profile/activity.blade.php:109:                                    <img
+resources/views/profile/activity.blade.php:150:                                    <img
+resources/views/profile/index.blade.php:331:                                    <img
+resources/views/profile/partials/hero.blade.php:21:                    <img src="{{ $avatarUrl }}" alt="صورة الملف الشخصي" class="w-full h-full rounded-full object-cover" loading="lazy">
+resources/views/recipe.blade.php:1572:                        <img id="main-recipe-image" class="w-full h-full object-cover transition-opacity duration-300" 
+resources/views/recipe.blade.php:1598:                                <img onclick="showImage({{ $index }})" 
+resources/views/recipe.blade.php:1748:                      <img src="{{ asset('storage/' . $tool['image']) }}" alt="{{ $tool['name'] }}" class="w-full h-full object-cover" loading="lazy">
+resources/views/recipe.blade.php:1938:                      <img src="{{ $relatedRecipe->image_url }}" alt="{{ $relatedRecipe->title }}" 
+resources/views/recipes.blade.php:1023:                                    <img
+resources/views/saved.blade.php:37:                                    <img src="{{ $savedTool->tool->image_url }}" 
+resources/views/search.blade.php:179:                                            <img src="{{ $image }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+resources/views/search.blade.php:254:                                            <img src="{{ $workshopImage }}" alt="{{ $workshop->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+resources/views/test-flip-cards.blade.php:104:                                <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}" 
+resources/views/test-save.blade.php:30:                    <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}" 
+resources/views/tools/show.blade.php:430:                                        <img src="{{ $image }}" alt="{{ $tool->name }}" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
+resources/views/tools/show.blade.php:449:                                            <img src="{{ $image }}" alt="{{ $tool->name }}" loading="lazy">
+resources/views/tools/show.blade.php:604:        <img src="" alt="{{ $tool->name }}" loading="lazy">
+resources/views/tools/show.blade.php:623:                                <img src="{{ $relatedTool->image_url }}" alt="{{ $relatedTool->name }}" loading="lazy">
+resources/views/tools.blade.php:452:                                                <img src="{{ $image }}"
+resources/views/workshop-details.blade.php:537:                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=ورشة+فاخرة' }}" 
+resources/views/workshop-details.blade.php:630:                                                    <img src="{{ $recipe->image_url ?: 'https://placehold.co/400x300/f87171/FFFFFF?text=وصفة' }}" 
+resources/views/workshop-details.blade.php:848:                                <img src="{{ $workshop->instructor_avatar }}" alt="{{ $workshop->instructor }}" 
+resources/views/workshop-details.blade.php:949:                                        <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
+resources/views/workshops/not-found.blade.php:117:                            <img src="{{ $imageUrl }}" alt="{{ $suggestedWorkshop->title }}" class="h-48 w-full object-cover" loading="lazy">
+resources/views/workshops.blade.php:213:                    <img src="{{ $featuredWorkshop->image ? asset('storage/' . $featuredWorkshop->image) : $featuredPlaceholderUrl }}" 
+resources/views/workshops.blade.php:317:                                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : $cardPlaceholderUrl }}" 

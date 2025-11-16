@@ -1571,7 +1571,7 @@
                     <div class="main-image-wrapper relative overflow-hidden">
                         <img id="main-recipe-image" class="w-full h-full object-cover transition-opacity duration-300" 
                              src="{{ $recipe->getAllImages()[0] }}" alt="صورة الوصفة"
-                             onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                         
                         <!-- Navigation Arrows -->
                         @if(count($recipe->getAllImages()) > 1)
@@ -1599,7 +1599,7 @@
                                      class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all thumbnail {{ $index === 0 ? 'active' : '' }}" 
                                      src="{{ $imageUrl }}" 
                                      alt="صورة {{ $index + 1 }}"
-                                     onerror="this.src='{{ asset('image/logo.png') }}';">
+                                     onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                             @endforeach
                         </div>
                     @endif
@@ -1745,7 +1745,7 @@
                   <!-- Tool Image -->
                   <div class="h-36 bg-gray-100 flex items-center justify-center">
                     @if(isset($tool['image']) && $tool['image'])
-                      <img src="{{ asset('storage/' . $tool['image']) }}" alt="{{ $tool['name'] }}" class="w-full h-full object-cover">
+                      <img src="{{ asset('storage/' . $tool['image']) }}" alt="{{ $tool['name'] }}" class="w-full h-full object-cover" loading="lazy">
                     @else
                       <i class="fas fa-tools text-4xl text-gray-400"></i>
                     @endif
@@ -1937,7 +1937,7 @@
                     @if($relatedRecipe->image_url)
                       <img src="{{ $relatedRecipe->image_url }}" alt="{{ $relatedRecipe->title }}" 
                            class="w-full h-full object-cover"
-                           onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                           onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                     @else
                       <i class="fas fa-image text-4xl text-gray-400"></i>
                     @endif
@@ -2099,7 +2099,6 @@
     </div>
     
     @push('scripts')
-        @vite(['resources/js/made-recipe.js', 'resources/js/share-recipe.js'])
         <script>
             // معالجة إضافية لروابط Google Drive في صفحة الوصفة
             document.addEventListener('DOMContentLoaded', function() {
@@ -2132,7 +2131,6 @@
                 loadToolsSavedStatus();
                 
                 // Load saved count for the badge
-                loadSavedCount();
                 
                 // Initialize serving size functionality
                 initializeServingSize();
@@ -2171,86 +2169,6 @@
                     })
                     .catch(error => {
                         console.error('Error loading saved status:', error);
-                    });
-            }
-
-            // Update saved count UI
-            function updateSavedCountUI(count) {
-                // تحديث العداد في الهيدر
-                const savedCountEl = document.getElementById('saved-count');
-                if (savedCountEl) {
-                    if (count > 0) {
-                        savedCountEl.textContent = count;
-                        savedCountEl.classList.remove('hidden');
-                        console.log('Updated navbar counter to:', count);
-                    } else {
-                        savedCountEl.classList.add('hidden');
-                        console.log('Hidden navbar counter');
-                    }
-                }
-            }
-
-            // Load saved count for the badge
-            function loadSavedCount() {
-                console.log('Loading saved count from recipe page...');
-                fetch('/saved/count')
-                    .then(response => {
-                        console.log('Recipe page response status:', response.status);
-                        if (response.status === 401) {
-                            console.log('User not authenticated in recipe page');
-                            updateSavedCountUI(0);
-                            return;
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data) {
-                            console.log('Recipe page saved count data:', data);
-                            updateSavedCountUI(data.count);
-                            
-                            // تحديث فوري للعداد في الهاتف المحمول (السلة)
-                            const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                            if (mobileCartCountEl) {
-                                if (data.count > 0) {
-                                    mobileCartCountEl.textContent = data.count;
-                                    mobileCartCountEl.classList.remove('hidden');
-                                    console.log('Updated mobile cart count (saved tools) from recipe page:', data.count);
-                                } else {
-                                    mobileCartCountEl.classList.add('hidden');
-                                    console.log('Hidden mobile cart count (saved tools) from recipe page');
-                                }
-                            }
-                            
-                            // تحديث فوري للعداد في الهاتف المحمول (الأدوات المحفوظة)
-                            const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-                            if (mobileSavedCountEl) {
-                                if (data.count > 0) {
-                                    mobileSavedCountEl.textContent = data.count;
-                                    mobileSavedCountEl.classList.remove('hidden');
-                                    console.log('Updated mobile saved count from recipe page:', data.count);
-                                } else {
-                                    mobileSavedCountEl.classList.add('hidden');
-                                    console.log('Hidden mobile saved count from recipe page');
-                                }
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading saved count from recipe page:', error);
-                        updateSavedCountUI(0);
-                        
-                        // تحديث فوري للعداد في الهاتف المحمول عند الخطأ
-                        const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                        if (mobileCartCountEl) {
-                            mobileCartCountEl.classList.add('hidden');
-                            console.log('Hidden mobile cart count (saved tools) due to error');
-                        }
-                        
-                        const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-                        if (mobileSavedCountEl) {
-                            mobileSavedCountEl.classList.add('hidden');
-                            console.log('Hidden mobile saved count due to error');
-                        }
                     });
             }
 
@@ -2295,29 +2213,6 @@
                             btn.classList.add('bg-green-500', 'hover:bg-green-600');
                             btn.classList.add('saved');
                             btn.disabled = false;
-                            
-                            // Update saved count in header
-                            const currentCount = parseInt(document.getElementById('saved-count')?.textContent || '0');
-                            updateSavedCountUI(currentCount + 1);
-                            console.log('Updated counter after adding item:', currentCount + 1);
-                            
-                            // تحديث فوري للعداد في الهاتف المحمول (السلة)
-                            const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                            if (mobileCartCountEl) {
-                                const currentCartCount = parseInt(mobileCartCountEl.textContent || '0');
-                                mobileCartCountEl.textContent = currentCartCount + 1;
-                                mobileCartCountEl.classList.remove('hidden');
-                                console.log('Updated mobile cart count (saved tools) after adding item from recipe page:', currentCartCount + 1);
-                            }
-                            
-                            // تحديث فوري للعداد في الهاتف المحمول (الأدوات المحفوظة)
-                            const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-                            if (mobileSavedCountEl) {
-                                const currentMobileCount = parseInt(mobileSavedCountEl.textContent || '0');
-                                mobileSavedCountEl.textContent = currentMobileCount + 1;
-                                mobileSavedCountEl.classList.remove('hidden');
-                                console.log('Updated mobile saved count after adding item from recipe page:', currentMobileCount + 1);
-                            }
                             
                             // Show success animation on the button
                             btn.style.transform = 'scale(1.05)';
@@ -2384,39 +2279,6 @@
                         button.classList.remove('bg-green-500', 'hover:bg-green-600', 'saved');
                         button.classList.add('bg-orange-500', 'hover:bg-orange-600');
                         button.disabled = false;
-                        
-                        // Update saved count
-                        const currentCount = parseInt(document.getElementById('saved-count')?.textContent || '0');
-                        updateSavedCountUI(Math.max(0, currentCount - 1));
-                        console.log('Updated counter after removing item:', Math.max(0, currentCount - 1));
-                        
-                        // تحديث فوري للعداد في الهاتف المحمول (السلة)
-                        const mobileCartCountEl = document.getElementById('mobile-cart-count');
-                        if (mobileCartCountEl) {
-                            const currentCartCount = parseInt(mobileCartCountEl.textContent || '0');
-                            const newCartCount = Math.max(0, currentCartCount - 1);
-                            mobileCartCountEl.textContent = newCartCount;
-                            if (newCartCount === 0) {
-                                mobileCartCountEl.classList.add('hidden');
-                            } else {
-                                mobileCartCountEl.classList.remove('hidden');
-                            }
-                            console.log('Updated mobile cart count (saved tools) after removing item from recipe page:', newCartCount);
-                        }
-                        
-                        // تحديث فوري للعداد في الهاتف المحمول (الأدوات المحفوظة)
-                        const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-                        if (mobileSavedCountEl) {
-                            const currentMobileCount = parseInt(mobileSavedCountEl.textContent || '0');
-                            const newCount = Math.max(0, currentMobileCount - 1);
-                            mobileSavedCountEl.textContent = newCount;
-                            if (newCount === 0) {
-                                mobileSavedCountEl.classList.add('hidden');
-                            } else {
-                                mobileSavedCountEl.classList.remove('hidden');
-                            }
-                            console.log('Updated mobile saved count after removing item from recipe page:', newCount);
-                        }
                         
                         // Show success animation
                         button.style.transform = 'scale(1.05)';
@@ -2841,3 +2703,5 @@
         </script>
     @endpush
 @endsection
+
+

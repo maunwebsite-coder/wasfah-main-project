@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'إضافة ورشة جديدة - لوحة الإدارة')
 
@@ -637,10 +637,8 @@
             $recipesCount = $recipes->count();
             $isOnlineOld = old('is_online', false) ? true : false;
             $autoGenerateMeeting = (int) old('auto_generate_meeting', 1) === 1;
-            $storedJitsiRoom = old('jitsi_room');
-            $storedJitsiPasscode = old('jitsi_passcode');
-            $storedMeetingLink = old('meeting_link');
-            $hasGeneratedMeeting = $storedJitsiRoom && $storedMeetingLink;
+            $storedMeetingLink = trim((string) old('meeting_link'));
+            $hasGeneratedMeeting = $storedMeetingLink !== '';
             $meetingStatusState = !$isOnlineOld
                 ? 'idle'
                 : ($hasGeneratedMeeting
@@ -648,11 +646,13 @@
                     : ($autoGenerateMeeting ? 'idle' : 'manual'));
             $meetingStatusText = !$isOnlineOld
                 ? 'قم بتفعيل الورشة الأونلاين للوصول إلى توليد الروابط.'
-                : ($hasGeneratedMeeting
-                    ? 'تم إنشاء رابط Jitsi جاهز.'
-                    : ($autoGenerateMeeting
-                        ? 'سيتم توليد رابط Jitsi تلقائياً بعد الحفظ.'
-                        : 'أدخل رابط الاجتماع المخصص يدوياً.'));
+                        : ($hasGeneratedMeeting
+                            ? 'تم إنشاء رابط Google Meet جاهز.'
+                            : ($autoGenerateMeeting
+                                ? 'سيتم توليد رابط Google Meet تلقائياً بعد الحفظ.'
+                                : 'أدخل رابط الاجتماع المخصص يدوياً.'));
+            $currencyOptions = \App\Support\Currency::all();
+            $defaultCurrency = \App\Support\Currency::default();
         @endphp
 
         <div class="page-hero">
@@ -859,7 +859,11 @@
                                            placeholder="0.00">
                                     <select name="currency"
                                             class="form-select sm:w-44 @error('currency') is-invalid @enderror">
-                                        <option value="JOD" {{ old('currency', 'JOD') == 'JOD' ? 'selected' : '' }}>دينار أردني</option>
+                                        @foreach($currencyOptions as $code => $currency)
+                                            <option value="{{ $code }}" {{ old('currency', $defaultCurrency) == $code ? 'selected' : '' }}>
+                                                {{ $currency['label'] ?? $code }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 @error('price')
@@ -925,13 +929,27 @@
                                 :is-online="$isOnlineOld"
                                 :auto-generate="$autoGenerateMeeting"
                                 :meeting-link="$storedMeetingLink"
-                                :jitsi-room="$storedJitsiRoom"
-                                :jitsi-passcode="$storedJitsiPasscode"
                                 :has-generated-meeting="$hasGeneratedMeeting"
                                 :meeting-status-state="$meetingStatusState"
                                 :meeting-status-text="$meetingStatusText"
                                 :generate-url="route('admin.workshops.generate-link')"
                             />
+
+                            <div class="md:col-span-2">
+                                <label for="recording_url" class="form-label">رابط تسجيل Google Drive</label>
+                                <input
+                                    id="recording_url"
+                                    name="recording_url"
+                                    type="url"
+                                    value="{{ old('recording_url') }}"
+                                    class="form-input @error('recording_url') is-invalid @enderror"
+                                    placeholder="https://drive.google.com/file/d/XXXX/view"
+                                >
+                                <p class="form-hint">ضع رابط المشاركة من Google Drive وسيتم تضمين الفيديو على الصفحة العامة للشيف.</p>
+                                @error('recording_url')
+                                    <p class="error-text">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -1070,7 +1088,7 @@
 
                         <div id="image-preview" class="hidden">
                             <div class="image-preview-card">
-                                <img id="preview-img" src="#" alt="معاينة الصورة الجديدة">
+                                <img id="preview-img" src="#" alt="معاينة الصورة الجديدة" loading="lazy">
                                 <button type="button" id="remove-preview" class="remove-preview-btn" onclick="removeImagePreview()">
                                     <i class="fas fa-times text-xs"></i>
                                 </button>
@@ -1137,7 +1155,7 @@
                                                     <img src="{{ $recipe->image_url ?: 'https://placehold.co/60x60/f87171/FFFFFF?text=وصفة' }}"
                                                          alt="{{ $recipe->title }}"
                                                          class="h-14 w-14 rounded-xl border border-slate-200 object-cover"
-                                                         onerror="this.src='{{ asset('image/logo.png') }}';">
+                                                         onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                                                     <div>
                                                         <h4 class="text-sm font-semibold text-slate-900 leading-snug">{{ $recipe->title }}</h4>
                                                         <p class="text-xs text-slate-500">{{ $recipe->author }}</p>
@@ -1339,11 +1357,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const onlineMeetingTools = document.getElementById('onlineMeetingTools');
     const manualMeetingField = document.getElementById('manualMeetingField');
     const autoGenerateInput = document.getElementById('auto_generate_meeting');
-    const generateBtn = document.getElementById('generateJitsiLinkBtn');
+    const generateBtn = document.getElementById('generateMeetLinkBtn');
     const generatedInfo = document.getElementById('generatedMeetingInfo');
     const meetingStatusBadge = document.getElementById('meetingStatusBadge');
-    const jitsiRoomField = document.getElementById('jitsi_room_field');
-    const jitsiPasscodeField = document.getElementById('jitsi_passcode_field');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     if (imageUploadArea) {
@@ -1382,13 +1398,12 @@ document.addEventListener('DOMContentLoaded', () => {
         meetingStatusBadge.textContent = text;
     }
 
-    function renderGeneratedInfo(link, passcode) {
+    function renderGeneratedInfo(link) {
         if (!generatedInfo) {
             return;
         }
 
-        const room = (jitsiRoomField?.value || '').trim();
-        if (!link || !room) {
+        if (!link) {
             generatedInfo.classList.add('hidden');
             generatedInfo.innerHTML = '';
             return;
@@ -1399,24 +1414,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const title = document.createElement('p');
         title.className = 'font-semibold text-slate-800';
-        title.textContent = 'تم إنشاء رابط Jitsi:';
+        title.textContent = 'تم إنشاء رابط Google Meet:';
         generatedInfo.appendChild(title);
 
         const linkEl = document.createElement('p');
         linkEl.className = 'mt-1 text-sm break-all text-slate-700';
         linkEl.textContent = link;
         generatedInfo.appendChild(linkEl);
-
-        if (passcode) {
-            const passcodeEl = document.createElement('p');
-            passcodeEl.className = 'mt-2 text-xs text-emerald-700';
-            passcodeEl.textContent = 'رمز الدخول: ';
-            const strong = document.createElement('span');
-            strong.className = 'font-semibold';
-            strong.textContent = passcode;
-            passcodeEl.appendChild(strong);
-            generatedInfo.appendChild(passcodeEl);
-        }
     }
 
     function toggleMeetingInputState() {
@@ -1426,12 +1430,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isOnline = !!isOnlineCheckbox?.checked;
         const autoGenerate = !!autoGenerateInput?.checked;
-        const hasGeneratedLink = Boolean(
-            (jitsiRoomField?.value || '').trim() && (meetingLinkInput.value || '').trim()
-        );
+        const hasGeneratedLink = Boolean((meetingLinkInput.value || '').trim());
 
         meetingLinkInput.placeholder = isOnline
-            ? 'https://meet.jit.si/wasfah-room'
+            ? 'https://meet.google.com/abc-defg-hij'
             : 'يمكن ترك الحقل فارغاً للورش الحضورية';
 
         meetingLinkInput.readOnly = isOnline && autoGenerate;
@@ -1452,9 +1454,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isOnline) {
                 setMeetingStatus('idle', 'قم بتفعيل الورشة الأونلاين للوصول إلى توليد الروابط.');
             } else if (hasGeneratedLink) {
-                setMeetingStatus('ready', 'تم إنشاء رابط Jitsi جاهز للمشاركين.');
+                setMeetingStatus('ready', 'تم إنشاء رابط Google Meet جاهز للمشاركين.');
             } else if (autoGenerate) {
-                setMeetingStatus('idle', 'سيتم توليد رابط Jitsi تلقائياً بعد الحفظ.');
+                setMeetingStatus('idle', 'سيتم توليد رابط Google Meet تلقائياً بعد الحفظ.');
             } else {
                 setMeetingStatus('manual', 'يرجى لصق رابط الاجتماع المخصص يدوياً.');
             }
@@ -1471,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (locationInput) {
             locationInput.required = !isOnline;
-            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Jitsi أو وصف موجز' : 'مثال: عمان - شارع الملكة رانيا';
+            locationInput.placeholder = isOnline ? 'مثال: أونلاين عبر Google Meet أو وصف موجز' : 'مثال: عمان - شارع الملكة رانيا';
             locationInput.classList.toggle('border-emerald-400', isOnline);
             if (locationHelp) {
                 locationHelp.textContent = isOnline
@@ -1567,20 +1569,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (meetingLinkInput) {
                 meetingLinkInput.value = data.meeting_link;
             }
-            if (jitsiRoomField) {
-                jitsiRoomField.value = data.room || '';
-            }
-            if (jitsiPasscodeField) {
-                jitsiPasscodeField.value = data.passcode || '';
-            }
             if (autoGenerateInput) {
                 autoGenerateInput.checked = true;
             }
 
-            renderGeneratedInfo(data.meeting_link, data.passcode || '');
+            renderGeneratedInfo(data.meeting_link);
             toggleMeetingInputState();
-            setMeetingStatus('ready', 'تم إنشاء رابط Jitsi جاهز للمشاركين.');
-            showNotification('تم إنشاء رابط Jitsi بنجاح.', 'success');
+            setMeetingStatus('ready', 'تم إنشاء رابط Google Meet جاهز للمشاركين.');
+            showNotification('تم إنشاء رابط Google Meet بنجاح.', 'success');
         } catch (error) {
             console.error(error);
             setMeetingStatus('error', 'فشل توليد الرابط، أعد المحاولة.');
@@ -1591,7 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    renderGeneratedInfo(meetingLinkInput?.value || '', jitsiPasscodeField?.value || '');
+    renderGeneratedInfo(meetingLinkInput?.value || '');
 
     if (recipeSearch) {
         recipeSearch.addEventListener('input', function() {
@@ -1704,3 +1700,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endpush
+
+

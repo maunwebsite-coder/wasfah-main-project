@@ -4,7 +4,7 @@
     $shortToolName = \Illuminate\Support\Str::limit($tool->name, 60, '...');
 @endphp
 
-@section('title', 'تفاصيل الأداة - ' . $shortToolName)
+@section('title', 'Tool details - ' . $shortToolName)
 
 @push('styles')
 <style>
@@ -430,7 +430,7 @@
                                         <img src="{{ $image }}" alt="{{ $tool->name }}" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
                                         <button type="button" class="gallery-zoom-btn" data-gallery-zoom data-index="{{ $index }}">
                                             <i class="fas fa-expand"></i>
-                                            <span class="zoom-label">تكبير الصورة</span>
+                                            <span class="zoom-label">Zoom image</span>
                                         </button>
                                     </div>
                                 </div>
@@ -476,38 +476,38 @@
                                 <span class="text-base font-semibold text-slate-700">{{ number_format($tool->rating ?? 0, 1) }}</span>
                             </div>
                             <span class="text-slate-400">|</span>
-                            <span class="text-slate-500">يعتمد عليها {{ number_format($reviewsCount) }} طاهياً محترفاً</span>
+                            <span class="text-slate-500">Trusted by {{ number_format($reviewsCount) }} professional chefs</span>
                         </div>
                     </div>
 
                     <div class="tool-overview-grid">
                         <div class="tool-overview-card">
-                            <span class="tool-overview-label">التقييم العام</span>
+                            <span class="tool-overview-label">Overall rating</span>
                             <span class="tool-overview-value">
                                 <i class="fas fa-medal"></i>
                                 {{ number_format($tool->rating ?? 0, 1) }}
                             </span>
-                            <span class="text-xs text-slate-400">{{ number_format($reviewsCount) }} مراجعة موثوقة</span>
+                            <span class="text-xs text-slate-400">{{ number_format($reviewsCount) }} verified reviews</span>
                         </div>
                         <div class="tool-overview-card">
-                            <span class="tool-overview-label">السعر التقريبي</span>
+                            <span class="tool-overview-label">Approximate price</span>
                             <span class="tool-overview-value text-orange-500">
                                 @if(!is_null($tool->price))
                                     {{ number_format($tool->price, 2) }}
-                                    <span class="text-sm font-semibold text-slate-500">درهم</span>
+                                    <span class="text-sm font-semibold text-slate-500">AED</span>
                                 @else
-                                    <span class="text-sm font-semibold text-slate-500">غير متوفر حالياً</span>
+                                    <span class="text-sm font-semibold text-slate-500">Not available right now</span>
                                 @endif
                             </span>
-                            <span class="text-xs text-slate-400">قد يختلف حسب المتجر وتكلفة الشحن</span>
+                            <span class="text-xs text-slate-400">May vary by retailer and shipping cost</span>
                         </div>
                         <div class="tool-overview-card">
-                            <span class="tool-overview-label">التصنيف</span>
+                            <span class="tool-overview-label">Category</span>
                             <span class="tool-overview-value">
                                 <i class="fas fa-utensils"></i>
-                                {{ $tool->category ?? 'أدوات مطبخ احترافية' }}
+                                {{ $tool->category ?? 'Professional kitchen tools' }}
                             </span>
-                            <span class="text-xs text-slate-400">جزء من مجموعة أدوات وصفة المختارة</span>
+                            <span class="text-xs text-slate-400">Part of the curated Wasfah tools collection</span>
                         </div>
                     </div>
 
@@ -520,25 +520,25 @@
                     <div class="tool-price-card">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <p class="text-sm text-slate-500">مناسب لمن يبحث عن</p>
+                                <p class="text-sm text-slate-500">Great for chefs who need</p>
                                 <p class="text-xl sm:text-2xl font-bold text-orange-500 mt-1">
-                                    {{ $tool->category ?? 'حلول مطبخ مبتكرة' }}
+                                    {{ $tool->category ?? 'cutting-edge kitchen solutions' }}
                                 </p>
                             </div>
                             <div class="text-sm text-slate-600 font-semibold">
                                 @if(!is_null($tool->price))
-                                    السعر الحالي: {{ number_format($tool->price, 2) }} درهم
+                                    Current price: {{ number_format($tool->price, 2) }} AED
                                 @else
-                                    السعر متغير حسب المتجر
+                                    Price varies by retailer
                                 @endif
                             </div>
                         </div>
-                        <p class="tool-price-note mt-3">* الأسعار المذكورة تقديرية وقد تختلف بناءً على توفر المنتج والعروض الجارية.</p>
+                        <p class="tool-price-note mt-3">* Prices are indicative and may change based on availability and active offers.</p>
                     </div>
 
                     @if(!empty($tool->features))
                         <div class="space-y-3">
-                            <h2 class="text-xl font-semibold text-slate-900">أبرز المميزات</h2>
+                            <h2 class="text-xl font-semibold text-slate-900">Key highlights</h2>
                             <div class="space-y-3">
                                 @foreach($tool->features as $feature)
                                     @if(!empty($feature))
@@ -557,7 +557,7 @@
                             <a href="{{ $tool->amazon_url }}" target="_blank" rel="noopener"
                                class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#FF9900] hover:bg-[#e68a00] transition-colors shadow-md rounded-xl">
                                 <i class="fab fa-amazon text-lg"></i>
-                                <span>متابعة الشراء من Amazon</span>
+                                <span>Continue on Amazon</span>
                                 <i class="fas fa-external-link-alt text-xs"></i>
                             </a>
                         @endif
@@ -566,7 +566,7 @@
                             <a href="{{ $tool->affiliate_url }}" target="_blank" rel="noopener"
                                class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-md rounded-xl">
                                 <i class="fas fa-shopping-bag text-lg"></i>
-                                <span>متجر الشريك المعتمد</span>
+                                <span>Authorized partner store</span>
                                 <i class="fas fa-external-link-alt text-xs"></i>
                             </a>
                         @endif
@@ -580,13 +580,13 @@
                                 data-tool-price="{{ $tool->price }}"
                             >
                                 <i class="fas fa-bookmark text-base"></i>
-                                <span class="btn-text">حفظ للشراء لاحقاً</span>
+                                <span class="btn-text">Save to buy later</span>
                                 <i class="fas fa-spinner fa-spin hidden loading-icon text-sm"></i>
                             </button>
                         @else
                             <div class="w-full bg-slate-100 text-slate-500 font-semibold py-3 px-6 rounded-xl text-sm flex items-center justify-center gap-2">
                                 <i class="fas fa-exclamation-circle text-base"></i>
-                                غير متوفر للشراء حالياً
+                                Not available for purchase right now
                             </div>
                         @endif
                     </div>
@@ -596,12 +596,12 @@
     </div>
 </section>
 
-<div id="gallery-lightbox" class="gallery-lightbox hidden" role="dialog" aria-modal="true" aria-label="معرض صور الأداة">
+<div id="gallery-lightbox" class="gallery-lightbox hidden" role="dialog" aria-modal="true" aria-label="Tool photo gallery">
     <div class="gallery-lightbox__content">
-        <button type="button" class="gallery-lightbox__close" data-gallery-close aria-label="إغلاق المعرض">
+        <button type="button" class="gallery-lightbox__close" data-gallery-close aria-label="Close gallery">
             <i class="fas fa-times"></i>
         </button>
-        <img src="" alt="{{ $tool->name }}">
+        <img src="" alt="{{ $tool->name }}" loading="lazy">
     </div>
 </div>
 
@@ -609,9 +609,9 @@
     <section class="py-12 sm:py-16 bg-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-12">
             <div class="flex items-center justify-between mb-6 sm:mb-8">
-                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">أدوات مشابهة قد تعجبك</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Similar tools you may like</h2>
                 <a href="{{ route('tools') }}" class="text-sm text-orange-500 hover:text-orange-600 font-semibold">
-                    عرض جميع الأدوات
+                    View all tools
                 </a>
             </div>
 
@@ -627,9 +627,9 @@
                                 <div class="flex items-center justify-between text-sm text-slate-500">
                                     <span class="font-bold text-orange-500">
                                         @if(!is_null($relatedTool->price))
-                                            {{ number_format($relatedTool->price, 2) }} درهم
+                                            {{ number_format($relatedTool->price, 2) }} AED
                                         @else
-                                            غير متوفر
+                                            Unavailable
                                         @endif
                                     </span>
                                     <span class="flex items-center gap-1 text-yellow-400">
@@ -815,32 +815,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function updateGlobalCounters(delta) {
-        const savedCountEl = document.getElementById('saved-count');
-        if (savedCountEl) {
-            const current = parseInt(savedCountEl.textContent || '0', 10);
-            const updated = Math.max(0, current + delta);
-            savedCountEl.textContent = updated;
-            savedCountEl.classList.toggle('hidden', updated === 0);
-        }
-
-        const mobileCartCountEl = document.getElementById('mobile-cart-count');
-        if (mobileCartCountEl) {
-            const current = parseInt(mobileCartCountEl.textContent || '0', 10);
-            const updated = Math.max(0, current + delta);
-            mobileCartCountEl.textContent = updated;
-            mobileCartCountEl.classList.toggle('hidden', updated === 0);
-        }
-
-        const mobileSavedCountEl = document.getElementById('saved-count-mobile');
-        if (mobileSavedCountEl) {
-            const current = parseInt(mobileSavedCountEl.textContent || '0', 10);
-            const updated = Math.max(0, current + delta);
-            mobileSavedCountEl.textContent = updated;
-            mobileSavedCountEl.classList.toggle('hidden', updated === 0);
-        }
-    }
-
     function showToast(message, type = 'info') {
         document.querySelectorAll('.toast').forEach(toast => toast.remove());
 
@@ -875,7 +849,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleUnauthenticated() {
-        showToast('يرجى تسجيل الدخول لحفظ الأدوات', 'warning');
+        showToast('Please sign in to save tools', 'warning');
         setTimeout(() => {
             window.location.href = '{{ route('login') }}';
         }, 1200);
@@ -893,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data && data.success) {
                     const isSaved = data.saved_tools.includes(toolId);
                     if (isSaved) {
-                        saveButton.querySelector('.btn-text').textContent = 'محفوظ';
+                        saveButton.querySelector('.btn-text').textContent = 'Saved';
                         applySavedButtonState(saveButton);
                     } else {
                         applyDefaultButtonState(saveButton);
@@ -908,7 +882,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function addToSaved() {
-        setLoadingState(saveButton, true, 'جاري الحفظ...');
+        setLoadingState(saveButton, true, 'Saving...');
         fetch('/saved/add', {
             method: 'POST',
             headers: {
@@ -926,12 +900,11 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             if (data.success) {
-                saveButton.querySelector('.btn-text').textContent = 'محفوظ';
+                saveButton.querySelector('.btn-text').textContent = 'Saved';
                 applySavedButtonState(saveButton);
                 saveButton.disabled = false;
                 saveButton.querySelector('.loading-icon').classList.add('hidden');
-                updateGlobalCounters(1);
-                showToast('تم حفظ المنتج للشراء لاحقاً!', 'success');
+                showToast('Item saved to buy later!', 'success');
             } else {
                 throw new Error(data.message || 'error');
             }
@@ -941,15 +914,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             saveButton.disabled = false;
-            saveButton.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+            saveButton.querySelector('.btn-text').textContent = 'Save to buy later';
             saveButton.querySelector('.loading-icon').classList.add('hidden');
             applyDefaultButtonState(saveButton);
-            showToast('حدث خطأ أثناء حفظ المنتج', 'error');
+            showToast('Something went wrong while saving the item', 'error');
         });
     }
 
     function removeFromSaved() {
-        setLoadingState(saveButton, true, 'جاري الحذف...');
+        setLoadingState(saveButton, true, 'Removing...');
         fetch('/saved/remove', {
             method: 'POST',
             headers: {
@@ -967,12 +940,11 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             if (data.success) {
-                saveButton.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                saveButton.querySelector('.btn-text').textContent = 'Save to buy later';
                 applyDefaultButtonState(saveButton);
                 saveButton.disabled = false;
                 saveButton.querySelector('.loading-icon').classList.add('hidden');
-                updateGlobalCounters(-1);
-                showToast('تم حذف المنتج من المحفوظات!', 'success');
+                showToast('Item removed from saved tools!', 'success');
             } else {
                 throw new Error(data.message || 'error');
             }
@@ -982,10 +954,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             saveButton.disabled = false;
-            saveButton.querySelector('.btn-text').textContent = 'محفوظ';
+            saveButton.querySelector('.btn-text').textContent = 'Saved';
             saveButton.querySelector('.loading-icon').classList.add('hidden');
             applySavedButtonState(saveButton);
-            showToast('حدث خطأ أثناء حذف المنتج من المحفوظات', 'error');
+            showToast('Something went wrong while removing the item', 'error');
         });
     }
 
@@ -1002,3 +974,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

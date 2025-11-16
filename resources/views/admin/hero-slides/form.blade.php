@@ -87,7 +87,7 @@
                                 {{ __('لا يمكن عرض الفيديو في هذا المتصفح.') }}
                             </video>
                         @else
-                            <img src="{{ $desktopPreview }}" alt="desktop preview" class="rounded-xl border">
+                            <img src="{{ $desktopPreview }}" alt="desktop preview" class="rounded-xl border" loading="lazy">
                         @endif
                     </div>
                 @endif
@@ -135,7 +135,7 @@
                                 {{ __('لا يمكن عرض الفيديو في هذا المتصفح.') }}
                             </video>
                         @else
-                            <img src="{{ $mobilePreview }}" alt="mobile preview" class="rounded-xl border">
+                            <img src="{{ $mobilePreview }}" alt="mobile preview" class="rounded-xl border" loading="lazy">
                         @endif
                     </div>
                 @endif

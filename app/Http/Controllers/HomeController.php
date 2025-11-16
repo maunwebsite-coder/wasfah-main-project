@@ -210,7 +210,7 @@ class HomeController extends Controller
 
         $selected = $withImages->isNotEmpty() ? $withImages->random() : null;
 
-        $desktop = $this->makeImageUrl(optional($selected)->image, asset('image/wterm.png'));
+        $desktop = $this->makeImageUrl(optional($selected)->image, asset('image/wterm.webp'));
         $mobile = $desktop;
 
         if ($selected) {
@@ -254,7 +254,7 @@ class HomeController extends Controller
 
         $desktop = $images->isNotEmpty()
             ? $images->random()
-            : $this->makeImageUrl(optional($selected)->image_url, asset('image/Brownies.png'));
+            : $this->makeImageUrl(optional($selected)->image_url, asset('image/brownies.webp'));
 
         $mobile = $images->isNotEmpty()
             ? $images->random()
@@ -322,7 +322,7 @@ class HomeController extends Controller
             return $this->defaultHeroSlides($heroMedia, $createWorkshopAction, $createWasfahLinkAction);
         }
 
-        $fallbackDesktop = data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'));
+        $fallbackDesktop = data_get($heroMedia, 'workshop.desktop', asset('image/wterm.webp'));
         $fallbackMobile = data_get($heroMedia, 'workshop.mobile', $fallbackDesktop);
 
         return $managedSlides
@@ -382,8 +382,8 @@ class HomeController extends Controller
                 'title' => data_get($workshops, 'title', 'ورشات حلويات احترافية'),
                 'description' => data_get($workshops, 'description', 'ورشات مباشرة بخطوات واضحة من شيفات مختصين.'),
                 'features' => $workshopFeatures,
-                'image' => data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png')),
-                'mobile_image' => data_get($heroMedia, 'workshop.mobile', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'))),
+                'image' => data_get($heroMedia, 'workshop.desktop', asset('image/wterm.webp')),
+                'mobile_image' => data_get($heroMedia, 'workshop.mobile', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.webp'))),
                 'image_alt' => data_get($workshops, 'image_alt', 'ورشة عمل للحلويات الاحترافية'),
                 'actions' => [
                     [
@@ -407,8 +407,8 @@ class HomeController extends Controller
                 'title' => data_get($chef, 'title', 'أنشئ ورشتك على وصفة'),
                 'description' => data_get($chef, 'description', 'أطلق ورشتك الاحترافية مع نظام حجوزات مدمج وأدوات تسويق مصممة للشيفات.'),
                 'features' => array_values(array_filter(data_get($chef, 'features', []))),
-                'image' => data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png'))),
-                'mobile_image' => data_get($heroMedia, 'chef.mobile', data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.png')))),
+                'image' => data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.webp'))),
+                'mobile_image' => data_get($heroMedia, 'chef.mobile', data_get($heroMedia, 'chef.desktop', data_get($heroMedia, 'workshop.desktop', asset('image/wterm.webp')))),
                 'image_alt' => data_get($chef, 'image_alt', 'شيف يطلق ورشته الخاصة'),
                 'actions' => [
                     $createWorkshopAction,
@@ -463,8 +463,8 @@ class HomeController extends Controller
                 'title' => data_get($recipes, 'title', 'مكتبة وصفات عالمية'),
                 'description' => data_get($recipes, 'description', 'وصفات فاخرة مجرَّبة مع شرح مصوَّر ونصائح مختصرة.'),
                 'features' => $recipeFeatures,
-                'image' => data_get($heroMedia, 'recipe.desktop', asset('image/Brownies.png')),
-                'mobile_image' => data_get($heroMedia, 'recipe.mobile', data_get($heroMedia, 'recipe.desktop', asset('image/Brownies.png'))),
+                'image' => data_get($heroMedia, 'recipe.desktop', asset('image/brownies.webp')),
+                'mobile_image' => data_get($heroMedia, 'recipe.mobile', data_get($heroMedia, 'recipe.desktop', asset('image/brownies.webp'))),
                 'image_alt' => data_get($recipes, 'image_alt', 'حلى براونيز فاخرة'),
                 'actions' => [
                     [
@@ -596,3 +596,5 @@ class HomeController extends Controller
         return $dictionary[$trimmed] ?? $text;
     }
 }
+
+

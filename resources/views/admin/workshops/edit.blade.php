@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'تعديل الورشة - ' . $workshop->title)
 
@@ -148,19 +148,16 @@
 <div class="py-10 md:py-16">
     <div class="container mx-auto px-4 max-w-6xl space-y-10">
         @php
-            $currencyLabels = [
-                'JOD' => 'دينار أردني',
-            ];
+            $currencyOptions = \App\Support\Currency::all();
+            $currentCurrencyLabel = $currencyOptions[$workshop->currency]['label'] ?? $workshop->currency;
             $priceFormatted = number_format($workshop->price, 2);
             $isOnlineOld = old('is_online', $workshop->is_online);
             $autoGenerateMeeting = (bool) old(
                 'auto_generate_meeting',
-                ($workshop->meeting_provider ?? null) === 'jitsi' ? 1 : 0
+                ($workshop->meeting_provider ?? null) === 'google_meet' ? 1 : 0
             );
             $storedMeetingLink = old('meeting_link', $workshop->meeting_link);
-            $storedJitsiRoom = old('jitsi_room', $workshop->jitsi_room);
-            $storedJitsiPasscode = old('jitsi_passcode', $workshop->jitsi_passcode);
-            $hasGeneratedMeeting = !empty($storedJitsiRoom) && !empty($storedMeetingLink);
+            $hasGeneratedMeeting = !empty($storedMeetingLink);
             $meetingStatusState = !$isOnlineOld
                 ? 'idle'
                 : ($hasGeneratedMeeting
@@ -169,9 +166,9 @@
             $meetingStatusText = !$isOnlineOld
                 ? 'قم بتفعيل الورشة الأونلاين للوصول إلى توليد الروابط.'
                 : ($hasGeneratedMeeting
-                    ? 'تم إنشاء رابط Jitsi جاهز للمشاركين.'
+                    ? 'تم إنشاء رابط Google Meet جاهز للمشاركين.'
                     : ($autoGenerateMeeting
-                        ? 'سيتم توليد رابط Jitsi تلقائياً بعد الحفظ.'
+                        ? 'سيتم توليد رابط Google Meet تلقائياً بعد الحفظ.'
                         : 'أدخل رابط الاجتماع المخصص يدوياً.'));
         @endphp
 
@@ -252,7 +249,7 @@
                 <div class="rounded-2xl bg-white/85 border border-white/70 shadow-md p-5">
                     <div class="text-xs font-semibold tracking-widest text-slate-400 uppercase">التكلفة</div>
                     <div class="mt-2 text-sm font-bold text-slate-800">
-                        {{ $priceFormatted }} {{ $currencyLabels[$workshop->currency] ?? $workshop->currency }}
+                        {{ $priceFormatted }} {{ $currentCurrencyLabel }}
                     </div>
                     <div class="mt-1 text-xs text-slate-500">يشمل رسوم المشاركة بالكامل</div>
                 </div>
@@ -396,7 +393,11 @@
                                        placeholder="0.00">
                                 <select name="currency"
                                         class="rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 @error('currency') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror">
-                                    <option value="JOD" {{ old('currency', $workshop->currency) == 'JOD' ? 'selected' : '' }}>دينار أردني</option>
+                                    @foreach($currencyOptions as $code => $currency)
+                                        <option value="{{ $code }}" {{ old('currency', $workshop->currency) == $code ? 'selected' : '' }}>
+                                            {{ $currency['label'] ?? $code }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                             @error('price')
@@ -460,8 +461,6 @@
                             :is-online="$isOnlineOld"
                             :auto-generate="$autoGenerateMeeting"
                             :meeting-link="$storedMeetingLink"
-                            :jitsi-room="$storedJitsiRoom"
-                            :jitsi-passcode="$storedJitsiPasscode"
                             :has-generated-meeting="$hasGeneratedMeeting"
                             :meeting-status-state="$meetingStatusState"
                             :meeting-status-text="$meetingStatusText"
@@ -472,6 +471,22 @@
                             hint-class="mt-2 text-xs text-slate-500"
                             error-class="mt-2 text-sm font-semibold text-red-500"
                         />
+
+                        <div class="md:col-span-2">
+                            <label for="recording_url" class="block text-sm font-semibold text-slate-700 mb-2">رابط تسجيل Google Drive</label>
+                            <input
+                                id="recording_url"
+                                name="recording_url"
+                                type="url"
+                                value="{{ old('recording_url', $workshop->recording_url) }}"
+                                class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200 @error('recording_url') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror"
+                                placeholder="https://drive.google.com/file/d/XXXX/view"
+                            >
+                            <p class="mt-2 text-xs text-slate-500">سيتم تحويل رابط Google Drive تلقائياً ليظهر كمشغّل فيديو داخل صفحة الشيف العامة.</p>
+                            @error('recording_url')
+                                <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </section>
 
@@ -587,7 +602,7 @@
                                      src="{{ asset('storage/' . $workshop->image) }}?v={{ time() }}"
                                      alt="{{ $workshop->title }}"
                                      class="h-28 w-28 rounded-2xl object-cover border border-slate-200"
-                                     onerror="this.src='{{ asset('image/logo.png') }}'; this.alt='صورة افتراضية';">
+                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                                 <div class="space-y-2">
                                     <p class="text-sm text-slate-600">
                                         هذه هي الصورة الحالية المعروضة للزوار. يمكنك استبدالها أو حذفها تماماً.
@@ -626,7 +641,7 @@
 
                         <div id="image-preview" class="hidden">
                             <div class="relative inline-block">
-                                <img id="preview-img" src="#" alt="معاينة الصورة الجديدة" class="h-36 w-36 rounded-2xl border-2 border-purple-200 object-cover shadow-lg">
+                                <img id="preview-img" src="#" alt="معاينة الصورة الجديدة" class="h-36 w-36 rounded-2xl border-2 border-purple-200 object-cover shadow-lg" loading="lazy">
                                 <button type="button" id="remove-preview"
                                         class="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg"
                                         onclick="removeImagePreview()">
@@ -697,7 +712,7 @@
                                                 <img src="{{ $recipe->image_url ?: 'https://placehold.co/60x60/f87171/FFFFFF?text=وصفة' }}"
                                                      alt="{{ $recipe->title }}"
                                                      class="h-14 w-14 rounded-xl border border-slate-200 object-cover"
-                                                     onerror="this.src='{{ asset('image/logo.png') }}';">
+                                                     onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                                                 <div>
                                                     <h4 class="text-sm font-semibold text-slate-900 leading-snug">{{ $recipe->title }}</h4>
                                                     <p class="text-xs text-slate-500">{{ $recipe->author }}</p>
@@ -1098,3 +1113,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endpush
+
+

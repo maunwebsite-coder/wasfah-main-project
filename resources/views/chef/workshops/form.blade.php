@@ -10,13 +10,13 @@
         'advanced' => __('chef.workshops.levels.advanced'),
     ];
     $currencies = [
-        'JOD' => __('chef.workshop_form.currencies.jod'),
+        'USD' => __('chef.workshop_form.currencies.usd'),
     ];
     $isOnline = old('is_online', $workshop->is_online ?? true);
     $autoGenerateMeeting = old(
         'auto_generate_meeting',
         $workshop
-            ? (($workshop->meeting_provider ?? null) === 'jitsi')
+            ? (($workshop->meeting_provider ?? null) === 'google_meet')
             : 1
     );
     $startDateValue = old('start_date', optional(optional($workshop)->start_date)->format('Y-m-d\TH:i'));
@@ -30,7 +30,9 @@
     }
 
     $currentUser = auth()->user();
-    $canManageMeetingLinks = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
+    $hostsCanOverride = (bool) config('workshop-links.allow_host_meeting_link_override', true);
+    $isAdminUser = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
+    $canManageMeetingLinks = $isAdminUser || $hostsCanOverride;
 
     if (!$canManageMeetingLinks) {
         $autoGenerateMeeting = 1;
@@ -139,7 +141,7 @@
                 <label for="currency" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.currency.label') }}</label>
                 <select id="currency" name="currency" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:ring-4 focus:ring-orange-100">
                     @foreach ($currencies as $value => $label)
-                        <option value="{{ $value }}" @selected(old('currency', $workshop->currency ?? 'JOD') === $value)>{{ $label }}</option>
+                        <option value="{{ $value }}" @selected(old('currency', $workshop->currency ?? 'USD') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
@@ -226,7 +228,7 @@
                             <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" @checked($autoGenerateMeeting)>
                             {{ __('chef.workshop_form.options.auto_generate_label') }}
                         </label>
-                        <button type="button" id="generateJitsiLinkBtn"
+                        <button type="button" id="generateMeetLinkBtn"
                                 data-url="{{ route('chef.workshops.generate-link') }}"
                                 class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300">
                             <i class="fas fa-bolt"></i>
@@ -238,7 +240,7 @@
                         <input type="url" id="meeting_link" name="meeting_link"
                                value="{{ $canManageMeetingLinks ? old('meeting_link', $workshop->meeting_link ?? '') : '' }}"
                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 @error('meeting_link') border-red-400 focus:ring-red-200 @enderror"
-                               placeholder="https://meet.jit.si/wasfah-room" {{ $autoGenerateMeeting ? 'disabled' : '' }}>
+                               placeholder="https://meet.google.com/abc-defg-hij" {{ $autoGenerateMeeting ? 'disabled' : '' }}>
                         <p id="meetingLinkHint" class="text-xs text-slate-500">
                             {{ $autoGenerateMeeting ? __('chef.workshop_form.messages.meeting_hint_auto') : __('chef.workshop_form.messages.meeting_hint_manual') }}
                         </p>
@@ -247,13 +249,10 @@
                         @enderror
                     </div>
                     <div id="generatedMeetingInfo" class="space-y-2 text-sm text-emerald-700">
-                        @if (($workshop->meeting_provider ?? null) === 'jitsi' && $workshop->meeting_link)
+                        @if (($workshop->meeting_provider ?? null) === 'google_meet' && $workshop->meeting_link)
                             <div class="rounded-2xl bg-white/70 p-3 text-emerald-700 shadow-inner">
-                                <p class="font-semibold">{{ __('chef.workshop_form.messages.jitsi_ready') }}</p>
+                                <p class="font-semibold">{{ __('chef.workshop_form.messages.google_ready') }}</p>
                                 <p class="truncate text-sm">{{ $workshop->meeting_link }}</p>
-                                @if ($workshop->jitsi_passcode)
-                                    <p class="mt-1 text-xs text-slate-500">{{ __('chef.workshop_form.fields.passcode.label') }} {{ $workshop->jitsi_passcode }}</p>
-                                @endif
                             </div>
                         @endif
                     </div>
@@ -280,6 +279,26 @@
                     <textarea id="address" name="address" rows="2"
                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-slate-400 focus:ring-4 focus:ring-slate-100">{{ old('address', $workshop->address ?? '') }}</textarea>
                 </div>
+            </div>
+
+            <div class="space-y-2 rounded-2xl border border-slate-100 bg-white/70 p-4 shadow-inner">
+                <label for="recording_url" class="text-sm font-semibold text-slate-700">
+                    {{ __('chef.workshop_form.fields.recording_url.label') }}
+                </label>
+                <input
+                    type="url"
+                    name="recording_url"
+                    id="recording_url"
+                    value="{{ old('recording_url', $workshop->recording_url ?? '') }}"
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 @error('recording_url') border-red-400 focus:ring-red-200 @enderror"
+                    placeholder="https://drive.google.com/file/d/XXXX/view"
+                >
+                <p class="text-xs text-slate-500">
+                    {{ __('chef.workshop_form.fields.recording_url.helper') }}
+                </p>
+                @error('recording_url')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
         </div>
     </section>
@@ -334,7 +353,7 @@
             </div>
             <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-center">
                 @if ($coverImageUrl)
-                    <img src="{{ $coverImageUrl }}" alt="{{ __('chef.workshop_form.sections.image.preview_alt') }}" class="mx-auto h-40 w-full rounded-2xl object-cover">
+                    <img src="{{ $coverImageUrl }}" alt="{{ __('chef.workshop_form.sections.image.preview_alt') }}" class="mx-auto h-40 w-full rounded-2xl object-cover" loading="lazy">
                 @else
                     <div class="flex h-40 flex-col items-center justify-center text-slate-400">
                         <i class="fas fa-image text-3xl"></i>
@@ -353,7 +372,7 @@
             </div>
             <label class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600">
                 <input type="hidden" name="is_active" value="0">
-                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $workshop->is_active ?? false))>
+                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $workshop->is_active ?? true))>
                 {{ __('chef.workshop_form.sections.publish.auto_activate') }}
             </label>
         </div>
@@ -369,7 +388,7 @@
         const autoGenerateInput = document.getElementById('auto_generate_meeting');
         const meetingLinkInput = document.getElementById('meeting_link');
         const meetingHint = document.getElementById('meetingLinkHint');
-        const generateBtn = document.getElementById('generateJitsiLinkBtn');
+        const generateBtn = document.getElementById('generateMeetLinkBtn');
         const generatedInfo = document.getElementById('generatedMeetingInfo');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const meetingHints = {
@@ -380,8 +399,7 @@
             titleRequired: @json(__('chef.workshop_form.js.title_required')),
             generateFailed: @json(__('chef.workshop_form.js.generate_failed')),
             genericError: @json(__('chef.workshop_form.js.generic_error')),
-            jitsiReady: @json(__('chef.workshop_form.messages.jitsi_ready')),
-            passcodeLabel: @json(__('chef.workshop_form.fields.passcode.label')),
+            googleReady: @json(__('chef.workshop_form.messages.google_ready')),
         };
 
         function toggleModeFields() {
@@ -450,9 +468,8 @@
                 if (generatedInfo) {
                     generatedInfo.innerHTML = `
                         <div class="rounded-2xl bg-white/70 p-3 text-emerald-700 shadow-inner">
-                            <p class="font-semibold">${jsTranslations.jitsiReady}</p>
+                            <p class="font-semibold">${jsTranslations.googleReady}</p>
                             <p class="mt-1 truncate text-sm">${data.meeting_link}</p>
-                            ${data.passcode ? `<p class="mt-1 text-xs text-slate-500">${jsTranslations.passcodeLabel} ${data.passcode}</p>` : ''}
                         </div>
                     `;
                 }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'منطقة الإدمن')
+@section('title', 'Admin area')
 
 @push('styles')
 <style>
@@ -354,17 +354,17 @@
             <span class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg">
                 <i class="fas fa-crown"></i>
             </span>
-            منطقة الإدمن
+            Admin area
         </h1>
         <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-            مرجعك السريع لكل ما يتعلق بإدارة Wasfah. راجع المهام العاجلة، واحصل على نظرة عامة، وابدأ العمل فوراً.
+            Your quick reference for everything related to managing Wasfah. Review urgent tasks, get the overview, and take action immediately.
         </p>
     </header>
 
     <section class="space-y-4">
         <div class="admin-section-title">
             <i class="fas fa-bell"></i>
-            ما يحتاج انتباهك الآن
+            Needs your attention now
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @foreach($attentionItems as $item)
@@ -377,7 +377,7 @@
                     $url = $item['url'] ?? ($destination ? route($destination, $params) : '#');
 
                     $displayValue = $format === 'currency'
-                        ? number_format((float) $rawValue, 2) . ' د.أ'
+                        ? number_format((float) $rawValue, 2) . ' AED'
                         : number_format((int) $rawValue);
                 @endphp
                 <a href="{{ $url }}" class="attention-card {{ $isEmpty ? 'is-empty' : '' }}">
@@ -402,7 +402,7 @@
     <section class="space-y-4">
         <div class="admin-section-title">
             <i class="fas fa-chart-line"></i>
-            نظرة سريعة
+            Quick glance
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             @foreach($metrics as $metric)
@@ -431,13 +431,11 @@
                 <div>
                     <div class="panel__title">
                         <i class="fas fa-fire text-orange-500 ml-2"></i>
-                        أحدث الوصفات
+                        Latest recipes
                     </div>
-                    <div class="panel__subtitle">تابع ما تم إضافته مؤخراً وتأكد من جاهزيته للنشر</div>
+                    <div class="panel__subtitle">Track what was added recently and make sure it is ready for publishing.</div>
                 </div>
-                <a href="{{ route('admin.recipes.index') }}" class="text-sm font-semibold text-orange-500 hover:text-orange-600">
-                    عرض الكل
-                </a>
+                <a href="{{ route('admin.recipes.index') }}" class="text-sm font-semibold text-orange-500 hover:text-orange-600">View all</a>
             </div>
             <div class="panel__list">
                 @forelse($recentRecipes as $recipe)
@@ -462,12 +460,12 @@
                             $badgeClass = $badgeMap[$statusKey] ?? 'panel__badge panel__badge--default';
                         @endphp
                         <span class="{{ $badgeClass }}">
-                            {{ $recipeStatusLabels[$statusKey] ?? 'غير محدد' }}
+                            {{ $recipeStatusLabels[$statusKey] ?? 'Unspecified' }}
                         </span>
                     </div>
                 @empty
                     <div class="panel__empty">
-                        لا توجد وصفات حديثة حالياً. ابدأ بإضافة محتوى جديد!
+                        No recent recipes right now. Start by adding new content!
                     </div>
                 @endforelse
             </div>
@@ -477,13 +475,11 @@
                 <div>
                     <div class="panel__title">
                         <i class="fas fa-calendar-alt text-orange-500 ml-2"></i>
-                        الورشات القادمة
+                        Upcoming workshops
                     </div>
-                    <div class="panel__subtitle">تحقق من الجدول وتأكد من جاهزية الفرق للحجوزات</div>
+                    <div class="panel__subtitle">Check the schedule and ensure teams are ready for bookings.</div>
                 </div>
-                <a href="{{ route('admin.workshops.index') }}" class="text-sm font-semibold text-orange-500 hover:text-orange-600">
-                    كل الورشات
-                </a>
+                <a href="{{ route('admin.workshops.index') }}" class="text-sm font-semibold text-orange-500 hover:text-orange-600">All workshops</a>
             </div>
             <div class="panel__list">
                 @forelse($upcomingWorkshops as $workshop)
@@ -497,14 +493,14 @@
                                 {{ optional($workshop->start_date)->translatedFormat('d F Y - h:i A') ?? '—' }}
                                 <span class="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full {{ $workshop->is_online ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-700' }}">
                                     <i class="fas {{ $workshop->is_online ? 'fa-video ml-1' : 'fa-map-marker-alt ml-1' }}"></i>
-                                    {{ $workshop->is_online ? 'أونلاين' : 'حضوري' }}
+                                    {{ $workshop->is_online ? 'Online' : 'In person' }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 @empty
                     <div class="panel__empty">
-                        لا توجد ورشات قادمة خلال الأيام القادمة. خطط لورشة جديدة الآن.
+                        No workshops are coming up in the next few days. Plan a new one now.
                     </div>
                 @endforelse
             </div>
@@ -514,7 +510,7 @@
     <section class="space-y-6">
         <div class="admin-section-title">
             <i class="fas fa-layer-group"></i>
-            إدارة أقسام المنصة
+            Manage platform sections
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             @foreach($managementSections as $section)
@@ -545,7 +541,7 @@
     <section class="quick-actions">
         <div class="admin-section-title justify-center">
             <i class="fas fa-bolt"></i>
-            إجراءات سريعة
+            Quick actions
         </div>
         <div class="quick-actions__grid">
             @foreach($quickActions as $action)
@@ -558,7 +554,7 @@
         <div class="mt-8 text-center">
             <a href="{{ route('admin.dashboard') }}" class="back-link">
                 <i class="fas fa-arrow-right"></i>
-                العودة إلى لوحة التحكم
+                Back to dashboard
             </a>
         </div>
     </section>

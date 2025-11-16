@@ -128,6 +128,11 @@ class AdminAreaController extends Controller
                 'route' => 'admin.referrals.index',
             ],
             [
+                'label' => 'النظام المالي',
+                'icon' => 'fa-file-invoice-dollar',
+                'route' => 'admin.finance.dashboard',
+            ],
+            [
                 'label' => 'إدارة المستخدمين',
                 'icon' => 'fa-users',
                 'route' => 'admin.users.index',

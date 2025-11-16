@@ -72,13 +72,7 @@
                 <p class="text-sm font-semibold text-slate-500">
                     {{ __('chef.workshops_earnings.stats.net.label') }}
                 </p>
-                <p class="mt-3 text-2xl font-bold text-slate-900">
-                    {{ $formatCurrency($netRange['low']) }}
-                    <span class="text-sm font-semibold text-slate-500">
-                        {{ __('chef.workshops_earnings.stats.net.range_to') }}
-                    </span>
-                    {{ $formatCurrency($netRange['high']) }}
-                </p>
+                <p class="mt-3 text-3xl font-bold text-slate-900">{{ $formatCurrency($lifetimeNet) }}</p>
                 <p class="mt-1 text-xs text-slate-500">
                     {{ __('chef.workshops_earnings.stats.net.hint') }}
                 </p>
@@ -96,7 +90,7 @@
                 <p class="text-sm font-semibold text-slate-500">
                     {{ __('chef.workshops_earnings.stats.average.label') }}
                 </p>
-                <p class="mt-3 text-3xl font-bold text-slate-900">{{ $formatCurrency($averageSeat) }}</p>
+                <p class="mt-3 text-3xl font-bold text-slate-900">{{ $formatCurrency($averageNetSeat) }}</p>
                 <p class="mt-1 text-xs text-slate-500">
                     {{ __('chef.workshops_earnings.stats.average.hint') }}
                 </p>
@@ -118,6 +112,10 @@
                         {{ __('chef.workshops_earnings.monthly.current.delta', ['amount' => $deltaLabel]) }}
                     </span>
                 </div>
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ __('chef.workshops_earnings.monthly.current.net_label') }}
+                    <span class="font-semibold text-emerald-600">{{ $formatCurrency($currentMonthNet) }}</span>
+                </p>
                 <p class="mt-2 text-xs text-slate-500">
                     {{ __('chef.workshops_earnings.monthly.current.hint') }}
                 </p>
@@ -127,6 +125,10 @@
                     {{ __('chef.workshops_earnings.monthly.previous.label') }}
                 </p>
                 <p class="mt-3 text-3xl font-bold text-slate-900">{{ $formatCurrency($previousMonthGross) }}</p>
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ __('chef.workshops_earnings.monthly.previous.net_label') }}
+                    <span class="font-semibold text-slate-700">{{ $formatCurrency($previousMonthNet) }}</span>
+                </p>
                 <p class="mt-2 text-xs text-slate-500">
                     {{ __('chef.workshops_earnings.monthly.previous.hint') }}
                 </p>
@@ -177,8 +179,7 @@
                         @forelse ($workshopBreakdown as $workshop)
                             @php
                                 $paidTotal = (float) ($workshop->paid_total ?? 0);
-                                $netLow = $paidTotal * 0.70;
-                                $netHigh = $paidTotal * 0.75;
+                                $netAmount = (float) ($workshop->chef_net_total ?? 0);
                                 $capacityValue = $workshop->max_participants
                                     ? $workshop->max_participants
                                     : __('chef.workshops_earnings.leaderboard.capacity_unknown');
@@ -205,10 +206,8 @@
                                 <td class="px-4 py-4 text-slate-900 font-semibold">
                                     {{ $formatCurrency($paidTotal) }}
                                 </td>
-                                <td class="px-4 py-4 text-slate-900 font-semibold">
-                                    {{ $formatCurrency($netLow) }}
-                                    <span class="text-xs text-slate-500">-</span>
-                                    {{ $formatCurrency($netHigh) }}
+                                <td class="px-4 py-4 text-emerald-600 font-semibold">
+                                    {{ $formatCurrency($netAmount) }}
                                 </td>
                             </tr>
                         @empty

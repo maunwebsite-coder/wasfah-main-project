@@ -1,13 +1,25 @@
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $chefName = $page->user->name ?? __('chef_links.footer.brand');
+    $defaultHeadline = $page->headline ?? __('chef_links.meta.default_title', ['name' => $chefName]);
+    $defaultDescription = $page->subheadline ?? __('chef_links.meta.default_description');
+    $ogTitle = $page->headline ?? __('chef_links.meta.og_title');
+    $ogDescription = $page->subheadline ?? __('chef_links.meta.og_description');
+    $imageAlt = __('chef_links.profile.image_alt', ['name' => $chefName]);
+    $dateLocale = $isRtl ? 'ar' : 'en';
+    $dateFormat = $isRtl ? 'd F Y • h:i a' : 'd M Y • h:i a';
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $page->headline ?? ('روابط الشيف ' . ($page->user->name ?? '')) }}</title>
-    <meta name="description" content="{{ $page->subheadline ?? 'كل الروابط المهمة للشيف في مكان واحد.' }}">
-    <meta property="og:title" content="{{ $page->headline ?? 'Wasfah Links' }}">
-    <meta property="og:description" content="{{ $page->subheadline ?? 'تابع أحدث الروابط الخاصة بالشيف.' }}">
-    <meta property="og:image" content="{{ $page->avatar_url ?? asset('image/logo.png') }}">
+    <title>{{ $defaultHeadline }}</title>
+    <meta name="description" content="{{ $defaultDescription }}">
+    <meta property="og:title" content="{{ $ogTitle }}">
+    <meta property="og:description" content="{{ $ogDescription }}">
+    <meta property="og:image" content="{{ $page->avatar_url ?? asset('image/logo.webp') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta name="theme-color" content="{{ $accentColor }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -277,14 +289,10 @@
 <body>
     <main class="page-card">
         <header>
-            <img src="{{ $page->avatar_url ?? asset('image/logo.png') }}" alt="صورة {{ $page->user->name ?? 'الشيف' }}" class="hero-image">
-            <h1>{{ $page->headline ?? ('روابط الشيف ' . ($page->user->name ?? '')) }}</h1>
-            @if ($page->subheadline)
-                <p class="subtitle">{{ $page->subheadline }}</p>
-            @endif
-            @if ($page->bio)
-                <div class="bio">{{ $page->bio }}</div>
-            @endif
+            <img src="{{ $page->avatar_url ?? asset('image/logo.webp') }}" alt="{{ $imageAlt }}" class="hero-image" loading="lazy">
+            <h1>{{ $defaultHeadline }}</h1>
+            <p class="subtitle">{{ $page->subheadline ?? $defaultDescription }}</p>
+            <div class="bio">{{ $page->bio ?? __('chef_links.profile.bio_fallback') }}</div>
             @if ($page->cta_label && $page->cta_url)
                 <a class="cta-button" href="{{ $page->cta_url }}" target="_blank" rel="noopener">
                     <i class="fas fa-arrow-up-right-from-square"></i>
@@ -296,9 +304,9 @@
         <section class="links-stack">
             @if ($page->show_upcoming_workshop && $upcomingWorkshop)
                 @php
-                    $upcomingDate = optional($upcomingWorkshop->start_date)->locale('ar')->translatedFormat('d F Y • h:i a');
-                    $upcomingLocation = $upcomingWorkshop->is_online ? 'أونلاين عبر المنصة' : ($upcomingWorkshop->location ?: 'سيتم تحديد الموقع');
-                    $upcomingPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'JOD'));
+                    $upcomingDate = optional($upcomingWorkshop->start_date)->locale($dateLocale)->translatedFormat($dateFormat);
+                    $upcomingLocation = $upcomingWorkshop->is_online ? __('chef_links.upcoming.location.online') : ($upcomingWorkshop->location ?: __('chef_links.upcoming.location.pending'));
+                    $upcomingPrice = $upcomingWorkshop->formatted_price ?? (number_format((float) ($upcomingWorkshop->price ?? 0), 2) . ' ' . ($upcomingWorkshop->currency ?? 'USD'));
                 @endphp
                 <a href="{{ route('workshop.show', ['workshop' => $upcomingWorkshop->slug]) }}" target="_blank" rel="noopener" class="link-card link-card--upcoming">
                     <span class="link-icon">
@@ -307,10 +315,10 @@
                     <span class="link-text">
                         <span class="upcoming-badge">
                             <i class="fas fa-bolt"></i>
-                            الورشة القادمة
+                            {{ __('chef_links.upcoming.badge') }}
                         </span>
                         <span class="link-title">{{ $upcomingWorkshop->title }}</span>
-                        <span class="link-subtitle">{{ \Illuminate\Support\Str::limit($upcomingWorkshop->description ?? 'ورشة مميزة يقدمها الشيف لأفراد المجتمع.', 110) }}</span>
+                        <span class="link-subtitle">{{ \Illuminate\Support\Str::limit($upcomingWorkshop->description ?? __('chef_links.upcoming.description_fallback'), 110) }}</span>
                         <span class="workshop-meta">
                             @if ($upcomingDate)
                                 <span>
@@ -349,15 +357,15 @@
             @empty
                 <div class="link-card" style="justify-content: center; background: rgba(249, 115, 22, 0.06); border-style: dashed;">
                     <span class="link-text" style="text-align: center;">
-                        <span class="link-title">لا توجد روابط متاحة حالياً</span>
-                        <span class="link-subtitle">سيقوم الشيف بتحديث الصفحة قريباً.</span>
+                        <span class="link-title">{{ __('chef_links.empty.title') }}</span>
+                        <span class="link-subtitle">{{ __('chef_links.empty.subtitle') }}</span>
                     </span>
                 </div>
             @endforelse
         </section>
 
         <footer>
-            <p>صفحة روابط Wasfah powered by <a href="{{ url('/') }}">Wasfah</a></p>
+            <p>{{ __('chef_links.footer.powered', ['brand' => __('chef_links.footer.brand')]) }} <a href="{{ url('/') }}">{{ __('chef_links.footer.brand') }}</a></p>
         </footer>
     </main>
 
@@ -365,9 +373,11 @@
         @if (auth()->id() === $page->user_id || auth()->user()->isAdmin())
             <a href="{{ route('chef.links.edit') }}" class="manage-bar">
                 <i class="fas fa-pen"></i>
-                تعديل صفحتي
+                {{ __('chef_links.manage.label') }}
             </a>
         @endif
     @endauth
 </body>
 </html>
+
+
