@@ -189,36 +189,36 @@
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         @if($featuredIsCompleted)
                             <button type="button" class="bg-gray-400 text-gray-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
-                                <i class="fas fa-check-circle ml-2 text-xl"></i>
+                                <i class="fas fa-check-circle mr-2 rtl:ml-2 text-xl"></i>
                                 {{ __('workshops.featured.completed') }}
                             </button>
                         @elseif($featuredIsBooked)
                             <button type="button" class="bg-green-500 text-white font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg" disabled>
-                                <i class="fas fa-check ml-2 text-xl booking-button-icon"></i>
+                                <i class="fas fa-check mr-2 rtl:ml-2 text-xl booking-button-icon"></i>
                                 <span class="booking-button-label">{{ __('workshops.featured.booked') }}</span>
                             </button>
                         @elseif($featuredIsFull)
                             <button type="button" class="bg-gray-400 text-gray-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
-                                <i class="fas fa-lock ml-2 text-xl"></i>
+                                <i class="fas fa-lock mr-2 rtl:ml-2 text-xl"></i>
                                 {{ __('workshops.featured.full') }}
                             </button>
                         @elseif($featuredIsRegistrationClosed)
                             <button type="button" class="bg-yellow-400 text-yellow-800 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl cursor-not-allowed flex items-center justify-center shadow-lg">
-                                <i class="fas fa-clock ml-2 text-xl"></i>
+                                <i class="fas fa-clock mr-2 rtl:ml-2 text-xl"></i>
                                 {{ __('workshops.featured.closed') }}
                             </button>
                         @else
                             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1">
                                 <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}#workshop-booking"
                                    class="flex-1 bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
-                                    <i class="fas fa-calendar-check ml-2 text-xl booking-button-icon"></i>
+                                    <i class="fas fa-calendar-check mr-2 rtl:ml-2 text-xl booking-button-icon"></i>
                                     <span class="booking-button-label">{{ __('workshops.featured.primary_cta') }}</span>
                                 </a>
                             </div>
                         @endif
                         <a href="{{ route('workshop.show', $featuredWorkshop->slug) }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
-                            <i class="fas fa-info-circle ml-2"></i>
+                            <i class="fas fa-info-circle mr-2 rtl:ml-2"></i>
                             {{ __('workshops.featured.secondary_cta') }}
                         </a>
                     </div>
@@ -257,12 +257,12 @@
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <a href="{{ route('workshops') }}" 
                            class="bg-white text-amber-600 hover:bg-amber-50 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl">
-                            <i class="fas fa-list ml-2 text-xl"></i>
+                            <i class="fas fa-list mr-2 rtl:ml-2 text-xl"></i>
                             {{ __('workshops.featured.no_upcoming_primary') }}
                         </a>
                         <a href="{{ route('recipes') }}" 
                            class="border-2 border-white text-white hover:bg-white hover:text-amber-600 font-bold py-2.5 px-5 sm:py-4 sm:px-8 rounded-xl transition-all duration-300 flex items-center justify-center">
-                            <i class="fas fa-utensils ml-2"></i>
+                            <i class="fas fa-utensils mr-2 rtl:ml-2"></i>
                             {{ __('workshops.featured.no_upcoming_secondary') }}
                         </a>
                     </div>
@@ -344,7 +344,7 @@
                                 @elseif($isRegistrationClosed)
                                 <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                                     <span class="text-white font-bold text-lg bg-yellow-500 px-4 py-2 rounded-full">
-                                        <i class="fas fa-clock ml-2"></i>
+                                        <i class="fas fa-clock mr-2 rtl:ml-2"></i>
                                         {{ __('workshops.cards.overlay_closed') }}
                                     </span>
                                 </div>
@@ -377,35 +377,35 @@
                                     <div class="flex gap-3 items-center">
                                         @if($isCompleted)
                                         <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
-                                            <i class="fas fa-check-circle ml-2"></i>
+                                            <i class="fas fa-check-circle mr-2 rtl:ml-2"></i>
                                             {{ __('workshops.featured.completed') }}
                                         </button>
                                         @elseif($isBooked)
                                         <button type="button" class="flex-1 bg-green-500 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm" disabled>
-                                            <i class="fas fa-check ml-2 booking-button-icon"></i>
+                                            <i class="fas fa-check mr-2 rtl:ml-2 booking-button-icon"></i>
                                             <span class="booking-button-label">{{ __('workshops.featured.booked') }}</span>
                                         </button>
                                         @elseif($isFull)
                                         <button type="button" class="flex-1 bg-gray-400 text-white font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
-                                            <i class="fas fa-lock ml-2"></i>
+                                            <i class="fas fa-lock mr-2 rtl:ml-2"></i>
                                             {{ __('workshops.featured.full') }}
                                         </button>
                                         @elseif($isRegistrationClosed)
                                             <button type="button" class="flex-1 bg-yellow-400 text-yellow-800 font-bold py-3 px-4 rounded-full cursor-not-allowed flex items-center justify-center text-sm">
-                                                <i class="fas fa-clock ml-2"></i>
+                                                <i class="fas fa-clock mr-2 rtl:ml-2"></i>
                                                 {{ __('workshops.featured.closed') }}
                                             </button>
                                         @else
                                             <div class="flex flex-col gap-2 flex-1">
                                                 <a href="{{ route('workshop.show', $workshop->slug) }}#workshop-booking"
                                                    class="flex-1 text-center font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center text-sm {{ $bookingButtonStateClasses }}">
-                                                    <i class="fas fa-calendar-check ml-2 booking-button-icon"></i>
+                                                    <i class="fas fa-calendar-check mr-2 rtl:ml-2 booking-button-icon"></i>
                                                     <span class="booking-button-label">{{ __('workshops.cards.button_book') }}</span>
                                                 </a>
                                             </div>
                                         @endif
                                         <a href="{{ route('workshop.show', $workshop->slug) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center group">
-                                            <i class="fas fa-info-circle text-sm ml-2 group-hover:text-orange-500 transition-colors"></i>
+                                            <i class="fas fa-info-circle text-sm mr-2 rtl:ml-2 group-hover:text-orange-500 transition-colors"></i>
                                             <span class="text-sm">{{ __('workshops.cards.button_details') }}</span>
                                         </a>
                                     </div>

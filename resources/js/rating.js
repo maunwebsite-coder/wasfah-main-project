@@ -383,7 +383,22 @@ class RecipeRating {
     }
 }
 
-// تهيئة نظام التقييم عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    new RecipeRating();
-});
+function bootstrapRecipeRating() {
+    const ratingForm = document.querySelector('.star-rating');
+    if (!ratingForm) {
+        return;
+    }
+
+    if (window.__recipeRatingInitialized) {
+        return;
+    }
+
+    window.recipeRatingInstance = new RecipeRating();
+    window.__recipeRatingInitialized = true;
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapRecipeRating, { once: true });
+} else {
+    bootstrapRecipeRating();
+}

@@ -7,10 +7,16 @@ let madeRecipeBtn = null;
 let questionTextEl = null;
 let madeItCountEl = null;
 
-// تهيئة النظام عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-    initializeMadeRecipeSystem();
-});
+// تهيئة النظام عند تحميل الصفحة حتى لو تم تحميل الملف بعد اكتمال DOM
+const runWhenReady = (callback) => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true });
+    } else {
+        callback();
+    }
+};
+
+runWhenReady(initializeMadeRecipeSystem);
 
 /**
  * تهيئة نظام "لقد جربتها!"
@@ -131,25 +137,40 @@ function updateDisplay() {
 }
 
 /**
+ * تحديث شكل الزر ونصه
+ */
+function updateButton(isMade) {
+    if (!madeRecipeBtn) {
+        return;
+    }
+
+    const btnText = madeRecipeBtn.querySelector('#made-btn-text');
+    const defaultText = madeRecipeBtn.dataset.defaultText || btnText?.textContent || 'لقد جربتها!';
+    const activeText = madeRecipeBtn.dataset.activeText || defaultText;
+
+    madeRecipeBtn.classList.remove('bg-orange-500', 'bg-green-500', 'hover:bg-orange-600', 'hover:bg-green-600');
+
+    if (isMade) {
+        madeRecipeBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        if (btnText) {
+            btnText.textContent = activeText;
+        }
+    } else {
+        madeRecipeBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+        if (btnText) {
+            btnText.textContent = defaultText;
+        }
+    }
+}
+
+/**
  * تحديث العداد عند تغيير الحالة
  */
 function updateCount(isMade) {
     const currentCount = getCurrentCount();
     const newCount = isMade ? currentCount + 1 : Math.max(0, currentCount - 1);
     
-    const btnText = madeRecipeBtn.querySelector('#made-btn-text');
-    
-    if (isMade) {
-        // تم تجربتها - أخضر
-        madeRecipeBtn.className = madeRecipeBtn.className.replace(/bg-orange-\d+|bg-green-\d+/g, 'bg-green-500');
-        madeRecipeBtn.className = madeRecipeBtn.className.replace(/hover:bg-orange-\d+|hover:bg-green-\d+/g, 'hover:bg-green-600');
-        if (btnText) btnText.textContent = 'جربتها!';
-    } else {
-        // لم يتم تجربتها - برتقالي
-        madeRecipeBtn.className = madeRecipeBtn.className.replace(/bg-orange-\d+|bg-green-\d+/g, 'bg-orange-500');
-        madeRecipeBtn.className = madeRecipeBtn.className.replace(/hover:bg-orange-\d+|hover:bg-green-\d+/g, 'hover:bg-orange-600');
-        if (btnText) btnText.textContent = 'لقد جربتها!';
-    }
+    updateButton(isMade);
     
     // تحديث النص فورياً مع العدد الجديد
     updateText(isMade, newCount);

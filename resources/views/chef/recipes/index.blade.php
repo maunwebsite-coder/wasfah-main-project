@@ -74,19 +74,13 @@
                 <p class="text-gray-600 mt-1">{{ __('chef.hero.description') }}</p>
             </div>
             <div class="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-row sm:items-stretch sm:justify-end">
-                @if ($publicProfileUrl)
-                    <a href="{{ $publicProfileUrl }}" target="_blank" rel="noopener" class="order-5 sm:order-1 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-orange-600 font-semibold shadow-sm hover:bg-orange-50 hover:border-orange-300 transition">
-                        <i class="fas fa-eye"></i>
-                        {{ __('chef.hero.actions.public_profile') }}
-                    </a>
-                @endif
-                <a href="{{ route('chef.workshops.index') }}" class="order-3 sm:order-3 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white px-5 py-3 text-indigo-600 font-semibold shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition">
-                    <i class="fas fa-video"></i>
-                    {{ __('chef.hero.actions.workshops') }}
-                </a>
-                <a href="{{ route('chef.workshops.earnings') }}" class="order-4 sm:order-2 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-emerald-600 font-semibold shadow-sm hover:border-emerald-300 hover:bg-emerald-50 transition">
-                    <i class="fas fa-wallet"></i>
-                    {{ __('chef.hero.actions.earnings') }}
+                <a href="{{ route('chef.recipes.create') }}" class="order-1 sm:order-5 col-span-2 sm:col-span-1 group flex w-full sm:w-auto items-center gap-3 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-white font-semibold shadow-[0_12px_30px_rgba(249,115,22,0.35)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(234,88,12,0.4)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70">
+                    <span class="flex h-11 w-11 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-lg text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                    </span>
+                    <span class="flex flex-col text-left leading-tight">
+                        <span>{{ __('chef.hero.actions.new_recipe') }}</span>
+                    </span>
                 </a>
                 <a href="{{ route('chef.workshops.create') }}" class="order-2 sm:order-4 col-span-2 sm:col-span-1 group flex w-full sm:w-auto items-center gap-3 rounded-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 px-6 py-3 text-white font-semibold shadow-[0_12px_30px_rgba(37,99,235,0.32)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(37,99,235,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70">
                     <span class="flex h-11 w-11 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-lg text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
@@ -96,10 +90,20 @@
                         <span>{{ __('chef.hero.actions.new_workshop') }}</span>
                     </span>
                 </a>
-                <a href="{{ route('chef.recipes.create') }}" class="order-1 sm:order-5 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 text-white font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition">
-                    <i class="fas fa-plus"></i>
-                    {{ __('chef.hero.actions.new_recipe') }}
+                <a href="{{ route('chef.workshops.index') }}" class="order-3 sm:order-3 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white px-5 py-3 text-indigo-600 font-semibold shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition">
+                    <i class="fas fa-video"></i>
+                    {{ __('chef.hero.actions.workshops') }}
                 </a>
+                <a href="{{ route('chef.workshops.earnings') }}" class="order-4 sm:order-2 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-emerald-600 font-semibold shadow-sm hover:border-emerald-300 hover:bg-emerald-50 transition">
+                    <i class="fas fa-wallet"></i>
+                    {{ __('chef.hero.actions.earnings') }}
+                </a>
+                @if ($publicProfileUrl)
+                    <a href="{{ $publicProfileUrl }}" target="_blank" rel="noopener" class="order-5 sm:order-1 inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-orange-600 font-semibold shadow-sm hover:bg-orange-50 hover:border-orange-300 transition">
+                        <i class="fas fa-eye"></i>
+                        {{ __('chef.hero.actions.public_profile') }}
+                    </a>
+                @endif
             </div>
         </div>
 

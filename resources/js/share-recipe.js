@@ -12,10 +12,31 @@ let currentRecipeUrl = '';
 let currentRecipeTitle = '';
 let currentRecipeDescription = '';
 
-// تهيئة النظام عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
+// تهيئة النظام عند تحميل الصفحة أو عند استيراد الوحدة بعد أن تصبح DOM جاهزة
+let shareSystemInitialized = false;
+
+function bootstrapShareSystem() {
+    if (shareSystemInitialized) {
+        return;
+    }
+
+    const hasShareElements =
+        document.getElementById('share-modal') ||
+        document.querySelector('[id^="share-recipe-btn"]');
+
+    if (!hasShareElements) {
+        return;
+    }
+
+    shareSystemInitialized = true;
     initializeShareSystem();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapShareSystem, { once: true });
+} else {
+    bootstrapShareSystem();
+}
 
 /**
  * تهيئة نظام المشاركة

@@ -317,20 +317,26 @@ class RecipeSaveButton {
     }
 }
 
-// تهيئة النظام عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    // التأكد من أننا في صفحة وصفة فردية
-    if (document.getElementById('save-recipe-page-btn')) {
-        // منع إنشاء مثيلات متعددة
-        if (window.recipeSaveButton) {
-            console.log('Recipe Save Button already initialized');
-            return;
-        }
-        
-        console.log('Initializing Recipe Save Button system...');
-        window.recipeSaveButton = new RecipeSaveButton();
+function bootstrapRecipeSaveButton() {
+    const pageButton = document.getElementById('save-recipe-page-btn');
+    if (!pageButton) {
+        return;
     }
-});
+
+    if (window.__recipeSaveButtonInitialized) {
+        return;
+    }
+
+    console.log('Initializing Recipe Save Button system...');
+    window.recipeSaveButton = new RecipeSaveButton();
+    window.__recipeSaveButtonInitialized = true;
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapRecipeSaveButton, { once: true });
+} else {
+    bootstrapRecipeSaveButton();
+}
 
 // تصدير للاستخدام العام إذا لزم الأمر
 window.RecipeSaveButton = RecipeSaveButton;

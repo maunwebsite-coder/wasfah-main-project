@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', $recipe->title)
 
@@ -17,7 +17,7 @@
         display: flex;
         justify-content: center;
         gap: 5px;
-        flex-direction: row; /* إزالة row-reverse */
+        flex-direction: row; /* Remove row-reverse */
       }
       .star-rating input {
         display: none;
@@ -31,35 +31,35 @@
       }
       .star-rating .star {
         font-size: 2.5rem;
-        color: #e5e7eb; /* نجوم رمادية في الوضع العادي */
+        color: #e5e7eb; /* Gray stars by default */
         display: block;
         transition: all 0.2s ease-in-out;
         text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         line-height: 1;
       }
       
-      /* النجوم المحددة */
+      /* Selected stars */
       .star-rating input:checked ~ label .star {
         color: #eab308 !important;
         transform: scale(1.1);
         text-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
       }
       
-      /* تأثير hover - إضاءة النجم المحوم عليه والنجوم التي تأتي بعده */
+      /* Hover effect: highlight the hovered star and the ones after it */
       .star-rating label:hover .star {
         color: #eab308 !important;
         transform: scale(1.1);
         text-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
       }
       
-      /* إضاءة النجوم التي تأتي بعد النجم المحوم عليه (من اليمين لليسار) */
+      /* Highlight stars that follow the hovered one (RTL order) */
       .star-rating label:hover ~ label .star {
         color: #eab308 !important;
         transform: scale(1.1);
         text-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
       }
       
-      /* إعادة تعيين النجوم التي تأتي قبل النجم المحوم عليه */
+      /* Reset stars that come before the hovered one */
       .star-rating label:hover + label .star {
         color: #e5e7eb !important;
         transform: scale(1);
@@ -70,9 +70,9 @@
         transform: scale(1.05);
       }
       
-      /* إزالة CSS الذي يسبب تظليل جميع النجوم */
+      /* Remove CSS that shaded all stars */
       
-      /* ضمان أن النجوم المحددة تبقى ذهبية */
+      /* Keep selected stars gold */
       .star-rating input:checked ~ label .star {
         color: #eab308 !important;
         transform: scale(1.1);
@@ -89,10 +89,10 @@
       }
 
       .btn.save-recipe-btn {
-        background-color: #10b981; /* bg-green-500 - افتراضي أخضر */
+        background-color: #10b981; /* bg-green-500 - default green */
         color: #ffffff;
-        min-width: 140px; /* الحفاظ على عرض ثابت */
-        min-height: 48px; /* الحفاظ على ارتفاع ثابت */
+        min-width: 140px; /* Keep width consistent */
+        min-height: 48px; /* Keep height consistent */
       }
 
       .btn.save-recipe-btn:hover {
@@ -1063,7 +1063,7 @@
         margin: 5px 0;
       }
       
-      /* أنماط كروت المعدات */
+      /* Equipment card styles */
       .tool-card {
         background: linear-gradient(135deg, #fef3e7 0%, #fed7aa 100%);
         border: 1px solid #fb923c;
@@ -1118,7 +1118,7 @@
         margin: 0 auto;
       }
 
-      /* تحسينات إضافية لكروت المعدات في صفحة الوصفة */
+      /* Extra equipment card styling for the recipe page */
       #tools-container .tool-card {
         background: white;
         border: 1px solid #e5e7eb;
@@ -1178,7 +1178,7 @@
         overflow: hidden;
       }
       
-      /* تحسينات للهواتف */
+      /* Mobile improvements */
       @media (max-width: 640px) {
         #tools-container .tool-card {
           margin-bottom: 0.75rem;
@@ -1222,19 +1222,19 @@
         }
       }
       
-      /* تحسينات للشاشات المتوسطة */
+      /* Medium screen tweaks */
       @media (min-width: 641px) and (max-width: 1024px) {
         #tools-container .tool-card {
           margin-bottom: 1.25rem;
         }
       }
       
-      /* تحسين الأزرار */
+      /* Button refinements */
       #tools-container .save-for-later-btn:active {
         transform: scale(0.98);
       }
       
-      /* تحسين أزرار Amazon */
+      /* Amazon button tweaks */
       #tools-container .tool-card a[href*="amazon"]:active {
         transform: scale(0.98);
       }
@@ -1244,7 +1244,7 @@
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
       }
       
-      /* تحسين الشارات */
+      /* Badge improvements */
       #tools-container .category-badge {
         backdrop-filter: blur(10px);
         background: rgba(249, 115, 22, 0.9);
@@ -1341,7 +1341,7 @@
         transform: scale(0.95);
       }
       
-      /* تحسينات للهواتف */
+      /* Mobile tweaks */
       @media (max-width: 640px) {
         .related-recipe-card {
           margin-bottom: 1rem;
@@ -1371,21 +1371,21 @@
         }
       }
       
-      /* تحسينات للشاشات المتوسطة */
+      /* Medium screen refinements */
       @media (min-width: 641px) and (max-width: 1024px) {
         .related-recipe-card .recipe-image {
           height: 220px;
         }
       }
         
-        /* تحسين عرض الصور */
+        /* Improve image layout */
         img {
           max-width: 100% !important;
           height: auto !important;
           page-break-inside: avoid;
         }
         
-        /* تحسين عرض الجداول */
+        /* Improve table layout */
         table {
           width: 100%;
           border-collapse: collapse;
@@ -1410,17 +1410,68 @@
 
 @section('content')
 
+    @php
+        $recipeJsTranslations = [
+            'tools' => [
+                'actions' => [
+                    'save' => __('recipe.tools.actions.save'),
+                    'saved' => __('recipe.tools.actions.saved'),
+                    'saving' => __('recipe.tools.actions.saving'),
+                    'removing' => __('recipe.tools.actions.removing'),
+                    'error' => __('recipe.tools.actions.error'),
+                ],
+                'messages' => [
+                    'save_success' => __('recipe.tools.messages.save_success'),
+                    'save_error' => __('recipe.tools.messages.save_error'),
+                    'remove_success' => __('recipe.tools.messages.remove_success'),
+                    'remove_error' => __('recipe.tools.messages.remove_error'),
+                ],
+            ],
+            'rating' => [
+                'button' => [
+                    'submit' => __('recipe.rating.button.submit'),
+                    'remove' => __('recipe.rating.button.remove'),
+                    'rate' => __('recipe.rating.button.rate'),
+                    'rated' => __('recipe.rating.button.rated'),
+                ],
+                'state' => [
+                    'submitting' => __('recipe.rating.state.submitting'),
+                    'submitted' => __('recipe.rating.state.submitted'),
+                    'removing' => __('recipe.rating.state.removing'),
+                ],
+                'messages' => [
+                    'choose' => __('recipe.rating.messages.choose_rating'),
+                    'login' => __('recipe.rating.messages.login_required'),
+                    'login_remove' => __('recipe.rating.messages.login_required_remove'),
+                    'submit_success' => __('recipe.rating.messages.submit_success'),
+                    'submit_error' => __('recipe.rating.messages.submit_error'),
+                    'remove_success' => __('recipe.rating.messages.remove_success'),
+                    'remove_error' => __('recipe.rating.messages.remove_error'),
+                ],
+                'user_rating_template' => __('recipe.rating.user_rating'),
+                'prompt' => __('recipe.rating.prompt'),
+            ],
+            'share' => [
+                'copied' => __('recipe.share.modal.copied'),
+            ],
+        ];
+    @endphp
+
     <main class="container mx-auto px-4 py-8">
-      <!-- بداية تصميم البطل للوصفة -->
+      <!-- Recipe hero -->
       <section class="recipe-hero rounded-3xl px-6 py-8 md:px-10 md:py-10 mb-12">
         @php
-          $totalTime = (int) ($recipe->prep_time ?? 0) + (int) ($recipe->cook_time ?? 0);
+          $prepMinutes = (int) ($recipe->prep_time ?? 0);
+          $cookMinutes = (int) ($recipe->cook_time ?? 0);
+          $totalTime = $prepMinutes + $cookMinutes;
+          $servingsCount = (int) ($recipe->servings ?? 0);
+          $baseServings = $servingsCount > 0 ? $servingsCount : 2;
         @endphp
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-start gap-10">
           <div class="flex-1">
             <span class="hero-badge">
-              <i class="fas fa-fire ml-1 text-sm"></i>
-              وصفة من منصة وصفة
+              <i class="fas fa-fire ltr:mr-1 rtl:ml-1 text-sm"></i>
+              {{ __('recipe.hero.badge') }}
             </span>
             <h1 class="hero-title mt-4">
               {{ $recipe->title }}
@@ -1430,8 +1481,8 @@
             </p>
             @if($recipe->is_registration_closed)
               <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-2xl mt-6 no-print flex items-start gap-3">
-                <i class="fas fa-clock mt-1 ml-2"></i>
-                <span class="font-semibold">انتهت مهلة الحجز لهذه الوصفة</span>
+                <i class="fas fa-clock mt-1 ltr:mr-2 rtl:ml-2"></i>
+                <span class="font-semibold">{{ __('recipe.hero.registration_closed') }}</span>
               </div>
             @endif
             <div class="hero-stats-grid mt-8 gap-3 sm:gap-4">
@@ -1440,13 +1491,13 @@
                   <i class="fas fa-star"></i>
                 </span>
                 <div>
-                  <span class="hero-stat-label">التقييم العام</span>
+                  <span class="hero-stat-label">{{ __('recipe.hero.stats.rating.label') }}</span>
                   <span class="hero-stat-value">
                     @if($recipe->interactions_avg_rating)
                       {{ number_format($recipe->interactions_avg_rating, 1) }}
-                      <span class="hero-stat-sub">تقييمات المستخدمين</span>
+                      <span class="hero-stat-sub">{{ __('recipe.hero.stats.rating.sub') }}</span>
                     @else
-                      لا توجد تقييمات بعد
+                      {{ __('recipe.hero.stats.rating.empty') }}
                     @endif
                   </span>
                 </div>
@@ -1456,9 +1507,9 @@
                   <i class="fas fa-bookmark"></i>
                 </span>
                 <div>
-                  <span class="hero-stat-label">المستخدمون الذين حفظوا</span>
+                  <span class="hero-stat-label">{{ __('recipe.hero.stats.saved.label') }}</span>
                   <span class="hero-stat-value" id="recipe-save-count">
-                    {{ $recipe->saved_count }} شخص حفظوا هذه الوصفة
+                    {{ trans_choice('recipe.hero.stats.saved.value', $recipe->saved_count, ['count' => $recipe->saved_count]) }}
                   </span>
                 </div>
               </div>
@@ -1470,23 +1521,36 @@
                 <div>
                   <span class="hero-stat-label">
                       @if($totalTime)
-                        الوقت الإجمالي
+                        {{ __('recipe.hero.stats.time.total') }}
                       @else
-                        الكمية تكفي
+                        {{ __('recipe.hero.stats.time.servings') }}
                       @endif
                     </span>
                     <span class="hero-stat-value">
                       @if($totalTime)
-                        {{ $totalTime }} دقيقة
-                        @if($recipe->prep_time && $recipe->cook_time)
-                          <span class="hero-stat-sub">تحضير {{ (int) $recipe->prep_time }}د • طبخ {{ (int) $recipe->cook_time }}د</span>
-                        @elseif($recipe->prep_time)
-                          <span class="hero-stat-sub">تحضير {{ (int) $recipe->prep_time }} دقيقة</span>
-                        @elseif($recipe->cook_time)
-                          <span class="hero-stat-sub">طبخ {{ (int) $recipe->cook_time }} دقيقة</span>
+                        {{ trans_choice('recipe.units.minutes', $totalTime, ['count' => $totalTime]) }}
+                        @if($prepMinutes && $cookMinutes)
+                          <span class="hero-stat-sub">
+                            {{ __('recipe.hero.stats.time.details.prep_and_cook', [
+                                'prep' => trans_choice('recipe.units.minutes_short', $prepMinutes, ['count' => $prepMinutes]),
+                                'cook' => trans_choice('recipe.units.minutes_short', $cookMinutes, ['count' => $cookMinutes]),
+                            ]) }}
+                          </span>
+                        @elseif($prepMinutes)
+                          <span class="hero-stat-sub">
+                            {{ __('recipe.hero.stats.time.details.prep_only', [
+                                'minutes' => trans_choice('recipe.units.minutes', $prepMinutes, ['count' => $prepMinutes]),
+                            ]) }}
+                          </span>
+                        @elseif($cookMinutes)
+                          <span class="hero-stat-sub">
+                            {{ __('recipe.hero.stats.time.details.cook_only', [
+                                'minutes' => trans_choice('recipe.units.minutes', $cookMinutes, ['count' => $cookMinutes]),
+                            ]) }}
+                          </span>
                         @endif
                       @elseif($recipe->servings)
-                        يكفي لـ {{ (int) $recipe->servings }} أشخاص
+                        {{ trans_choice('recipe.hero.stats.servings.value', $servingsCount, ['count' => $servingsCount]) }}
                       @endif
                     </span>
                   </div>
@@ -1497,18 +1561,18 @@
                   <i class="fas fa-user"></i>
                 </span>
                 <div>
-                  <span class="hero-stat-label">صدر عن</span>
+                  <span class="hero-stat-label">{{ __('recipe.hero.stats.published_by') }}</span>
                   <span class="hero-stat-value hero-stat-value--compact">
                     <span class="hero-stat-line">
                       @if ($recipe->chef)
                         <a href="{{ route('chefs.show', ['chef' => $recipe->chef->id]) }}" class="hero-stat-link">
-                          الشيف {{ $recipe->chef->name }}
+                          {{ __('recipe.hero.byline.chef', ['name' => $recipe->chef->name]) }}
                         </a>
                       @else
-                        {{ $recipe->author ?? 'فريق وصفة' }}
+                        {{ $recipe->author ?: __('recipe.hero.byline.team') }}
                       @endif
                     </span>
-                    <span class="hero-stat-line">آخر تحديث {{ $recipe->updated_at->format('Y-m-d') }}</span>
+                    <span class="hero-stat-line">{{ __('recipe.hero.stats.updated_at', ['date' => $recipe->updated_at->format('Y-m-d')]) }}</span>
                   </span>
                 </div>
               </div>
@@ -1522,19 +1586,19 @@
                 data-recipe-id="{{ $recipe->recipe_id }}" 
                 data-saved="{{ $recipe->is_saved ? 'true' : 'false' }}"
                 data-user-id="{{ Auth::id() }}">
-                <i class="fas fa-bookmark ml-2"></i>
-                <span>{{ $recipe->is_saved ? 'محفوظة' : 'حفظ' }}</span>
+                <i class="fas fa-bookmark ltr:mr-2 rtl:ml-2"></i>
+                <span>{{ $recipe->is_saved ? __('recipe.hero.actions.saved') : __('recipe.hero.actions.save') }}</span>
               </button>
               <button
                 id="rating-scroll-btn"
                 class="flex items-center justify-center p-3 text-base border border-gray-200 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors {{ $recipe->user_rating ? 'bg-green-50 border-green-300 text-green-700' : '' }}"
               >
-                <i class="fas fa-star ml-2"></i>
+                <i class="fas fa-star ltr:mr-2 rtl:ml-2"></i>
                 <span id="rating-btn-text">
                   @if($recipe->user_rating)
-                    تم التقييم
+                    {{ __('recipe.hero.actions.rated') }}
                   @else
-                    تقييم
+                    {{ __('recipe.hero.actions.rate') }}
                   @endif
                 </span>
               </button>
@@ -1542,23 +1606,21 @@
                 id="print-recipe-btn"
                 class="flex items-center justify-center p-3 text-base border border-gray-200 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
               >
-                <i class="fas fa-print ml-2"></i>
-                طباعة
+                <i class="fas fa-print ltr:mr-2 rtl:ml-2"></i>
+                {{ __('recipe.hero.buttons.print') }}
               </button>
               <button
                 id="share-recipe-btn-1"
                 class="flex items-center justify-center p-3 text-base border border-gray-200 rounded-full font-semibold text-gray-700 bg-white hover:bg-gray-100 transition-colors"
               >
-                <i class="fas fa-share-alt ml-2"></i>
-                مشاركة
+                <i class="fas fa-share-alt ltr:mr-2 rtl:ml-2"></i>
+                {{ __('recipe.hero.buttons.share') }}
               </button>
             </div>
           </div>
         </div>
       </section>
-      <!-- *******************************
-           نهاية تصميم البطل للوصفة
-           ******************************* -->
+      <!-- End recipe hero -->
 
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1570,8 +1632,8 @@
                     <!-- Main Image Display -->
                     <div class="main-image-wrapper relative overflow-hidden">
                         <img id="main-recipe-image" class="w-full h-full object-cover transition-opacity duration-300" 
-                             src="{{ $recipe->getAllImages()[0] }}" alt="صورة الوصفة"
-                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+                             src="{{ $recipe->getAllImages()[0] }}" alt="{{ __('recipe.misc.image_alt') }}"
+                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('recipe.misc.placeholder_image_alt') }}';" loading="lazy">
                         
                         <!-- Navigation Arrows -->
                         @if(count($recipe->getAllImages()) > 1)
@@ -1598,7 +1660,7 @@
                                 <img onclick="showImage({{ $index }})" 
                                      class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all thumbnail {{ $index === 0 ? 'active' : '' }}" 
                                      src="{{ $imageUrl }}" 
-                                     alt="صورة {{ $index + 1 }}"
+                                     alt="{{ __('recipe.misc.gallery_image_alt', ['number' => $index + 1]) }}"
                                      onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
                             @endforeach
                         </div>
@@ -1623,7 +1685,7 @@
         <div class="section-card info-card px-6 py-6 md:px-8 md:py-8">
           <h2 class="section-title">
             <i class="fas fa-info-circle"></i>
-            <span>معلومات أساسية</span>
+            <span>{{ __('recipe.sections.info') }}</span>
           </h2>
           <div class="info-highlight-grid">
             <div class="info-highlight">
@@ -1631,10 +1693,10 @@
                 <i class="fas fa-clock"></i>
               </span>
               <div>
-                <span class="info-label">وقت التحضير</span>
+                <span class="info-label">{{ __('recipe.info.prep') }}</span>
                 <span class="info-value">
                   <span data-prep-time>{{ (int)$recipe->prep_time }}</span>
-                  <span class="info-unit">دقيقة</span>
+                  <span class="info-unit">{{ __('recipe.info_units.minutes') }}</span>
                 </span>
               </div>
             </div>
@@ -1643,10 +1705,10 @@
                 <i class="fas fa-fire"></i>
               </span>
               <div>
-                <span class="info-label">وقت الطهي</span>
+                <span class="info-label">{{ __('recipe.info.cook') }}</span>
                 <span class="info-value">
                   <span data-cook-time>{{ (int)$recipe->cook_time }}</span>
-                  <span class="info-unit">دقيقة</span>
+                  <span class="info-unit">{{ __('recipe.info_units.minutes') }}</span>
                 </span>
               </div>
             </div>
@@ -1655,10 +1717,10 @@
                 <i class="fas fa-utensils"></i>
               </span>
               <div>
-                <span class="info-label">تكفي لـ</span>
+                <span class="info-label">{{ __('recipe.info.servings') }}</span>
                 <span class="info-value">
                   <span data-servings>{{ (int)$recipe->servings }}</span>
-                  <span class="info-unit">أشخاص</span>
+                  <span class="info-unit">{{ __('recipe.info_units.people') }}</span>
                 </span>
               </div>
             </div>
@@ -1670,7 +1732,7 @@
         <div class="section-card px-6 py-6 md:px-8 md:py-8">
           <h2 class="section-title">
             <i class="fas fa-list"></i>
-            <span>المكونات</span>
+            <span>{{ __('recipe.sections.ingredients') }}</span>
           </h2>
 
           <div class="serving-controls mb-6 no-print">
@@ -1696,7 +1758,7 @@
 
           <div class="serving-size-hint no-print">
             <span class="text-sm text-gray-600">
-              الوصفة الأصلية (1X) تنتج حصتين
+              {{ __('recipe.ingredients.original_yield', ['count' => $baseServings]) }}
             </span>
             <i
               id="info-icon"
@@ -1707,9 +1769,7 @@
               class="absolute bottom-full right-0 mb-2 p-4 bg-white rounded-xl shadow-xl max-w-xs w-64 z-10 hidden transform origin-bottom-right transition-opacity duration-300 border border-orange-100"
             >
               <p class="text-sm text-gray-700 leading-relaxed">
-                تم تطوير هذه الوصفة بإنتاجيتها الأصلية. يتم تعديل كميات المكونات
-                تلقائيًا، ولكن أوقات الطهي والخطوات تظل كما هي. لاحظ أنه ليست كل
-                الوصفات تتناسب بشكل مثالي.
+                {{ __('recipe.ingredients.tooltip') }}
               </p>
             </div>
           </div>
@@ -1717,7 +1777,7 @@
           <ul class="ingredient-list mt-6">
             @foreach($recipe->ingredients as $ingredient)
               @php
-                $ingredientFullText = trim(($ingredient->quantity ?? 'كمية حسب الحاجة') . ' ' . $ingredient->name);
+                $ingredientFullText = trim(($ingredient->quantity ?? __('recipe.ingredients.quantity_as_needed')) . ' ' . $ingredient->name);
               @endphp
               <li class="ingredient-item" 
                   data-original-quantity="{{ $ingredient->quantity ?? '' }}"
@@ -1736,7 +1796,7 @@
         <div class="section-card px-6 py-6 md:px-8 md:py-8">
           <h2 class="section-title mb-6">
             <i class="fas fa-tools"></i>
-            <span>المعدات المستخدمة</span>
+            <span>{{ __('recipe.sections.tools') }}</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 slider-track tools-slider">
             @if((is_array($recipe->tools) ? count($recipe->tools) : $recipe->tools->count()) > 0)
@@ -1767,7 +1827,7 @@
                     
                     <!-- Price -->
                     <div class="text-lg font-bold text-orange-500 mb-3">
-                      {{ $tool['price'] ? 'د.إ ' . number_format($tool['price'], 2) : 'غير محدد' }}
+                      {{ $tool['price'] ? __('recipe.tools.price_label', ['price' => number_format($tool['price'], 2)]) : __('recipe.tools.price_unknown') }}
                     </div>
                     
                     <!-- Save Button -->
@@ -1776,7 +1836,7 @@
                             data-tool-name="{{ $tool['name'] }}" 
                             data-tool-price="{{ $tool['price'] }}">
                       <i class="fas fa-bookmark"></i>
-                      <span class="btn-text">حفظ للشراء لاحقاً</span>
+                      <span class="btn-text">{{ __('recipe.tools.actions.save') }}</span>
                       <i class="fas fa-spinner fa-spin loading-icon hidden"></i>
                     </button>
                     
@@ -1785,7 +1845,7 @@
                       <a href="{{ $tool['amazon_url'] }}" target="_blank" 
                          class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 rtl:space-x-reverse">
                         <i class="fab fa-amazon"></i>
-                        <span>عرض في Amazon</span>
+                        <span>{{ __('recipe.tools.actions.view') }}</span>
                       </a>
                     @endif
                   </div>
@@ -1794,7 +1854,7 @@
             @else
               <div class="text-center text-gray-500 italic col-span-full py-8">
                 <i class="fas fa-tools text-4xl text-gray-300 mb-3"></i>
-                <p>لا توجد معدات محددة لهذه الوصفة</p>
+                <p>{{ __('recipe.tools.empty') }}</p>
               </div>
             @endif
           </div>
@@ -1805,7 +1865,7 @@
         <div class="section-card px-6 py-6 md:px-8 md:py-8">
           <h2 class="section-title">
             <i class="fas fa-clipboard-check"></i>
-            <span>خطوات التحضير</span>
+            <span>{{ __('recipe.sections.instructions') }}</span>
           </h2>
           <ol class="step-list">
             @foreach($recipe->steps as $index => $step)
@@ -1822,17 +1882,19 @@
       <div class="section-card callout-card mt-8 no-print">
         <div class="callout-meta">
           <span class="callout-badge">
-            <i class="fas fa-users ml-1"></i>
-            تفاعل المجتمع
+            <i class="fas fa-users ltr:mr-1 rtl:ml-1"></i>
+            {{ __('recipe.community.title') }}
           </span>
           <h3 id="question-text" class="font-semibold text-gray-800 text-lg md:text-xl">
-            هل جربت هذه الوصفة؟
+            {{ __('recipe.community.question') }}
           </h3>
           <p id="made-it-count" class="text-gray-600 text-sm md:text-base">
             @if($recipe->made_count > 0)
-              <span class="font-bold text-orange-500 text-lg">{{ $recipe->made_count }}</span> شخص جربوا هذه الوصفة!
+              {!! trans_choice('recipe.community.count', $recipe->made_count, [
+                  'count' => '<span class="font-bold text-orange-500 text-lg">'.$recipe->made_count.'</span>',
+              ]) !!}
             @else
-              كن أول من يجرب هذه الوصفة! 🚀
+              {{ trans_choice('recipe.community.count', 0, ['count' => 0]) }}
             @endif
           </p>
         </div>
@@ -1843,16 +1905,18 @@
             data-recipe-id="{{ $recipe->recipe_id }}"
             data-user-id="{{ Auth::id() }}"
             data-made="{{ $recipe->is_made ? 'true' : 'false' }}"
+            data-default-text="{{ __('recipe.community.button.default') }}"
+            data-active-text="{{ __('recipe.community.button.active') }}"
           >
-            <i class="fas fa-check-circle ml-2"></i>
-            <span id="made-btn-text">{{ $recipe->is_made ? 'جربتها!' : 'لقد جربتها!' }}</span>
+            <i class="fas fa-check-circle ltr:mr-2 rtl:ml-2"></i>
+            <span id="made-btn-text">{{ $recipe->is_made ? __('recipe.community.button.active') : __('recipe.community.button.default') }}</span>
           </button>
           <button
             id="share-recipe-btn-2"
             class="flex items-center justify-center px-6 py-3 border border-orange-200 text-orange-600 rounded-full font-semibold bg-white/90 hover:bg-white transition-colors"
           >
-            <i class="fas fa-share-alt ml-2"></i>
-            مشاركة الوصفة
+            <i class="fas fa-share-alt ltr:mr-2 rtl:ml-2"></i>
+            {{ __('recipe.share.section_title') }}
           </button>
         </div>
       </div>
@@ -1861,35 +1925,35 @@
         <div class="section-card rating-card px-6 py-6 md:px-8 md:py-8">
           <h2 class="section-title">
             <i class="fas fa-star"></i>
-            <span>تقييم الوصفة</span>
+            <span>{{ __('recipe.sections.rating') }}</span>
           </h2>
           <div class="flex flex-col items-center text-center gap-4">
             <div class="star-rating">
-              <input type="radio" id="star5" name="rating" value="5" {{ $recipe->user_rating == 5 ? 'checked' : '' }} /><label for="star5" title="5 نجوم">
+              <input type="radio" id="star5" name="rating" value="5" {{ $recipe->user_rating == 5 ? 'checked' : '' }} /><label for="star5" title="{{ trans_choice('recipe.rating.star_title', 5, ['count' => 5]) }}">
                 <span class="star">★</span></label
               >
-              <input type="radio" id="star4" name="rating" value="4" {{ $recipe->user_rating == 4 ? 'checked' : '' }} /><label for="star4" title="4 نجوم">
+              <input type="radio" id="star4" name="rating" value="4" {{ $recipe->user_rating == 4 ? 'checked' : '' }} /><label for="star4" title="{{ trans_choice('recipe.rating.star_title', 4, ['count' => 4]) }}">
                 <span class="star">★</span></label
               >
-              <input type="radio" id="star3" name="rating" value="3" {{ $recipe->user_rating == 3 ? 'checked' : '' }} /><label for="star3" title="3 نجوم">
+              <input type="radio" id="star3" name="rating" value="3" {{ $recipe->user_rating == 3 ? 'checked' : '' }} /><label for="star3" title="{{ trans_choice('recipe.rating.star_title', 3, ['count' => 3]) }}">
                 <span class="star">★</span></label
               >
-              <input type="radio" id="star2" name="rating" value="2" {{ $recipe->user_rating == 2 ? 'checked' : '' }} /><label for="star2" title="نجمتان">
+              <input type="radio" id="star2" name="rating" value="2" {{ $recipe->user_rating == 2 ? 'checked' : '' }} /><label for="star2" title="{{ trans_choice('recipe.rating.star_title', 2, ['count' => 2]) }}">
                 <span class="star">★</span></label
               >
-              <input type="radio" id="star1" name="rating" value="1" {{ $recipe->user_rating == 1 ? 'checked' : '' }} /><label for="star1" title="نجمة واحدة">
+              <input type="radio" id="star1" name="rating" value="1" {{ $recipe->user_rating == 1 ? 'checked' : '' }} /><label for="star1" title="{{ trans_choice('recipe.rating.star_title', 1, ['count' => 1]) }}">
                 <span class="star">★</span></label
               >
             </div>
             <p id="user-rating-text" class="text-center text-gray-500 dark-text mt-2 mb-4">
               @if(Auth::check())
                 @if($recipe->user_rating)
-                  تقييمك: {{ $recipe->user_rating }} نجوم
+                  {{ __('recipe.rating.user_rating', ['rating' => $recipe->user_rating]) }}
                 @else
-                  الرجاء تقييم الوصفة
+                  {{ __('recipe.rating.prompt') }}
                 @endif
               @else
-                <a href="/login" class="text-orange-500 hover:text-orange-600 underline">سجل الدخول لتقييم الوصفة</a>
+                <a href="/login" class="text-orange-500 hover:text-orange-600 underline">{{ __('recipe.rating.cta.login_link') }}</a>
               @endif
             </p>
             @if(Auth::check())
@@ -1898,23 +1962,23 @@
                   id="submit-rating-btn"
                   class="flex-1 px-6 py-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
                 >
-                  <i class="fas fa-paper-plane ml-2"></i>
-                  أرسل التقييم
+                  <i class="fas fa-paper-plane ltr:mr-2 rtl:ml-2"></i>
+                  {{ __('recipe.rating.button.submit') }}
                 </button>
                 @if($recipe->user_rating)
                   <button
                     id="remove-rating-btn"
                     class="flex-1 px-6 py-3 rounded-full font-semibold text-red-500 bg-transparent border-2 border-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                   >
-                    <i class="fas fa-trash ml-2"></i>
-                    إلغاء التقييم
+                    <i class="fas fa-trash ltr:mr-2 rtl:ml-2"></i>
+                    {{ __('recipe.rating.button.remove') }}
                   </button>
                 @endif
               </div>
             @else
               <a href="/login" class="inline-flex items-center justify-center px-6 py-3 rounded-full font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors">
-                <i class="fas fa-sign-in-alt ml-2"></i>
-                سجل الدخول للتقييم
+                <i class="fas fa-sign-in-alt ltr:mr-2 rtl:ml-2"></i>
+                {{ __('recipe.rating.cta.login_button') }}
               </a>
             @endif
           </div>
@@ -1925,7 +1989,7 @@
         <div class="section-card px-6 py-6 md:px-8 md:py-8">
           <h2 class="section-title">
             <i class="fas fa-utensils"></i>
-            <span>وصفات مشابهة من نفس التصنيف</span>
+            <span>{{ __('recipe.sections.related') }}</span>
           </h2>
           
           @if($relatedRecipes && $relatedRecipes->count() > 0)
@@ -1937,7 +2001,7 @@
                     @if($relatedRecipe->image_url)
                       <img src="{{ $relatedRecipe->image_url }}" alt="{{ $relatedRecipe->title }}" 
                            class="w-full h-full object-cover"
-                           onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+                           onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('recipe.misc.placeholder_image_alt') }}';" loading="lazy">
                     @else
                       <i class="fas fa-image text-4xl text-gray-400"></i>
                     @endif
@@ -1961,12 +2025,12 @@
                     <!-- Recipe Info -->
                     <div class="recipe-info flex items-center justify-between text-sm text-gray-600 mb-3">
                       <div class="flex items-center">
-                        <i class="fas fa-clock text-orange-500 ml-1"></i>
-                        <span>{{ (int)$relatedRecipe->prep_time }} دقيقة</span>
+                        <i class="fas fa-clock text-orange-500 ltr:mr-1 rtl:ml-1"></i>
+                        <span>{{ trans_choice('recipe.units.minutes', (int)$relatedRecipe->prep_time, ['count' => (int)$relatedRecipe->prep_time]) }}</span>
                       </div>
                       <div class="flex items-center">
-                        <i class="fas fa-users text-orange-500 ml-1"></i>
-                        <span>{{ (int)$relatedRecipe->servings }} أشخاص</span>
+                        <i class="fas fa-users text-orange-500 ltr:mr-1 rtl:ml-1"></i>
+                        <span>{{ trans_choice('recipe.units.people', (int)$relatedRecipe->servings, ['count' => (int)$relatedRecipe->servings]) }}</span>
                       </div>
                     </div>
                     
@@ -1981,23 +2045,23 @@
                         @if($relatedRecipe->interactions_avg_rating)
                           {{ number_format($relatedRecipe->interactions_avg_rating, 1) }}
                         @else
-                          لا توجد تقييمات
+                          {{ __('recipe.related.no_ratings') }}
                         @endif
                       </span>
                     </div>
                     
                     <!-- Save Count -->
                     <div class="flex items-center text-sm text-gray-600 mb-4">
-                      <i class="fas fa-bookmark text-orange-500 ml-1"></i>
-                      <span>{{ $relatedRecipe->saved_count }} شخص حفظوا هذه الوصفة</span>
+                      <i class="fas fa-bookmark text-orange-500 ltr:mr-1 rtl:ml-1"></i>
+                      <span>{{ trans_choice('recipe.related.saved', $relatedRecipe->saved_count, ['count' => $relatedRecipe->saved_count]) }}</span>
                     </div>
                     
                     <!-- Action Buttons -->
                     <div class="action-buttons flex space-x-2 rtl:space-x-reverse">
                       <a href="{{ route('recipe.show', $relatedRecipe->slug) }}" 
-                         class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors text-center text-sm font-semibold">
-                        <i class="fas fa-eye ml-1"></i>
-                        عرض الوصفة
+                        class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors text-center text-sm font-semibold">
+                        <i class="fas fa-eye ltr:mr-1 rtl:ml-1"></i>
+                        {{ __('recipe.actions.view_recipe') }}
                       </a>
 
                     </div>
@@ -2008,7 +2072,7 @@
           @else
             <div class="text-center text-gray-500 py-8">
               <i class="fas fa-utensils text-4xl text-gray-300 mb-3"></i>
-              <p>لا توجد وصفات مشابهة في نفس التصنيف</p>
+              <p>{{ __('recipe.related.empty') }}</p>
             </div>
           @endif
         </div>
@@ -2026,30 +2090,30 @@
             </div>
             
             <div class="text-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-2">تأكيد الإلغاء</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">{{ __('recipe.rating.modal.title') }}</h3>
                 <p class="text-gray-600 leading-relaxed">
-                    هل أنت متأكد من إلغاء التقييم؟<br>
-                    <span class="text-sm text-gray-500">لن يتم حذف الحفظ أو حالة "جربتها"</span>
+                    {{ __('recipe.rating.modal.question') }}<br>
+                    <span class="text-sm text-gray-500">{{ __('recipe.rating.modal.hint') }}</span>
                 </p>
             </div>
             
             <div class="flex space-x-3 rtl:space-x-reverse">
                 <button id="confirm-cancel" class="flex-1 p-3 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
-                    إلغاء
+                    {{ __('recipe.rating.modal.cancel') }}
                 </button>
                 <button id="confirm-delete" class="flex-1 p-3 rounded-lg font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors">
-                    <i class="fas fa-trash ml-2"></i>
-                    نعم، ألغِ التقييم
+                    <i class="fas fa-trash ltr:mr-2 rtl:ml-2"></i>
+                    {{ __('recipe.rating.modal.confirm') }}
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Share Modal -->
-    <div id="share-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div id="share-modal" data-share-recipe class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-gray-800">مشاركة الوصفة</h3>
+                <h3 class="text-xl font-bold text-gray-800">{{ __('recipe.share.modal.title') }}</h3>
                 <button id="close-share-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -2061,38 +2125,38 @@
                     <h4 class="font-semibold text-gray-800 mb-2">{{ $recipe->title }}</h4>
                     <p class="text-sm text-gray-600 mb-3">{{ Str::limit($recipe->description, 100) }}</p>
                     <div class="flex items-center space-x-4 rtl:space-x-reverse text-sm text-gray-500">
-                        <span><i class="fas fa-clock ml-1"></i> {{ (int)$recipe->prep_time }} دقيقة</span>
-                        <span><i class="fas fa-users ml-1"></i> {{ (int)$recipe->servings }} أشخاص</span>
+                        <span><i class="fas fa-clock ltr:mr-1 rtl:ml-1"></i> {{ __('recipe.share.modal.stats.prep', ['minutes' => trans_choice('recipe.units.minutes', (int)$recipe->prep_time, ['count' => (int)$recipe->prep_time])]) }}</span>
+                        <span><i class="fas fa-users ltr:mr-1 rtl:ml-1"></i> {{ __('recipe.share.modal.stats.servings', ['count' => (int)$recipe->servings]) }}</span>
                     </div>
                 </div>
                 
                 <!-- Share Options -->
                 <div class="space-y-3">
-                    <h5 class="font-semibold text-gray-700">اختر طريقة المشاركة:</h5>
+                    <h5 class="font-semibold text-gray-700">{{ __('recipe.share.modal.options_title') }}</h5>
                     
                     <!-- Copy Link -->
                     <button id="copy-link-btn" class="w-full flex items-center justify-center p-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
-                        <i class="fas fa-copy ml-2"></i>
-                        نسخ الرابط
+                        <i class="fas fa-copy ltr:mr-2 rtl:ml-2"></i>
+                        {{ __('recipe.share.modal.copy_link') }}
                     </button>
                     
                     <!-- Social Media -->
                     <div class="grid grid-cols-2 gap-3">
                         <a id="whatsapp-share" href="#" target="_blank" class="flex items-center justify-center p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                            <i class="fab fa-whatsapp ml-2"></i>
-                            واتساب
+                            <i class="fab fa-whatsapp ltr:mr-2 rtl:ml-2"></i>
+                            {{ __('recipe.share.modal.whatsapp') }}
                         </a>
                         <a id="telegram-share" href="#" target="_blank" class="flex items-center justify-center p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                            <i class="fab fa-telegram ml-2"></i>
-                            تليجرام
+                            <i class="fab fa-telegram ltr:mr-2 rtl:ml-2"></i>
+                            {{ __('recipe.share.modal.telegram') }}
                         </a>
                     </div>
                 </div>
                 
                 <!-- Success Message -->
                 <div id="copy-success" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-                    <i class="fas fa-check-circle ml-2"></i>
-                    تم نسخ الرابط بنجاح!
+                    <i class="fas fa-check-circle ltr:mr-2 rtl:ml-2"></i>
+                    {{ __('recipe.share.modal.copied') }}
                 </div>
             </div>
         </div>
@@ -2100,9 +2164,13 @@
     
     @push('scripts')
         <script>
-            // معالجة إضافية لروابط Google Drive في صفحة الوصفة
+            const recipeText = @json($recipeJsTranslations, JSON_UNESCAPED_UNICODE);
+            const toolsText = recipeText.tools;
+            const ratingText = recipeText.rating;
+            const formatUserRating = (value) => ratingText.user_rating_template.replace(':rating', value);
+            // Extra handling for Google Drive links on the recipe page
             document.addEventListener('DOMContentLoaded', function() {
-                // معالجة الصور الموجودة في الصفحة
+                // Process images already in the DOM
                 function processRecipeImages() {
                     const images = document.querySelectorAll('img[src*="drive.google.com"]');
                     images.forEach(function(img) {
@@ -2114,15 +2182,15 @@
                     });
                 }
                 
-                // معالجة فورية
+                // Initial pass
                 processRecipeImages();
                 
-                // معالجة دورية كل ثانيتين للتأكد من معالجة الصور المحملة ديناميكياً
+                // Repeat every two seconds to catch dynamically loaded images
                 const interval = setInterval(function() {
                     processRecipeImages();
                 }, 2000);
                 
-                // إيقاف المعالجة الدورية بعد 10 ثوانٍ
+                // Stop polling after ten seconds
                 setTimeout(function() {
                     clearInterval(interval);
                 }, 10000);
@@ -2160,7 +2228,7 @@
                                 const isSaved = data.saved_tools.includes(parseInt(toolId));
                                 
                                 if (isSaved) {
-                                    btn.querySelector('.btn-text').textContent = 'محفوظ';
+                                    btn.querySelector('.btn-text').textContent = toolsText.actions.saved;
                                     btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                                     btn.classList.add('bg-green-500', 'hover:bg-green-600', 'saved');
                                 }
@@ -2190,7 +2258,7 @@
                     
                     // Show loading state
                     btn.disabled = true;
-                    btn.querySelector('.btn-text').textContent = 'جاري الحفظ...';
+                    btn.querySelector('.btn-text').textContent = toolsText.actions.saving;
                     btn.querySelector('.loading-icon').classList.remove('hidden');
                     
                     // Save for later
@@ -2208,7 +2276,7 @@
                     .then(data => {
                         if (data.success) {
                             // Show success state - Item is now saved
-                            btn.querySelector('.btn-text').textContent = 'محفوظ';
+                            btn.querySelector('.btn-text').textContent = toolsText.actions.saved;
                             btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                             btn.classList.add('bg-green-500', 'hover:bg-green-600');
                             btn.classList.add('saved');
@@ -2221,22 +2289,22 @@
                             }, 200);
                             
                             // Show toast notification
-                            showToast('تم حفظ المنتج للشراء لاحقاً!', 'success');
+                            showToast(toolsText.messages.save_success, 'success');
                             
                             // Hide loading icon
                             btn.querySelector('.loading-icon').classList.add('hidden');
                         } else {
                             // Show error state
-                            btn.querySelector('.btn-text').textContent = 'خطأ في الحفظ';
+                            btn.querySelector('.btn-text').textContent = toolsText.actions.error;
                             btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                             btn.classList.add('bg-red-500');
                             
-                            showToast(data.message || 'حدث خطأ أثناء حفظ المنتج', 'error');
+                            showToast(data.message || toolsText.messages.save_error, 'error');
                             
                             // Reset button after 2 seconds
                             setTimeout(() => {
                                 btn.disabled = false;
-                                btn.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                                btn.querySelector('.btn-text').textContent = toolsText.actions.save;
                                 btn.querySelector('.loading-icon').classList.add('hidden');
                                 btn.classList.remove('bg-red-500');
                                 btn.classList.add('bg-orange-500', 'hover:bg-orange-600');
@@ -2246,9 +2314,9 @@
                     .catch(error => {
                         console.error('Error:', error);
                         btn.disabled = false;
-                        btn.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                        btn.querySelector('.btn-text').textContent = toolsText.actions.save;
                         btn.querySelector('.loading-icon').classList.add('hidden');
-                        showToast('حدث خطأ أثناء حفظ المنتج', 'error');
+                        showToast(toolsText.messages.save_error, 'error');
                     });
                 }
             });
@@ -2257,7 +2325,7 @@
             function removeFromSaved(button, toolId) {
                 // Show loading state
                 button.disabled = true;
-                button.querySelector('.btn-text').textContent = 'جاري الحذف...';
+                button.querySelector('.btn-text').textContent = toolsText.actions.removing;
                 button.querySelector('.loading-icon').classList.remove('hidden');
                 
                 // Remove from saved
@@ -2275,7 +2343,7 @@
                 .then(data => {
                     if (data.success) {
                         // Show success state - Item removed
-                        button.querySelector('.btn-text').textContent = 'حفظ للشراء لاحقاً';
+                        button.querySelector('.btn-text').textContent = toolsText.actions.save;
                         button.classList.remove('bg-green-500', 'hover:bg-green-600', 'saved');
                         button.classList.add('bg-orange-500', 'hover:bg-orange-600');
                         button.disabled = false;
@@ -2287,20 +2355,20 @@
                         }, 200);
                         
                         // Show success message
-                        showToast('تم حذف المنتج من المحفوظات!', 'success');
+                        showToast(toolsText.messages.remove_success, 'success');
                         
                         // Hide loading icon
                         button.querySelector('.loading-icon').classList.add('hidden');
                     } else {
-                        throw new Error(data.message || 'حدث خطأ أثناء حذف المنتج');
+                        throw new Error(data.message || toolsText.messages.remove_error);
                     }
                 })
                 .catch(error => {
                     console.error('Error removing from saved:', error);
                     button.disabled = false;
-                    button.querySelector('.btn-text').textContent = 'محفوظ';
+                    button.querySelector('.btn-text').textContent = toolsText.actions.saved;
                     button.querySelector('.loading-icon').classList.add('hidden');
-                    showToast('حدث خطأ أثناء حذف المنتج من المحفوظات', 'error');
+                    showToast(error.message || toolsText.messages.remove_error, 'error');
                 });
             }
 
@@ -2374,7 +2442,7 @@
                                     fullTextSpan.textContent = originalQuantity + ' ' + name;
                                 }
                             } else {
-                                // Try to extract number from quantity string (e.g., "2 كوب" -> 2)
+                                // Try to extract number from quantity string (e.g., "2 cups" -> 2)
                                 const quantityMatch = originalQuantity.match(/(\d+(?:\.\d+)?)/);
                                 if (quantityMatch) {
                                     const originalAmount = parseFloat(quantityMatch[1]);
@@ -2420,12 +2488,12 @@
                 ratingInputs.forEach(input => {
                     input.addEventListener('change', function() {
                         const rating = this.value;
-                        userRatingText.textContent = `تقييمك: ${rating} نجوم`;
+                        userRatingText.textContent = formatUserRating(rating);
                         
                         // Reset submit button if it was previously submitted
                         if (submitBtn) {
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fas fa-paper-plane ml-2"></i>أرسل التقييم';
+                            submitBtn.innerHTML = `<i class="fas fa-paper-plane ltr:mr-2 rtl:ml-2"></i>${ratingText.button.submit}`;
                             submitBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
                             submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
                         }
@@ -2438,7 +2506,7 @@
                         const selectedRating = document.querySelector('input[name="rating"]:checked');
                         
                         if (!selectedRating) {
-                            showToast('الرجاء اختيار تقييم قبل الإرسال', 'warning');
+                            showToast(ratingText.messages.choose, 'warning');
                             return;
                         }
 
@@ -2447,7 +2515,7 @@
                         // Check if user is authenticated
                         const userId = document.querySelector('[data-user-id]')?.dataset.userId;
                         if (!userId || userId === '' || userId === 'null') {
-                            showToast('يجب تسجيل الدخول لتقييم الوصفة', 'warning');
+                            showToast(ratingText.messages.login, 'warning');
                             // Redirect to login page
                             setTimeout(() => {
                                 window.location.href = '/login';
@@ -2457,7 +2525,7 @@
                         
                         // Show loading state
                         submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الإرسال...';
+                        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin ltr:mr-2 rtl:ml-2"></i>${ratingText.state.submitting}`;
 
                         // Send rating to server
                         const saveRecipeBtn = document.getElementById('save-recipe-page-btn');
@@ -2486,16 +2554,16 @@
                         })
                         .then(response => {
                             if (response.status === 401) {
-                                throw new Error('يجب تسجيل الدخول لتقييم الوصفة');
+                                throw new Error(ratingText.messages.login);
                             }
                             return response.json();
                         })
                         .then(data => {
-                            showToast('تم إرسال التقييم بنجاح!', 'success');
-                            userRatingText.textContent = `تقييمك: ${rating} نجوم`;
+                            showToast(ratingText.messages.submit_success, 'success');
+                            userRatingText.textContent = formatUserRating(rating);
                             
                             // Update button text
-                            submitBtn.innerHTML = '<i class="fas fa-check ml-2"></i>تم الإرسال';
+                            submitBtn.innerHTML = `<i class="fas fa-check ltr:mr-2 rtl:ml-2"></i>${ratingText.state.submitted}`;
                             submitBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                             submitBtn.classList.add('bg-green-500', 'hover:bg-green-600');
                             
@@ -2503,18 +2571,18 @@
                             const ratingBtn = document.getElementById('rating-scroll-btn');
                             const ratingBtnText = document.getElementById('rating-btn-text');
                             if (ratingBtn && ratingBtnText) {
-                                ratingBtnText.textContent = 'تم التقييم';
+                                ratingBtnText.textContent = ratingText.button.rated;
                                 ratingBtn.classList.add('bg-green-50', 'border-green-300', 'text-green-700');
                                 ratingBtn.classList.remove('text-gray-700');
                             }
                         })
                         .catch(error => {
                             console.error('Error submitting rating:', error);
-                            showToast(error.message || 'حدث خطأ أثناء إرسال التقييم', 'error');
+                            showToast(error.message || ratingText.messages.submit_error, 'error');
                             
                             // Reset button
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fas fa-paper-plane ml-2"></i>أرسل التقييم';
+                            submitBtn.innerHTML = `<i class="fas fa-paper-plane ltr:mr-2 rtl:ml-2"></i>${ratingText.button.submit}`;
                         });
                     });
                 }
@@ -2631,7 +2699,7 @@
                         // Show loading state
                         const originalText = removeRatingBtn.innerHTML;
                         removeRatingBtn.disabled = true;
-                        removeRatingBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i>جاري الإلغاء...';
+                        removeRatingBtn.innerHTML = `<i class="fas fa-spinner fa-spin ltr:mr-2 rtl:ml-2"></i>${ratingText.state.removing}`;
                         
                         // Send request to remove rating
                         fetch('/api/interactions/remove', {
@@ -2646,13 +2714,13 @@
                         })
                         .then(response => {
                             if (response.status === 401) {
-                                throw new Error('يجب تسجيل الدخول لإلغاء التقييم');
+                                throw new Error(ratingText.messages.login_remove);
                             }
                             return response.json();
                         })
                         .then(data => {
                             if (data.success) {
-                                showToast('تم إلغاء التقييم بنجاح!', 'success');
+                                showToast(ratingText.messages.remove_success, 'success');
                                 
                                 // Reset rating inputs
                                 document.querySelectorAll('input[name="rating"]').forEach(input => {
@@ -2662,7 +2730,7 @@
                                 // Update user rating text
                                 const userRatingText = document.getElementById('user-rating-text');
                                 if (userRatingText) {
-                                    userRatingText.textContent = 'الرجاء تقييم الوصفة';
+                                    userRatingText.textContent = ratingText.prompt;
                                 }
                                 
                                 // Hide remove rating button
@@ -2672,7 +2740,7 @@
                                 const ratingBtn = document.getElementById('rating-scroll-btn');
                                 const ratingBtnText = document.getElementById('rating-btn-text');
                                 if (ratingBtn && ratingBtnText) {
-                                    ratingBtnText.textContent = 'تقييم';
+                                    ratingBtnText.textContent = ratingText.button.rate;
                                     ratingBtn.classList.remove('bg-green-50', 'border-green-300', 'text-green-700');
                                     ratingBtn.classList.add('text-gray-700');
                                 }
@@ -2681,17 +2749,17 @@
                                 const submitBtn = document.getElementById('submit-rating-btn');
                                 if (submitBtn) {
                                     submitBtn.disabled = false;
-                                    submitBtn.innerHTML = '<i class="fas fa-paper-plane ml-2"></i>أرسل التقييم';
+                                    submitBtn.innerHTML = `<i class="fas fa-paper-plane ltr:mr-2 rtl:ml-2"></i>${ratingText.button.submit}`;
                                     submitBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
                                     submitBtn.classList.add('bg-orange-500', 'hover:bg-orange-600');
                                 }
                             } else {
-                                throw new Error(data.message || 'حدث خطأ أثناء إلغاء التقييم');
+                                throw new Error(data.message || ratingText.messages.remove_error);
                             }
                         })
                         .catch(error => {
                             console.error('Error removing rating:', error);
-                            showToast(error.message || 'حدث خطأ أثناء إلغاء التقييم', 'error');
+                            showToast(error.message || ratingText.messages.remove_error, 'error');
                             
                             // Reset button
                             removeRatingBtn.disabled = false;

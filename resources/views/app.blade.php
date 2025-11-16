@@ -186,7 +186,11 @@
                 </nav>
             </div>
         </div>
-        <div id="mobileMenu" class="hidden bg-white border-t shadow-md md:hidden">
+        <div id="mobileMenu" class="hidden bg-white border-t shadow-md md:hidden" style="display: none; z-index: 9999;">
+            <button type="button" data-close-mobile-menu class="absolute top-4 right-4 rtl:left-4 rtl:right-auto z-50 flex h-11 w-11 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-white shadow-lg shadow-rose-200 transition hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-200" style="z-index: 10050;">
+                <i class="fas fa-times text-xl font-bold"></i>
+                <span class="sr-only">Close menu</span>
+            </button>
             <nav class="flex flex-col space-y-2 p-4 text-gray-600">
                 @auth
                     <a href="#" class="-m-3 flex items-center p-3 focus:outline-offset-2"><span class="ml-4 rtl:mr-4 text-base font-semibold text-gray-900">{{ Auth::user()->name }}</span></a>

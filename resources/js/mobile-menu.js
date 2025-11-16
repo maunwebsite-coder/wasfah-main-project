@@ -9,15 +9,36 @@ let isMobileMenuInitialized = false;
 let outsideClickHandler = null;
 let escapeKeyHandler = null;
 
+function liftMobileMenuLayer(mobileMenu) {
+    if (!mobileMenu || mobileMenu.dataset.layerLifted === 'true') {
+        return;
+    }
+
+    if (document.body && mobileMenu.parentElement !== document.body) {
+        document.body.appendChild(mobileMenu);
+    }
+
+    mobileMenu.dataset.layerLifted = 'true';
+}
+
 function openMobileMenu(mobileMenu, menuIcon, closeIcon) {
     mobileMenu.classList.remove('hidden');
     mobileMenu.classList.add('show');
     mobileMenu.style.display = 'block';
     mobileMenu.style.visibility = 'visible';
     mobileMenu.style.opacity = '1';
+    mobileMenu.style.position = 'fixed';
+    mobileMenu.style.top = '0';
+    mobileMenu.style.right = '0';
+    mobileMenu.style.bottom = '0';
+    mobileMenu.style.left = '0';
+    mobileMenu.style.zIndex = '10000';
     menuIcon?.classList.add('hidden');
     closeIcon?.classList.remove('hidden');
     document.body?.classList.add('mobile-menu-open');
+    document
+        .querySelector('[data-navbar-layer]')
+        ?.classList.add('mobile-menu-layer-active');
 }
 
 function closeMobileMenu(mobileMenu, menuIcon, closeIcon) {
@@ -26,9 +47,18 @@ function closeMobileMenu(mobileMenu, menuIcon, closeIcon) {
     mobileMenu.style.display = 'none';
     mobileMenu.style.visibility = 'hidden';
     mobileMenu.style.opacity = '0';
+    mobileMenu.style.removeProperty('position');
+    mobileMenu.style.removeProperty('top');
+    mobileMenu.style.removeProperty('right');
+    mobileMenu.style.removeProperty('bottom');
+    mobileMenu.style.removeProperty('left');
+    mobileMenu.style.removeProperty('z-index');
     menuIcon?.classList.remove('hidden');
     closeIcon?.classList.add('hidden');
     document.body?.classList.remove('mobile-menu-open');
+    document
+        .querySelector('[data-navbar-layer]')
+        ?.classList.remove('mobile-menu-layer-active');
 }
 
 // Mobile Menu Setup Function
@@ -48,6 +78,7 @@ function setupMobileMenu(force = false) {
     });
 
     if (mobileMenuBtn && mobileMenu && menuIcon && closeIcon) {
+        liftMobileMenuLayer(mobileMenu);
         console.log('All elements found! Setting up click handler...');
 
         if (isMobileMenuInitialized && !force) {
@@ -102,6 +133,16 @@ function setupMobileMenu(force = false) {
         };
 
         document.addEventListener('keydown', escapeKeyHandler);
+
+        // Close menu buttons inside panel
+        mobileMenu
+            .querySelectorAll('[data-close-mobile-menu]')
+            .forEach((button) => {
+                button.onclick = (event) => {
+                    event.preventDefault();
+                    closeMobileMenu(mobileMenu, menuIcon, closeIcon);
+                };
+            });
 
         console.log('Mobile menu setup completed successfully!');
         isMobileMenuInitialized = true;

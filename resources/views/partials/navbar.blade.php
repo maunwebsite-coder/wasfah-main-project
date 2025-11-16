@@ -299,7 +299,11 @@
         @endif
     </div>
 
-    <div id="mobileMenu" class="mobile-menu hidden border-t border-orange-100 bg-white/95 shadow-lg backdrop-blur md:hidden" style="display: none;">
+    <div id="mobileMenu" class="mobile-menu hidden border-t border-orange-100 bg-white/95 shadow-lg backdrop-blur md:hidden" style="display: none; z-index: 9999;">
+        <button type="button" data-close-mobile-menu class="absolute top-4 right-4 rtl:left-4 rtl:right-auto z-50 flex h-11 w-11 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-white shadow-lg shadow-rose-200 transition hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-200" style="z-index: 10050;">
+            <i class="fas fa-times text-xl font-bold"></i>
+            <span class="sr-only">{{ $navCopy['menu']['close'] ?? 'إغلاق القائمة' }}</span>
+        </button>
         <nav class="flex flex-col gap-6 p-5 text-slate-800" aria-label="{{ $navCopy['mobile_nav_label'] }}">
             <div class="rounded-3xl bg-gradient-to-l from-orange-500 via-rose-500 to-amber-400 p-4 text-white shadow-lg">
                 <div class="flex items-center gap-3">

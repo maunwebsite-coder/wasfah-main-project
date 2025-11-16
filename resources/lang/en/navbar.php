@@ -7,8 +7,8 @@ return [
     'mobile_banner' => [
         'greeting' => 'Hi, :name',
         'guest' => 'guest',
-        'tagline' => 'Ready to explore new flavors?',
-        'subtitle' => 'Browse recipes, tools, and workshops in seconds.',
+        'tagline' => 'Explore recipes fast.',
+        'subtitle' => 'Find tools and workshops instantly.',
     ],
     'search' => [
         'placeholder' => 'Search for a recipe, tool, or workshop...',
@@ -50,9 +50,9 @@ return [
         'quick_nav' => 'Quick navigation',
         'partners' => [
             'title' => 'Partner solutions',
-            'subtitle' => 'A complete collaboration pitch with Wasfah.',
-            'description' => 'Review metrics, templates, and partnership steps in a single deck.',
-            'cta' => 'Explore the partnership deck',
+            'subtitle' => 'Pitch Wasfah in one quick deck.',
+            'description' => 'Metrics, templates, and next steps ready to share.',
+            'cta' => 'Open the partner deck',
         ],
         'tool_hub' => [
             'title' => 'Your control hub',

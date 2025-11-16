@@ -827,7 +827,7 @@
     .floating-booking-bar {
         position: fixed;
         left: 50%;
-        bottom: 1rem;
+        bottom: var(--floating-booking-desktop-offset, 1rem);
         transform: translate(-50%, 0);
         width: min(620px, calc(100% - 2.5rem));
         z-index: 60;
@@ -840,7 +840,7 @@
         box-shadow: 0 30px 65px rgba(15, 23, 42, 0.25);
         border: 1px solid rgba(15, 23, 42, 0.08);
         margin-bottom: env(safe-area-inset-bottom, 0);
-        transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease, bottom 0.3s ease;
     }
 
     .floating-booking-bar.is-hidden {
@@ -953,7 +953,7 @@
         }
 
         .floating-booking-bar {
-            bottom: calc(4.5rem + env(safe-area-inset-bottom, 0));
+            bottom: calc(var(--floating-booking-mobile-offset, 4.5rem) + env(safe-area-inset-bottom, 0));
             padding: 0.75rem 1.25rem;
         }
 
@@ -1416,14 +1416,14 @@
                                 <div id="booking-primary-action">
                                 @if($workshop->is_completed)
                                     <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
-                                        <i class="fas fa-check-circle ml-2"></i>
+                                        <i class="fas fa-check-circle mr-2 rtl:ml-2"></i>
                                         {{ __('workshops.details.booking_card.cta_completed') }}
                                     </button>
                                 @elseif($userBooking)
                                     @if($userBooking->status === 'confirmed')
                                         @if($workshop->is_online && $workshop->meeting_link && $userBooking->public_code)
                                             <a href="{{ $userBooking->secure_join_url }}" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl text-lg booking-button flex items-center justify-center gap-2">
-                                                <i class="fas fa-video ml-2"></i>
+                                                <i class="fas fa-video mr-2 rtl:ml-2"></i>
                                                 <span>{{ __('workshops.details.booking_card.cta_join') }}</span>
                                             </a>
                                             <p class="booking-action-hint">
@@ -1431,7 +1431,7 @@
                                             </p>
                                         @else
                                             <button class="w-full bg-green-500 text-white font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button" disabled>
-                                                <i class="fas fa-check ml-2 booking-button-icon"></i>
+                                                <i class="fas fa-check mr-2 rtl:ml-2 booking-button-icon"></i>
                                                 <span class="booking-button-label">{{ __('workshops.details.booking_card.cta_confirmed') }}</span>
                                             </button>
                                             <p class="booking-action-hint">
@@ -1440,7 +1440,7 @@
                                         @endif
                                     @else
                                         <button class="w-full bg-yellow-400 text-yellow-900 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button" disabled>
-                                            <i class="fas fa-hourglass-half ml-2 booking-button-icon"></i>
+                                            <i class="fas fa-hourglass-half mr-2 rtl:ml-2 booking-button-icon"></i>
                                             <span class="booking-button-label">{{ __('workshops.details.booking_card.cta_pending') }}</span>
                                         </button>
                                         <p class="booking-action-hint">
@@ -1449,19 +1449,19 @@
                                     @endif
                                 @elseif($workshop->is_fully_booked)
                                     <button class="w-full bg-gray-300 text-gray-500 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
-                                        <i class="fas fa-times-circle ml-2"></i>
+                                        <i class="fas fa-times-circle mr-2 rtl:ml-2"></i>
                                         {{ __('workshops.details.booking_card.cta_full') }}
                                     </button>
                                 @elseif(! $workshop->is_registration_open)
                                     <button class="w-full bg-yellow-400 text-yellow-800 font-bold py-4 px-6 rounded-xl cursor-not-allowed text-lg booking-button">
-                                        <i class="fas fa-clock ml-2"></i>
+                                        <i class="fas fa-clock mr-2 rtl:ml-2"></i>
                                         {{ __('workshops.details.booking_card.cta_closed') }}
                                     </button>
                                 @else
                                     @guest
                                         <button class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 px-6 rounded-xl text-lg booking-button transition-all duration-300 transform hover:scale-105"
                                                 onclick="showLoginRequiredModal({{ $workshop->id }})">
-                                            <i class="fas fa-sign-in-alt ml-2"></i>
+                                            <i class="fas fa-sign-in-alt mr-2 rtl:ml-2"></i>
                                             {{ __('workshops.details.booking_card.login_required') }}
                                         </button>
                                         <p class="booking-action-hint">
@@ -1784,7 +1784,7 @@ const bookingUi = {
     joinLabel: @json(__('workshops.details.booking_card.cta_join')),
     joinHint: @json(__('workshops.details.booking_card.join_room_hint')),
     joinButtonClasses: 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl text-lg booking-button flex items-center justify-center gap-2',
-    joinIconClasses: 'fas fa-video ml-2',
+    joinIconClasses: 'fas fa-video mr-2 rtl:ml-2',
 };
 
 const loginModalTexts = {
@@ -2682,10 +2682,63 @@ function initFloatingBookingBarFooterObserver() {
     window.__floatingBookingBarFooterObserverInitialized = true;
 }
 
+function initFloatingBookingBarTabBarSync() {
+    if (window.__floatingBookingBarTabBarSyncInitialized) {
+        return;
+    }
+
+    const floatingBar = document.querySelector('.floating-booking-bar');
+    const mobileTabBar = document.querySelector('[data-mobile-tab-bar]');
+
+    if (!floatingBar || !mobileTabBar || typeof window === 'undefined') {
+        return;
+    }
+
+    const mediaQuery = typeof window.matchMedia === 'function'
+        ? window.matchMedia('(max-width: 768px)')
+        : null;
+    const BASE_SPACING = 16;
+
+    const updateOffset = () => {
+        if (!mediaQuery || !mediaQuery.matches) {
+            floatingBar.style.removeProperty('--floating-booking-mobile-offset');
+            return;
+        }
+
+        const navRect = mobileTabBar.getBoundingClientRect();
+        const navHeight = navRect && navRect.height ? navRect.height : 0;
+        const isHidden = mobileTabBar.classList.contains('mobile-tab-bar--hidden');
+        const offset = isHidden ? BASE_SPACING : Math.round(navHeight + BASE_SPACING);
+
+        floatingBar.style.setProperty('--floating-booking-mobile-offset', `${offset}px`);
+    };
+
+    if (typeof MutationObserver === 'function') {
+        const observer = new MutationObserver(updateOffset);
+        observer.observe(mobileTabBar, { attributes: true, attributeFilter: ['class'] });
+    } else {
+        window.addEventListener('scroll', updateOffset, { passive: true });
+    }
+
+    window.addEventListener('resize', updateOffset);
+
+    if (mediaQuery) {
+        if (typeof mediaQuery.addEventListener === 'function') {
+            mediaQuery.addEventListener('change', updateOffset);
+        } else if (typeof mediaQuery.addListener === 'function') {
+            mediaQuery.addListener(updateOffset);
+        }
+    }
+
+    updateOffset();
+    window.__floatingBookingBarTabBarSyncInitialized = true;
+}
+
 function bootWorkshopDetailsScripts() {
     initWorkshopDetailsBooking();
     initFloatingBookingBarScroll();
     initFloatingBookingBarFooterObserver();
+    initFloatingBookingBarTabBarSync();
 }
 
 if (document.readyState === 'loading') {

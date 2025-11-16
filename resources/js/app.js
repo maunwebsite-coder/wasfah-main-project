@@ -100,6 +100,9 @@ const lazyModules = [
         name: 'share-recipe',
         condition: () =>
             document.querySelector('[data-share-recipe]') ||
+            document.getElementById('share-modal') ||
+            document.querySelector('[id^="share-recipe-btn"]') ||
+            document.getElementById('print-recipe-btn') ||
             document.getElementById('share-whatsapp-btn'),
         loader: () => import('./share-recipe.js'),
     },
