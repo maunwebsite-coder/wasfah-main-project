@@ -1,0 +1,172 @@
+<style data-critical="true">
+    :root {
+        color-scheme: light;
+        font-feature-settings: 'kern';
+    }
+
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body {
+        font-family: 'Tajawal', var(--font-sans, ui-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background-color: #f8f8f8;
+        min-height: 100vh;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .mobile-menu {
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-12px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .mobile-menu.show {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(0);
+    }
+
+    .mobile-menu.hidden {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transform: translateY(-12px);
+    }
+
+    .mobile-menu-btn {
+        border-radius: 0.75rem;
+        padding: 0.35rem;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .mobile-menu-btn:hover {
+        background-color: #fff7ed;
+    }
+
+    header .header-container {
+        gap: 1rem;
+    }
+
+    #dropdown-menu,
+    #user-menu-dropdown {
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #dropdown-menu.show,
+    #user-menu-dropdown.show {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(0);
+    }
+
+    .mobile-tab-bar {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 60;
+        display: block;
+        padding: 0.35rem 0.85rem calc(0.75rem + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, 0.98);
+        border-top: 1px solid rgba(248, 113, 113, 0.15);
+        box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+    }
+
+    .mobile-tab-bar__loading-line {
+        position: absolute;
+        inset-inline: 0.85rem;
+        top: 0.35rem;
+        height: 0.2rem;
+        border-radius: 999px;
+        background: rgba(251, 146, 60, 0.2);
+        opacity: 0;
+        transform: translateY(-0.35rem);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .mobile-tab-bar__loading-line::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(253, 186, 116, 0.2), rgba(249, 115, 22, 0.9));
+        transform-origin: left center;
+        transform: scaleX(0);
+        opacity: 0;
+        animation: mobile-tab-bar-line 1.2s ease-in-out infinite;
+    }
+
+    .mobile-tab-bar__inner {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.25rem;
+    }
+
+    .mobile-tab-bar__item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
+        padding: 0.35rem 0.25rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #475569;
+        text-decoration: none;
+    }
+
+    .mobile-tab-bar__item.is-active {
+        color: #c2410c;
+        background-color: rgba(251, 146, 60, 0.18);
+    }
+
+    .mobile-tab-bar--loading {
+        pointer-events: none;
+    }
+
+    .mobile-tab-bar--loading .mobile-tab-bar__loading-line {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .mobile-tab-bar--loading .mobile-tab-bar__item {
+        opacity: 0.35;
+    }
+
+    @media (min-width: 768px) {
+        .mobile-tab-bar {
+            display: none !important;
+        }
+    }
+
+    @keyframes mobile-tab-bar-line {
+        0% {
+            transform: scaleX(0);
+            opacity: 0.2;
+        }
+        50% {
+            transform: scaleX(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scaleX(0);
+            opacity: 0.2;
+        }
+    }
+</style>

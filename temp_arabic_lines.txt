@@ -1,0 +1,116 @@
+﻿3:@section('title', $workshop->title . ' - موقع وصفة')
+706:        'label' => 'متاح للحجز',
+711:            'label' => 'انتهت الورشة',
+716:            'label' => 'اكتملت المقاعد',
+721:            'label' => 'الحجز مغلق',
+726:            'label' => 'حجرك نشط',
+741:                            <i class="fas fa-star text-yellow-300 mr-2"></i> ورشة مميزة
+743:                            ورشة عمل
+758:                        <span class="font-medium">{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
+762:                        <span class="font-medium">البداية: {{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
+766:                        <span class="font-medium">النهاية: {{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
+770:                        <span class="font-medium">{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'ورشة حضورية') }}</span>
+774:                        <span class="font-medium">مع {{ $workshop->instructor }}</span>
+783:                            <span class="font-medium">{{ $workshop->bookings_count }}/{{ $workshop->max_participants }} مشارك</span>
+798:                        <span class="text-amber-100 font-medium">({{ (int)$workshop->reviews_count }} تقييم)</span>
+805:                <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=ورشة+فاخرة' }}" 
+808:                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';"
+814:                            اكتمل العدد
+836:                                حول الورشة
+849:                                    ماذا ستتعلم
+863:                                    المتطلبات
+877:                                    المواد المطلوبة
+891:                                    وصفات الورشة
+898:                                                    <img src="{{ $recipe->image_url ?: 'https://placehold.co/400x300/f87171/FFFFFF?text=وصفة' }}" 
+901:                                                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+919:                                                            <span>{{ $recipe->prep_time + $recipe->cook_time }} دقيقة</span>
+923:                                                            <span>{{ $recipe->servings }} حصة</span>
+927:                                                            <span>{{ $recipe->difficulty === 'easy' ? 'سهل' : ($recipe->difficulty === 'medium' ? 'متوسط' : 'صعب') }}</span>
+937:                                                            عرض الوصفة
+954:                                    <p class="booking-card-eyebrow">الحجوزات</p>
+957:                                        <span>احجز مقعدك الآن</span>
+959:                                    <p class="booking-card-subtitle">تصميم متناسق مع واجهة وصفة وتجربة حجز أوضح.</p>
+968:                                    <span class="booking-price-label">السعر</span>
+970:                                    <p class="booking-price-hint">يشمل الرسوم وخدمات منصة وصفة</p>
+974:                                        <span class="booking-meta-label">تاريخ الورشة</span>
+979:                                        <span class="booking-meta-label">طريقة الانضمام</span>
+981:                                        <p class="booking-meta-hint">{{ $workshop->is_online ? 'سيتم إرسال رابط الدخول بعد تأكيد الحجز' : ($workshop->location ?? 'سيتم مشاركة تفاصيل الموقع بعد إتمام الحجز') }}</p>
+992:                                            <p class="booking-info-label">آخر موعد للتسجيل</p>
+1001:                                            <p class="booking-info-label">ساعات الورشة</p>
+1010:                                            <p class="booking-info-label">يقودها</p>
+1020:                                                <p class="booking-info-label">المقاعد المؤكدة</p>
+1031:                                        الورشة مكتملة
+1038:                                                <span>دخول غرفة الورشة</span>
+1041:                                                سيتم فتح الغرفة داخل موقع وصفة عند بدء الورشة أو بعد تفعيلها من الشيف.
+1046:                                                <span class="booking-button-label">تم تأكيد الحجز</span>
+1049:                                                سيتم إرسال رابط الدخول فور تحضيره من قبل الشيف أو فريق وصفة.
+1055:                                            <span class="booking-button-label">طلبك قيد المراجعة</span>
+1058:                                            سنتواصل معك فور تأكيد حجزك. يمكنك متابعة الحالة من صفحة الحجوزات.
+1064:                                        الورشة مكتملة
+1069:                                        انتهى التسجيل
+1076:                                            سجّل الدخول لحجز الورشة
+1079:                                            بعد تسجيل الدخول يمكنك الدفع مباشرةً وتأكيد الحجز فوراً.
+1084:                                                <p class="text-yellow-900 font-semibold mb-1">الدفع الإلكتروني غير متاح حالياً</p>
+1085:                                                <p class="text-sm text-yellow-800">يرجى التواصل مع فريق وصفة لتفعيل بوابات الدفع الإلكتروني قبل استقبال الحجوزات.</p>
+1090:                                                    <h4 class="text-lg font-bold text-gray-900 mb-2">تفاصيل الورشة</h4>
+1092:                                                        <span>تاريخ الورشة</span>
+1093:                                                        <span class="font-semibold text-gray-900">{{ $workshop->start_date ? $workshop->start_date->format('d/m/Y') : 'غير محدد' }}</span>
+1096:                                                        <span>وقت البداية</span>
+1097:                                                        <span class="font-semibold text-gray-900">{{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
+1100:                                                        <span>وقت النهاية</span>
+1101:                                                        <span class="font-semibold text-gray-900">{{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}</span>
+1104:                                                        <span>المدرب</span>
+1108:                                                        <span>مكان الورشة</span>
+1109:                                                        <span class="font-semibold text-gray-900">{{ $workshop->is_online ? 'ورشة أونلاين' : ($workshop->location ?? 'غير محدد') }}</span>
+1112:                                                        <span>التكلفة</span>
+1246:                                تفاصيل إضافية
+1255:                                        <p class="text-sm text-gray-500">تاريخ البداية</p>
+1256:                                        <p class="font-semibold text-gray-900">{{ $workshop->start_date ? $workshop->start_date->format('m/d/Y g:i A') : 'غير محدد' }}</p>
+1264:                                        <p class="text-sm text-gray-500">تاريخ النهاية</p>
+1265:                                        <p class="font-semibold text-gray-900">{{ $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : 'غير محدد' }}</p>
+1273:                                        <p class="text-sm text-gray-500">الفئة</p>
+1282:                                        <p class="text-sm text-gray-500">المستوى</p>
+1283:                                        <p class="font-semibold text-gray-900">{{ $workshop->level === 'beginner' ? 'مبتدئ' : 'متقدم' }}</p>
+1291:                                        <p class="text-sm text-gray-500">المشاهدات</p>
+1301:                                            <p class="text-sm text-gray-500">العنوان</p>
+1319:                        <h2 class="text-4xl font-bold text-gray-900 mb-4 related-workshops-title">قد تعجبك أيضاً</h2>
+1331:                                        <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=ورشة' }}" 
+1334:                                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+1337:                                            <span class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">مكتمل</span>
+1339:                                            <span class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">أونلاين</span>
+1341:                                            <span class="absolute top-3 left-3 bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">حضوري</span>
+1366:                                            التفاصيل <i class="fas fa-arrow-left mr-1"></i>
+1497:            const message = errorMessage || data.message || 'حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.';
+1532:    showCustomAlert(payload.message || 'تم الدفع وتأكيد الحجز بنجاح!', 'success');
+1602:            showCustomAlert(error.message || 'تعذر إكمال عملية الدفع.', 'error');
+1620:            showCustomAlert('تم إلغاء عملية الدفع.', 'warning');
+2150:// دالة عرض التنبيه المخصص
+2152:    // إزالة أي تنبيهات سابقة
+2158:    // تحديد الألوان والأيقونات حسب النوع
+2186:    // إنشاء التنبيه
+2209:    // إضافة التنبيه للصفحة
+2212:    // إظهار التنبيه مع تأثير
+2221:    // إزالة التنبيه تلقائياً بعد 5 ثوان
+2227:// دالة إغلاق التنبيه
+2242:// دالة عرض modal تسجيل الدخول المطلوب
+2244:    // إزالة أي modal سابق
+2250:    // تخزين معرف الورشة للعودة إليها بعد تسجيل الدخول
+2255:    // إنشاء modal تسجيل الدخول المطلوب
+2259:                <!-- زر الإغلاق في الزاوية العلوية -->
+2265:                    <!-- الأيقونة -->
+2270:                    <!-- العنوان -->
+2271:                    <h3 class="text-2xl font-bold text-gray-900 mb-4">تسجيل الدخول مطلوب</h3>
+2273:                    <!-- الرسالة -->
+2276:                            يجب تسجيل الدخول أولاً لحجز الورشة
+2279:                            سجل دخولك أو أنشئ حساب جديد للمتابعة
+2283:                    <!-- الأزرار -->
+2287:                            تسجيل الدخول
+2291:                            إنشاء حساب
+2299:    // إضافة modal للصفحة
+2302:    // إضافة مستمع حدث للضغط على مفتاح Escape
+2310:// دالة إغلاق modal تسجيل الدخول المطلوب
+2312:    // إذا كان الحدث من النقر على الخلفية، أغلق الـ modal
+2321:    // إغلاق الـ modal في جميع الحالات الأخرى
+2328:// دالة التوجيه لتسجيل الدخول مع معرف الورشة
+2338:// دالة التوجيه للتسجيل مع معرف الورشة
+2348:// جعل الدوال متاحة عالمياً

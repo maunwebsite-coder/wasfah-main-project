@@ -1,0 +1,485 @@
+/* تحسينات لوحة التحكم */
+
+/* تأثيرات الحركة */
+.dashboard-card {
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* تحسين الألوان المتدرجة */
+.gradient-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-purple {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-orange {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* تحسين الأيقونات */
+.dashboard-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover .dashboard-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* تحسين النصوص */
+.dashboard-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #1f2937;
+}
+
+.dashboard-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* تحسين الأزرار */
+.dashboard-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.dashboard-btn:hover::before {
+    left: 100%;
+}
+
+/* تحسين الرسوم البيانية */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* تحسين القوائم */
+.activity-item {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+}
+
+.activity-item:hover {
+    background-color: #f3f4f6;
+    transform: translateX(-2px);
+}
+
+/* تحسين الإحصائيات */
+.stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+/* تحسين الحالة */
+.status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* تحسين الاستجابة */
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 1.25rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* تأثيرات إضافية */
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* تحسين الألوان للحالة */
+.status-confirmed {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-cancelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.status-completed {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+/* تحسين التخطيط */
+.dashboard-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* تحسين النماذج */
+.dashboard-form {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* تحسين الجداول */
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+    padding: 0.75rem;
+    text-align: right;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dashboard-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* تحسين التنبيهات */
+.dashboard-alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+}
+
+.dashboard-alert-success {
+    background-color: #f0fdf4;
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.dashboard-alert-warning {
+    background-color: #fffbeb;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.dashboard-alert-error {
+    background-color: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+/* تحسين التحميل */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* شريط التنقل السريع */
+.dashboard-quick-nav {
+    position: sticky;
+    top: 1rem;
+    z-index: 15;
+    backdrop-filter: blur(6px);
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.dashboard-nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 9999px;
+    background-color: #f3f4f6;
+    color: #1f2937;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dashboard-nav-pill:hover {
+    background-color: #e5e7eb;
+    color: #2563eb;
+}
+
+.dashboard-nav-pill.is-active {
+    background-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+}
+
+.dashboard-nav-pill.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* مؤشرات الاتجاه */
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.trend-positive {
+    background-color: rgba(16, 185, 129, 0.3);
+    color: #ecfdf5;
+}
+
+.trend-negative {
+    background-color: rgba(239, 68, 68, 0.3);
+    color: #fee2e2;
+}
+
+.dashboard-card:not(.text-white) .trend-indicator {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #1f2937;
+}
+
+.dashboard-card:not(.text-white) .trend-positive {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #166534;
+}
+
+.dashboard-card:not(.text-white) .trend-negative {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #991b1b;
+}
+
+.trend-average {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.dashboard-card:not(.text-white) .trend-average {
+    color: #4b5563;
+}
+
+.trend-context {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.dashboard-card:not(.text-white) .trend-context {
+    color: #6b7280;
+}
+
+/* أدوات البحث السريع */
+.dashboard-filter-control {
+    position: relative;
+}
+
+/* مرشحات لوحة التحكم */
+.dashboard-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-filter-field {
+    min-width: 200px;
+}
+
+.dashboard-select {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-align: right;
+    color: #111827;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.dashboard-filter-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.dashboard-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 9999px;
+    padding: 0.35rem 0.8rem;
+    font-weight: 600;
+}
+
+.dashboard-filter-note {
+    font-size: 0.7rem;
+}
+
+.dashboard-search-input {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    padding-right: 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-align: right;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.dashboard-search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.dashboard-search-icon {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.dashboard-filter-empty-message {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 0.75rem;
+}
+
+/* أسطورة الحالات */
+.status-legend {
+    font-size: 0.75rem;
+}
+
+.status-legend-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.dashboard-anchor {
+    scroll-margin-top: 6rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-quick-nav {
+        position: static;
+        backdrop-filter: none;
+    }
+
+    .dashboard-nav-pill {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .dashboard-filter-field {
+        min-width: 100%;
+    }
+}
