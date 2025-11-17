@@ -2216,6 +2216,44 @@
                 initializeModalClose();
             });
 
+            function initializeModalClose() {
+                const confirmModal = document.getElementById('confirm-modal');
+                const shareModal = document.getElementById('share-modal');
+
+                const hideModal = (modal) => {
+                    if (!modal) {
+                        return;
+                    }
+
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                };
+
+                if (confirmModal) {
+                    confirmModal.addEventListener('click', function(event) {
+                        if (event.target === confirmModal) {
+                            hideModal(confirmModal);
+                        }
+                    });
+                }
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key !== 'Escape') {
+                        return;
+                    }
+
+                    hideModal(confirmModal);
+
+                    if (window.ShareRecipe && typeof window.ShareRecipe.closeShareModal === 'function') {
+                        window.ShareRecipe.closeShareModal();
+                    } else if (shareModal && !shareModal.classList.contains('hidden')) {
+                        shareModal.classList.add('hidden');
+                        shareModal.classList.remove('opacity-100', 'opacity-0');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+
             // Load saved status for tools
             function loadToolsSavedStatus() {
                 fetch('/saved/status')

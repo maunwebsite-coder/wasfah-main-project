@@ -30,6 +30,15 @@
             ? ($recipe->visibility ?? Recipe::VISIBILITY_PUBLIC)
             : Recipe::VISIBILITY_PUBLIC
     );
+
+    $recipeFormStrings = [
+        'step_placeholder' => __('chef.recipe_form.sections.steps.placeholder'),
+        'ingredient_name_label' => __('chef.recipe_form.sections.ingredients.name_label'),
+        'ingredient_name_placeholder' => __('chef.recipe_form.sections.ingredients.name_placeholder'),
+        'ingredient_amount_label' => __('chef.recipe_form.sections.ingredients.amount_label'),
+        'ingredient_amount_placeholder' => __('chef.recipe_form.sections.ingredients.amount_placeholder'),
+        'ingredient_remove' => __('chef.recipe_form.sections.ingredients.remove_button'),
+    ];
 @endphp
 
 <input type="hidden" name="submit_action" id="recipe-submit-action" value="draft">
@@ -302,14 +311,7 @@
 @once
     @push('scripts')
         <script>
-            const recipeFormStrings = @json([
-                'step_placeholder' => __('chef.recipe_form.sections.steps.placeholder'),
-                'ingredient_name_label' => __('chef.recipe_form.sections.ingredients.name_label'),
-                'ingredient_name_placeholder' => __('chef.recipe_form.sections.ingredients.name_placeholder'),
-                'ingredient_amount_label' => __('chef.recipe_form.sections.ingredients.amount_label'),
-                'ingredient_amount_placeholder' => __('chef.recipe_form.sections.ingredients.amount_placeholder'),
-                'ingredient_remove' => __('chef.recipe_form.sections.ingredients.remove_button'),
-            ]);
+            const recipeFormStrings = @json($recipeFormStrings);
 
             document.addEventListener('DOMContentLoaded', function () {
                 const stepsWrapper = document.getElementById('steps-wrapper');
