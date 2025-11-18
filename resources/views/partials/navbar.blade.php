@@ -60,7 +60,7 @@
         <div class="flex items-center justify-between gap-4 py-3 md:py-4 header-container">
             <div class="flex items-center gap-4 min-w-0">
                 <a href="{{ route('home') }}" class="flex items-center gap-3 text-slate-800">
-                    <img src="{{ asset('image/logo.png') }}" alt="Logo" class="h-12 w-auto inline header-logo">
+                    <img src="{{ \App\Support\BrandAssets::logoAsset('png') }}" alt="Logo" class="h-14 w-auto inline header-logo">
                     <span class="hidden md:inline text-xl font-bold tracking-tight"></span>
                 </a>
 

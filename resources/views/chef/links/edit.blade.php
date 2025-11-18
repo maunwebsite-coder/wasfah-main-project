@@ -14,9 +14,9 @@
     $ctaUrlValue = old('cta_url', $page->cta_url) ?: '#';
     $accentColorValue = old('accent_color', $page->accent_color ?? $accentColor ?? '#f97316') ?: '#f97316';
     $lastUpdated = $page->updated_at?->locale('ar')->diffForHumans() ?? 'الآن';
-    $heroPlaceholder = asset('image/logo.webp');
+    $heroPlaceholder = \App\Support\BrandAssets::logoAsset('webp');
     $heroPreviewDefault = $heroImageUrl ?: $heroPlaceholder;
-    $linkImagePlaceholder = asset('image/logo.webp');
+    $linkImagePlaceholder = \App\Support\BrandAssets::logoAsset('webp');
     $linkImageAllowedList = str_replace(', ', '، ', \App\Support\ImageUploadConstraints::allowedExtensionsList());
     $linkImageMaxSize = \App\Support\ImageUploadConstraints::maxMegabytes();
     $createContextActive = old('form_context') === 'create';

@@ -290,7 +290,7 @@
                                     $servings = (int) ($recipe->servings ?? 0);
                                     $imageSrc = $recipe->image
                                         ? Storage::disk('public')->url($recipe->image)
-                                        : ($recipe->image_url ?: asset('image/logo.webp'));
+                                        : ($recipe->image_url ?: \App\Support\BrandAssets::logoAsset('webp'));
                                     $ownerName = $recipe->chef?->name ?? ($recipe->author ?: 'فريق وصفة');
                                     $ownerSubtitle = $recipe->chef ? 'شيف مسجل' : 'فريق وصفة';
                                 @endphp
@@ -302,7 +302,7 @@
                                                     src="{{ $imageSrc }}" 
                                                     alt="{{ $recipe->title }}" 
                                                     class="recipe-thumbnail"
-                                                    onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+                                                    onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                                                 @if($difficultyLabel)
                                                     <span class="difficulty-badge">
                                                         {{ $difficultyLabel }}

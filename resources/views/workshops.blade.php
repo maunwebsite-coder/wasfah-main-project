@@ -336,7 +336,7 @@
                             <div class="relative">
                                 <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : $cardPlaceholderUrl }}" 
                                      alt="{{ $workshop->title }}"
-                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ addslashes(__('workshops.labels.fallback_image_alt')) }}';" loading="lazy">
+                                     onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ addslashes(__('workshops.labels.fallback_image_alt')) }}';" loading="lazy">
                                 @if($isFull)
                                 <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                                     <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">{{ __('workshops.cards.overlay_full') }}</span>

@@ -19,7 +19,7 @@
     <meta name="description" content="{{ $defaultDescription }}">
     <meta property="og:title" content="{{ $ogTitle }}">
     <meta property="og:description" content="{{ $ogDescription }}">
-    <meta property="og:image" content="{{ $page->avatar_url ?? asset('image/logo.webp') }}">
+    <meta property="og:image" content="{{ $page->avatar_url ?? \App\Support\BrandAssets::logoAsset('webp') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta name="theme-color" content="{{ $accentColor }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -388,7 +388,7 @@
 <body>
     <main class="page-card">
         <header>
-            <img src="{{ $page->avatar_url ?? asset('image/logo.webp') }}" alt="{{ $imageAlt }}" class="hero-image" loading="lazy">
+            <img src="{{ $page->avatar_url ?? \App\Support\BrandAssets::logoAsset('webp') }}" alt="{{ $imageAlt }}" class="hero-image" loading="lazy">
             <h1>{{ $defaultHeadline }}</h1>
             <p class="subtitle">{{ $page->subheadline ?? $defaultDescription }}</p>
             <div class="bio">{{ $page->bio ?? __('chef_links.profile.bio_fallback') }}</div>

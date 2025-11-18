@@ -452,7 +452,7 @@
                                                 <img src="{{ $image }}"
                                                      alt="{{ $tool->name }}"
                                                      class="tool-card__image"
-                                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('tools.cards.image_fallback_alt') }}';" loading="lazy">
+                                                    onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('tools.cards.image_fallback_alt') }}';" loading="lazy">
                                             </div>
                                         @endforeach
                                     </div>

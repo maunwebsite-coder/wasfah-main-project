@@ -28,8 +28,8 @@ return [
         ],
         [
             'icon' => 'fas fa-utensils',
-            'value' => '+80',
-            'label' => 'شيف يعتمدون Wasfa Links',
+            'value' => '+شيف واحد',
+            'label' => 'كل شيف تنضم عبرك يضيف لك دخلاً جديداً',
         ],
     ],
     'intro' => [

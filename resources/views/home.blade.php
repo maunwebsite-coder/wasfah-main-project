@@ -379,7 +379,7 @@
                             <div class="swiper-slide">
                                 <article class="home-tool-card">
                                     <div class="home-tool-card__image">
-                                        <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" loading="lazy" decoding="async" width="320" height="240" onerror="this.src='{{ asset('image/logo.webp') }}'">
+                                        <img src="{{ $tool->image_url }}" alt="{{ $tool->name }}" loading="lazy" decoding="async" width="320" height="240" onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'">
                                         @if(!empty($tool->category))
                                             <span class="home-tool-card__category">{{ $tool->category }}</span>
                                         @endif
@@ -593,7 +593,7 @@
                                                  width="600"
                                                  height="400"
                                                  decoding="async"
-                                                 onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('home.premium_workshops.placeholder_image_alt') }}';" loading="lazy">
+                                                 onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('home.premium_workshops.placeholder_image_alt') }}';" loading="lazy">
                                             @if($isFull)
                                             <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                                                 <span class="text-white font-bold text-lg bg-red-500 px-4 py-2 rounded-full">{{ __('home.premium_workshops.status_full') }}</span>

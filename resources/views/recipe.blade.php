@@ -1633,7 +1633,7 @@
                     <div class="main-image-wrapper relative overflow-hidden">
                         <img id="main-recipe-image" class="w-full h-full object-cover transition-opacity duration-300" 
                              src="{{ $recipe->getAllImages()[0] }}" alt="{{ __('recipe.misc.image_alt') }}"
-                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('recipe.misc.placeholder_image_alt') }}';" loading="lazy">
+                            onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('recipe.misc.placeholder_image_alt') }}';" loading="lazy">
                         
                         <!-- Navigation Arrows -->
                         @if(count($recipe->getAllImages()) > 1)
@@ -1661,7 +1661,7 @@
                                      class="w-16 h-16 object-cover rounded-xl cursor-pointer border-2 transition-all thumbnail {{ $index === 0 ? 'active' : '' }}" 
                                      src="{{ $imageUrl }}" 
                                      alt="{{ __('recipe.misc.gallery_image_alt', ['number' => $index + 1]) }}"
-                                     onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+                                    onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}';" loading="lazy">
                             @endforeach
                         </div>
                     @endif
@@ -2001,7 +2001,7 @@
                     @if($relatedRecipe->image_url)
                       <img src="{{ $relatedRecipe->image_url }}" alt="{{ $relatedRecipe->title }}" 
                            class="w-full h-full object-cover"
-                           onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('recipe.misc.placeholder_image_alt') }}';" loading="lazy">
+                          onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('recipe.misc.placeholder_image_alt') }}';" loading="lazy">
                     @else
                       <i class="fas fa-image text-4xl text-gray-400"></i>
                     @endif

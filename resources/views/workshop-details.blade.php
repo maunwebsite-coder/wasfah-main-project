@@ -1153,7 +1153,7 @@
                     <img src="{{ $workshop->image ? asset('storage/' . $workshop->image) : 'https://placehold.co/800x600/f87171/FFFFFF?text=' . urlencode(__('workshops.labels.featured_placeholder_text')) }}" 
                          alt="{{ $workshop->title }}" 
                          class="workshop-image w-full h-full object-cover"
-                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';"
+                        onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';"
                          loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-l from-transparent to-amber-500/20"></div>
                     @if($workshop->is_fully_booked)
@@ -1249,7 +1249,7 @@
                                                     <img src="{{ $recipe->image_url ?: 'https://placehold.co/400x300/f87171/FFFFFF?text=' . urlencode(__('workshops.details.recipes.placeholder')) }}" 
                                                          alt="{{ $recipe->title }}" 
                                                          class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';" loading="lazy">
+                                                        onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';" loading="lazy">
                                                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                                     <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                         <div class="bg-white/90 backdrop-blur-sm rounded-full p-2">
@@ -1662,7 +1662,7 @@
                                         <img src="{{ $related->image ? asset('storage/' . $related->image) : 'https://placehold.co/600x400/f87171/FFFFFF?text=' . urlencode(__('workshops.labels.card_placeholder_text')) }}" 
                                              alt="{{ $related->title }}" 
                                              class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 related-workshop-image"
-                                             onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';" loading="lazy">
+                                            onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='{{ __('workshops.labels.fallback_image_alt') }}';" loading="lazy">
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         @if($isFull)
                                             <span class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">{{ __('workshops.details.related.badge_full') }}</span>

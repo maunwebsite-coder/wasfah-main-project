@@ -42,13 +42,13 @@
 
         <div class="footer-line flex flex-col items-center gap-2 text-center text-sm text-gray-500 md:flex-row md:flex-wrap md:justify-center md:gap-4">
             <div class="flex items-center gap-2 text-orange-600">
-                <x-optimized-picture
-                    base="image/logo"
+                    <x-optimized-picture
+                        :base="\App\Support\BrandAssets::logoBase()"
                     :widths="[96, 192, 384]"
                     alt="{{ __('footer.brand.logo_alt') }}"
-                    class="h-6 w-auto"
+                    class="h-8 w-auto"
                     :lazy="false"
-                    sizes="72px"
+                    sizes="96px"
                 />
             </div>
 

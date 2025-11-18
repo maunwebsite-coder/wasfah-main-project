@@ -37,7 +37,7 @@
                                     <img src="{{ $savedTool->tool->image_url }}" 
                                          alt="{{ $savedTool->tool->name }}" 
                                          class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                                         onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt=@json(__('saved.placeholder_alt'));"
+                                        onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt=@json(__('saved.placeholder_alt'));"
                                     
                                     <!-- Category Badge -->
                                     <div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full" loading="lazy">

@@ -101,10 +101,10 @@
                         <!-- Front of the card -->
                         <div class="card-front">
                             <div class="relative h-full">
-                                <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}" 
+                                <img src="{{ $recipe->image_url ?: \App\Support\BrandAssets::logoAsset('webp') }}" 
                                      alt="{{ $recipe->title }}" 
                                      class="w-full h-full object-cover"
-                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+                                     onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                                 
                                 <!-- Overlay with recipe info -->
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-6">

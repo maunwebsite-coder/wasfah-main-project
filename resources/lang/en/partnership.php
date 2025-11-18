@@ -27,9 +27,9 @@ return [
             'label' => 'Instant earnings dashboard',
         ],
         [
-            'icon' => 'fas fa-utensils',
-            'value' => '+80',
-            'label' => 'Chefs rely on Wasfa Links',
+            'icon' => 'fas fa-users',
+            'value' => '+1 chef',
+            'label' => 'Every chef you onboard unlocks new revenue for you',
         ],
     ],
     'intro' => [

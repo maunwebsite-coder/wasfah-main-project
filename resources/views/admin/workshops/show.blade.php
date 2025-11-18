@@ -463,7 +463,7 @@
                                             <img src="{{ $recipe->image_url ?: 'https://placehold.co/80x80/f97316/FFFFFF?text=وصفة' }}"
                                                  alt="{{ $recipe->title }}"
                                                  class="h-16 w-16 rounded-xl border border-slate-200 object-cover"
-                                                 onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+                                                onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}';" loading="lazy">
                                             <div class="space-y-1">
                                                 <p class="text-sm font-bold text-slate-900">{{ $recipe->title }}</p>
                                                 <p class="text-xs text-slate-500">{{ $recipe->author }}</p>

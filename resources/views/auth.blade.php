@@ -429,8 +429,8 @@
             <div class="auth-flow" data-intent-state="customer">
                 <div class="auth-brand">
                     <div class="brand-logo">
-                        <x-optimized-picture
-                            base="image/logo"
+                            <x-optimized-picture
+                                :base="\App\Support\BrandAssets::logoBase()"
                             :widths="[96, 192, 384]"
                             alt="{{ __('auth.logo_alt') }}"
                             :lazy="false"

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Chef;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Chef\LinkPageUpdateRequest;
+use App\Support\BrandAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,7 +26,7 @@ class LinkPageController extends Controller
 
         $heroImageUrl = $page->hero_image_path
             ? Storage::disk('public')->url($page->hero_image_path)
-            : ($page->avatar_url ?? asset('image/logo.webp'));
+            : ($page->avatar_url ?? BrandAssets::logoAsset('webp'));
 
         $linkPresets = [
             [

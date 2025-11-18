@@ -1559,7 +1559,7 @@
                                 $previewUrl = $entry['preview_url'] ?? null;
                                 $watchUrl = $entry['watch_url'] ?? null;
                                 $isDirectVideo = $entry['is_direct_video'] ?? false;
-                                $poster = $entry['poster'] ?? asset('image/logo.webp');
+                                $poster = $entry['poster'] ?? \App\Support\BrandAssets::logoAsset('webp');
                                 $badgeLabel = $entry['badge'] ?? __('chef.recordings.badges.available');
                             @endphp
                             <article class="chef-recording-card">

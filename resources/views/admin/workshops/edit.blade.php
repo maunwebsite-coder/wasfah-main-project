@@ -602,7 +602,7 @@
                                      src="{{ asset('storage/' . $workshop->image) }}?v={{ time() }}"
                                      alt="{{ $workshop->title }}"
                                      class="h-28 w-28 rounded-2xl object-cover border border-slate-200"
-                                     onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+                                    onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
                                 <div class="space-y-2">
                                     <p class="text-sm text-slate-600">
                                         هذه هي الصورة الحالية المعروضة للزوار. يمكنك استبدالها أو حذفها تماماً.
@@ -712,7 +712,7 @@
                                                 <img src="{{ $recipe->image_url ?: 'https://placehold.co/60x60/f87171/FFFFFF?text=وصفة' }}"
                                                      alt="{{ $recipe->title }}"
                                                      class="h-14 w-14 rounded-xl border border-slate-200 object-cover"
-                                                     onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+                                                    onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}';" loading="lazy">
                                                 <div>
                                                     <h4 class="text-sm font-semibold text-slate-900 leading-snug">{{ $recipe->title }}</h4>
                                                     <p class="text-xs text-slate-500">{{ $recipe->author }}</p>

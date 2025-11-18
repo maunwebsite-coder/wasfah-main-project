@@ -6,6 +6,7 @@ use App\Models\ChefLinkPage;
 use App\Models\User;
 use App\Models\Workshop;
 use App\Services\GoogleDriveService;
+use App\Support\BrandAssets;
 use App\Support\Concerns\ResolvesWorkshopRecordings;
 use Google\Service\Drive\DriveFile;
 use Illuminate\Support\Carbon;
@@ -267,7 +268,7 @@ class ChefPublicWorkshopController extends Controller
     protected function resolveAvatarUrl(?string $avatar): string
     {
         if (! $avatar) {
-            return asset('image/logo.webp');
+            return BrandAssets::logoAsset('webp');
         }
 
         if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {

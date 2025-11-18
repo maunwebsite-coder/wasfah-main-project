@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Support\BrandAssets;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Tool extends Model
@@ -83,7 +84,7 @@ class Tool extends Model
             }
         }
         
-        return asset('image/logo.webp');
+        return BrandAssets::logoAsset('webp');
     }
 
     /**

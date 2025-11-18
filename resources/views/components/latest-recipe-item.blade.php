@@ -3,11 +3,11 @@
 <li>
     <a href="{{ route('recipe.show', $recipe->slug) }}" class="latest-recipe-mini">
         <div class="latest-recipe-thumb">
-            <img src="{{ $recipe->image_url ?: asset('image/logo.webp') }}"
+            <img src="{{ $recipe->image_url ?: \App\Support\BrandAssets::logoAsset('webp') }}"
                  alt="{{ $recipe->title }}"
                  width="56"
                  height="56"
-                 onerror="this.src='{{ asset('image/logo.webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
+                 onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}'; this.alt='صورة افتراضية';" loading="lazy">
         </div>
         <div class="latest-recipe-info">
             <h3 class="latest-recipe-title line-clamp-2">

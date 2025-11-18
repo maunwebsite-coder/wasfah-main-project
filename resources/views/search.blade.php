@@ -168,7 +168,7 @@
                             <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                                 @foreach($recipes as $recipe)
                                     @php
-                                        $image = $recipe->image_url ?: ($recipe->image ? (str_starts_with($recipe->image, 'http') ? $recipe->image : asset('storage/' . $recipe->image)) : asset('image/logo.webp'));
+                                        $image = $recipe->image_url ?: ($recipe->image ? (str_starts_with($recipe->image, 'http') ? $recipe->image : asset('storage/' . $recipe->image)) : \App\Support\BrandAssets::logoAsset('webp'));
                                         $prepTime = $recipe->prep_time
                                             ? __('search.recipes.prep_time', ['minutes' => $recipe->prep_time])
                                             : __('search.recipes.flex_time');
@@ -176,7 +176,7 @@
                                     @endphp
                                     <article class="SearchCard group flex flex-col overflow-hidden rounded-3xl border border-orange-50 bg-white shadow-sm">
                                         <div class="relative h-56 overflow-hidden">
-                                            <img src="{{ $image }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+                                            <img src="{{ $image }}" alt="{{ $recipe->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}';" loading="lazy">
                                             <div class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 py-3 text-xs text-white">
                                                 <span class="flex items-center gap-2 font-medium">
                                                     <i class="fas fa-tag text-[11px] opacity-80"></i>
@@ -243,15 +243,15 @@
                             <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                                 @foreach($workshops as $workshop)
                                     @php
-                                        $workshopImage = $workshop->image
-                                            ? (str_starts_with($workshop->image, 'http') ? $workshop->image : asset('storage/' . $workshop->image))
-                                            : asset('image/logo.webp');
+                                            $workshopImage = $workshop->image
+                                                ? (str_starts_with($workshop->image, 'http') ? $workshop->image : asset('storage/' . $workshop->image))
+                                                : \App\Support\BrandAssets::logoAsset('webp');
                                         $workshopExcerpt = \Illuminate\Support\Str::limit($workshop->description ?? '', 140);
                                         $workshopDate = optional($workshop->start_date)->format('Y-m-d');
                                     @endphp
                                     <article class="SearchCard group flex flex-col overflow-hidden rounded-3xl border border-orange-50 bg-white shadow-sm">
                                         <div class="relative h-56 overflow-hidden">
-                                            <img src="{{ $workshopImage }}" alt="{{ $workshop->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ asset('image/logo.webp') }}';" loading="lazy">
+                                            <img src="{{ $workshopImage }}" alt="{{ $workshop->title }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" onerror="this.src='{{ \App\Support\BrandAssets::logoAsset('webp') }}';" loading="lazy">
                                             <div class="absolute inset-x-0 top-4 flex items-start justify-between px-4">
                                                 <span class="rounded-full bg-orange-500/90 px-3 py-1 text-xs font-semibold text-white shadow">
                                                     {{ $workshop->formatted_price ?? number_format($workshop->price ?? 0, 2) . ' ' . ($workshop->currency ?? 'USD') }}

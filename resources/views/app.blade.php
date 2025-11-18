@@ -1,6 +1,8 @@
 @php
     $currentLocale = $currentLocale ?? app()->getLocale();
     $isRtl = $isRtl ?? ($currentLocale === 'ar');
+    $brandLogoBase = \App\Support\BrandAssets::logoBase($currentLocale);
+    $brandLogoUrl = \App\Support\BrandAssets::logoAsset('webp', $currentLocale);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $currentLocale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" style="margin:0;padding:0;">
@@ -28,7 +30,7 @@
     <noscript>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     </noscript>
-    <link rel="preload" as="image" href="{{ asset('image/logo.webp') }}" type="image/webp" fetchpriority="high">
+    <link rel="preload" as="image" href="{{ $brandLogoUrl }}" type="image/webp" fetchpriority="high">
     @stack('preloads')
     @php
         $vite = app(\Illuminate\Foundation\Vite::class);
@@ -114,7 +116,7 @@
             <div class="flex items-center space-x-2 rtl:space-x-reverse">
                 <a href="{{ route('home') }}" class="flex items-center">
                     <x-optimized-picture
-                        base="image/logo"
+                        :base="$brandLogoBase"
                         :widths="[96, 192, 384]"
                         alt="Logo"
                         class="h-12 w-auto inline"

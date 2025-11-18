@@ -7,7 +7,7 @@
     <meta name="description" content="{{ __('links.meta.description') }}">
     <meta property="og:title" content="{{ __('links.meta.og_title') }}">
     <meta property="og:description" content="{{ __('links.meta.og_description') }}">
-    <meta property="og:image" content="{{ asset('image/logo.webp') }}">
+    <meta property="og:image" content="{{ \App\Support\BrandAssets::logoAsset('webp') }}">
     <meta name="theme-color" content="#f97316">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -661,8 +661,8 @@
     </main>
     <footer>
         <div class="footer-brand">
-            <x-optimized-picture
-                base="image/logo"
+                <x-optimized-picture
+                    :base="\App\Support\BrandAssets::logoBase()"
                 :widths="[96, 192, 384]"
                 alt="{{ __('links.footer.logo_alt') }}"
                 sizes="96px"
