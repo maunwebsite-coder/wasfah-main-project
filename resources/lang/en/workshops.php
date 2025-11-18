@@ -159,7 +159,7 @@ return [
     'whatsapp_verification' => [
         'title' => 'WhatsApp Booking Confirmation',
         'button' => 'Verify WhatsApp Booking',
-        'helper' => 'We refresh the status as soon as the Wasfah team reviews your request.',
+        'helper' => 'Opens WhatsApp so you can follow up with the Wasfah team — and we still refresh the status for you.',
         'loading' => 'Checking...',
         'awaiting_confirmation' => 'Your WhatsApp request is logged and will be confirmed shortly.',
         'success' => 'Current status: :status · Last update :updated_at.',
@@ -169,6 +169,8 @@ return [
         'login_required' => 'Please sign in to track your WhatsApp booking.',
         'unexpected_error' => 'Something went wrong while checking your booking. Please try again later.',
         'unknown_time' => 'Unknown time',
+        'message_template' => 'Hi Wasfah team, I would like to verify my WhatsApp booking :booking for workshop :workshop.',
+        'reference_unknown' => 'Not available',
     ],
 
     'details' => [

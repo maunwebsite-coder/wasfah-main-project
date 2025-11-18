@@ -16,6 +16,9 @@
     $lastUpdated = $page->updated_at?->locale('ar')->diffForHumans() ?? 'الآن';
     $heroPlaceholder = asset('image/logo.webp');
     $heroPreviewDefault = $heroImageUrl ?: $heroPlaceholder;
+    $linkImagePlaceholder = asset('image/logo.webp');
+    $linkImageAllowedList = str_replace(', ', '، ', \App\Support\ImageUploadConstraints::allowedExtensionsList());
+    $linkImageMaxSize = \App\Support\ImageUploadConstraints::maxMegabytes();
     $createContextActive = old('form_context') === 'create';
     $createTitle = $createContextActive ? old('title') : '';
     $createSubtitle = $createContextActive ? old('subtitle') : '';
@@ -270,6 +273,10 @@
                                 $itemUrl = $isCurrent ? old('url', $item->url) : $item->url;
                                 $itemIcon = $isCurrent ? old('icon', $item->icon) : $item->icon;
                                 $itemPosition = $isCurrent ? old('position', $item->position) : $item->position;
+                                $itemStoredImageUrl = $item->image_url;
+                                $itemImagePreviewId = 'link-image-preview-' . $item->id;
+                                $itemRemoveImageChecked = $isCurrent ? (bool) old('remove_image') : false;
+                                $itemPreviewImage = $itemRemoveImageChecked ? null : $itemStoredImageUrl;
                             @endphp
                             <details class="group rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-200" @if($isCurrent) open @endif>
                                 <summary class="flex cursor-pointer flex-wrap items-center justify-between gap-4 px-5 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
@@ -298,7 +305,7 @@
                                     </div>
                                 </summary>
                                 <div class="border-t border-gray-100 px-5 py-5 space-y-4">
-                                    <form action="{{ route('chef.links.items.update', $item) }}" method="POST" class="space-y-4">
+                                    <form action="{{ route('chef.links.items.update', $item) }}" method="POST" class="space-y-4" enctype="multipart/form-data">
                                         @csrf
                                         @method('PUT')
                                         <input type="hidden" name="item_id" value="{{ $item->id }}">
@@ -323,6 +330,27 @@
                                                 <label class="text-sm font-medium text-gray-700">رمز الأيقونة</label>
                                                 <input type="text" name="icon" value="{{ $itemIcon }}" class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-orange-400 focus:ring focus:ring-orange-100" placeholder="مثال: fas fa-play">
                                                 <p class="text-xs text-gray-500">استخدم أيقونات Font Awesome المتاحة.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">الصورة الرئيسية للرابط</label>
+                                            <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                                                <div class="h-24 w-24 overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex-shrink-0">
+                                                    <img src="{{ $itemPreviewImage ?? $linkImagePlaceholder }}" alt="صورة الرابط" class="h-full w-full object-cover" id="{{ $itemImagePreviewId }}" data-default="{{ $itemStoredImageUrl ?? $linkImagePlaceholder }}" data-placeholder="{{ $linkImagePlaceholder }}" loading="lazy" width="96" height="96">
+                                                </div>
+                                                <div class="flex-1 space-y-2">
+                                                    <label class="inline-flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm text-gray-700 cursor-pointer hover:border-orange-400 hover:text-orange-500 transition">
+                                                        <i class="fas fa-upload text-base"></i>
+                                                        <span>رفع صورة حديثة</span>
+                                                        <input type="file" id="link-image-input-{{ $item->id }}" name="image" accept="image/*" class="sr-only link-image-input" data-preview="#{{ $itemImagePreviewId }}" data-remove-checkbox="#remove-image-{{ $item->id }}">
+                                                    </label>
+                                                    <label class="flex items-center gap-2 text-sm text-gray-600 {{ $itemStoredImageUrl ? '' : 'opacity-60' }}">
+                                                        <input type="checkbox" id="remove-image-{{ $item->id }}" name="remove_image" value="1" class="rounded border-gray-300 text-orange-500 focus:ring-orange-400" {{ $itemStoredImageUrl ? '' : 'disabled' }} {{ $itemRemoveImageChecked ? 'checked' : '' }} data-link-image-remove data-preview="#{{ $itemImagePreviewId }}" data-placeholder="{{ $linkImagePlaceholder }}" data-target-input="#link-image-input-{{ $item->id }}">
+                                                        إزالة الصورة الرئيسية
+                                                    </label>
+                                                    <p class="text-xs text-gray-500">ستظهر هذه الصورة كخلفية كاملة للبطاقة. يدعم {{ $linkImageAllowedList }} حتى {{ $linkImageMaxSize }} ميجابايت.</p>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -398,19 +426,32 @@
                             <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">روابطك البارزة</p>
                             <ul class="space-y-2">
                                 @forelse ($items->take(3) as $previewItem)
-                                    <li class="flex items-center justify-between rounded-2xl border border-gray-100 px-4 py-3 text-sm text-gray-600">
+                                    @php
+                                        $previewImage = $previewItem->image_url;
+                                        $previewIcon = $previewItem->icon ?: 'fas fa-link';
+                                        $previewClasses = 'flex items-center justify-between rounded-2xl border border-gray-100 px-4 py-3 text-sm text-gray-600';
+                                        $previewStyle = '';
+
+                                        if ($previewImage) {
+                                            $previewClasses = 'flex items-center justify-between rounded-2xl border border-transparent px-4 py-4 text-sm text-white shadow';
+                                            $previewStyle = "background-image: linear-gradient(135deg, rgba(15,23,42,0.7), rgba(15,23,42,0.25)), url('{$previewImage}'); background-size: cover; background-position: center;";
+                                        }
+                                    @endphp
+                                    <li class="{{ $previewClasses }}" @if ($previewStyle) style="{{ $previewStyle }}" @endif>
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <span class="flex h-9 w-9 items-center justify-center rounded-xl text-lg text-white" style="background-color: var(--accent-color);">
-                                                <i class="{{ $previewItem->icon ?: 'fas fa-link' }}"></i>
-                                            </span>
+                                            @if (!$previewImage)
+                                                <span class="flex h-9 w-9 items-center justify-center rounded-xl text-lg text-white" style="background-color: var(--accent-color);">
+                                                    <i class="{{ $previewIcon }}"></i>
+                                                </span>
+                                            @endif
                                             <div class="min-w-0">
-                                                <p class="font-semibold text-gray-800 truncate">{{ $previewItem->title }}</p>
+                                                <p class="font-semibold {{ $previewImage ? 'text-white' : 'text-gray-800' }} truncate">{{ $previewItem->title }}</p>
                                                 @if ($previewItem->subtitle)
-                                                    <p class="text-xs text-gray-500 truncate">{{ \Illuminate\Support\Str::limit($previewItem->subtitle, 50) }}</p>
+                                                    <p class="text-xs {{ $previewImage ? 'text-white/80' : 'text-gray-500' }} truncate">{{ \Illuminate\Support\Str::limit($previewItem->subtitle, 50) }}</p>
                                                 @endif
                                             </div>
                                         </div>
-                                        <i class="fas fa-chevron-left text-gray-300"></i>
+                                        <i class="fas fa-chevron-left {{ $previewImage ? 'text-white/80' : 'text-gray-300' }}"></i>
                                     </li>
                                 @empty
                                     <li class="rounded-2xl border border-dashed border-gray-200 px-4 py-3 text-center text-xs text-gray-400">
@@ -476,7 +517,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('chef.links.items.store') }}" method="POST" class="px-4 py-5 space-y-4 sm:px-6 sm:py-6" data-new-link-form>
+                    <form action="{{ route('chef.links.items.store') }}" method="POST" class="px-4 py-5 space-y-4 sm:px-6 sm:py-6" data-new-link-form enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="form_context" value="create">
 
@@ -504,6 +545,22 @@
                             <label class="text-sm font-medium text-gray-700">رمز الأيقونة (اختياري)</label>
                             <input type="text" name="icon" id="new_link_icon" value="{{ $createIcon }}" class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-orange-400 focus:ring focus:ring-orange-100" placeholder="مثال: fab fa-instagram">
                             <p class="text-xs text-gray-500">يمكنك العثور على الأيقونات المناسبة من <a href="https://fontawesome.com/search" target="_blank" rel="noopener" class="text-orange-500 underline">مكتبة Font Awesome</a>.</p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700">الصورة الرئيسية للرابط (اختياري)</label>
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                                <div class="h-24 w-24 overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex-shrink-0">
+                                    <img src="{{ $linkImagePlaceholder }}" alt="معاينة صورة الرابط" class="h-full w-full object-cover" id="new_link_image_preview" data-default="{{ $linkImagePlaceholder }}" data-placeholder="{{ $linkImagePlaceholder }}" loading="lazy" width="96" height="96">
+                                </div>
+                                <div class="flex-1 space-y-2">
+                                    <label class="inline-flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm text-gray-700 cursor-pointer hover:border-orange-400 hover:text-orange-500 transition">
+                                        <i class="fas fa-upload text-base"></i>
+                                        <span>رفع صورة</span>
+                                        <input type="file" name="image" accept="image/*" class="sr-only link-image-input" data-preview="#new_link_image_preview">
+                                    </label>
+                                    <p class="text-xs text-gray-500">ستغطي هذه الصورة خلفية البطاقة. يدعم {{ $linkImageAllowedList }} حتى {{ $linkImageMaxSize }} ميجابايت.</p>
+                                </div>
+                            </div>
                         </div>
                         <label class="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                             <input type="checkbox" name="is_active" value="1" class="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400" {{ $createIsActive ? 'checked' : '' }}>
@@ -801,6 +858,93 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     renderHeroImage(heroOriginalSrc);
+
+    const getPreviewFallback = (preview) => {
+        if (!preview) {
+            return '';
+        }
+
+        return preview.getAttribute('data-default') || preview.getAttribute('data-placeholder') || preview.src;
+    };
+
+    const getPreviewPlaceholder = (preview) => {
+        if (!preview) {
+            return '';
+        }
+
+        return preview.getAttribute('data-placeholder') || preview.getAttribute('data-default') || preview.src;
+    };
+
+    document.querySelectorAll('.link-image-input').forEach((input) => {
+        input.addEventListener('change', () => {
+            const previewSelector = input.getAttribute('data-preview');
+            const preview = previewSelector ? document.querySelector(previewSelector) : null;
+
+            if (!preview) {
+                return;
+            }
+
+            const file = input.files && input.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (event.target && typeof event.target.result === 'string') {
+                        preview.src = event.target.result;
+                        preview.setAttribute('data-current-upload', event.target.result);
+                    }
+                };
+                reader.readAsDataURL(file);
+
+                const removeSelector = input.getAttribute('data-remove-checkbox');
+                if (removeSelector) {
+                    const removeCheckbox = document.querySelector(removeSelector);
+                    if (removeCheckbox) {
+                        removeCheckbox.checked = false;
+                        removeCheckbox.disabled = false;
+                    }
+                }
+            } else {
+                preview.removeAttribute('data-current-upload');
+                const fallback = getPreviewFallback(preview);
+                preview.src = fallback;
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-link-image-remove]').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+            const previewSelector = checkbox.getAttribute('data-preview');
+            const preview = previewSelector ? document.querySelector(previewSelector) : null;
+
+            if (!preview) {
+                return;
+            }
+
+            if (checkbox.checked) {
+                const targetInputSelector = checkbox.getAttribute('data-target-input');
+                if (targetInputSelector) {
+                    const targetInput = document.querySelector(targetInputSelector);
+                    if (targetInput) {
+                        targetInput.value = '';
+                    }
+                }
+
+                preview.removeAttribute('data-current-upload');
+                const placeholder = checkbox.getAttribute('data-placeholder') || getPreviewPlaceholder(preview);
+                preview.src = placeholder;
+            } else {
+                const uploadPreview = preview.getAttribute('data-current-upload');
+                if (uploadPreview) {
+                    preview.src = uploadPreview;
+                    return;
+                }
+
+                const fallback = getPreviewFallback(preview);
+                preview.src = fallback;
+            }
+        });
+    });
 
     const colorPicker = document.getElementById('accent_color_picker');
     const colorInput = document.getElementById('accent_color');

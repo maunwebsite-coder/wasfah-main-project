@@ -197,7 +197,7 @@ const WhatsAppBooking = (() => {
                     <div class="text-right">
                         <p class="text-xs font-semibold text-amber-500 uppercase tracking-widest">تفاصيل مختصرة</p>
                         <h4 class="text-lg font-bold text-gray-900 mb-1">${title}</h4>
-                        <p class="text-sm text-gray-500">كل ما تحتاجه قبل الدفع</p>
+                        <p class="text-sm text-gray-500">كل ما تحتاجه قبل الدفع عبر الواتساب مع احتساب رسوم خدمة إضافية بقيمة 1 USD</p>
                     </div>
                     <div class="text-left">
                         <p class="text-xs text-gray-500 mb-1">قيمة المشاركة</p>
@@ -253,7 +253,7 @@ const WhatsAppBooking = (() => {
                                 حجز سريع
                             </span>
                             <h3 class="text-2xl font-black text-gray-900 mt-4 mb-2">راجع التفاصيل قبل الدفع</h3>
-                            <p class="text-gray-600 text-sm">اطّلع على تفاصيل الورشة المختصرة ثم اضغط زر الدفع لإكمال الحجز عبر الواتساب.</p>
+                            <p class="text-gray-600 text-sm">اطّلع على تفاصيل الورشة المختصرة ثم اضغط زر الدفع لإكمال الحجز عبر الواتساب، مع ملاحظة أنه سيتم إضافة 1 USD على قيمة المشاركة كرسوم خدمة للحجز عبر الواتساب.</p>
                         </div>
                         ${summaryHTML}
                         <div class="space-y-3">

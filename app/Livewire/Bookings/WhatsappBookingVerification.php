@@ -25,6 +25,8 @@ class WhatsappBookingVerification extends Component
 
     public string $stripeElementId = 'stripe-checkout-card';
 
+    public ?string $whatsappVerificationUrl = null;
+
     public function mount(
         int $workshopId,
         bool $initialHasWhatsappBooking = false,
@@ -36,10 +38,10 @@ class WhatsappBookingVerification extends Component
         $this->bookingId = $initialBookingId;
         $this->stripeElementId = $stripeElementId ?: 'stripe-checkout-card';
 
+        $this->whatsappVerificationUrl = $this->buildWhatsappVerificationUrl();
+
         if ($this->hasWhatsappBooking) {
-            $this->dispatchHideStripe();
-            $this->statusMessage = __('workshops.whatsapp_verification.awaiting_confirmation');
-            $this->statusTone = 'info';
+            $this->refreshBooking($this->bookingId);
         }
     }
 
@@ -118,6 +120,7 @@ class WhatsappBookingVerification extends Component
         $booking = $this->locateWhatsappBooking($bookingId);
         $this->hasWhatsappBooking = (bool) $booking;
         $this->bookingId = $booking?->id;
+        $this->whatsappVerificationUrl = $this->buildWhatsappVerificationUrl($booking);
 
         if ($this->hasWhatsappBooking) {
             $this->dispatchHideStripe();
@@ -127,6 +130,28 @@ class WhatsappBookingVerification extends Component
                 $this->statusTone = 'info';
             }
         }
+    }
+
+    protected function buildWhatsappVerificationUrl(?WorkshopBooking $booking = null): ?string
+    {
+        $rawNumber = (string) config('services.whatsapp_booking.number', '');
+        $digitsOnly = preg_replace('/\D+/', '', $rawNumber);
+
+        if (!$digitsOnly) {
+            return null;
+        }
+
+        $bookingReference = $booking?->public_code
+            ?? ($booking?->id ? '#' . $booking->id : ($this->bookingId ? '#' . $this->bookingId : __('workshops.whatsapp_verification.reference_unknown')));
+
+        $workshopReference = '#' . $this->workshopId;
+
+        $message = __('workshops.whatsapp_verification.message_template', [
+            'booking' => $bookingReference,
+            'workshop' => $workshopReference,
+        ]);
+
+        return sprintf('https://wa.me/%s?text=%s', $digitsOnly, rawurlencode($message));
     }
 
     protected function locateWhatsappBooking(?int $bookingId = null): ?WorkshopBooking

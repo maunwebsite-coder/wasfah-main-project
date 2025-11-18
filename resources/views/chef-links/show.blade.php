@@ -150,19 +150,99 @@
         .link-card {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 18px 20px;
-            border-radius: 22px;
-            border: 1px solid rgba(249, 115, 22, 0.12);
-            background: rgba(255, 255, 255, 0.95);
+            gap: 18px;
+            padding: 18px 22px;
+            border-radius: 26px;
+            border: 1px solid rgba(249, 115, 22, 0.1);
+            background: rgba(255, 255, 255, 0.97);
             color: inherit;
             text-decoration: none;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-card::after {
+            content: '';
+            position: absolute;
+            inset-block-start: -40%;
+            inset-inline-end: -10%;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.08), transparent 65%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
 
         .link-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 18px 28px rgba(249, 115, 22, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 32px rgba(249, 115, 22, 0.12);
+        }
+
+        .link-card:hover::after {
+            opacity: 1;
+        }
+
+        .link-card--upcoming {
+            position: relative;
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(255, 255, 255, 0.96));
+            overflow: hidden;
+        }
+
+        .link-card--upcoming::after {
+            display: none;
+        }
+
+        .link-card--photo {
+            border: none;
+            background: transparent;
+            color: #fff;
+            padding: 24px;
+            box-shadow: 0 30px 50px rgba(15, 23, 42, 0.25);
+        }
+
+        .link-card--photo::before,
+        .link-card--photo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .link-card--photo::before {
+            background-image: var(--card-image);
+            background-size: cover;
+            background-position: center;
+            filter: saturate(1) brightness(0.95);
+        }
+
+        .link-card--photo::after {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.3));
+        }
+
+        .link-card--photo > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .link-card--photo .link-title {
+            color: #fff;
+        }
+
+        .link-card--photo .link-subtitle {
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .link-card--photo .link-arrow {
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
+        .link-card--photo:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 40px 60px rgba(15, 23, 42, 0.35);
         }
 
         .link-card--upcoming {
@@ -221,16 +301,17 @@
         }
 
         .link-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: var(--accent-soft);
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(249, 115, 22, 0.25));
             color: var(--accent);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
             flex-shrink: 0;
+            box-shadow: 0 14px 24px rgba(249, 115, 22, 0.12);
         }
 
         .link-text {
@@ -247,6 +328,24 @@
             margin: 4px 0 0;
             font-size: 0.9rem;
             color: var(--text-muted);
+        }
+
+        .link-arrow {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(249, 115, 22, 0.14);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+
+        .link-arrow--ghost {
+            background: rgba(255, 255, 255, 0.25);
+            color: var(--accent);
         }
 
         footer {
@@ -336,23 +435,35 @@
                             </span>
                         </span>
                     </span>
-                    <i class="fas fa-arrow-left" style="color: var(--accent); z-index: 1;"></i>
+                    <span class="link-arrow link-arrow--ghost" style="z-index: 1;">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
                 </a>
             @endif
             @forelse ($page->items as $item)
-                <a href="{{ $item->url }}" target="_blank" rel="noopener" class="link-card">
-                    @if ($item->icon)
+                @php
+                    $itemImage = $item->image_url;
+                    $itemIcon = $item->icon ?: 'fas fa-link';
+                    $cardClasses = 'link-card';
+                    if ($itemImage) {
+                        $cardClasses .= ' link-card--photo';
+                    }
+                @endphp
+                <a href="{{ $item->url }}" target="_blank" rel="noopener" class="{{ $cardClasses }}" @if ($itemImage) style="--card-image: url('{{ $itemImage }}');" @endif>
+                    @unless ($itemImage)
                         <span class="link-icon">
-                            <i class="{{ $item->icon }}"></i>
+                            <i class="{{ $itemIcon }}"></i>
                         </span>
-                    @endif
+                    @endunless
                     <span class="link-text">
                         <span class="link-title">{{ $item->title }}</span>
                         @if ($item->subtitle)
                             <span class="link-subtitle">{{ $item->subtitle }}</span>
                         @endif
                     </span>
-                    <i class="fas fa-angle-left" style="color: var(--accent);"></i>
+                    <span class="link-arrow">
+                        <i class="fas fa-angle-left"></i>
+                    </span>
                 </a>
             @empty
                 <div class="link-card" style="justify-content: center; background: rgba(249, 115, 22, 0.06); border-style: dashed;">

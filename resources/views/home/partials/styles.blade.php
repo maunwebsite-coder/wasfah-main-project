@@ -1141,9 +1141,22 @@
                 width: 280px;
                 height: 280px;
             }
+            .hero-slide {
+                padding: 0;
+                gap: 0;
+                border-radius: 1.65rem;
+                overflow: hidden;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 237, 0.98));
+            }
             .hero-media {
                 aspect-ratio: 16 / 9;
                 height: auto;
+                min-height: clamp(220px, 55vw, 360px);
+                border-radius: 0;
+            }
+            .hero-content {
+                padding: clamp(1.15rem, 4vw, 2.25rem);
+                background: rgba(255, 255, 255, 0.96);
             }
         }
 
@@ -1156,14 +1169,14 @@
                 gap: 1.5rem;
             }
             .hero-main-card {
-                padding: 1.25rem;
+                padding: 0;
             }
             .hero-slider {
-                margin-bottom: 0.8rem;
+                margin-bottom: 0;
             }
             .hero-slide {
-                padding: 1.25rem;
-                gap: 1.2rem;
+                padding: 0;
+                gap: 0;
             }
             .hero-actions {
                 flex-direction: column;
@@ -1218,11 +1231,11 @@
                 border-radius: 1.5rem;
             }
             .hero-slide {
-                padding: 0.75rem;
-                gap: 0.65rem;
+                padding: 0;
+                gap: 0;
             }
             .hero-slider {
-                margin-bottom: 0.35rem;
+                margin-bottom: 0;
             }
             .hero-main-card {
                 padding: 0;
