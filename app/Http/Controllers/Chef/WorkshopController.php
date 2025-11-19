@@ -901,11 +901,44 @@ class WorkshopController extends Controller
             $timezone = Timezones::defaultHostTimezone();
         }
 
-        if ($user && method_exists($user, 'isChef') && $user->isChef() && $user->timezone !== $timezone) {
+        if (
+            $user
+            && method_exists($user, 'isChef')
+            && $user->isChef()
+            && $user->timezone !== $timezone
+            && $this->userTimezoneColumnExists($user)
+        ) {
             $user->forceFill(['timezone' => $timezone])->save();
         }
 
         return $timezone;
+    }
+
+    protected function userTimezoneColumnExists(?User $user): bool
+    {
+        static $checked = false;
+        static $exists = false;
+
+        if ($checked) {
+            return $exists;
+        }
+
+        if (! $user) {
+            return false;
+        }
+
+        try {
+            $exists = Schema::hasColumn($user->getTable(), 'timezone');
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to verify timezone column existence on users table.', [
+                'error' => $exception->getMessage(),
+            ]);
+            $exists = false;
+        }
+
+        $checked = true;
+
+        return $exists;
     }
 
     protected function handleImageUpload(Request $request, Workshop $workshop): void
