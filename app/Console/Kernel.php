@@ -10,6 +10,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('workshops:sync-recordings')->hourly();
+        $schedule->command('google:refresh-token')->daily();
     }
 
     protected function commands(): void
