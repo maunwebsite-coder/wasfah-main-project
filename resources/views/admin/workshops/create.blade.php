@@ -746,6 +746,23 @@
                     </div>
 
                     <div class="section-body">
+                        @php
+                            $defaultTimezone = old('host_timezone', auth()->user()->timezone ?? request()->cookie('user_timezone') ?? config('app.timezone', 'UTC'));
+                        @endphp
+                        <div class="mb-4">
+                            <label for="host_timezone" class="form-label">{{ __('chef.workshop_form.fields.host_timezone.label') }}</label>
+                            <select id="host_timezone" name="host_timezone" class="form-select @error('host_timezone') is-invalid @enderror" required>
+                                @foreach($timezoneOptions ?? [] as $tzValue => $tzLabel)
+                                    <option value="{{ $tzValue }}" @selected($defaultTimezone === $tzValue)>{{ $tzLabel }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ __('chef.workshop_form.fields.host_timezone.helper', ['detected' => request()->cookie('user_timezone') ?? __('chef.workshop_form.fields.host_timezone.unknown')]) }}
+                            </p>
+                            @error('host_timezone')
+                                <p class="error-text">{{ $message }}</p>
+                            @enderror
+                        </div>
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="md:col-span-2">
                                 <label for="title" class="form-label">عنوان الورشة *</label>

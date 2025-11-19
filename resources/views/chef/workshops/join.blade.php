@@ -104,6 +104,24 @@
 </style>
 @endpush
 
+@php
+    $hostTimezoneName = $workshop->host_timezone
+        ?? optional($workshop->start_date)?->getTimezone()?->getName()
+        ?? config('app.timezone', 'UTC');
+    $hostTimezonePretty = $hostTimezoneName ? str_replace('_', ' ', $hostTimezoneName) : null;
+    $hostOffset = $workshop->start_date
+        ? sprintf('GMT%s', $workshop->start_date->format('P'))
+        : 'GMT+00:00';
+    $hostScheduleDisplay = $workshop->start_date
+        ? __('workshops.details.timezones.host_timezone_template', [
+            'label' => __('workshops.details.timezones.host_label'),
+            'date' => optional($workshop->start_date)->format('m/d/Y g:i A'),
+            'offset' => $hostOffset,
+            'timezone' => $hostTimezonePretty ?? 'UTC',
+        ])
+        : null;
+@endphp
+
 @section('content')
 @php
     $locale = app()->getLocale();
@@ -130,6 +148,9 @@
                 <p class="text-xs uppercase tracking-widest text-slate-500">{{ __('chef.dashboard.workshops.host_room.stats.schedule') }}</p>
                 <p class="mt-2 text-lg font-semibold text-slate-900">
                     {{ $startDateFormatted ?? __('chef.dashboard.workshops.host_room.no_schedule') }}
+                    @if($hostScheduleDisplay)
+                        <span class="block text-sm font-normal text-slate-600 mt-1">{{ $hostScheduleDisplay }}</span>
+                    @endif
                     @if($startDateIso)
                         <span
                             class="block text-sm font-normal text-slate-500 mt-1"

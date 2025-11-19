@@ -14,6 +14,7 @@ use App\Services\GoogleMeetService;
 use App\Services\WorkshopMeetingAttendeeSyncService;
 use App\Support\ImageUploadConstraints;
 use App\Support\HostMeetRedirectLinkFactory;
+use App\Support\Timezones;
 use App\Support\NotificationCopy;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -142,6 +143,7 @@ class WorkshopController extends Controller
     {
         return view('chef.workshops.create', [
             'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+            'timezoneOptions' => Timezones::options(),
         ]);
     }
 
@@ -150,9 +152,10 @@ class WorkshopController extends Controller
         $this->enforceMeetingLinkPrivacyPolicy($request);
 
         $data = $this->validateWorkshop($request);
+        $timezone = $this->resolveWorkshopTimezone($request);
 
         $workshop = new Workshop();
-        $this->fillWorkshopData($workshop, $data);
+        $this->fillWorkshopData($workshop, $data, $timezone);
         $this->handleImageUpload($request, $workshop);
         $this->applyMeetingProvider($request, $workshop, $data['meeting_link'] ?? null);
         $workshop->user_id = Auth::id();
@@ -176,6 +179,7 @@ class WorkshopController extends Controller
         return view('chef.workshops.edit', [
             'workshop' => $workshop,
             'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+            'timezoneOptions' => Timezones::options(),
         ]);
     }
 
@@ -186,7 +190,8 @@ class WorkshopController extends Controller
         $this->enforceMeetingLinkPrivacyPolicy($request);
 
         $data = $this->validateWorkshop($request, $workshop->id);
-        $this->fillWorkshopData($workshop, $data);
+        $timezone = $this->resolveWorkshopTimezone($request, $workshop);
+        $this->fillWorkshopData($workshop, $data, $timezone);
         $this->handleImageUpload($request, $workshop);
         $this->applyMeetingProvider($request, $workshop, $data['meeting_link'] ?? $workshop->meeting_link);
         $workshop->instructor = $data['instructor'] ?? $workshop->instructor ?? Auth::user()->name;
@@ -513,16 +518,30 @@ class WorkshopController extends Controller
         $currentUser = Auth::user();
 
         abort_unless(
-            $currentUser && ($currentUser->isChef() || $currentUser->isAdmin()),
+            $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin(),
             403
         );
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'start_date' => ['nullable', 'date'],
+            'host_timezone' => [
+                'nullable',
+                'string',
+                Rule::in(array_keys(Timezones::options())),
+            ],
         ]);
 
-        $startsAt = isset($validated['start_date']) ? Carbon::parse($validated['start_date']) : null;
+        $startsAt = null;
+
+        if (! empty($validated['start_date'])) {
+            try {
+                $timezone = $this->resolveWorkshopTimezone($request);
+                $startsAt = Carbon::parse($validated['start_date'], $timezone);
+            } catch (\Throwable $exception) {
+                $startsAt = null;
+            }
+        }
 
         try {
             $meeting = $this->googleMeetService->createMeeting(
@@ -722,6 +741,11 @@ class WorkshopController extends Controller
             'image' => array_merge(['nullable'], ImageUploadConstraints::rules()),
             'remove_image' => ['sometimes', 'boolean'],
             'auto_generate_meeting' => ['sometimes', 'boolean'],
+            'host_timezone' => [
+                'nullable',
+                'string',
+                Rule::in(array_keys(Timezones::options())),
+            ],
         ];
 
         $messages = ImageUploadConstraints::messages('image', [
@@ -803,7 +827,7 @@ class WorkshopController extends Controller
         return !$workshop->is_active;
     }
 
-    protected function fillWorkshopData(Workshop $workshop, array $data): void
+    protected function fillWorkshopData(Workshop $workshop, array $data, string $hostTimezone): void
     {
         $workshop->fill([
             'title' => $data['title'],
@@ -815,9 +839,10 @@ class WorkshopController extends Controller
             'max_participants' => $data['max_participants'],
             'price' => $data['price'],
             'currency' => $data['currency'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-            'registration_deadline' => $data['registration_deadline'] ?? null,
+            'host_timezone' => $hostTimezone,
+            'start_date' => $this->convertLocalInputToUtc($data['start_date'], $hostTimezone),
+            'end_date' => $this->convertLocalInputToUtc($data['end_date'], $hostTimezone),
+            'registration_deadline' => $this->convertLocalInputToUtc($data['registration_deadline'] ?? null, $hostTimezone),
             'location' => $data['location'] ?? null,
             'address' => $data['address'] ?? null,
             'what_you_will_learn' => $data['what_you_will_learn'] ?? null,
@@ -833,6 +858,54 @@ class WorkshopController extends Controller
         if (!$workshop->is_online && empty($workshop->location)) {
             $workshop->location = 'سيتم تحديد الموقع لاحقاً';
         }
+    }
+
+    protected function convertLocalInputToUtc(null|string $value, string $timezone): ?Carbon
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value, $timezone)->setTimezone('UTC');
+        } catch (\Throwable $exception) {
+            Log::warning('Failed to convert workshop datetime to UTC.', [
+                'input' => $value,
+                'timezone' => $timezone,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    protected function resolveWorkshopTimezone(Request $request, ?Workshop $workshop = null): string
+    {
+        $user = Auth::user();
+        $timezone = null;
+        $candidates = [
+            $request->input('host_timezone'),
+            $user?->timezone,
+            $workshop?->host_timezone,
+            $request->cookie('user_timezone'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (Timezones::isValid($candidate)) {
+                $timezone = $candidate;
+                break;
+            }
+        }
+
+        if (! $timezone) {
+            $timezone = config('app.timezone', 'UTC');
+        }
+
+        if ($user && method_exists($user, 'isChef') && $user->isChef() && $user->timezone !== $timezone) {
+            $user->forceFill(['timezone' => $timezone])->save();
+        }
+
+        return $timezone;
     }
 
     protected function handleImageUpload(Request $request, Workshop $workshop): void

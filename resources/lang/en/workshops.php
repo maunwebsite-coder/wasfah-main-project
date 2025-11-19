@@ -278,10 +278,12 @@ return [
             'register' => 'Create account',
         ],
         'timezones' => [
+            'host_label' => 'Chef time',
             'viewer_label' => 'Your local time',
             'viewer_placeholder' => 'Adjusting to your timezone…',
             'viewer_timezone_template' => ':label :date (:offset · :timezone)',
             'viewer_timezone_fallback' => 'your timezone',
+            'host_timezone_template' => ':label :date (:offset · :timezone)',
         ],
         'messages' => [
             'unexpected_error' => 'Something went wrong. Please try again later.',

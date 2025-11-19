@@ -1024,6 +1024,21 @@
     $workshopEndDateTimeLabel = $workshop->end_date ? $workshop->end_date->format('m/d/Y g:i A') : $notSpecifiedLabel;
     $workshopStartIso = optional($workshop->start_date)->toIso8601String();
     $workshopEndIso = optional($workshop->end_date)->toIso8601String();
+    $hostTimezoneName = $workshop->host_timezone
+        ?? optional($workshop->start_date)?->getTimezone()?->getName()
+        ?? config('app.timezone', 'UTC');
+    $hostTimezonePretty = $hostTimezoneName ? str_replace('_', ' ', $hostTimezoneName) : null;
+    $hostOffset = $workshop->start_date
+        ? sprintf('GMT%s', $workshop->start_date->format('P'))
+        : 'GMT+00:00';
+    $hostTimezoneDisplay = $workshop->start_date
+        ? __('workshops.details.timezones.host_timezone_template', [
+            'label' => __('workshops.details.timezones.host_label'),
+            'date' => $workshopStartDateTimeLabel,
+            'offset' => $hostOffset,
+            'timezone' => $hostTimezonePretty ?? 'UTC',
+        ])
+        : null;
     $workshopDeadlineLabel = $workshop->registration_deadline ? $workshop->registration_deadline->format('d/m/Y') : $notSpecifiedLabel;
     $workshopLocationLabel = $whatsappLocationLabel;
     $bookingStatusPill = [
@@ -1096,6 +1111,9 @@
                             <div class="hero-detail-content">
                                 <span class="workshop-hero-meta-label">{{ __('workshops.details.booking_card.hours_label') }}</span>
                                 <span class="hero-detail-value">{{ $workshopStartTimeLabel }} - {{ $workshopEndTimeLabel }}</span>
+                                @if($hostTimezoneDisplay)
+                                    <span class="hero-detail-extra">{{ $hostTimezoneDisplay }}</span>
+                                @endif
                                 @if($workshopStartIso)
                                     <span
                                         class="hero-detail-extra"

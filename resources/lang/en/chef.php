@@ -425,6 +425,11 @@ return [
             'registration_deadline' => [
                 'label' => 'Registration deadline',
             ],
+            'host_timezone' => [
+                'label' => 'What timezone are you in? *',
+                'helper' => 'We detected :detected on this device. Your workshop dates will be converted from this timezone.',
+                'unknown' => 'your current timezone',
+            ],
             'meeting_link' => [
                 'label' => 'Meeting link',
             ],

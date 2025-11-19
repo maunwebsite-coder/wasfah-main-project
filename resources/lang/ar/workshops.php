@@ -278,10 +278,12 @@ return [
             'register' => 'إنشاء حساب',
         ],
         'timezones' => [
+            'host_label' => 'وقت الشيف',
             'viewer_label' => 'توقيتك المحلي',
             'viewer_placeholder' => 'جاري ضبط الوقت حسب منطقتك...',
             'viewer_timezone_template' => ':label :date (:offset · :timezone)',
             'viewer_timezone_fallback' => 'منطقتك الزمنية',
+            'host_timezone_template' => ':label :date (:offset · :timezone)',
         ],
         'messages' => [
             'unexpected_error' => 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.',

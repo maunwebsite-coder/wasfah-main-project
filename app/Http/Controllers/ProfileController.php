@@ -10,8 +10,10 @@ use App\Models\Workshop;
 use App\Models\UserInteraction;
 use App\Services\ContentModerationService;
 use App\Support\ImageUploadConstraints;
+use App\Support\Timezones;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -370,6 +372,10 @@ class ProfileController extends Controller
             ];
         }
 
+        $timezoneOptions = Timezones::options();
+        $detectedTimezone = request()->cookie('user_timezone');
+        $preferredTimezone = $user->timezone ?? $detectedTimezone ?? config('app.timezone', 'UTC');
+
         return compact(
             'user',
             'savedRecipes',
@@ -381,7 +387,10 @@ class ProfileController extends Controller
             'achievements',
             'nextWorkshop',
             'upcomingWorkshops',
-            'chefOverview'
+            'chefOverview',
+            'timezoneOptions',
+            'preferredTimezone',
+            'detectedTimezone'
         );
     }
     
@@ -391,7 +400,13 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        
+        $timezoneKeys = array_keys(Timezones::options());
+        $timezoneRule = [
+            $user->role === User::ROLE_CHEF ? 'required' : 'nullable',
+            'string',
+            Rule::in($timezoneKeys),
+        ];
+
         $rules = [
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20|regex:/^[0-9+\-\s\(\)]+$/',
@@ -399,6 +414,7 @@ class ProfileController extends Controller
                 ? ['required', 'email', 'max:255']
                 : ['nullable', 'email', 'max:255'],
             'avatar' => array_merge(['nullable'], ImageUploadConstraints::rules()),
+            'timezone' => $timezoneRule,
         ];
 
         $messages = ImageUploadConstraints::messages('avatar', [
@@ -418,6 +434,7 @@ class ProfileController extends Controller
             'name' => $request->name,
             'phone' => $request->phone,
             'google_email' => $request->input('google_email') ?: null,
+            'timezone' => $request->input('timezone') ?: null,
         ];
 
         if ($user->isChef() && $request->hasFile('avatar')) {

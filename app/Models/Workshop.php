@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Support\ImageUploadConstraints;
 use App\Support\Currency;
+use App\Support\Timezones;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -43,6 +45,7 @@ class Workshop extends Model
         'start_date',
         'end_date',
         'registration_deadline',
+        'host_timezone',
         'is_online',
         'meeting_link',
         'meeting_code',
@@ -93,6 +96,92 @@ class Workshop extends Model
 
     protected static bool $descriptionFullTextChecked = false;
     protected static bool $descriptionFullTextExists = false;
+
+    protected function startDate(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $this->convertDateToHostTimezone($value)
+        );
+    }
+
+    protected function endDate(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $this->convertDateToHostTimezone($value)
+        );
+    }
+
+    protected function registrationDeadline(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $this->convertDateToHostTimezone($value)
+        );
+    }
+
+    public function getStartDateUtcAttribute(): ?Carbon
+    {
+        return $this->utcDateFromRaw('start_date');
+    }
+
+    public function getEndDateUtcAttribute(): ?Carbon
+    {
+        return $this->utcDateFromRaw('end_date');
+    }
+
+    public function getRegistrationDeadlineUtcAttribute(): ?Carbon
+    {
+        return $this->utcDateFromRaw('registration_deadline');
+    }
+
+    protected function convertDateToHostTimezone(mixed $value): ?Carbon
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            $date = $value->copy();
+        } elseif ($value instanceof \DateTimeInterface) {
+            $date = Carbon::instance($value);
+        } elseif (is_numeric($value)) {
+            $date = Carbon::createFromTimestamp((int) $value, 'UTC');
+        } else {
+            $date = $this->asDateTime($value);
+        }
+
+        $timezone = $this->resolveHostTimezone();
+
+        try {
+            return $date->clone()->setTimezone($timezone);
+        } catch (\Throwable $exception) {
+            return $date;
+        }
+    }
+
+    protected function resolveHostTimezone(): string
+    {
+        $timezone = $this->getAttributeFromArray('host_timezone')
+            ?? $this->attributes['host_timezone'] ?? $this->host_timezone ?? null;
+
+        if (! Timezones::isValid($timezone)) {
+            $timezone = config('app.timezone', 'UTC');
+        }
+
+        return $timezone ?: 'UTC';
+    }
+
+    protected function utcDateFromRaw(string $key): ?Carbon
+    {
+        $raw = $this->getRawOriginal($key);
+
+        if (! $raw) {
+            return null;
+        }
+
+        $date = $this->asDateTime($raw);
+
+        return $date->clone()->setTimezone('UTC');
+    }
 
     protected function meetingLink(): Attribute
     {
@@ -359,6 +448,11 @@ class Workshop extends Model
             'is_online' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'host_timezone' => [
+                'nullable',
+                'string',
+                Rule::in(array_keys(Timezones::options())),
+            ],
             'meeting_link' => [
                 'nullable',
                 'url',

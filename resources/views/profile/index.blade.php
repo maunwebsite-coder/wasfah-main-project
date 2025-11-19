@@ -561,6 +561,33 @@
                     </div>
 
                     <div class="space-y-2">
+                        <label for="timezone" class="text-sm font-semibold text-gray-700">
+                            Preferred timezone
+                        </label>
+                        <select
+                            id="timezone"
+                            name="timezone"
+                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-800 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                            @if($user->role === 'chef') required @endif
+                        >
+                            @foreach ($timezoneOptions as $timezoneValue => $timezoneLabel)
+                                <option value="{{ $timezoneValue }}" @selected(old('timezone', $preferredTimezone) === $timezoneValue)>
+                                    {{ $timezoneLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500">
+                            We will convert your workshop schedules from this timezone.
+                            @if($detectedTimezone)
+                                Detected on this device: <span class="font-medium">{{ $detectedTimezone }}</span>.
+                            @endif
+                        </p>
+                        @error('timezone')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-2">
                         <label for="google_email" class="text-sm font-semibold text-gray-700">Google Meet email</label>
                         <input
                             type="email"

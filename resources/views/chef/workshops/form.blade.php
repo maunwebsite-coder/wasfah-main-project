@@ -1,4 +1,5 @@
 @php
+    use App\Support\Timezones;
     use Illuminate\Support\Facades\Storage;
     use Illuminate\Support\Str;
 
@@ -22,6 +23,15 @@
     $startDateValue = old('start_date', optional(optional($workshop)->start_date)->format('Y-m-d\TH:i'));
     $endDateValue = old('end_date', optional(optional($workshop)->end_date)->format('Y-m-d\TH:i'));
     $deadlineValue = old('registration_deadline', optional(optional($workshop)->registration_deadline)->format('Y-m-d\TH:i'));
+    $timezoneOptions = $timezoneOptions ?? Timezones::options();
+    $detectedTimezone = request()->cookie('user_timezone');
+    $hostTimezoneValue = old(
+        'host_timezone',
+        $workshop->host_timezone
+            ?? auth()->user()?->timezone
+            ?? $detectedTimezone
+            ?? config('app.timezone', 'UTC')
+    );
     $coverImageUrl = null;
     if ($workshop && $workshop->image) {
         $coverImageUrl = Str::startsWith($workshop->image, ['http://', 'https://'])
@@ -177,6 +187,29 @@
                 <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ __('chef.workshop_form.sections.schedule.title') }}</h2>
             </div>
             <p class="text-sm text-slate-500">{{ __('chef.workshop_form.sections.schedule.description') }}</p>
+        </div>
+        <div class="mb-6 space-y-3">
+            <label for="host_timezone" class="text-sm font-semibold text-slate-700">
+                {{ __('chef.workshop_form.fields.host_timezone.label') }}
+            </label>
+            <select
+                id="host_timezone"
+                name="host_timezone"
+                required
+                class="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:ring-4 focus:ring-orange-100 @error('host_timezone') border-red-400 focus:ring-red-200 @enderror"
+            >
+                @foreach($timezoneOptions as $tzValue => $tzLabel)
+                    <option value="{{ $tzValue }}" @selected($hostTimezoneValue === $tzValue)>
+                        {{ $tzLabel }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="text-xs text-slate-500">
+                {{ __('chef.workshop_form.fields.host_timezone.helper', ['detected' => $detectedTimezone ?? __('chef.workshop_form.fields.host_timezone.unknown')]) }}
+            </p>
+            @error('host_timezone')
+                <p class="text-sm text-red-600">{{ $message }}</p>
+            @enderror
         </div>
         <div class="grid gap-5 md:grid-cols-3">
             <div class="space-y-3">

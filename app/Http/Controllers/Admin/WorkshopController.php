@@ -10,6 +10,7 @@ use App\Services\GoogleMeetService;
 use App\Services\WorkshopMeetingAttendeeSyncService;
 use App\Support\ImageUploadConstraints;
 use App\Support\HostMeetRedirectLinkFactory;
+use App\Support\Timezones;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -123,6 +124,7 @@ class WorkshopController extends Controller
         return view('admin.workshops.create', [
             'recipes' => $recipes,
             'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+            'timezoneOptions' => Timezones::options(),
         ]);
     }
 
@@ -141,13 +143,16 @@ class WorkshopController extends Controller
             ])
         );
 
+        $timezone = $this->resolveWorkshopTimezone($request);
+
         $workshop = new Workshop();
         $workshop->user_id = Auth::id();
         $workshop->title = $request->title;
         $workshop->description = $request->description;
         $workshop->instructor = $request->instructor;
-        $workshop->start_date = $request->start_date;
-        $workshop->end_date = $request->end_date;
+        $workshop->host_timezone = $timezone;
+        $workshop->start_date = $this->convertLocalInputToUtc($request->start_date, $timezone);
+        $workshop->end_date = $this->convertLocalInputToUtc($request->end_date, $timezone);
         $workshop->price = $request->price;
         $workshop->currency = $request->currency;
         $workshop->max_participants = $request->max_participants;
@@ -159,7 +164,7 @@ class WorkshopController extends Controller
         $workshop->category = $request->category;
         $workshop->level = $request->level;
         $workshop->duration = $request->duration;
-        $workshop->registration_deadline = $request->registration_deadline;
+        $workshop->registration_deadline = $this->convertLocalInputToUtc($request->registration_deadline, $timezone);
         $workshop->address = $request->address ?? '';
         $workshop->content = $request->content ?? '';
         $workshop->what_you_will_learn = $request->what_you_will_learn ?? '';
@@ -271,6 +276,7 @@ class WorkshopController extends Controller
             'workshop' => $workshop,
             'recipes' => $recipes,
             'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+            'timezoneOptions' => Timezones::options(),
         ]);
     }
 
@@ -311,11 +317,14 @@ class WorkshopController extends Controller
             throw $e;
         }
 
+        $timezone = $this->resolveWorkshopTimezone($request, $workshop);
+
         $workshop->title = $request->title;
         $workshop->description = $request->description;
         $workshop->instructor = $request->instructor;
-        $workshop->start_date = $request->start_date;
-        $workshop->end_date = $request->end_date;
+        $workshop->host_timezone = $timezone;
+        $workshop->start_date = $this->convertLocalInputToUtc($request->start_date, $timezone);
+        $workshop->end_date = $this->convertLocalInputToUtc($request->end_date, $timezone);
         $workshop->price = $request->price;
         $workshop->currency = $request->currency;
         $workshop->max_participants = $request->max_participants;
@@ -327,7 +336,7 @@ class WorkshopController extends Controller
         $workshop->category = $request->category;
         $workshop->level = $request->level;
         $workshop->duration = $request->duration;
-        $workshop->registration_deadline = $request->registration_deadline;
+        $workshop->registration_deadline = $this->convertLocalInputToUtc($request->registration_deadline, $timezone);
         $workshop->address = $request->address ?? '';
         $workshop->content = $request->content ?? '';
         $workshop->what_you_will_learn = $request->what_you_will_learn ?? '';
@@ -546,6 +555,54 @@ class WorkshopController extends Controller
         return response()->json([
             'hasFeatured' => $hasFeatured
         ]);
+    }
+
+    protected function resolveWorkshopTimezone(Request $request, ?Workshop $workshop = null): string
+    {
+        $user = Auth::user();
+        $timezone = null;
+        $candidates = [
+            $request->input('host_timezone'),
+            $workshop?->host_timezone,
+            $user?->timezone,
+            $request->cookie('user_timezone'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (Timezones::isValid($candidate)) {
+                $timezone = $candidate;
+                break;
+            }
+        }
+
+        if (! $timezone) {
+            $timezone = config('app.timezone', 'UTC');
+        }
+
+        if ($user && method_exists($user, 'isAdmin') && $user->isAdmin() && $user->timezone !== $timezone) {
+            $user->forceFill(['timezone' => $timezone])->save();
+        }
+
+        return $timezone;
+    }
+
+    protected function convertLocalInputToUtc(?string $value, string $timezone): ?Carbon
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value, $timezone)->setTimezone('UTC');
+        } catch (\Throwable $exception) {
+            \Log::warning('Failed to convert admin workshop datetime to UTC.', [
+                'input' => $value,
+                'timezone' => $timezone,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     protected function shouldForceAutoMeetingLinks(): bool

@@ -34,6 +34,7 @@ class User extends Authenticatable
         'google_email',
         'password',
         'phone',
+        'timezone',
         'country_code',
         'phone_country_code',
         'provider',

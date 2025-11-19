@@ -4,6 +4,55 @@ import { registerSW } from 'virtual:pwa-register';
 const hasDOM = typeof document !== 'undefined';
 const hasWindow = typeof window !== 'undefined';
 
+const readCookie = (name) => {
+    if (!hasDOM) {
+        return null;
+    }
+
+    const cookies = document.cookie ? document.cookie.split('; ') : [];
+
+    for (let i = 0; i < cookies.length; i += 1) {
+        const [key, ...rest] = cookies[i].split('=');
+
+        if (key === decodeURIComponent(name)) {
+            return decodeURIComponent(rest.join('='));
+        }
+    }
+
+    return null;
+};
+
+const persistUserTimezone = () => {
+    if (!hasDOM) {
+        return;
+    }
+
+    let timezone = null;
+
+    try {
+        timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (error) {
+        timezone = null;
+    }
+
+    if (!timezone) {
+        return;
+    }
+
+    const cookieName = 'user_timezone';
+    const current = readCookie(cookieName);
+
+    if (current === timezone) {
+        return;
+    }
+
+    const encoded = encodeURIComponent(timezone);
+    const maxAge = 60 * 60 * 24 * 180; // 180 days
+    const secure = window.location.protocol === 'https:' ? ';Secure' : '';
+
+    document.cookie = `${cookieName}=${encoded};path=/;max-age=${maxAge};SameSite=Lax${secure}`;
+};
+
 const idle = (callback, timeout = 800) => {
     if (!hasWindow) {
         return;
@@ -183,6 +232,10 @@ const bootstrapLazyModules = () => {
 
     lazyModules.forEach((entry) => tryLoadModule(entry));
 };
+
+if (hasDOM) {
+    persistUserTimezone();
+}
 
 if (hasDOM) {
     if (document.readyState === 'loading') {

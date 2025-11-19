@@ -349,6 +349,25 @@
                         </div>
                     </div>
 
+                    @php
+                        $selectedHostTimezone = old('host_timezone', $workshop->host_timezone ?? auth()->user()->timezone ?? request()->cookie('user_timezone') ?? config('app.timezone', 'UTC'));
+                    @endphp
+                    <div>
+                        <label for="host_timezone" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('chef.workshop_form.fields.host_timezone.label') }}</label>
+                        <select id="host_timezone" name="host_timezone" required
+                                class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 @error('host_timezone') border-red-400 focus:border-red-500 focus:ring-red-200 @enderror">
+                            @foreach(($timezoneOptions ?? []) as $tzValue => $tzLabel)
+                                <option value="{{ $tzValue }}" @selected($selectedHostTimezone === $tzValue)>{{ $tzLabel }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-slate-500">
+                            {{ __('chef.workshop_form.fields.host_timezone.helper', ['detected' => request()->cookie('user_timezone') ?? __('chef.workshop_form.fields.host_timezone.unknown')]) }}
+                        </p>
+                        @error('host_timezone')
+                            <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div class="grid gap-6 md:grid-cols-2">
                         <div>
                             <label for="start_date" class="block text-sm font-semibold text-slate-700 mb-2">تاريخ البداية *</label>
