@@ -152,10 +152,13 @@
             $currentCurrencyLabel = $currencyOptions[$workshop->currency]['label'] ?? $workshop->currency;
             $priceFormatted = number_format($workshop->price, 2);
             $isOnlineOld = old('is_online', $workshop->is_online);
-            $autoGenerateMeeting = (bool) old(
-                'auto_generate_meeting',
-                ($workshop->meeting_provider ?? null) === 'google_meet' ? 1 : 0
-            );
+            $forceAutoMeetingLinks = $forceAutoMeetingLinks ?? false;
+            $autoGenerateMeeting = $forceAutoMeetingLinks
+                ? true
+                : (bool) old(
+                    'auto_generate_meeting',
+                    ($workshop->meeting_provider ?? null) === 'google_meet' ? 1 : 0
+                );
             $storedMeetingLink = old('meeting_link', $workshop->meeting_link);
             $hasGeneratedMeeting = !empty($storedMeetingLink);
             $meetingStatusState = !$isOnlineOld
@@ -465,6 +468,7 @@
                             :meeting-status-state="$meetingStatusState"
                             :meeting-status-text="$meetingStatusText"
                             :generate-url="route('admin.workshops.generate-link')"
+                            :force-auto="$forceAutoMeetingLinks"
                             label-class="block text-sm font-semibold text-slate-700 mb-2"
                             input-class="w-full rounded-2xl border-2 border-slate-200 bg-white/80 px-4 py-3 text-slate-800 shadow-sm transition focus:border-rose-400 focus:ring-4 focus:ring-rose-200"
                             input-error-class="border-red-400 focus:border-red-500 focus:ring-red-200"

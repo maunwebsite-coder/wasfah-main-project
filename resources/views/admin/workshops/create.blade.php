@@ -636,7 +636,10 @@
         @php
             $recipesCount = $recipes->count();
             $isOnlineOld = old('is_online', false) ? true : false;
-            $autoGenerateMeeting = (int) old('auto_generate_meeting', 1) === 1;
+            $forceAutoMeetingLinks = $forceAutoMeetingLinks ?? false;
+            $autoGenerateMeeting = $forceAutoMeetingLinks
+                ? true
+                : (int) old('auto_generate_meeting', 1) === 1;
             $storedMeetingLink = trim((string) old('meeting_link'));
             $hasGeneratedMeeting = $storedMeetingLink !== '';
             $meetingStatusState = !$isOnlineOld
@@ -933,6 +936,7 @@
                                 :meeting-status-state="$meetingStatusState"
                                 :meeting-status-text="$meetingStatusText"
                                 :generate-url="route('admin.workshops.generate-link')"
+                                :force-auto="$forceAutoMeetingLinks"
                             />
 
                             <div class="md:col-span-2">

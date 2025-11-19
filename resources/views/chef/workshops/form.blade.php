@@ -29,12 +29,13 @@
             : Storage::disk('public')->url($workshop->image);
     }
 
+    $forceAutoMeetingLinks = $forceAutoMeetingLinks ?? false;
     $currentUser = auth()->user();
     $hostsCanOverride = (bool) config('workshop-links.allow_host_meeting_link_override', true);
     $isAdminUser = $currentUser && method_exists($currentUser, 'isAdmin') && $currentUser->isAdmin();
-    $canManageMeetingLinks = $isAdminUser || $hostsCanOverride;
+    $canManageMeetingLinks = !$forceAutoMeetingLinks && ($isAdminUser || $hostsCanOverride);
 
-    if (!$canManageMeetingLinks) {
+    if ($forceAutoMeetingLinks || !$canManageMeetingLinks) {
         $autoGenerateMeeting = 1;
     }
 @endphp

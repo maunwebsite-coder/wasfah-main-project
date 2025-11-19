@@ -120,7 +120,10 @@ class WorkshopController extends Controller
     public function create()
     {
         $recipes = Recipe::approved()->public()->orderBy('title')->get();
-        return view('admin.workshops.create', compact('recipes'));
+        return view('admin.workshops.create', [
+            'recipes' => $recipes,
+            'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+        ]);
     }
 
     /**
@@ -128,6 +131,8 @@ class WorkshopController extends Controller
      */
     public function store(Request $request)
     {
+        $this->enforceAutoMeetingLinkPolicy($request);
+
         $request->validate(
             Workshop::validationRules(),
             ImageUploadConstraints::messages('image', [
@@ -262,7 +267,11 @@ class WorkshopController extends Controller
     {
         $workshop = Workshop::with('recipes')->findOrFail($id);
         $recipes = Recipe::approved()->public()->orderBy('title')->get();
-        return view('admin.workshops.edit', compact('workshop', 'recipes'));
+        return view('admin.workshops.edit', [
+            'workshop' => $workshop,
+            'recipes' => $recipes,
+            'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+        ]);
     }
 
     /**
@@ -282,6 +291,8 @@ class WorkshopController extends Controller
             'request_method' => $request->method(),
             'content_type' => $request->header('Content-Type'),
         ]);
+
+        $this->enforceAutoMeetingLinkPolicy($request);
 
         try {
         $request->validate(
@@ -537,6 +548,31 @@ class WorkshopController extends Controller
         ]);
     }
 
+    protected function shouldForceAutoMeetingLinks(): bool
+    {
+        return $this->googleMeetService->isEnabled();
+    }
+
+    protected function enforceAutoMeetingLinkPolicy(Request $request): void
+    {
+        $googleMeetEnabled = $this->googleMeetService->isEnabled();
+
+        if (!$googleMeetEnabled) {
+            $request->merge([
+                'auto_generate_meeting' => 0,
+            ]);
+
+            return;
+        }
+
+        if ($request->boolean('is_online')) {
+            $request->merge([
+                'auto_generate_meeting' => 1,
+                'meeting_link' => null,
+            ]);
+        }
+    }
+
     protected function syncMeetingDetails(Request $request, Workshop $workshop): void
     {
         $locationValue = trim((string) ($request->location ?? ''));
@@ -552,10 +588,10 @@ class WorkshopController extends Controller
             return;
         }
 
-        $autoGenerate = $request->boolean('auto_generate_meeting');
         $meetingLinkInput = trim((string) ($request->meeting_link ?? ''));
+        $googleMeetEnabled = $this->googleMeetService->isEnabled();
 
-        if ($autoGenerate || $meetingLinkInput === '') {
+        if ($googleMeetEnabled) {
             $meeting = $this->generateAdminGoogleMeetMeeting($workshop);
             $workshop->meeting_link = $meeting['meeting_link'];
             $workshop->meeting_provider = $meeting['provider'] ?? 'google_meet';

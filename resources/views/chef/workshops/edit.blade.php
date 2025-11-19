@@ -33,7 +33,10 @@
             @csrf
             @method('PUT')
 
-            @include('chef.workshops.form', ['workshop' => $workshop])
+            @include('chef.workshops.form', [
+                'workshop' => $workshop,
+                'forceAutoMeetingLinks' => $forceAutoMeetingLinks ?? false,
+            ])
 
             <div class="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-100 bg-white/90 px-5 py-4 shadow-lg backdrop-blur">
                 <div class="text-sm text-slate-500">

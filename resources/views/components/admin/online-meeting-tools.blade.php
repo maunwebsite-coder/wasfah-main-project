@@ -11,17 +11,23 @@
     'inputErrorClass' => 'is-invalid',
     'hintClass' => 'form-hint',
     'errorClass' => 'error-text',
+    'forceAuto' => false,
 ])
 
 @php
     $meetingLinkValue = trim((string) ($meetingLink ?? ''));
     $showGeneratedInfo = $hasGeneratedMeeting || $meetingLinkValue !== '';
+    $autoLockEnabled = (bool) $forceAuto;
 
     $inputClasses = trim(
         $inputClass .
         ($isOnline && $autoGenerate ? ' readonly-input' : '') .
         ($errors->has('meeting_link') ? ' ' . $inputErrorClass : '')
     );
+
+    if ($autoLockEnabled) {
+        $autoGenerate = true;
+    }
 @endphp
 
 <div {{ $attributes->class(['md:col-span-2 space-y-4']) }}>
@@ -38,11 +44,22 @@
                     {{ $meetingStatusText }}
                 </span>
                 <div class="flex flex-wrap items-center gap-3">
-                    <input type="hidden" name="auto_generate_meeting" value="0">
-                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                        <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerate ? 'checked' : '' }}>
-                        توليد تلقائي عبر Google Meet
-                    </label>
+                    @if($autoLockEnabled)
+                        <input type="hidden" name="auto_generate_meeting" value="1">
+                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 text-emerald-700">
+                            <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" checked disabled>
+                            توليد تلقائي عبر Google Meet
+                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-semibold text-emerald-700">
+                                مفعل دائماً
+                            </span>
+                        </label>
+                    @else
+                        <input type="hidden" name="auto_generate_meeting" value="0">
+                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <input type="checkbox" name="auto_generate_meeting" id="auto_generate_meeting" value="1" {{ $autoGenerate ? 'checked' : '' }}>
+                            توليد تلقائي عبر Google Meet
+                        </label>
+                    @endif
                     <button type="button"
                             id="generateMeetLinkBtn"
                             data-url="{{ $generateUrl }}"
@@ -78,6 +95,8 @@
         <p id="meeting-link-help" class="{{ $hintClass }}">
             @if(!$isOnline)
                 هذا الحقل اختياري للورش الحضورية.
+            @elseif($autoLockEnabled)
+                سيتم تعيين الرابط تلقائياً بعد الحفظ ولا يمكن تعديله يدوياً.
             @elseif($autoGenerate)
                 سيتم تعيين الرابط تلقائياً بعد الحفظ أو فور الضغط على زر التوليد.
             @else

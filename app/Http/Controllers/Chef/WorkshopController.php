@@ -140,7 +140,9 @@ class WorkshopController extends Controller
 
     public function create(): \Illuminate\View\View
     {
-        return view('chef.workshops.create');
+        return view('chef.workshops.create', [
+            'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -171,7 +173,10 @@ class WorkshopController extends Controller
     {
         $this->authorizeWorkshop($workshop);
 
-        return view('chef.workshops.edit', compact('workshop'));
+        return view('chef.workshops.edit', [
+            'workshop' => $workshop,
+            'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
+        ]);
     }
 
     public function update(Request $request, Workshop $workshop): RedirectResponse
@@ -886,15 +891,10 @@ class WorkshopController extends Controller
             return;
         }
 
-        $currentUser = Auth::user();
         $googleMeetEnabled = $this->googleMeetIntegrationEnabled();
-        $hostOverridesEnabled = $this->hostMeetingLinkOverridesEnabled();
-        $shouldForceAutoGeneration = $googleMeetEnabled
-            && (!$currentUser || !$currentUser->isAdmin())
-            && !$hostOverridesEnabled;
         $autoGenerate = $googleMeetEnabled && $request->boolean('auto_generate_meeting');
 
-        if ($shouldForceAutoGeneration) {
+        if ($this->shouldForceAutoMeetingLinks() && $googleMeetEnabled && $workshop->is_online) {
             $autoGenerate = true;
             $inputLink = null;
         }
@@ -964,7 +964,6 @@ class WorkshopController extends Controller
 
     protected function enforceMeetingLinkPrivacyPolicy(Request $request): void
     {
-        $user = Auth::user();
         $googleMeetEnabled = $this->googleMeetIntegrationEnabled();
 
         if (!$googleMeetEnabled) {
@@ -975,7 +974,7 @@ class WorkshopController extends Controller
             return;
         }
 
-        if ((!$user || !$user->isAdmin()) && !$this->hostMeetingLinkOverridesEnabled()) {
+        if ($request->boolean('is_online') && $this->shouldForceAutoMeetingLinks()) {
             $request->merge([
                 'auto_generate_meeting' => 1,
                 'meeting_link' => null,
@@ -988,8 +987,8 @@ class WorkshopController extends Controller
         return $this->googleMeetService->isEnabled();
     }
 
-    protected function hostMeetingLinkOverridesEnabled(): bool
+    protected function shouldForceAutoMeetingLinks(): bool
     {
-        return (bool) config('workshop-links.allow_host_meeting_link_override', true);
+        return $this->googleMeetIntegrationEnabled();
     }
 }
