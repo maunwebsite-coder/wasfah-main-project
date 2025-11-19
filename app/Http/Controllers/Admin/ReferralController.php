@@ -219,7 +219,10 @@ class ReferralController extends Controller
         ]);
 
         $payload = $data;
-        $payload['referral_skip_platform_fee'] = $user->isChef()
+        $isChefAccount = $user->role === User::ROLE_CHEF;
+        $isPartner = (bool) ($payload['is_referral_partner'] ?? false);
+
+        $payload['referral_skip_platform_fee'] = ($isChefAccount && $isPartner)
             ? (bool) ($data['referral_skip_platform_fee'] ?? false)
             : false;
 

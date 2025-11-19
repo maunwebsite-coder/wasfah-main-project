@@ -150,7 +150,7 @@ class BookingFinancialSplitTest extends TestCase
 
         $partnerChef = User::factory()->create([
             'role' => User::ROLE_CHEF,
-            'chef_status' => User::CHEF_STATUS_APPROVED,
+            'chef_status' => User::CHEF_STATUS_PENDING,
             'is_referral_partner' => true,
             'referral_skip_platform_fee' => true,
         ]);

@@ -60,6 +60,7 @@ class ChefPublicWorkshopController extends Controller
         $carbonLocale = $appLocale === 'ar' ? 'ar' : 'en';
         $dateTimeFormat = __('chef.workshops.datetime_format');
         $driveRecordings = $this->resolveDriveRecordings($workshops, $carbonLocale, $dateTimeFormat);
+        $workshops = $this->attachDriveRecordingsToWorkshops($workshops, $driveRecordings);
 
         return view('chef.public-workshops', [
             'chef' => $chef,
@@ -78,36 +79,27 @@ class ChefPublicWorkshopController extends Controller
             return collect();
         }
 
-        $meetingCodeVariants = $workshops
-            ->pluck('meeting_code')
-            ->map(fn ($code) => $this->normalizeMeetingCodeValue($code))
-            ->filter()
-            ->flatMap(fn (string $code) => $this->expandMeetingCodeVariants($code))
-            ->unique()
-            ->values();
+        $meetingCodeVariants = $this->buildMeetingCodeVariantMap($workshops);
 
-        if ($meetingCodeVariants->isEmpty()) {
+        if (empty($meetingCodeVariants)) {
             return collect();
         }
 
         return collect($this->googleDrive->listRecordings(null, 100))
             ->filter(fn ($file) => $file instanceof DriveFile)
-            ->filter(function (DriveFile $file) use ($meetingCodeVariants): bool {
+            ->map(function (DriveFile $file) use ($meetingCodeVariants, $locale, $dateTimeFormat): ?array {
                 $name = strtolower($file->getName() ?? '');
 
                 if ($name === '') {
-                    return false;
+                    return null;
                 }
 
-                foreach ($meetingCodeVariants as $variant) {
-                    if ($variant !== '' && str_contains($name, $variant)) {
-                        return true;
-                    }
+                $matchedCode = $this->matchMeetingCodeFromName($name, $meetingCodeVariants);
+
+                if (! $matchedCode) {
+                    return null;
                 }
 
-                return false;
-            })
-            ->map(function (DriveFile $file) use ($locale, $dateTimeFormat): array {
                 $modifiedAt = $file->getModifiedTime()
                     ? Carbon::parse($file->getModifiedTime())->locale($locale)
                     : null;
@@ -122,6 +114,7 @@ class ChefPublicWorkshopController extends Controller
 
                 return [
                     'id' => $fileId ?: uniqid('drive-', true),
+                    'matched_code' => $matchedCode,
                     'title' => $file->getName() ?: __('chef.recordings.untitled'),
                     'description' => $file->getDescription()
                         ? Str::limit($file->getDescription(), 140)
@@ -133,7 +126,107 @@ class ChefPublicWorkshopController extends Controller
                     'watch_url' => $watchUrl,
                 ];
             })
+            ->filter()
             ->values();
+    }
+
+    /**
+     * Attach any resolved Drive recordings back onto their workshops for inline playback.
+     */
+    protected function attachDriveRecordingsToWorkshops(Collection $workshops, Collection $driveRecordings): Collection
+    {
+        if ($driveRecordings->isEmpty()) {
+            return $workshops;
+        }
+
+        $recordingsByCode = $driveRecordings
+            ->filter(fn (array $recording) => ! empty($recording['matched_code']))
+            ->groupBy('matched_code');
+
+        if ($recordingsByCode->isEmpty()) {
+            return $workshops;
+        }
+
+        return $workshops->map(function (Workshop $workshop) use ($recordingsByCode) {
+            $normalizedCode = $this->normalizeMeetingCodeValue($workshop->meeting_code);
+
+            if (! $normalizedCode || ! $recordingsByCode->has($normalizedCode)) {
+                return $workshop;
+            }
+
+            $recording = $recordingsByCode->get($normalizedCode)->first();
+
+            if (! $recording) {
+                return $workshop;
+            }
+
+            $currentSource = $workshop->getAttribute('recording_source_url');
+            $currentPreview = $workshop->getAttribute('video_preview_url');
+
+            if (! $currentSource && ! empty($recording['watch_url'])) {
+                $workshop->setAttribute('recording_source_url', $recording['watch_url']);
+                $currentSource = $recording['watch_url'];
+            }
+
+            if (! $currentPreview && ! empty($recording['preview_url'])) {
+                $workshop->setAttribute('video_preview_url', $recording['preview_url']);
+            }
+
+            if (! $workshop->getAttribute('is_direct_video')) {
+                $workshop->setAttribute(
+                    'is_direct_video',
+                    $this->isDirectVideoUrl($workshop->getAttribute('recording_source_url'))
+                );
+            }
+
+            if (! empty($recording['preview_url']) || ! empty($recording['watch_url'])) {
+                $workshop->setAttribute('recording_from_drive', true);
+            }
+
+            return $workshop;
+        });
+    }
+
+    /**
+     * Build a lookup table of meeting code variants mapped to their canonical forms.
+     */
+    protected function buildMeetingCodeVariantMap(Collection $workshops): array
+    {
+        $variantMap = [];
+
+        foreach ($workshops as $workshop) {
+            $normalized = $this->normalizeMeetingCodeValue($workshop->meeting_code);
+
+            if (! $normalized) {
+                continue;
+            }
+
+            foreach ($this->expandMeetingCodeVariants($normalized) as $variant) {
+                if ($variant === '') {
+                    continue;
+                }
+
+                $variantMap[$variant] = $normalized;
+            }
+        }
+
+        uksort($variantMap, fn ($a, $b) => strlen($b) <=> strlen($a));
+
+        return $variantMap;
+    }
+
+    /**
+     * Determine which meeting code variant appears in the provided file name.
+     */
+    protected function matchMeetingCodeFromName(string $fileName, array $variantMap): ?string
+    {
+        foreach ($variantMap as $variant => $canonical) {
+            if ($variant !== '' && str_contains($fileName, $variant)) {
+                return $canonical;
+            }
+        }
+
+        return null;
     }
 
     /**

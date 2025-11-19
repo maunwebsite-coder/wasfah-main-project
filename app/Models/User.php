@@ -297,7 +297,7 @@ class User extends Authenticatable
      */
     public function shouldWaivePlatformFeeForOwnWorkshops(): bool
     {
-        return $this->isChef()
+        return $this->role === self::ROLE_CHEF
             && $this->isReferralPartner()
             && (bool) $this->referral_skip_platform_fee;
     }

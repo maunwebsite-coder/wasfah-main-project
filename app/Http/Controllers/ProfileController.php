@@ -11,6 +11,9 @@ use App\Models\UserInteraction;
 use App\Services\ContentModerationService;
 use App\Support\Timezones;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Support\ImageUploadConstraints;
 
 class ProfileController extends Controller
 {
@@ -407,13 +410,16 @@ class ProfileController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20|regex:/^[0-9+\-\s\(\)]+$/',
-            'google_email' => $user->role === User::ROLE_CHEF
-                ? ['required', 'email', 'max:255']
-                : ['nullable', 'email', 'max:255'],
             'timezone' => $timezoneRule,
+            'avatar' => array_merge(['nullable'], ImageUploadConstraints::rules()),
         ];
 
-        $request->validate($rules);
+        $messages = ImageUploadConstraints::messages('avatar', [
+            'ar' => 'الصورة الشخصية',
+            'en' => 'profile photo',
+        ]);
+
+        $request->validate($rules, $messages);
 
         if (ContentModerationService::containsProhibitedLanguage($request->name)) {
             return back()
@@ -424,9 +430,26 @@ class ProfileController extends Controller
         $updateData = [
             'name' => $request->name,
             'phone' => $request->phone,
-            'google_email' => $request->input('google_email') ?: null,
             'timezone' => $request->input('timezone') ?: null,
         ];
+
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store(
+                'avatars/' . $user->id,
+                'public'
+            );
+
+            $oldAvatar = $user->avatar;
+            $shouldDeleteOldAvatar = $oldAvatar
+                && ! Str::startsWith($oldAvatar, ['http://', 'https://'])
+                && Storage::disk('public')->exists($oldAvatar);
+
+            if ($shouldDeleteOldAvatar) {
+                Storage::disk('public')->delete($oldAvatar);
+            }
+
+            $updateData['avatar'] = $avatarPath;
+        }
 
         $user->update($updateData);
         

@@ -4,6 +4,9 @@
 
 @php
     use Carbon\Carbon;
+    use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Str;
+    use App\Support\ImageUploadConstraints;
 @endphp
 
 @section('content')
@@ -588,28 +591,58 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="google_email" class="text-sm font-semibold text-gray-700">Google Meet email</label>
-                        <input
-                            type="email"
-                            id="google_email"
-                            name="google_email"
-                            value="{{ old('google_email', $user->google_email ?? config('services.google_meet.organizer_email')) }}"
-                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-800 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                            placeholder="{{ config('services.google_meet.organizer_email') }}"
-                            @if($user->role === 'chef') required @endif
-                        >
-                        <p class="text-xs text-gray-500">
-                            Use the exact Google account that hosts your workshops ({{ config('services.google_meet.organizer_email') }}) so Meet lets you in instantly.
-                        </p>
-                        @error('google_email')
-                            <p class="text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <label class="text-sm font-semibold text-gray-700">Google Meet email</label>
+                        <div class="flex items-start gap-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-3">
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                                <i class="fas fa-lock text-sm"></i>
+                            </span>
+                            <div class="space-y-1">
+                                <p class="text-sm font-semibold text-gray-800">
+                                    {{ $user->google_email ?? config('services.google_meet.organizer_email') }}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    This email is managed by the support team to keep Google Meet access consistent. Contact support if it needs an update.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
+                    @php
+                        $profileAvatarUrl = null;
+                        if ($user->avatar) {
+                            $profileAvatarUrl = Str::startsWith($user->avatar, ['http://', 'https://'])
+                                ? $user->avatar
+                                : Storage::disk('public')->url($user->avatar);
+                        }
+                    @endphp
+
                     <div class="space-y-2 md:col-span-2">
-                        <p class="text-sm font-semibold text-gray-700">Profile photo</p>
-                        <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-gray-600">
-                            الصورة الشخصية تتم إدارتها مركزياً لضمان هوية موحدة للشيف. لا يمكن تغييرها من لوحة التحكم. تواصل مع فريق الدعم إذا احتجت لتحديثها.
+                        <label for="avatar" class="text-sm font-semibold text-gray-700">Profile photo</label>
+                        <div class="flex flex-col gap-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-gray-600 md:flex-row md:items-center">
+                            <div class="flex items-center gap-4">
+                                <div class="h-20 w-20 overflow-hidden rounded-2xl bg-white text-xl font-semibold text-gray-500 shadow-inner ring-1 ring-gray-200 flex items-center justify-center">
+                                    @if ($profileAvatarUrl)
+                                        <img src="{{ $profileAvatarUrl }}" alt="Current profile photo" class="h-full w-full object-cover" loading="lazy">
+                                    @else
+                                        {{ mb_substr($user->name, 0, 1) }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <input
+                                    type="file"
+                                    name="avatar"
+                                    id="avatar"
+                                    accept="image/*"
+                                    class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-full file:border-0 file:bg-orange-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-orange-600 hover:file:bg-orange-100"
+                                >
+                                <p class="text-xs text-gray-500">
+                                    Upload a clear square image (up to {{ ImageUploadConstraints::maxMegabytes() }} MB, {{ ImageUploadConstraints::allowedExtensionsList() }}). Changes sync instantly across your public chef profile.
+                                </p>
+                                @error('avatar')
+                                    <p class="text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 
