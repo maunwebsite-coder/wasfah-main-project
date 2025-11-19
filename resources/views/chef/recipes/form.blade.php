@@ -294,15 +294,29 @@
                 </div>
             </div>
 
-            <div class="bg-orange-50 rounded-2xl p-6 border border-orange-100 h-fit">
-                <h3 class="text-lg font-semibold text-orange-700 mb-4">{{ __('chef.recipe_form.sections.external_image.title') }}</h3>
-                <p class="text-sm text-orange-600 mb-4">{{ __('chef.recipe_form.sections.external_image.description') }}</p>
-                <input type="url" name="image_url" value="{{ old('image_url', $isEdit ? $recipe->image_url : '') }}"
-                       class="w-full rounded-xl border border-orange-200 px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                       placeholder="{{ __('chef.recipe_form.sections.external_image.placeholder') }}">
-                @error('image_url')
-                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                @enderror
+            <div class="space-y-6 h-fit">
+                <div class="bg-orange-50 rounded-2xl p-6 border border-orange-100">
+                    <h3 class="text-lg font-semibold text-orange-700 mb-4">{{ __('chef.recipe_form.sections.external_image.title') }}</h3>
+                    <p class="text-sm text-orange-600 mb-4">{{ __('chef.recipe_form.sections.external_image.description') }}</p>
+                    <input type="url" name="image_url" value="{{ old('image_url', $isEdit ? $recipe->image_url : '') }}"
+                           class="w-full rounded-xl border border-orange-200 px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                           placeholder="{{ __('chef.recipe_form.sections.external_image.placeholder') }}">
+                    @error('image_url')
+                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('chef.recipe_form.sections.video.title') }}</h3>
+                    <p class="text-sm text-gray-600 mb-4">{{ __('chef.recipe_form.sections.video.description') }}</p>
+                    <input type="url" name="video_url" value="{{ old('video_url', $isEdit ? $recipe->video_url : '') }}"
+                           class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                           placeholder="{{ __('chef.recipe_form.sections.video.placeholder') }}">
+                    <p class="mt-2 text-xs text-gray-500">{{ __('chef.recipe_form.sections.video.hint') }}</p>
+                    @error('video_url')
+                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
         </div>
     </section>

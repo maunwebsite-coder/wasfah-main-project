@@ -106,6 +106,7 @@ class RecipeController extends Controller
             'servings' => $data['servings'] ?? null,
             'difficulty' => $data['difficulty'] ?? null,
             'image_url' => $this->cleanImageUrl($data['image_url'] ?? null),
+            'video_url' => $this->normalizeVideoUrl($data['video_url'] ?? null),
             'image' => $imagePaths['image'],
             'image_2' => $imagePaths['image_2'],
             'image_3' => $imagePaths['image_3'],
@@ -185,6 +186,7 @@ class RecipeController extends Controller
             'servings' => $data['servings'] ?? null,
             'difficulty' => $data['difficulty'] ?? null,
             'image_url' => $this->cleanImageUrl($data['image_url'] ?? null),
+            'video_url' => $this->normalizeVideoUrl($data['video_url'] ?? null),
             'image' => $imagePaths['image'],
             'image_2' => $imagePaths['image_2'],
             'image_3' => $imagePaths['image_3'],
@@ -271,6 +273,7 @@ class RecipeController extends Controller
             'servings' => ['nullable', 'integer', 'min:0'],
             'difficulty' => ['nullable', Rule::in(['easy', 'medium', 'hard'])],
             'image_url' => ['nullable', 'url'],
+            'video_url' => ['nullable', 'url'],
             'image' => $imageRule,
             'image_2' => $imageRule,
             'image_3' => $imageRule,
@@ -455,5 +458,66 @@ class RecipeController extends Controller
         }
 
         return $url;
+    }
+
+    /**
+     * Normalize supported video URLs into embeddable formats.
+     */
+    private function normalizeVideoUrl(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        $normalized = trim($url);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        $host = strtolower(parse_url($normalized, PHP_URL_HOST) ?? '');
+
+        if ($host === '') {
+            return $normalized;
+        }
+
+        $allowedHosts = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
+
+        if (!in_array($host, $allowedHosts, true)) {
+            return $normalized;
+        }
+
+        $videoId = null;
+
+        if ($host === 'youtu.be') {
+            $path = trim(parse_url($normalized, PHP_URL_PATH) ?? '', '/');
+            if ($path !== '') {
+                $videoId = $path;
+            }
+        } else {
+            $path = parse_url($normalized, PHP_URL_PATH) ?? '';
+
+            if (preg_match('#/(embed|shorts)/([a-zA-Z0-9_-]{6,})#', $path, $matches)) {
+                $videoId = $matches[2];
+            }
+
+            if (!$videoId) {
+                $query = parse_url($normalized, PHP_URL_QUERY) ?? '';
+                parse_str($query, $params);
+
+                foreach (['v', 'vi'] as $key) {
+                    if (!empty($params[$key]) && is_string($params[$key])) {
+                        $videoId = $params[$key];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$videoId || preg_match('/^[a-zA-Z0-9_-]{6,}$/', $videoId) !== 1) {
+            return $normalized;
+        }
+
+        return sprintf('https://www.youtube.com/embed/%s', $videoId);
     }
 }

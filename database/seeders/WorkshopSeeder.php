@@ -59,7 +59,7 @@ class WorkshopSeeder extends Seeder
                 'instructor_bio' => 'شيف إيطالي محترف مع 20 عام من الخبرة في المطاعم الإيطالية',
                 'category' => 'مطبخ عالمي',
                 'level' => 'متوسط',
-                'duration' => 240, // 4 ساعات
+                'duration' => 180, // 3 ساعات (الحد الأقصى)
                 'max_participants' => 12,
                 'price' => 200.00,
                 'currency' => 'USD',
@@ -128,7 +128,7 @@ class WorkshopSeeder extends Seeder
                 'instructor_bio' => 'شيف متخصص في الخبز والمعجنات مع 12 عام من الخبرة',
                 'category' => 'خبز ومعجنات',
                 'level' => 'متوسط',
-                'duration' => 300, // 5 ساعات
+                'duration' => 180, // 3 ساعات (الحد الأقصى)
                 'max_participants' => 10,
                 'price' => 180.00,
                 'currency' => 'USD',
@@ -162,7 +162,7 @@ class WorkshopSeeder extends Seeder
                 'instructor_bio' => 'شيف فرنسية متخصصة في الحلويات مع 18 عام من الخبرة',
                 'category' => 'حلويات',
                 'level' => 'متقدم',
-                'duration' => 360, // 6 ساعات
+                'duration' => 180, // 3 ساعات (الحد الأقصى)
                 'max_participants' => 8,
                 'price' => 300.00,
                 'currency' => 'USD',

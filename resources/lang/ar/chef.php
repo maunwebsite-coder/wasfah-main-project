@@ -606,6 +606,12 @@ return [
                 'description' => 'إذا كان لديك رابط مباشر للصورة (مثل Google Drive أو Unsplash) يمكنك إضافته هنا.',
                 'placeholder' => 'https://example.com/your-image.jpg',
             ],
+            'video' => [
+                'title' => 'رابط فيديو يوتيوب (اختياري)',
+                'description' => 'الصق أي رابط لفيديو على يوتيوب (Watch أو Shorts أو رابط المشاركة) وسنحوّله تلقائياً لصيغة قابلة للعرض داخل صفحة الوصفة.',
+                'placeholder' => 'https://www.youtube.com/watch?v=example',
+                'hint' => 'سيظهر الفيديو للزوار داخل صفحة الوصفة بعد حفظه.',
+            ],
         ],
         'fields' => [
             'title' => [

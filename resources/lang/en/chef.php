@@ -606,6 +606,12 @@ return [
                 'description' => 'Paste a direct image link (Google Drive, Unsplash, etc.) if you have one.',
                 'placeholder' => 'https://example.com/your-image.jpg',
             ],
+            'video' => [
+                'title' => 'YouTube video link (optional)',
+                'description' => 'Paste any YouTube link (Watch, share, or Shorts) and we\'ll turn it into an embeddable player on your recipe page.',
+                'placeholder' => 'https://www.youtube.com/watch?v=example',
+                'hint' => 'Viewers will see the video near the top of your recipe after it is saved.',
+            ],
         ],
         'fields' => [
             'title' => [

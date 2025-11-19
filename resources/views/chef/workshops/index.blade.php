@@ -121,22 +121,38 @@
             </div>
         @endif
 
-        <div class="mb-8 grid gap-4 md:grid-cols-4">
-            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                <p class="text-sm text-slate-500">{{ __('chef.dashboard.workshops.stats.total') }}</p>
-                <p class="mt-2 text-3xl font-bold text-slate-900">{{ $stats['total'] }}</p>
-            </div>
-            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                <p class="text-sm text-slate-500">{{ __('chef.dashboard.workshops.stats.active') }}</p>
-                <p class="mt-2 text-3xl font-bold text-emerald-600">{{ $stats['active'] }}</p>
-            </div>
-            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                <p class="text-sm text-slate-500">{{ __('chef.dashboard.workshops.stats.online') }}</p>
-                <p class="mt-2 text-3xl font-bold text-indigo-600">{{ $stats['online'] }}</p>
-            </div>
-            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-                <p class="text-sm text-slate-500">{{ __('chef.dashboard.workshops.stats.drafts') }}</p>
-                <p class="mt-2 text-3xl font-bold text-orange-600">{{ $stats['drafts'] }}</p>
+        @php
+            $statCards = [
+                [
+                    'label' => __('chef.dashboard.workshops.stats.total'),
+                    'value' => $stats['total'],
+                    'accent' => 'text-slate-900',
+                ],
+                [
+                    'label' => __('chef.dashboard.workshops.stats.active'),
+                    'value' => $stats['active'],
+                    'accent' => 'text-emerald-600',
+                ],
+                [
+                    'label' => __('chef.dashboard.workshops.stats.online'),
+                    'value' => $stats['online'],
+                    'accent' => 'text-indigo-600',
+                ],
+                [
+                    'label' => __('chef.dashboard.workshops.stats.drafts'),
+                    'value' => $stats['drafts'],
+                    'accent' => 'text-orange-600',
+                ],
+            ];
+        @endphp
+        <div class="mb-8">
+            <div class="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0 md:snap-none">
+                @foreach ($statCards as $card)
+                    <div class="snap-start rounded-3xl border border-slate-100 bg-white p-5 shadow-sm flex min-w-[220px] flex-col flex-none md:min-w-0">
+                        <p class="text-sm text-slate-500">{{ $card['label'] }}</p>
+                        <p class="mt-2 text-3xl font-bold {{ $card['accent'] }}">{{ $card['value'] }}</p>
+                    </div>
+                @endforeach
             </div>
         </div>
 

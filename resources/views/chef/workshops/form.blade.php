@@ -93,7 +93,7 @@
             </div>
             <div class="space-y-3">
                 <label for="duration" class="text-sm font-semibold text-slate-700">{{ __('chef.workshop_form.fields.duration.label') }}</label>
-                <input type="number" id="duration" name="duration" required min="30" max="600" step="15"
+                <input type="number" id="duration" name="duration" required min="30" max="180" step="15"
                        value="{{ old('duration', $workshop->duration ?? 90) }}"
                        class="w-full rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-slate-900 shadow-inner focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100 @error('duration') border-red-400 focus:ring-red-200 @enderror">
                 @error('duration')

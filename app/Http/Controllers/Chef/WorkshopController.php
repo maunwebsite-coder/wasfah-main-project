@@ -720,7 +720,7 @@ class WorkshopController extends Controller
             'content' => ['nullable', 'string'],
             'category' => ['required', 'string', 'max:120'],
             'level' => ['required', Rule::in(['beginner', 'intermediate', 'advanced'])],
-            'duration' => ['required', 'integer', 'min:30', 'max:600'],
+            'duration' => ['required', 'integer', 'min:30', 'max:180'],
             'max_participants' => ['required', 'integer', 'min:1', 'max:500'],
             'price' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', Rule::in(['USD'])],
