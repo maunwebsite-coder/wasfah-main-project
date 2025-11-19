@@ -39,9 +39,19 @@ class GoogleMeetService
         $calendarReady = $calendarId || $this->organizerEmail;
 
         if ($credentialsReady && $calendarReady) {
-            $this->enabled = true;
             $this->calendarId = $calendarId ?: $this->organizerEmail;
-            $this->calendar = $this->bootstrapCalendarClient($client, $clientId, $clientSecret, $refreshToken);
+
+            try {
+                $this->calendar = $this->bootstrapCalendarClient($client, $clientId, $clientSecret, $refreshToken);
+                $this->enabled = true;
+            } catch (\Throwable $exception) {
+                $this->enabled = false;
+                $this->calendar = null;
+
+                Log::error('Failed to initialize Google Meet calendar client.', [
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         }
     }
 
