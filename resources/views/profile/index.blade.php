@@ -593,13 +593,13 @@
                             type="email"
                             id="google_email"
                             name="google_email"
-                            value="{{ old('google_email', $user->google_email) }}"
+                            value="{{ old('google_email', $user->google_email ?? config('services.google_meet.organizer_email')) }}"
                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-800 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                            placeholder="name@gmail.com"
+                            placeholder="{{ config('services.google_meet.organizer_email') }}"
                             @if($user->role === 'chef') required @endif
                         >
                         <p class="text-xs text-gray-500">
-                            Use the exact Google account that hosts your workshops so Meet lets you in instantly.
+                            Use the exact Google account that hosts your workshops ({{ config('services.google_meet.organizer_email') }}) so Meet lets you in instantly.
                         </p>
                         @error('google_email')
                             <p class="text-sm text-red-600">{{ $message }}</p>
@@ -607,24 +607,10 @@
                     </div>
 
                     <div class="space-y-2 md:col-span-2">
-                        <label for="avatar" class="text-sm font-semibold text-gray-700">Profile photo</label>
-                        <input
-                            type="file"
-                            id="avatar"
-                            name="avatar"
-                            class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-700 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                            accept="image/*"
-                            data-max-size="5120"
-                            data-max-size-message="You cannot upload an image larger than 5 MB."
-                            data-error-target="#profile_avatar_error"
-                        >
-                        <p class="text-xs text-gray-500">
-                            Supports images up to 5 MB. Choose a clear photo that represents your style.
-                        </p>
-                        <p id="profile_avatar_error" class="text-xs text-red-600 hidden"></p>
-                        @error('avatar')
-                            <p class="text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <p class="text-sm font-semibold text-gray-700">Profile photo</p>
+                        <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm text-gray-600">
+                            الصورة الشخصية تتم إدارتها مركزياً لضمان هوية موحدة للشيف. لا يمكن تغييرها من لوحة التحكم. تواصل مع فريق الدعم إذا احتجت لتحديثها.
+                        </div>
                     </div>
 
                     <div class="md:col-span-2">

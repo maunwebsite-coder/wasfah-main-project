@@ -1,5 +1,7 @@
 <?php
 
+$defaultMeetOrganizer = 'maaunapp@gmail.com';
+
 return [
 
     /*
@@ -45,8 +47,8 @@ return [
         'client_id' => env('GOOGLE_MEET_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
         'client_secret' => env('GOOGLE_MEET_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
         'refresh_token' => env('GOOGLE_MEET_REFRESH_TOKEN'),
-        'calendar_id' => env('GOOGLE_MEET_CALENDAR_ID', env('GOOGLE_MEET_ORGANIZER_EMAIL')),
-        'organizer_email' => env('GOOGLE_MEET_ORGANIZER_EMAIL', env('GOOGLE_MEET_CALENDAR_ID')),
+        'calendar_id' => env('GOOGLE_MEET_CALENDAR_ID', env('GOOGLE_MEET_ORGANIZER_EMAIL', $defaultMeetOrganizer)),
+        'organizer_email' => env('GOOGLE_MEET_ORGANIZER_EMAIL', env('GOOGLE_MEET_CALENDAR_ID', $defaultMeetOrganizer)),
         'default_duration' => (int) env('GOOGLE_MEET_DEFAULT_DURATION', 90),
         'timezone' => env('GOOGLE_MEET_TIMEZONE', env('APP_TIMEZONE', 'UTC')),
         'host_redirect_ttl' => (int) env('GOOGLE_MEET_HOST_REDIRECT_TTL', 120),

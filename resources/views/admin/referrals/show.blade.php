@@ -76,6 +76,33 @@
                                 <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
+                        @if($user->role === \App\Models\User::ROLE_CHEF)
+                            <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-900">عدم اقتطاع نسبة المنصة من ورش هذا الشريك</p>
+                                    <p class="text-xs text-slate-500">عند التفعيل سيتم تحويل صافي المبلغ كاملاً لهذا الشريك في حال كان هو الشيف المستضيف.</p>
+                                    <p class="text-[11px] text-slate-400 mt-1">ينطبق فقط على هذا الحساب عند تنظيمه لورشاته.</p>
+                                </div>
+                                <div>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="hidden" name="referral_skip_platform_fee" value="0">
+                                        <input
+                                            type="checkbox"
+                                            name="referral_skip_platform_fee"
+                                            value="1"
+                                            class="sr-only peer"
+                                            {{ old('referral_skip_platform_fee', $user->referral_skip_platform_fee) ? 'checked' : '' }}
+                                        >
+                                        <div class="h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-emerald-500 transition relative">
+                                            <span class="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-white shadow peer-checked:translate-x-[-18px] transition"></span>
+                                        </div>
+                                    </label>
+                                    @error('referral_skip_platform_fee')
+                                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endif
                         <div>
                             <label class="text-xs font-semibold text-slate-600 mb-1 block">ملاحظات داخلية</label>
                             <textarea

@@ -215,9 +215,15 @@ class ReferralController extends Controller
             'referral_commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'referral_admin_notes' => ['nullable', 'string', 'max:2000'],
             'referral_commission_currency' => ['required', Rule::in($supportedCurrencies)],
+            'referral_skip_platform_fee' => ['nullable', 'boolean'],
         ]);
 
-        $user->fill($data);
+        $payload = $data;
+        $payload['referral_skip_platform_fee'] = $user->isChef()
+            ? (bool) ($data['referral_skip_platform_fee'] ?? false)
+            : false;
+
+        $user->fill($payload);
 
         if ($data['is_referral_partner']) {
             $user->ensureReferralCode();

@@ -170,14 +170,16 @@
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white text-amber-500 shadow-inner">
                         <i class="fas fa-info-circle"></i>
                     </div>
-                    <div class="space-y-1">
-                        <p class="font-semibold text-amber-900">{{ __('chef.workshop_form.messages.pricing_notice_title') }}</p>
-                        <p class="leading-relaxed">
-                            {!! __('chef.workshop_form.messages.pricing_notice_body', ['fee_range' => '<strong>25% – 30%</strong>']) !!}
-                            <br>
-                            {{ __('chef.workshop_form.messages.pricing_notice_followup') }}
-                        </p>
-                    </div>
+                    @if (! auth()->user()?->shouldWaivePlatformFeeForOwnWorkshops())
+                        <div class="space-y-1">
+                            <p class="font-semibold text-amber-900">{{ __('chef.workshop_form.messages.pricing_notice_title') }}</p>
+                            <p class="leading-relaxed">
+                                {!! __('chef.workshop_form.messages.pricing_notice_body', ['fee_range' => '<strong>25% – 30%</strong>']) !!}
+                                <br>
+                                {{ __('chef.workshop_form.messages.pricing_notice_followup') }}
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

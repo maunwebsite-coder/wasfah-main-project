@@ -141,6 +141,49 @@ class BookingFinancialSplitTest extends TestCase
         ]);
     }
 
+    public function test_partner_chefs_can_skip_platform_fee(): void
+    {
+        config([
+            'finance.chef_share_percent' => 70,
+            'finance.admin_share_percent' => 30,
+        ]);
+
+        $partnerChef = User::factory()->create([
+            'role' => User::ROLE_CHEF,
+            'chef_status' => User::CHEF_STATUS_APPROVED,
+            'is_referral_partner' => true,
+            'referral_skip_platform_fee' => true,
+        ]);
+
+        $customer = User::factory()->create();
+        $workshop = $this->createWorkshop($partnerChef, ['price' => 150]);
+
+        $booking = WorkshopBooking::create([
+            'workshop_id' => $workshop->id,
+            'user_id' => $customer->id,
+            'status' => 'confirmed',
+            'booking_date' => now(),
+            'payment_status' => 'pending',
+            'payment_amount' => 150,
+            'payment_method' => 'manual',
+        ]);
+
+        $booking->update(['payment_status' => 'paid']);
+        $booking->refresh();
+
+        $this->assertSame(WorkshopBooking::FINANCIAL_STATUS_DISTRIBUTED, $booking->financial_status);
+
+        $shares = $booking->revenueShares()
+            ->where('status', BookingRevenueShare::STATUS_DISTRIBUTED)
+            ->get()
+            ->keyBy('recipient_type');
+
+        $this->assertCount(2, $shares);
+        $this->assertEquals(150.0, (float) $shares[BookingRevenueShare::TYPE_CHEF]->amount);
+        $this->assertEquals(0.0, (float) $shares[BookingRevenueShare::TYPE_ADMIN]->amount);
+        $this->assertTrue((bool) ($shares[BookingRevenueShare::TYPE_ADMIN]->meta['platform_fee_waived'] ?? false));
+    }
+
     public function test_refunded_booking_voids_existing_shares(): void
     {
         $chef = User::factory()->create([

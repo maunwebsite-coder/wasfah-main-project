@@ -91,12 +91,17 @@ class BookingFinancialService
                 $this->markShareAsCancelled($booking, BookingRevenueShare::TYPE_PARTNER, 'no_partner_distribution');
             }
 
+            $adminMeta = $metadataBase + ['role' => 'admin'];
+            if (!empty($shares['admin']['waived'])) {
+                $adminMeta['platform_fee_waived'] = true;
+            }
+
             $this->storeShare($booking, BookingRevenueShare::TYPE_ADMIN, [
                 'recipient_id' => null,
                 'percentage' => $shares['admin']['percent'],
                 'amount' => $shares['admin']['amount'],
                 'currency' => $currency,
-                'meta' => $metadataBase + ['role' => 'admin'],
+                'meta' => $adminMeta,
             ]);
 
             WorkshopBooking::withoutEvents(function () use ($booking) {
@@ -201,11 +206,17 @@ class BookingFinancialService
         $partnerShare = $this->resolvePartnerShare($booking);
         $partnerPercent = $this->sanitizePercent($partnerShare['percent'], 0, 40);
 
-        if ($chefPercent + $partnerPercent > 100) {
+        $shouldWaivePlatformFee = $this->shouldWaivePlatformFee($booking);
+
+        if ($shouldWaivePlatformFee) {
+            $chefPercent = max(0, 100 - $partnerPercent);
+        } elseif ($chefPercent + $partnerPercent > 100) {
             $partnerPercent = max(0, 100 - $chefPercent);
         }
 
-        $adminPercent = max(0, 100 - $chefPercent - $partnerPercent);
+        $adminPercent = $shouldWaivePlatformFee
+            ? 0.0
+            : max(0, 100 - $chefPercent - $partnerPercent);
 
         $chefAmount = $this->roundAmount($paymentAmount * ($chefPercent / 100));
         $partnerAmount = $partnerPercent > 0
@@ -216,10 +227,15 @@ class BookingFinancialService
             $partnerAmount = $this->roundAmount($partnerShare['amount']);
         }
 
-        $adminAmount = $this->roundAmount($paymentAmount - $chefAmount - $partnerAmount);
-
-        if ($adminAmount < 0) {
+        if ($shouldWaivePlatformFee) {
+            $chefAmount = $this->roundAmount($paymentAmount - $partnerAmount);
             $adminAmount = 0.0;
+        } else {
+            $adminAmount = $this->roundAmount($paymentAmount - $chefAmount - $partnerAmount);
+
+            if ($adminAmount < 0) {
+                $adminAmount = 0.0;
+            }
         }
 
         return [
@@ -236,8 +252,20 @@ class BookingFinancialService
             'admin' => [
                 'percent' => $adminPercent,
                 'amount' => $adminAmount,
+                'waived' => $shouldWaivePlatformFee,
             ],
         ];
+    }
+
+    protected function shouldWaivePlatformFee(WorkshopBooking $booking): bool
+    {
+        $chef = $booking->workshop?->chef;
+
+        if (! $chef) {
+            return false;
+        }
+
+        return $chef->shouldWaivePlatformFeeForOwnWorkshops();
     }
 
     protected function resolvePartnerShare(WorkshopBooking $booking): array

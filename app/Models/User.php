@@ -62,6 +62,7 @@ class User extends Authenticatable
         'referral_commission_currency',
         'referral_partner_since_at',
         'referral_admin_notes',
+        'referral_skip_platform_fee',
         'policies_accepted_at',
         'policies_accepted_ip',
         'policies_version',
@@ -98,6 +99,7 @@ class User extends Authenticatable
             'is_referral_partner' => 'boolean',
             'referral_partner_since_at' => 'datetime',
             'referral_commission_rate' => 'decimal:2',
+            'referral_skip_platform_fee' => 'boolean',
             'policies_accepted_at' => 'datetime',
         ];
     }
@@ -288,6 +290,16 @@ class User extends Authenticatable
     public function isReferralPartner(): bool
     {
         return (bool) $this->is_referral_partner;
+    }
+
+    /**
+     * Determine if platform fees should be waived for this chef's own workshops.
+     */
+    public function shouldWaivePlatformFeeForOwnWorkshops(): bool
+    {
+        return $this->isChef()
+            && $this->isReferralPartner()
+            && (bool) $this->referral_skip_platform_fee;
     }
 
     /**

@@ -9,10 +9,7 @@ use App\Models\Recipe;
 use App\Models\Workshop;
 use App\Models\UserInteraction;
 use App\Services\ContentModerationService;
-use App\Support\ImageUploadConstraints;
 use App\Support\Timezones;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -413,16 +410,10 @@ class ProfileController extends Controller
             'google_email' => $user->role === User::ROLE_CHEF
                 ? ['required', 'email', 'max:255']
                 : ['nullable', 'email', 'max:255'],
-            'avatar' => array_merge(['nullable'], ImageUploadConstraints::rules()),
             'timezone' => $timezoneRule,
         ];
 
-        $messages = ImageUploadConstraints::messages('avatar', [
-            'ar' => 'صورة الملف الشخصي',
-            'en' => 'profile photo',
-        ]);
-
-        $request->validate($rules, $messages);
+        $request->validate($rules);
 
         if (ContentModerationService::containsProhibitedLanguage($request->name)) {
             return back()
@@ -436,31 +427,6 @@ class ProfileController extends Controller
             'google_email' => $request->input('google_email') ?: null,
             'timezone' => $request->input('timezone') ?: null,
         ];
-
-        if ($user->isChef() && $request->hasFile('avatar')) {
-            $originalName = $request->file('avatar')->getClientOriginalName();
-
-            if (ContentModerationService::containsProhibitedLanguage($originalName)) {
-                return back()
-                    ->withErrors(['avatar' => 'اسم الملف يحتوي على كلمات غير لائقة.'])
-                    ->withInput();
-            }
-
-            if (ContentModerationService::imageAppearsExplicit($request->file('avatar'))) {
-                return back()
-                    ->withErrors(['avatar' => 'الرجاء اختيار صورة احترافية مناسبة.'])
-                    ->withInput();
-            }
-
-            $newAvatarPath = $request->file('avatar')->store('avatars', 'public');
-
-            $oldAvatar = $user->avatar;
-            if ($oldAvatar && !Str::startsWith($oldAvatar, ['http://', 'https://']) && Storage::disk('public')->exists($oldAvatar)) {
-                Storage::disk('public')->delete($oldAvatar);
-            }
-
-            $updateData['avatar'] = $newAvatarPath;
-        }
 
         $user->update($updateData);
         
