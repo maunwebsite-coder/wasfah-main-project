@@ -505,7 +505,12 @@ class WorkshopController extends Controller
 
     public function generateMeetingLink(Request $request)
     {
-        abort_unless(Auth::user()?->isAdmin(), 403);
+        $currentUser = Auth::user();
+
+        abort_unless(
+            $currentUser && ($currentUser->isChef() || $currentUser->isAdmin()),
+            403
+        );
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
