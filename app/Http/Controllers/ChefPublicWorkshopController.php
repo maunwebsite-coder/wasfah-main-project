@@ -79,24 +79,24 @@ class ChefPublicWorkshopController extends Controller
             return collect();
         }
 
-        $meetingCodeVariants = $this->buildMeetingCodeVariantMap($workshops);
+        $matchIndex = $this->buildWorkshopMatchIndex($workshops);
 
-        if (empty($meetingCodeVariants)) {
+        if (empty($matchIndex['meeting']) && empty($matchIndex['title'])) {
             return collect();
         }
 
         return collect($this->googleDrive->listRecordings(null, 100))
             ->filter(fn ($file) => $file instanceof DriveFile)
-            ->map(function (DriveFile $file) use ($meetingCodeVariants, $locale, $dateTimeFormat): ?array {
+            ->map(function (DriveFile $file) use ($matchIndex, $locale, $dateTimeFormat): ?array {
                 $name = strtolower($file->getName() ?? '');
 
                 if ($name === '') {
                     return null;
                 }
 
-                $matchedCode = $this->matchMeetingCodeFromName($name, $meetingCodeVariants);
+                $match = $this->matchWorkshopFromDriveFile($name, $matchIndex);
 
-                if (! $matchedCode) {
+                if (! $match) {
                     return null;
                 }
 
@@ -114,7 +114,8 @@ class ChefPublicWorkshopController extends Controller
 
                 return [
                     'id' => $fileId ?: uniqid('drive-', true),
-                    'matched_code' => $matchedCode,
+                    'matched_code' => $match['code'] ?? null,
+                    'matched_workshop_id' => $match['workshop_id'] ?? null,
                     'title' => $file->getName() ?: __('chef.recordings.untitled'),
                     'description' => $file->getDescription()
                         ? Str::limit($file->getDescription(), 140)
@@ -139,22 +140,16 @@ class ChefPublicWorkshopController extends Controller
             return $workshops;
         }
 
-        $recordingsByCode = $driveRecordings
-            ->filter(fn (array $recording) => ! empty($recording['matched_code']))
-            ->groupBy('matched_code');
+        $recordingsByWorkshop = $driveRecordings
+            ->filter(fn (array $recording) => ! empty($recording['matched_workshop_id']))
+            ->groupBy('matched_workshop_id');
 
-        if ($recordingsByCode->isEmpty()) {
+        if ($recordingsByWorkshop->isEmpty()) {
             return $workshops;
         }
 
-        return $workshops->map(function (Workshop $workshop) use ($recordingsByCode) {
-            $normalizedCode = $this->normalizeMeetingCodeValue($workshop->meeting_code);
-
-            if (! $normalizedCode || ! $recordingsByCode->has($normalizedCode)) {
-                return $workshop;
-            }
-
-            $recording = $recordingsByCode->get($normalizedCode)->first();
+        return $workshops->map(function (Workshop $workshop) use ($recordingsByWorkshop) {
+            $recording = $recordingsByWorkshop->get($workshop->getKey())->first();
 
             if (! $recording) {
                 return $workshop;
@@ -188,41 +183,67 @@ class ChefPublicWorkshopController extends Controller
     }
 
     /**
-     * Build a lookup table of meeting code variants mapped to their canonical forms.
+     * Build lookup tables to match Drive recordings by meeting codes or workshop titles.
      */
-    protected function buildMeetingCodeVariantMap(Collection $workshops): array
+    protected function buildWorkshopMatchIndex(Collection $workshops): array
     {
-        $variantMap = [];
+        $meetingVariants = [];
+        $titleVariants = [];
 
         foreach ($workshops as $workshop) {
-            $normalized = $this->normalizeMeetingCodeValue($workshop->meeting_code);
+            $workshopId = $workshop->getKey();
+            $normalizedCode = $this->normalizeMeetingCodeValue($workshop->meeting_code);
 
-            if (! $normalized) {
-                continue;
+            if ($normalizedCode) {
+                foreach ($this->expandMeetingCodeVariants($normalizedCode) as $variant) {
+                    if ($variant === '') {
+                        continue;
+                    }
+
+                    $meetingVariants[$variant] = [
+                        'workshop_id' => $workshopId,
+                        'code' => $normalizedCode,
+                    ];
+                }
             }
 
-            foreach ($this->expandMeetingCodeVariants($normalized) as $variant) {
+            foreach ($this->expandTitleVariants($workshop) as $variant) {
                 if ($variant === '') {
                     continue;
                 }
 
-                $variantMap[$variant] = $normalized;
+                $titleVariants[$variant] = $workshopId;
             }
         }
 
-        uksort($variantMap, fn ($a, $b) => strlen($b) <=> strlen($a));
+        uksort($meetingVariants, fn ($a, $b) => strlen($b) <=> strlen($a));
+        uksort($titleVariants, fn ($a, $b) => strlen($b) <=> strlen($a));
 
-        return $variantMap;
+        return [
+            'meeting' => $meetingVariants,
+            'title' => $titleVariants,
+        ];
     }
 
     /**
-     * Determine which meeting code variant appears in the provided file name.
+     * Determine which workshop a Drive recording belongs to.
      */
-    protected function matchMeetingCodeFromName(string $fileName, array $variantMap): ?string
+    protected function matchWorkshopFromDriveFile(string $fileName, array $matchIndex): ?array
     {
-        foreach ($variantMap as $variant => $canonical) {
+        foreach ($matchIndex['meeting'] ?? [] as $variant => $payload) {
             if ($variant !== '' && str_contains($fileName, $variant)) {
-                return $canonical;
+                return $payload;
+            }
+        }
+
+        $sluggedName = Str::slug($fileName);
+
+        foreach ($matchIndex['title'] ?? [] as $variant => $workshopId) {
+            if ($variant !== '' && str_contains($sluggedName, $variant)) {
+                return [
+                    'workshop_id' => $workshopId,
+                    'code' => null,
+                ];
             }
         }
 
@@ -263,6 +284,34 @@ class ChefPublicWorkshopController extends Controller
         $spaced = str_replace(['-', '_'], ' ', $code);
         if ($spaced !== $code) {
             $variants[] = $spaced;
+        }
+
+        return array_values(array_unique(array_filter($variants)));
+    }
+
+    /**
+     * Generate normalized variants of a workshop title for matching Drive files.
+     */
+    protected function expandTitleVariants(Workshop $workshop): array
+    {
+        $candidates = [
+            $workshop->title,
+            $workshop->slug,
+        ];
+
+        $variants = [];
+
+        foreach ($candidates as $value) {
+            if (! is_string($value) || trim($value) === '') {
+                continue;
+            }
+
+            $slugged = Str::slug($value);
+
+            if ($slugged !== '') {
+                $variants[] = $slugged;
+                $variants[] = str_replace('-', '', $slugged);
+            }
         }
 
         return array_values(array_unique(array_filter($variants)));

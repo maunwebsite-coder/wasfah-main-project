@@ -23,7 +23,7 @@ class ChefPublicWorkshopsTest extends TestCase
 
         Workshop::query()->create([
             'user_id' => $chef->id,
-            'title' => 'Drive Synced Workshop',
+            'title' => 'Tiramisu',
             'description' => str_repeat('Great workshop. ', 3),
             'content' => 'Agenda',
             'category' => 'Baking',
@@ -47,7 +47,7 @@ class ChefPublicWorkshopsTest extends TestCase
 
         $driveFile = new DriveFile();
         $driveFile->setId('drive-file-123');
-        $driveFile->setName('Recording ABC-DEFG-HIJ Session');
+        $driveFile->setName('Tiramisu - 2025-11-19 Session');
         $driveFile->setWebViewLink('https://drive.google.com/file/d/drive-file-123/view?usp=drivesdk');
         $driveFile->setModifiedTime(now()->toAtomString());
 
