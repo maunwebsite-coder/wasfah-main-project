@@ -350,7 +350,16 @@
                     </div>
 
                     @php
-                        $selectedHostTimezone = old('host_timezone', $workshop->host_timezone ?? auth()->user()->timezone ?? request()->cookie('user_timezone') ?? config('app.timezone', 'UTC'));
+                        $selectedHostTimezone = old(
+                            'host_timezone',
+                            $workshop->host_timezone
+                                ?? auth()->user()->timezone
+                                ?? request()->cookie('user_timezone')
+                                ?? \App\Support\Timezones::defaultHostTimezone()
+                        );
+                        if (! \App\Support\Timezones::isAllowedHostTimezone($selectedHostTimezone)) {
+                            $selectedHostTimezone = \App\Support\Timezones::defaultHostTimezone();
+                        }
                     @endphp
                     <div>
                         <label for="host_timezone" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('chef.workshop_form.fields.host_timezone.label') }}</label>

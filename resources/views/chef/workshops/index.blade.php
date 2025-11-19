@@ -82,7 +82,7 @@
                             @endif
                         </div>
 
-                        <form action="{{ route('chef.workshops.reset-device', $resetWorkshopSlug) }}" method="POST" class="space-y-3">
+                        <form action="{{ route('chef.workshops.reset-device', ['workshop' => $resetWorkshopSlug]) }}" method="POST" class="space-y-3">
                             @csrf
                             <input type="hidden" name="reset_workshop_slug" value="{{ $resetWorkshopSlug }}">
                             <input type="hidden" name="reset_workshop_title" value="{{ $resetWorkshopTitle }}">
@@ -103,7 +103,7 @@
                                     <i class="fas fa-unlock"></i>
                                     {{ __('chef.dashboard.workshops.device_reset.confirm') }}
                                 </button>
-                                <a href="{{ route('chef.workshops.join', $resetWorkshopSlug) }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-white px-5 py-3 text-sm font-semibold text-amber-700 shadow-sm hover:border-amber-300 hover:text-amber-900">
+                                <a href="{{ route('chef.workshops.join', ['workshop' => $resetWorkshopSlug]) }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-white px-5 py-3 text-sm font-semibold text-amber-700 shadow-sm hover:border-amber-300 hover:text-amber-900">
                                     <i class="fas fa-redo"></i>
                                     {{ __('chef.dashboard.workshops.device_reset.retry') }}
                                 </a>

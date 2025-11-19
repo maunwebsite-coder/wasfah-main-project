@@ -747,7 +747,15 @@
 
                     <div class="section-body">
                         @php
-                            $defaultTimezone = old('host_timezone', auth()->user()->timezone ?? request()->cookie('user_timezone') ?? config('app.timezone', 'UTC'));
+                            $defaultTimezone = old(
+                                'host_timezone',
+                                auth()->user()->timezone
+                                    ?? request()->cookie('user_timezone')
+                                    ?? \App\Support\Timezones::defaultHostTimezone()
+                            );
+                            if (! \App\Support\Timezones::isAllowedHostTimezone($defaultTimezone)) {
+                                $defaultTimezone = \App\Support\Timezones::defaultHostTimezone();
+                            }
                         @endphp
                         <div class="mb-4">
                             <label for="host_timezone" class="form-label">{{ __('chef.workshop_form.fields.host_timezone.label') }}</label>

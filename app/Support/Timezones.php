@@ -13,6 +13,7 @@ class Timezones
      * @var array<string, string>|null
      */
     protected static ?array $options = null;
+    protected static ?array $hostOptions = null;
 
     /**
      * Return an associative array of timezone => formatted label.
@@ -64,6 +65,53 @@ class Timezones
     }
 
     /**
+     * Return limited host timezone options.
+     *
+     * @return array<string, string>
+     */
+    public static function hostOptions(): array
+    {
+        if (static::$hostOptions !== null) {
+            return static::$hostOptions;
+        }
+
+        $allowed = static::allowedHostTimezones();
+
+        if (empty($allowed)) {
+            static::$hostOptions = static::options();
+
+            return static::$hostOptions;
+        }
+
+        $options = static::options();
+        $filtered = [];
+
+        foreach ($allowed as $timezone) {
+            if (isset($options[$timezone])) {
+                $filtered[$timezone] = $options[$timezone];
+            }
+        }
+
+        static::$hostOptions = $filtered ?: static::options();
+
+        return static::$hostOptions;
+    }
+
+    /**
+     * Retrieve the default host timezone.
+     */
+    public static function defaultHostTimezone(): string
+    {
+        $hostOptions = static::hostOptions();
+
+        foreach ($hostOptions as $timezone => $label) {
+            return $timezone;
+        }
+
+        return config('app.timezone', 'UTC');
+    }
+
+    /**
      * Check if the provided timezone is valid.
      */
     public static function isValid(?string $timezone): bool
@@ -79,6 +127,39 @@ class Timezones
         } catch (\Throwable $exception) {
             return false;
         }
+    }
+
+    /**
+     * Determine if the timezone is allowed for host selection.
+     */
+    public static function isAllowedHostTimezone(?string $timezone): bool
+    {
+        $allowed = static::allowedHostTimezones();
+
+        if (empty($allowed)) {
+            return static::isValid($timezone);
+        }
+
+        return is_string($timezone) && in_array($timezone, $allowed, true);
+    }
+
+    /**
+     * Retrieve the configured host timezone whitelist.
+     *
+     * @return list<string>
+     */
+    public static function allowedHostTimezones(): array
+    {
+        $allowed = config('timezones.allowed_host_timezones', []);
+
+        if (! is_array($allowed) || empty($allowed)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn ($timezone) => static::isValid($timezone) ? $timezone : null,
+            $allowed
+        )));
     }
 
     protected static function formatOffset(int $seconds): string

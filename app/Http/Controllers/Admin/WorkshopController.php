@@ -124,7 +124,7 @@ class WorkshopController extends Controller
         return view('admin.workshops.create', [
             'recipes' => $recipes,
             'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
-            'timezoneOptions' => Timezones::options(),
+            'timezoneOptions' => Timezones::hostOptions(),
         ]);
     }
 
@@ -276,7 +276,7 @@ class WorkshopController extends Controller
             'workshop' => $workshop,
             'recipes' => $recipes,
             'forceAutoMeetingLinks' => $this->shouldForceAutoMeetingLinks(),
-            'timezoneOptions' => Timezones::options(),
+            'timezoneOptions' => Timezones::hostOptions(),
         ]);
     }
 
@@ -569,14 +569,14 @@ class WorkshopController extends Controller
         ];
 
         foreach ($candidates as $candidate) {
-            if (Timezones::isValid($candidate)) {
+            if (Timezones::isAllowedHostTimezone($candidate)) {
                 $timezone = $candidate;
                 break;
             }
         }
 
         if (! $timezone) {
-            $timezone = config('app.timezone', 'UTC');
+            $timezone = Timezones::defaultHostTimezone();
         }
 
         if ($user && method_exists($user, 'isAdmin') && $user->isAdmin() && $user->timezone !== $timezone) {

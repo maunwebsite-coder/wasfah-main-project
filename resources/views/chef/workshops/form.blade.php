@@ -23,15 +23,18 @@
     $startDateValue = old('start_date', optional(optional($workshop)->start_date)->format('Y-m-d\TH:i'));
     $endDateValue = old('end_date', optional(optional($workshop)->end_date)->format('Y-m-d\TH:i'));
     $deadlineValue = old('registration_deadline', optional(optional($workshop)->registration_deadline)->format('Y-m-d\TH:i'));
-    $timezoneOptions = $timezoneOptions ?? Timezones::options();
+    $timezoneOptions = $timezoneOptions ?? Timezones::hostOptions();
     $detectedTimezone = request()->cookie('user_timezone');
     $hostTimezoneValue = old(
         'host_timezone',
         $workshop->host_timezone
             ?? auth()->user()?->timezone
             ?? $detectedTimezone
-            ?? config('app.timezone', 'UTC')
+            ?? Timezones::defaultHostTimezone()
     );
+    if (! Timezones::isAllowedHostTimezone($hostTimezoneValue)) {
+        $hostTimezoneValue = Timezones::defaultHostTimezone();
+    }
     $coverImageUrl = null;
     if ($workshop && $workshop->image) {
         $coverImageUrl = Str::startsWith($workshop->image, ['http://', 'https://'])

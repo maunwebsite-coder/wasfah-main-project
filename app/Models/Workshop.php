@@ -448,11 +448,11 @@ class Workshop extends Model
             'is_online' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'host_timezone' => [
-                'nullable',
-                'string',
-                Rule::in(array_keys(Timezones::options())),
-            ],
+        'host_timezone' => [
+            'nullable',
+            'string',
+            Rule::in(array_keys(Timezones::hostOptions())),
+        ],
             'meeting_link' => [
                 'nullable',
                 'url',
